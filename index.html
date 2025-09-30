@@ -471,8 +471,24 @@
             let displayJob = { ...job };
             ui.showModal(displayJob.title, '<div class="spinner w-8 h-8 mx-auto"></div><p class="text-center mt-2">情報取得中...</p>', { size: 'max-w-3xl' });
             if (String(displayJob.job_id).startsWith('http')) { try { const scrapedData = await api.call('scrapeJobDetails', [displayJob.job_id]); if (scrapedData.jobDescription) displayJob.description = `【外部サイト】\n${scrapedData.jobDescription}`; if (scrapedData.requirements) displayJob.qualifications = `【外部サイト】\n${scrapedData.requirements}`; } catch (e) { console.error('Scraping failed:', e); } }
+            
             const jobIdDisplay = String(displayJob.job_id).startsWith('http') ? `<a href="${displayJob.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (displayJob.job_id || 'N/A');
-            const detailsHtml = Object.entries({ 'company': '企業名', 'salary': '給与', 'location': '勤務地', 'employment_type': '雇用形態', 'description': '業務内容', 'qualifications': '応募資格' }).map(([key, label]) => displayJob[key] ? `<div class="border-b py-2"><dt class="font-semibold text-slate-600">${label}</dt><dd class="text-slate-800 whitespace-pre-wrap">${displayJob[key]}</dd></div>` : '').join('');
+            
+            let detailsHtml = `<div class="border-b py-2"><dt class="font-semibold text-slate-600">求人ID</dt><dd class="text-slate-800">${jobIdDisplay}</dd></div>`;
+            detailsHtml += Object.entries({
+                'company': '企業名',
+                'title': '職種名',
+                'jobcategory': '職種分類',
+                'industrycategory': '業種分類',
+                'salary': '給与',
+                'location': '勤務地',
+                'employment_type': '雇用形態',
+                'description': '業務内容',
+                'qualifications': '必須の経験・スキル',
+                'qualifications_2': '歓迎する経験・スキル',
+                'Strengths': 'この仕事の魅力・特徴'
+            }).map(([key, label]) => displayJob[key] ? `<div class="border-b py-2"><dt class="font-semibold text-slate-600">${label}</dt><dd class="text-slate-800 whitespace-pre-wrap">${displayJob[key]}</dd></div>` : '').join('');
+            
             const finalContent = `<dl>${detailsHtml}</dl><div class="mt-6 pt-4 border-t text-right space-x-2">${CURRENT_USER.role === 'user' ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-cyan-500 text-white ai-match-analysis-btn" data-job-id="${displayJob.job_id}">✨ AIマッチ度分析</button><button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-apply-btn" data-job-id="${displayJob.job_id}">この求人に応募する</button>` : ''}${['admin','coach'].includes(CURRENT_USER.role) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-recommend-btn" data-job-id="${displayJob.job_id}">この求人を紹介する</button>` : ''}</div>`;
             $('#modal-content').html(finalContent); 
         }
