@@ -317,6 +317,7 @@
             return jobsToRender.map(job => { 
                 const isFavorited = FAVORITE_JOB_IDS.includes(job.job_id); 
                 const jobIdDisplay = String(job.job_id).startsWith('http') ? `<a href="${job.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (job.job_id || 'N/A'); 
+                const employmentType = job.employment_type || job['employment type'] || 'N/A'; // Fix for employment type
                 return `<div class="bg-white rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-1 p-6 flex flex-col">
                     <div>
                         <div class="flex justify-between items-start mb-2">
@@ -331,7 +332,7 @@
                         <p><strong><i class="fas fa-building w-5 text-slate-400"></i> 会社名:</strong> ${job.company || 'N/A'}</p>
                         <p><strong><i class="fas fa-map-marker-alt w-5 text-slate-400"></i> 勤務地:</strong> ${job.location || 'N/A'}</p>
                         <p><strong><i class="fas fa-yen-sign w-5 text-slate-400"></i> 給与:</strong> ${job.salary || 'N/A'}</p>
-                        <p><strong><i class="fas fa-briefcase w-5 text-slate-400"></i> 雇用形態:</strong> ${job['employment_type'] || 'N/A'}</p>
+                        <p><strong><i class="fas fa-briefcase w-5 text-slate-400"></i> 雇用形態:</strong> ${employmentType}</p>
                     </div>
                     <div class="mt-auto pt-4 text-right">
                         <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white job-details-btn" data-job-id="${job.job_id}">詳細を見る</button>
@@ -453,7 +454,7 @@
 
                 if (selectedIndustries.length > 0 && !selectedIndustries.includes(job.industrycategory)) return false;
                 if (selectedJobTypes.length > 0 && !selectedJobTypes.includes(job.jobcategory)) return false;
-                if (selectedEmploymentTypes.length > 0 && !selectedEmploymentTypes.some(type => (job.employment_type || '').includes(type))) return false;
+                if (selectedEmploymentTypes.length > 0 && !selectedEmploymentTypes.some(type => (job.employment_type || job['employment type'] || '').includes(type))) return false;
                 if (selectedLocations.length > 0 && !selectedLocations.some(loc => (job.location || '').includes(loc))) return false;
                 if (searchFreewords.length > 0 && !searchFreewords.some(word => textToSearch.includes(word.toLowerCase()))) return false;
                 if (activeSearchTags.length > 0 && !activeSearchTags.every(tag => (job.tags || '').includes(tag))) return false;
@@ -487,7 +488,10 @@
                 'qualifications': '必須の経験・スキル',
                 'qualifications_2': '歓迎する経験・スキル',
                 'Strengths': 'この仕事の魅力・特徴'
-            }).map(([key, label]) => displayJob[key] ? `<div class="border-b py-2"><dt class="font-semibold text-slate-600">${label}</dt><dd class="text-slate-800 whitespace-pre-wrap">${displayJob[key]}</dd></div>` : '').join('');
+            }).map(([key, label]) => {
+                const value = displayJob[key] || displayJob[key.replace('_', ' ')];
+                return value ? `<div class="border-b py-2"><dt class="font-semibold text-slate-600">${label}</dt><dd class="text-slate-800 whitespace-pre-wrap">${value}</dd></div>` : ''
+            }).join('');
             
             const finalContent = `<dl>${detailsHtml}</dl><div class="mt-6 pt-4 border-t text-right space-x-2">${CURRENT_USER.role === 'user' ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-cyan-500 text-white ai-match-analysis-btn" data-job-id="${displayJob.job_id}">✨ AIマッチ度分析</button><button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-apply-btn" data-job-id="${displayJob.job_id}">この求人に応募する</button>` : ''}${['admin','coach'].includes(CURRENT_USER.role) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-recommend-btn" data-job-id="${displayJob.job_id}">この求人を紹介する</button>` : ''}</div>`;
             $('#modal-content').html(finalContent); 
