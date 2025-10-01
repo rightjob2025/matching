@@ -614,7 +614,7 @@
         // ========================
         // Event Listeners
         // ========================
-        function initializeEvents() {
+function initializeEvents() {
             $(document).off();
 
             // --- Auth ---
@@ -628,7 +628,7 @@
             $(document).on('click', '#modal-close-btn, #modal-ok-btn', ui.hideModal);
             $(document).on('click', '#menu-toggle-btn', ui.toggleSidebar);
             $(document).on('click', '#sidebar-overlay', ui.closeSidebar);
-            
+
             // --- Dashboard ---
             $(document).on('click', '.recommendation-feedback-btn', async function() {
                 const btn = $(this);
@@ -671,7 +671,7 @@
                     <div class="pl-4 text-slate-600">${(app.interview_dates || '').split(',').map(d => d.trim()).join('<br>') || '未設定'}</div>
                     <p><strong>メモ:</strong></p>
                     <div class="pl-4 text-slate-600 whitespace-pre-wrap bg-slate-50 p-2 rounded-md">${app.memo || '未設定'}</div>
-                </div>`; 
+                </div>`;
                 ui.showModal('応募詳細', content, { size: 'max-w-2xl' });
             });
              $(document).on('click', '#progress-page .edit-status-btn', function() {
@@ -686,26 +686,26 @@
                 </form>`;
                 ui.showModal('ステータス更新', content);
             });
-            $(document).on('submit', '#update-status-form', async function(e) { 
-                e.preventDefault(); 
-                const appId = $(this).data('id'); 
+            $(document).on('submit', '#update-status-form', async function(e) {
+                e.preventDefault();
+                const appId = $(this).data('id');
                 const newStatus = $('#new-status').val();
                 const newMemo = $('#new-memo').val();
-                try { 
-                    await api.call('updateApplicationStatus', [appId, newStatus, newMemo]); 
-                    ui.hideModal(); 
-                    ui.showAlert('更新完了', 'ステータスを更新しました。'); 
-                    renderProgress(); 
-                } catch(err) { 
-                    ui.showAlert('エラー', `更新に失敗しました: ${err}`); 
-                } 
+                try {
+                    await api.call('updateApplicationStatus', [appId, newStatus, newMemo]);
+                    ui.hideModal();
+                    ui.showAlert('更新完了', 'ステータスを更新しました。');
+                    renderProgress();
+                } catch(err) {
+                    ui.showAlert('エラー', `更新に失敗しました: ${err}`);
+                }
             });
 
 
             // --- Job Search ---
             $(document).on('click', '#job-search-btn', performSearch);
             $(document).on('change', '#sort-select', performSearch);
-            $(document).on('click', '#job-search-reset-btn', () => { 
+            $(document).on('click', '#job-search-reset-btn', () => {
                 $('#search-keyword').val('');
                 selectedIndustries = []; selectedJobTypes = []; selectedEmploymentTypes = []; selectedLocations = []; searchFreewords = []; activeSearchTags = [];
                 renderJobSearch(); // Re-render to reset components
@@ -716,132 +716,14 @@
                 performSearch();
             });
             $(document).on('click', '#load-more-btn', () => { currentJobPage++; displayJobs(); });
-
-            // --- User Management ---
-            $(document).on('input', '#user-search-input', function() { const term = $(this).val().toLowerCase(); $('#user-list-body tr').each(function() { $(this).toggle($(this).text().toLowerCase().includes(term)); }); });
-
-            // --- Job Management ---
-            $(document).on('input', '#job-management-search-input', function() { const term = $(this).val().toLowerCase(); $('#job-list-body tr').each(function() { $(this).toggle($(this).text().toLowerCase().includes(term)); }); });
-            $(document).on('click', '#show-new-job-modal-btn, .edit-job-btn', function() { 
-                const jobId = $(this).data('job-id'); 
-                const isEdit = !!jobId; 
-                const job = isEdit ? ALL_JOBS.find(j => j.job_id === jobId) : {}; 
-                const industryOpts = (MASTERS.industry || []).map(i => `<option value="${i}" ${job.industrycategory === i ? 'selected' : ''}>${i}</option>`).join(''); 
-                const jobTypeOpts = (MASTERS.job_type || []).map(j => `<option value="${j}" ${job.jobcategory === j ? 'selected' : ''}>${j}</option>`).join(''); 
-                const content = `<form id="job-form"><input type="hidden" name="job_id" value="${job.job_id || ''}"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm">求人名</label><input name="title" class="mt-1 block w-full rounded-md border-slate-300" value="${job.title || ''}" required></div><div><label class="block text-sm">企業名</label><input name="company" class="mt-1 block w-full rounded-md border-slate-300" value="${job.company || ''}" required></div><div><label class="block text-sm">業種</label><select name="industrycategory" class="mt-1 block w-full rounded-md border-slate-300">${industryOpts}</select></div><div><label class="block text-sm">職種</label><select name="jobcategory" class="mt-1 block w-full rounded-md border-slate-300">${jobTypeOpts}</select></div></div><div class="mt-4"><div class="flex justify-between items-center"><label class="block text-sm">業務内容</label><button type="button" id="ai-generate-description-btn" class="text-sm text-indigo-600 hover:underline">✨ AIで作成</button></div><textarea name="description" rows="5" class="mt-1 block w-full rounded-md border-slate-300">${job.description || ''}</textarea></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">${isEdit ? '更新' : '登録'}</button></div></form>`; 
-                ui.showModal(isEdit ? '求人編集' : '新規求人登録', content, { size: 'max-w-3xl' }); 
-            });
-            $(document).on('submit', '#job-form', async function(e) { e.preventDefault(); const data = {}; $(this).serializeArray().forEach(item => data[item.name] = item.value); try { await api.call(data.job_id ? 'updateJob' : 'createNewJob', [data]); ui.hideModal(); ui.showAlert('成功', `求人情報を${data.job_id ? '更新' : '登録'}しました。`); renderJobManagement(); } catch (err) { ui.showAlert('エラー', `処理に失敗: ${err}`); }});
-
-            // --- Job Details, Apply, Recommend, Favorite ---
-            $(document).on('click', '.job-details-btn', function() { showJobDetailsModal($(this).data('job-id')); });
-            $(document).on('click', '.job-apply-btn', function() { const jobId = $(this).data('job-id'); const content = `<form id="apply-form" data-job-id="${jobId}"><p class="mb-4">面接希望日時を3つまで入力してください。</p>${[1,2,3].map(i => `<div class="mb-2"><label class="block text-sm">希望日時 ${i}</label><input type="datetime-local" class="mt-1 block w-full rounded-md border-slate-300 interview-date"></div>`).join('')}<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">応募確定</button></div></form>`; ui.showModal('応募の確認', content); });
-            $(document).on('submit', '#apply-form', async function(e) { e.preventDefault(); const jobId = $(this).data('job-id'); const dates = $('.interview-date').map((i, el) => $(el).val()).get().filter(Boolean); try { await api.call('applyForJob', [jobId, dates]); ui.hideModal(); ui.showAlert('応募完了', '応募が完了しました。'); renderProgress(); } catch(e) { ui.showAlert('エラー', `応募に失敗: ${e}`); }});
-            $(document).on('click', '.job-recommend-btn', async function() { const jobId = $(this).data('job-id'); try { const users = await api.call('getAllUsers'); const userOpts = users.filter(u => u.role === 'user').map(u => `<option value="${u.user_id}">${u.name}</option>`).join(''); const content = `<form id="recommend-form" data-job-id="${jobId}"><p class="mb-4">紹介する求職者を選択してください。</p><div><label class="block text-sm">求職者</label><select name="targetUserId" class="mt-1 block w-full rounded-md border-slate-300">${userOpts}</select></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">紹介する</button></div></form>`; ui.showModal('求人を紹介', content); } catch(e) { ui.showAlert('エラー', `ユーザーの読込に失敗: ${e}`); }});
-            $(document).on('submit', '#recommend-form', async function(e) { e.preventDefault(); const jobId = $(this).data('job-id'); const userId = $(this).find('[name=targetUserId]').val(); try { await api.call('recommendJobToUser', [userId, jobId]); ui.hideModal(); ui.showAlert('成功', '求人を紹介しました。'); } catch(e) { ui.showAlert('エラー', `紹介に失敗: ${e}`); }});
-            $(document).on('click', '.favorite-btn', async function() { const btn = $(this); try { const res = await api.call('toggleFavoriteJob', [btn.data('job-id')]); btn.toggleClass('text-yellow-400 text-slate-400').find('i').toggleClass('fas far'); if(res.favorited) FAVORITE_JOB_IDS.push(btn.data('job-id')); else FAVORITE_JOB_IDS = FAVORITE_JOB_IDS.filter(id => id !== btn.data('job-id')); } catch(e) { ui.showAlert('エラー', `お気に入り操作に失敗: ${e}`); }});
-
-            // --- User Management ---
-            $(document).on('click', '#show-new-user-modal-btn, .edit-user-btn', async function() {
-                try {
-                    if (!MASTERS.industry) { const {masters} = await api.call('getJobsAndMasters'); MASTERS = {...MASTERS, ...masters}; }
-                    
-                    const userId = $(this).data('user-id');
-                    const isEdit = !!userId;
-                    const user = isEdit ? ALL_USERS.find(u => u.user_id === userId) : {};
-                    if(isEdit && !user) return ui.showAlert('エラー', 'ユーザーが見つかりません。');
-
-                    const coaches = ALL_USERS.filter(u => u.role === 'coach' && u.user_id !== userId);
-                    const coachOpts = coaches.map(c => `<option value="${c.user_id}" ${c.user_id === user.coach_id ? 'selected' : ''}>${c.name}</option>`).join('');
-                    
-                    if(isEdit){ 
-                        editedDesiredIndustries = user.desired_industry?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-                        editedDesiredJobTypes = user.desired_job_type?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-                        editedDesiredEmploymentTypes = user.desired_employment_type?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-                        editedDesiredLocations = user.desired_location?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-                        editedDesiredFreewords = user.desired_freewords?.split(',').map(s=>s.trim()).filter(Boolean) || [];
-                    } else {
-                        [editedDesiredIndustries, editedDesiredJobTypes, editedDesiredEmploymentTypes, editedDesiredLocations, editedDesiredFreewords] = [[],[],[],[],[]];
-                    }
-                    
-                    const content = `<form id="user-form">
-                        <input type="hidden" name="user_id" value="${user.user_id || ''}">
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium text-slate-700">氏名</label><input name="name" type="text" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.name || ''}" required></div>
-                            <div><label class="block text-sm font-medium text-slate-700">メールアドレス</label><input name="email" type="email" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.email || ''}" required></div>
-                            <div><label class="block text-sm font-medium text-slate-700">パスワード ${isEdit ? '(変更する場合のみ入力)' : ''}</label><input name="password" type="password" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></div>
-                            <div><label class="block text-sm font-medium text-slate-700">役割</label><select name="role" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="user" ${user.role === 'user' ? 'selected' : ''}>user</option><option value="coach" ${user.role === 'coach' ? 'selected' : ''}>coach</option><option value="admin" ${user.role === 'admin' ? 'selected' : ''}>admin</option></select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">担当コーチ</label><select name="coach_id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="">なし</option>${coachOpts}</select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">Google Drive URL</label><input name="drive_folder_url" type="url" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.drive_folder_url || ''}"></div>
-                        </div>
-                        <div class="mt-6 pt-4 border-t">
-                            <h4 class="text-lg font-semibold text-slate-700 mb-4">希望条件</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-medium text-slate-700">希望業種</label><div id="edit-user-desired-industry"></div></div>
-                                <div><label class="block text-sm font-medium text-slate-700">希望職種</label><div id="edit-user-desired-job-type"></div></div>
-                                <div><label class="block text-sm font-medium text-slate-700">希望勤務形態</label><div id="edit-user-desired-employment-type"></div></div>
-                                <div><label class="block text-sm font-medium text-slate-700">希望勤務地</label><div id="edit-user-desired-location"></div></div>
-                                <div class="col-span-2"><label class="block text-sm font-medium text-slate-700">希望年収</label><input name="desired_salary" type="text" placeholder="例: 500万円" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.desired_salary || ''}"></div>
-                                <div class="col-span-2"><label class="block text-sm font-medium text-slate-700">希望フリーワード</label><div id="edit-user-desired-freewords"></div></div>
-                            </div>
-                        </div>
-                        <div class="mt-4"><label class="block text-sm font-medium text-slate-700">自己PR・スキル等</label><textarea name="notes" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="5">${user.notes || ''}</textarea></div>
-                        <div class="mt-4"><label class="block text-sm font-medium text-slate-700">履歴書 (テキスト)</label><textarea name="resume" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="8">${user.resume || ''}</textarea></div>
-                        <div class="mt-4"><label class="block text-sm font-medium text-slate-700">職務経歴書 (テキスト)</label><textarea name="work_history" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="12">${user.work_history || ''}</textarea></div>
-                        <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">${isEdit ? '更新' : '登録'}</button></div>
-                    </form>`;
-                    
-                    ui.showModal(isEdit ? 'ユーザー編集' : '新規ユーザー登録', content, { size: 'max-w-3xl' });
-                    
-                    multiSelect.create('edit-user-desired-industry', MASTERS.industry || [], editedDesiredIndustries, v => editedDesiredIndustries = v);
-                    multiSelect.create('edit-user-desired-job-type', MASTERS.job_type || [], editedDesiredJobTypes, v => editedDesiredJobTypes = v);
-                    multiSelect.create('edit-user-desired-employment-type', EMPLOYMENT_TYPES, editedDesiredEmploymentTypes, v => editedDesiredEmploymentTypes = v);
-                    multiSelect.create('edit-user-desired-location', PREFECTURES, editedDesiredLocations, v => editedDesiredLocations = v);
-                    freewordInput.create('edit-user-desired-freewords', editedDesiredFreewords, w => editedDesiredFreewords = w);
-                } catch (e) { 
-                    ui.showAlert('エラー', `編集画面の準備に失敗しました: ${e}`);
-                }
-            });
-
-            $(document).on('submit', '#user-form', async function(e) {
-                e.preventDefault();
-                const data = {};
-                $(this).serializeArray().forEach(item => data[item.name] = item.value);
-                data.desired_industry = editedDesiredIndustries.join(',');
-                data.desired_job_type = editedDesiredJobTypes.join(',');
-                data.desired_employment_type = editedDesiredEmploymentTypes.join(',');
-                data.desired_location = editedDesiredLocations.join(',');
-                data.desired_freewords = editedDesiredFreewords.join(',');
-                
-                try {
-                    const action = data.user_id ? 'adminUpdateUser' : 'adminCreateUser';
-                    if (!data.user_id && !data.password) return ui.showAlert('入力エラー', '新規登録にはパスワードが必要です。');
-                    await api.call(action, [data]);
-                    ui.hideModal();
-                    ui.showAlert('成功', `ユーザー情報を${data.user_id ? '更新' : '登録'}しました。`);
-                    renderUserManagement();
-                } catch (e) {
-                    ui.showAlert('エラー', `処理に失敗しました: ${e}`);
-                }
-            });
-
-            // --- AI Features ---
-            $(document).on('click', '#ai-generate-description-btn', async function() { const form = $(this).closest('form'); const title = form.find('[name="title"]').val(); const company = form.find('[name="company"]').val(); if (!title || !company) { ui.showAlert('情報不足', '「求人名」と「企業名」を入力してください。'); return; } const btn = $(this); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>生成中...'); try { const result = await api.call('generateAIDescription', [title, company]); form.find('[name="description"]').val(result); } catch (e) { ui.showAlert('AIエラー', `生成に失敗: ${e}`); } finally { btn.prop('disabled', false).html('✨ AIで作成'); } });
-            $(document).on('click', '.ai-match-analysis-btn', async function() { const jobId = $(this).data('job-id'); ui.showModal('✨ AIマッチ度分析', '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const result = await api.call('generateAIMatchAnalysis', [jobId]); const scoreMatch = result.match(/総合評価:\s*(\d+)/); let scoreHtml = ''; let analysisText = result; if(scoreMatch) { scoreHtml = `<div class="bg-indigo-50 p-4 mb-6 rounded-lg"><h3 class="font-medium text-indigo-700">総合評価</h3><p class="text-4xl font-bold text-indigo-600 mt-1">${scoreMatch[1]}<span class="text-lg ml-1">点</span></p></div>`; analysisText = result.replace(/総合評価:\s*\d+点\n*/, ''); } const finalHtml = scoreHtml + `<div class="gemini-content prose">${marked.parse(analysisText)}</div>`; $('#modal-content').html(finalHtml); } catch (e) { $('#modal-content').html(`<p class="text-red-500">分析に失敗: ${e}</p>`); } });
-            $(document).on('click', '.ai-recommend-btn', async function() { const userId = $(this).data('user-id'); const user = ALL_USERS.find(u => u.user_id === userId); ui.showModal(`✨ ${user.name}さんへのAI推薦`, '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const jobs = await api.call('getAIRecommendations', [userId]); if(jobs.length === 0) { $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>'); return; } let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`).join('') + `<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`; $('#modal-content').html(html); } catch(e) { $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`); } });
-            $(document).on('submit', '#ai-recommend-form', async function(e) { e.preventDefault(); const userId = $(this).data('user-id'); const jobs = []; $(this).find('input:checked').each(function() { jobs.push({ job_id: $(this).val(), reason: decodeURIComponent($(this).data('reason')), score: $(this).data('score') }); }); if(jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。'); try { await api.call('saveAIRecommendations', [userId, jobs]); ui.hideModal(); ui.showAlert('保存完了', `${jobs.length}件のAI推薦を保存しました。`); } catch(e) { ui.showAlert('保存エラー', `保存に失敗: ${e}`); } });
-        }
-
-            // --- Job Search ---
-            $(document).on('click', '#job-search-btn', performSearch);
-            $(document).on('change', '#sort-select', performSearch);
-            $(document).on('click', '#job-search-reset-btn', () => { 
-                $('#search-keyword').val('');
-                selectedIndustries = []; selectedJobTypes = []; selectedEmploymentTypes = []; selectedLocations = []; searchFreewords = []; activeSearchTags = [];
-                renderJobSearch(); // Re-render to reset components
-            });
             $(document).on('click', '#apply-desired-conditions-btn', async () => {
                 try {
+                    // Ensure MASTERS data is available
+                    if (!MASTERS.industry) {
+                        const { masters } = await api.call('getJobsAndMasters');
+                        MASTERS = { ...MASTERS, ...masters };
+                    }
+
                     const profile = await api.call('getMyProfile');
                     if (!profile) {
                         ui.showAlert('エラー', 'プロファイル情報の取得に失敗しました。');
@@ -869,12 +751,121 @@
                     ui.showAlert('エラー', `希望条件の適用に失敗しました: ${e}`);
                 }
             });
-            $(document).on('click', '.tag-badge', function() {
-                $(this).toggleClass('bg-indigo-600 text-white bg-slate-100 text-slate-600');
-                activeSearchTags = $('.tag-badge.bg-indigo-600').map((i, el) => $(el).text()).get();
-                performSearch();
+
+            // --- User Management ---
+            $(document).on('input', '#user-search-input', function() { const term = $(this).val().toLowerCase(); $('#user-list-body tr').each(function() { $(this).toggle($(this).text().toLowerCase().includes(term)); }); });
+
+            // --- Job Management ---
+            $(document).on('input', '#job-management-search-input', function() { const term = $(this).val().toLowerCase(); $('#job-list-body tr').each(function() { $(this).toggle($(this).text().toLowerCase().includes(term)); }); });
+            $(document).on('click', '#show-new-job-modal-btn, .edit-job-btn', function() {
+                const jobId = $(this).data('job-id');
+                const isEdit = !!jobId;
+                const job = isEdit ? ALL_JOBS.find(j => j.job_id === jobId) : {};
+                const industryOpts = (MASTERS.industry || []).map(i => `<option value="${i}" ${job.industrycategory === i ? 'selected' : ''}>${i}</option>`).join('');
+                const jobTypeOpts = (MASTERS.job_type || []).map(j => `<option value="${j}" ${job.jobcategory === j ? 'selected' : ''}>${j}</option>`).join('');
+                const content = `<form id="job-form"><input type="hidden" name="job_id" value="${job.job_id || ''}"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm">求人名</label><input name="title" class="mt-1 block w-full rounded-md border-slate-300" value="${job.title || ''}" required></div><div><label class="block text-sm">企業名</label><input name="company" class="mt-1 block w-full rounded-md border-slate-300" value="${job.company || ''}" required></div><div><label class="block text-sm">業種</label><select name="industrycategory" class="mt-1 block w-full rounded-md border-slate-300">${industryOpts}</select></div><div><label class="block text-sm">職種</label><select name="jobcategory" class="mt-1 block w-full rounded-md border-slate-300">${jobTypeOpts}</select></div></div><div class="mt-4"><div class="flex justify-between items-center"><label class="block text-sm">業務内容</label><button type="button" id="ai-generate-description-btn" class="text-sm text-indigo-600 hover:underline">✨ AIで作成</button></div><textarea name="description" rows="5" class="mt-1 block w-full rounded-md border-slate-300">${job.description || ''}</textarea></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">${isEdit ? '更新' : '登録'}</button></div></form>`;
+                ui.showModal(isEdit ? '求人編集' : '新規求人登録', content, { size: 'max-w-3xl' });
             });
-            $(document).on('click', '#load-more-btn', () => { currentJobPage++; displayJobs(); });
+            $(document).on('submit', '#job-form', async function(e) { e.preventDefault(); const data = {}; $(this).serializeArray().forEach(item => data[item.name] = item.value); try { await api.call(data.job_id ? 'updateJob' : 'createNewJob', [data]); ui.hideModal(); ui.showAlert('成功', `求人情報を${data.job_id ? '更新' : '登録'}しました。`); renderJobManagement(); } catch (err) { ui.showAlert('エラー', `処理に失敗: ${err}`); }});
+
+            // --- Job Details, Apply, Recommend, Favorite ---
+            $(document).on('click', '.job-details-btn', function() { showJobDetailsModal($(this).data('job-id')); });
+            $(document).on('click', '.job-apply-btn', function() { const jobId = $(this).data('job-id'); const content = `<form id="apply-form" data-job-id="${jobId}"><p class="mb-4">面接希望日時を3つまで入力してください。</p>${[1,2,3].map(i => `<div class="mb-2"><label class="block text-sm">希望日時 ${i}</label><input type="datetime-local" class="mt-1 block w-full rounded-md border-slate-300 interview-date"></div>`).join('')}<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">応募確定</button></div></form>`; ui.showModal('応募の確認', content); });
+            $(document).on('submit', '#apply-form', async function(e) { e.preventDefault(); const jobId = $(this).data('job-id'); const dates = $('.interview-date').map((i, el) => $(el).val()).get().filter(Boolean); try { await api.call('applyForJob', [jobId, dates]); ui.hideModal(); ui.showAlert('応募完了', '応募が完了しました。'); renderProgress(); } catch(e) { ui.showAlert('エラー', `応募に失敗: ${e}`); }});
+            $(document).on('click', '.job-recommend-btn', async function() { const jobId = $(this).data('job-id'); try { const users = await api.call('getAllUsers'); const userOpts = users.filter(u => u.role === 'user').map(u => `<option value="${u.user_id}">${u.name}</option>`).join(''); const content = `<form id="recommend-form" data-job-id="${jobId}"><p class="mb-4">紹介する求職者を選択してください。</p><div><label class="block text-sm">求職者</label><select name="targetUserId" class="mt-1 block w-full rounded-md border-slate-300">${userOpts}</select></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">紹介する</button></div></form>`; ui.showModal('求人を紹介', content); } catch(e) { ui.showAlert('エラー', `ユーザーの読込に失敗: ${e}`); }});
+            $(document).on('submit', '#recommend-form', async function(e) { e.preventDefault(); const jobId = $(this).data('job-id'); const userId = $(this).find('[name=targetUserId]').val(); try { await api.call('recommendJobToUser', [userId, jobId]); ui.hideModal(); ui.showAlert('成功', '求人を紹介しました。'); } catch(e) { ui.showAlert('エラー', `紹介に失敗: ${e}`); }});
+            $(document).on('click', '.favorite-btn', async function() { const btn = $(this); try { const res = await api.call('toggleFavoriteJob', [btn.data('job-id')]); btn.toggleClass('text-yellow-400 text-slate-400').find('i').toggleClass('fas far'); if(res.favorited) FAVORITE_JOB_IDS.push(btn.data('job-id')); else FAVORITE_JOB_IDS = FAVORITE_JOB_IDS.filter(id => id !== btn.data('job-id')); } catch(e) { ui.showAlert('エラー', `お気に入り操作に失敗: ${e}`); }});
+
+            // --- User Management ---
+            $(document).on('click', '#show-new-user-modal-btn, .edit-user-btn', async function() {
+                try {
+                    if (!MASTERS.industry) { const {masters} = await api.call('getJobsAndMasters'); MASTERS = {...MASTERS, ...masters}; }
+
+                    const userId = $(this).data('user-id');
+                    const isEdit = !!userId;
+                    const user = isEdit ? ALL_USERS.find(u => u.user_id === userId) : {};
+                    if(isEdit && !user) return ui.showAlert('エラー', 'ユーザーが見つかりません。');
+
+                    const coaches = ALL_USERS.filter(u => u.role === 'coach' && u.user_id !== userId);
+                    const coachOpts = coaches.map(c => `<option value="${c.user_id}" ${c.user_id === user.coach_id ? 'selected' : ''}>${c.name}</option>`).join('');
+
+                    if(isEdit){
+                        editedDesiredIndustries = user.desired_industry?.split(',').map(s=>s.trim()).filter(Boolean) || [];
+                        editedDesiredJobTypes = user.desired_job_type?.split(',').map(s=>s.trim()).filter(Boolean) || [];
+                        editedDesiredEmploymentTypes = user.desired_employment_type?.split(',').map(s=>s.trim()).filter(Boolean) || [];
+                        editedDesiredLocations = user.desired_location?.split(',').map(s=>s.trim()).filter(Boolean) || [];
+                        editedDesiredFreewords = user.desired_freewords?.split(',').map(s=>s.trim()).filter(Boolean) || [];
+                    } else {
+                        [editedDesiredIndustries, editedDesiredJobTypes, editedDesiredEmploymentTypes, editedDesiredLocations, editedDesiredFreewords] = [[],[],[],[],[]];
+                    }
+
+                    const content = `<form id="user-form">
+                        <input type="hidden" name="user_id" value="${user.user_id || ''}">
+                        <div class="space-y-4">
+                            <div><label class="block text-sm font-medium text-slate-700">氏名</label><input name="name" type="text" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.name || ''}" required></div>
+                            <div><label class="block text-sm font-medium text-slate-700">メールアドレス</label><input name="email" type="email" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.email || ''}" required></div>
+                            <div><label class="block text-sm font-medium text-slate-700">パスワード ${isEdit ? '(変更する場合のみ入力)' : ''}</label><input name="password" type="password" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></div>
+                            <div><label class="block text-sm font-medium text-slate-700">役割</label><select name="role" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="user" ${user.role === 'user' ? 'selected' : ''}>user</option><option value="coach" ${user.role === 'coach' ? 'selected' : ''}>coach</option><option value="admin" ${user.role === 'admin' ? 'selected' : ''}>admin</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">担当コーチ</label><select name="coach_id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="">なし</option>${coachOpts}</select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">Google Drive URL</label><input name="drive_folder_url" type="url" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.drive_folder_url || ''}"></div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t">
+                            <h4 class="text-lg font-semibold text-slate-700 mb-4">希望条件</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium text-slate-700">希望業種</label><div id="edit-user-desired-industry"></div></div>
+                                <div><label class="block text-sm font-medium text-slate-700">希望職種</label><div id="edit-user-desired-job-type"></div></div>
+                                <div><label class="block text-sm font-medium text-slate-700">希望勤務形態</label><div id="edit-user-desired-employment-type"></div></div>
+                                <div><label class="block text-sm font-medium text-slate-700">希望勤務地</label><div id="edit-user-desired-location"></div></div>
+                                <div class="col-span-2"><label class="block text-sm font-medium text-slate-700">希望年収</label><input name="desired_salary" type="text" placeholder="例: 500万円" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" value="${user.desired_salary || ''}"></div>
+                                <div class="col-span-2"><label class="block text-sm font-medium text-slate-700">希望フリーワード</label><div id="edit-user-desired-freewords"></div></div>
+                            </div>
+                        </div>
+                        <div class="mt-4"><label class="block text-sm font-medium text-slate-700">自己PR・スキル等</label><textarea name="notes" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="5">${user.notes || ''}</textarea></div>
+                        <div class="mt-4"><label class="block text-sm font-medium text-slate-700">履歴書 (テキスト)</label><textarea name="resume" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="8">${user.resume || ''}</textarea></div>
+                        <div class="mt-4"><label class="block text-sm font-medium text-slate-700">職務経歴書 (テキスト)</label><textarea name="work_history" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="12">${user.work_history || ''}</textarea></div>
+                        <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">${isEdit ? '更新' : '登録'}</button></div>
+                    </form>`;
+
+                    ui.showModal(isEdit ? 'ユーザー編集' : '新規ユーザー登録', content, { size: 'max-w-3xl' });
+
+                    multiSelect.create('edit-user-desired-industry', MASTERS.industry || [], editedDesiredIndustries, v => editedDesiredIndustries = v);
+                    multiSelect.create('edit-user-desired-job-type', MASTERS.job_type || [], editedDesiredJobTypes, v => editedDesiredJobTypes = v);
+                    multiSelect.create('edit-user-desired-employment-type', EMPLOYMENT_TYPES, editedDesiredEmploymentTypes, v => editedDesiredEmploymentTypes = v);
+                    multiSelect.create('edit-user-desired-location', PREFECTURES, editedDesiredLocations, v => editedDesiredLocations = v);
+                    freewordInput.create('edit-user-desired-freewords', editedDesiredFreewords, w => editedDesiredFreewords = w);
+                } catch (e) {
+                    ui.showAlert('エラー', `編集画面の準備に失敗しました: ${e}`);
+                }
+            });
+
+            $(document).on('submit', '#user-form', async function(e) {
+                e.preventDefault();
+                const data = {};
+                $(this).serializeArray().forEach(item => data[item.name] = item.value);
+                data.desired_industry = editedDesiredIndustries.join(',');
+                data.desired_job_type = editedDesiredJobTypes.join(',');
+                data.desired_employment_type = editedDesiredEmploymentTypes.join(',');
+                data.desired_location = editedDesiredLocations.join(',');
+                data.desired_freewords = editedDesiredFreewords.join(',');
+
+                try {
+                    const action = data.user_id ? 'adminUpdateUser' : 'adminCreateUser';
+                    if (!data.user_id && !data.password) return ui.showAlert('入力エラー', '新規登録にはパスワードが必要です。');
+                    await api.call(action, [data]);
+                    ui.hideModal();
+                    ui.showAlert('成功', `ユーザー情報を${data.user_id ? '更新' : '登録'}しました。`);
+                    renderUserManagement();
+                } catch (e) {
+                    ui.showAlert('エラー', `処理に失敗しました: ${e}`);
+                }
+            });
+
+            // --- AI Features ---
+            $(document).on('click', '#ai-generate-description-btn', async function() { const form = $(this).closest('form'); const title = form.find('[name="title"]').val(); const company = form.find('[name="company"]').val(); if (!title || !company) { ui.showAlert('情報不足', '「求人名」と「企業名」を入力してください。'); return; } const btn = $(this); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>生成中...'); try { const result = await api.call('generateAIDescription', [title, company]); form.find('[name="description"]').val(result); } catch (e) { ui.showAlert('AIエラー', `生成に失敗: ${e}`); } finally { btn.prop('disabled', false).html('✨ AIで作成'); } });
+            $(document).on('click', '.ai-match-analysis-btn', async function() { const jobId = $(this).data('job-id'); ui.showModal('✨ AIマッチ度分析', '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const result = await api.call('generateAIMatchAnalysis', [jobId]); const scoreMatch = result.match(/総合評価:\s*(\d+)/); let scoreHtml = ''; let analysisText = result; if(scoreMatch) { scoreHtml = `<div class="bg-indigo-50 p-4 mb-6 rounded-lg"><h3 class="font-medium text-indigo-700">総合評価</h3><p class="text-4xl font-bold text-indigo-600 mt-1">${scoreMatch[1]}<span class="text-lg ml-1">点</span></p></div>`; analysisText = result.replace(/総合評価:\s*\d+点\n*/, ''); } const finalHtml = scoreHtml + `<div class="gemini-content prose">${marked.parse(analysisText)}</div>`; $('#modal-content').html(finalHtml); } catch (e) { $('#modal-content').html(`<p class="text-red-500">分析に失敗: ${e}</p>`); } });
+            $(document).on('click', '.ai-recommend-btn', async function() { const userId = $(this).data('user-id'); const user = ALL_USERS.find(u => u.user_id === userId); ui.showModal(`✨ ${user.name}さんへのAI推薦`, '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const jobs = await api.call('getAIRecommendations', [userId]); if(jobs.length === 0) { $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>'); return; } let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`).join('') + `<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`; $('#modal-content').html(html); } catch(e) { $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`); } });
+            $(document).on('submit', '#ai-recommend-form', async function(e) { e.preventDefault(); const userId = $(this).data('user-id'); const jobs = []; $(this).find('input:checked').each(function() { jobs.push({ job_id: $(this).val(), reason: decodeURIComponent($(this).data('reason')), score: $(this).data('score') }); }); if(jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。'); try { await api.call('saveAIRecommendations', [userId, jobs]); ui.hideModal(); ui.showAlert('保存完了', `${jobs.length}件のAI推薦を保存しました。`); } catch(e) { ui.showAlert('保存エラー', `保存に失敗: ${e}`); } });
+        }
         
         // ========================
         // Initializer
