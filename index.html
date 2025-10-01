@@ -178,7 +178,7 @@
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyzR64B2kmgzDf5m7_Fbbolwd_zdqdsqRcE3BzBL8QpRjexTzKY7hQYeW-vfDaKO8OL/exec";
 
 
-        let CURRENT_USER = null, ALL_JOBS = [], FILTERED_JOBS = [], ALL_USERS = [], MASTERS = {}, ALL_APPLICATIONS = [], FAVORITE_JOB_IDS = [];
+        let CURRENT_USER = null, ALL_JOBS = [], FILTERED_JOBS = [], ALL_USERS = [], MASTERS = {}, ALL_APPLICATIONS = [], FAVORITE_JOB_IDS = [], ALL_RECOMMENDATIONS = [];
         let currentJobPage = 1;
         const JOBS_PER_PAGE = 12;
 
@@ -385,7 +385,8 @@
 
         async function renderDashboard() { 
             try { 
-                const data = await api.call('getDashboardData'); 
+                const data = await api.call('getDashboardData');
+                ALL_RECOMMENDATIONS = data.recommendations || []; // おすすめ求人情報をグローバル変数に保存
                 const card = "bg-white rounded-xl shadow-md hover:shadow-lg p-6"; 
                 let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">ダッシュボード</h2>`; 
                 if (CURRENT_USER.role === 'user') {
@@ -472,8 +473,9 @@
         async function renderRecommendationsList() { 
             try { 
                 const recs = await api.call('getAllRecommendations'); 
-                
-                // Sort recommendations: rejected items at the bottom, then by AI score
+                ALL_RECOMMENDATIONS = recs || []; // おすすめ求人情報をグローバル変数に保存
+
+                // 見送り済みの求人を下に、それ以外はAIスコア順でソート
                 recs.sort((a, b) => {
                     const aRejected = a.user_reaction === 'rejected';
                     const bRejected = b.user_reaction === 'rejected';
@@ -486,7 +488,7 @@
                 const searchFilterHtml = CURRENT_USER.role === 'admin' ? `<div class="mb-4"><input id="recommendation-user-search" type="text" placeholder="求職者名で絞り込み..." class="block w-full max-w-xs px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"></div>` : ''; 
                 let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">おすすめ求人一覧</h2>${searchFilterHtml}`; 
                 if (!recs || recs.length === 0) { 
-                    content += `<div class="bg-white rounded-xl shadow-md p-6"><p class="text-center text-slate-500">過去に推薦された求人はありません。</p></div>`; 
+                    content += `<div class="bg-white rounded-xl shadow-md p-6"><p class="text-center text-slate-500">現在、おすすめの求人はありません。</p></div>`; 
                     $('#recommendations-list-page').html(content); 
                     return; 
                 } 
@@ -499,11 +501,15 @@
                     const recommender = isAI ? `AI (${rec.ai_score||'N/A'}点)` : rec.recommender_name; 
                     const managerCell = isManager ? `<td class="p-3">${rec.user_name}</td>` : ''; 
                     const rejectButton = !isRejected ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">見送る</button>` : '';
+                    const reasonHtml = rec.recommendation_reason ? `<p class="text-xs font-normal text-slate-500 mt-1 pl-1 border-l-2 border-slate-200">${rec.recommendation_reason}</p>` : '';
 
                     return `<tr class="border-b recommendation-row ${isRejected ? 'bg-slate-100 text-slate-500' : ''}" data-user-name="${rec.user_name||''}">
                                 <td class="p-3 text-sm">${recDate}</td>
                                 ${managerCell}
-                                <td class="p-3 font-medium ${isRejected ? '' : 'text-slate-800'}">${rec.title}</td>
+                                <td class="p-3 font-medium ${isRejected ? '' : 'text-slate-800'}">
+                                    ${rec.title}
+                                    ${reasonHtml}
+                                </td>
                                 <td class="p-3">${rec.company}</td>
                                 <td class="p-3"><i class="fas ${isAI?'fa-robot text-indigo-500':'fa-user-tie text-green-500'} mr-2"></i>${recommender}</td>
                                 <td class="p-3 status-badge"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getBadge(rec.user_reaction)}">${getBadgeText(rec.user_reaction)}</span></td>
@@ -518,7 +524,8 @@
             } catch (e) { 
                 console.error("Recs list render failed:", e); 
             } 
-        }        
+        }
+
         async function renderProgress() { try { const { applications, statuses } = await api.call('getProgressData'); ALL_APPLICATIONS = applications || []; MASTERS.application_status = statuses || []; const getBadge = s => ({ "内定": "bg-green-100 text-green-700", "最終面接": "bg-purple-100 text-purple-700", "一次面接": "bg-blue-100 text-blue-700", "二次面接": "bg-blue-100 text-blue-700", "書類選考": "bg-yellow-100 text-yellow-700", "応募完了": "bg-yellow-100 text-yellow-700", "終了": "bg-slate-100 text-slate-600", "見送り": "bg-red-100 text-red-700" }[s] || 'bg-slate-100 text-slate-600'); const tableRows = apps => apps?.length > 0 ? apps.map(app => { const group = ['内定'].includes(app.status)?'offered':(['終了','見送り'].includes(app.status)?'finished':'progress'); return `<tr class="border-b" data-status-group="${group}"><td class="p-3 text-sm text-slate-600">${new Date(app.application_date).toLocaleDateString('ja-JP')}</td><td class="p-3 font-medium text-slate-800">${app.company_name}</td><td class="p-3 text-slate-700">${app.job_title}</td>${['admin','coach'].includes(CURRENT_USER.role)?`<td class="p-3 text-slate-600">${app.user_name}</td>`:''}<td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getBadge(app.status)}">${app.status||'N/A'}</span></td><td class="p-3 text-right space-x-2"><button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white details-btn" data-id="${app.application_id}">詳細</button>${CURRENT_USER.role==='admin'?`<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white edit-status-btn" data-id="${app.application_id}" data-current-status="${app.status}">編集</button>`:''}</td></tr>`; }).join('') : '<tr><td colspan="6" class="text-center text-slate-500 py-8">該当する応募情報はありません。</td></tr>'; let content = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-slate-800">進捗管理</h2></div><div class="bg-white rounded-xl shadow-md p-4 mb-6"><div class="flex items-center space-x-2"><span class="text-sm font-medium text-slate-600">絞り込み:</span><button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white" data-filter="progress">進捗中</button><button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="offered">内定</button><button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="finished">終了</button><button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="all">すべて表示</button></div></div><div class="bg-white rounded-xl shadow-md overflow-x-auto"><table class="w-full text-left min-w-[600px]"><thead class="bg-slate-50 border-b"><tr><th class="p-3 text-sm font-semibold text-slate-600">応募日</th><th class="p-3 text-sm font-semibold text-slate-600">企業名</th><th class="p-3 text-sm font-semibold text-slate-600">求人名</th>${['admin','coach'].includes(CURRENT_USER.role)?'<th class="p-3 text-sm font-semibold text-slate-600">応募者</th>':''}<th class="p-3 text-sm font-semibold text-slate-600">ステータス</th><th class="p-3"></th></tr></thead><tbody id="progress-table-body">${tableRows(ALL_APPLICATIONS)}</tbody></table></div>`; $('#progress-page').html(content); if (ALL_APPLICATIONS.length > 0) $('.filter-btn[data-filter="progress"]').click(); } catch (e) { console.error("Progress render failed:", e); } }
         async function renderMyPage() { try { if (!MASTERS.industry) { const { masters } = await api.call('getJobsAndMasters'); MASTERS = { ...MASTERS, ...masters }; } const profile = await api.call('getMyProfile'); if (!profile) throw new Error('Profile not found'); desiredIndustries = profile.desired_industry?.split(',').map(s=>s.trim()).filter(Boolean) || []; desiredJobTypes = profile.desired_job_type?.split(',').map(s=>s.trim()).filter(Boolean) || []; desiredEmploymentTypes = profile.desired_employment_type?.split(',').map(s=>s.trim()).filter(Boolean) || []; desiredLocations = profile.desired_location?.split(',').map(s=>s.trim()).filter(Boolean) || []; desiredFreewords = profile.desired_freewords?.split(',').map(s=>s.trim()).filter(Boolean) || []; const fLabel = "block text-sm font-medium text-slate-700"; const fInput = "mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"; const card = "bg-white rounded-xl shadow-md p-6"; let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">マイページ</h2><div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="lg:col-span-2"><form id="profile-form"><div class="${card} mb-8"><h3 class="text-xl font-bold text-slate-800 mb-4">基本情報</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="${fLabel}">氏名</label><input name="name" type="text" class="${fInput}" value="${profile.name||''}"></div><div><label class="${fLabel}">メール</label><input type="email" class="${fInput} bg-slate-100" value="${profile.email||''}" readonly></div></div></div><div class="${card}"><h3 class="text-xl font-bold text-slate-800 mb-4">希望条件</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="${fLabel}">希望業種</label><div id="desired-industry-multi-select"></div></div><div><label class="${fLabel}">希望職種</label><div id="desired-job-type-multi-select"></div></div><div><label class="${fLabel}">希望勤務形態</label><div id="desired-employment-type-multi-select"></div></div><div><label class="${fLabel}">希望勤務地</label><div id="desired-location-multi-select"></div></div><div class="col-span-2"><label class="${fLabel}">希望年収</label><input name="desired_salary" type="text" placeholder="例: 500万円" class="${fInput}" value="${profile.desired_salary||''}"></div><div class="col-span-2"><label class="${fLabel}">希望フリーワード</label><div id="desired-freeword-input"></div></div></div></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg shadow-md bg-indigo-600 text-white">プロフィールを更新</button></div></form></div></div>`; $('#mypage-page').html(content); multiSelect.create('desired-industry-multi-select', MASTERS.industry||[], desiredIndustries, v => desiredIndustries=v); multiSelect.create('desired-job-type-multi-select', MASTERS.job_type||[], desiredJobTypes, v => desiredJobTypes=v); multiSelect.create('desired-employment-type-multi-select', EMPLOYMENT_TYPES, desiredEmploymentTypes, v => desiredEmploymentTypes=v); multiSelect.create('desired-location-multi-select', PREFECTURES, desiredLocations, v => desiredLocations=v); freewordInput.create('desired-freeword-input', desiredFreewords, w => desiredFreewords=w); } catch (e) { console.error("MyPage render failed:", e); } }
         async function renderJobManagement() { try { const { jobs, masters } = await api.call('getJobsAndMasters'); ALL_JOBS = jobs || []; MASTERS = { ...MASTERS, ...masters }; const btnPrimary = "font-bold py-2 px-4 rounded-lg shadow-md bg-indigo-600 text-white"; const btnSecondarySm = "font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white"; const fInput = "mt-1 block w-full rounded-md border-slate-300 shadow-sm"; const jobListHtml = jobsToRender => jobsToRender.map(job => `<tr class="border-b"><td class="p-3 font-medium">${job.title}</td><td class="p-3">${job.company}</td><td class="p-3">${job.status}</td><td class="p-3">${new Date(job.created_at).toLocaleDateString()}</td><td class="p-3 text-right"><button class="${btnSecondarySm} edit-job-btn" data-job-id="${job.job_id}">編集</button></td></tr>`).join(''); let content = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-slate-800">求人管理</h2><button id="show-new-job-modal-btn" class="${btnPrimary}"><i class="fas fa-plus mr-2"></i>新規登録</button></div><div class="bg-white rounded-xl shadow-md p-6"><input id="job-management-search-input" type="text" placeholder="求人名、企業名で検索..." class="${fInput} mb-4"><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-slate-50 border-b"><tr><th class="p-3 text-sm font-semibold">求人名</th><th class="p-3 text-sm font-semibold">企業名</th><th class="p-3 text-sm font-semibold">ステータス</th><th class="p-3 text-sm font-semibold">登録日</th><th class="p-3"></th></tr></thead><tbody id="job-list-body">${jobListHtml(ALL_JOBS)}</tbody></table></div></div>`; $('#job-management-page').html(content); } catch(e) { console.error("Job Management render failed:", e); } }
@@ -931,24 +938,69 @@ function initializeEvents() {
             // --- AI Features ---
             $(document).on('click', '#ai-generate-description-btn', async function() { const form = $(this).closest('form'); const title = form.find('[name="title"]').val(); const company = form.find('[name="company"]').val(); if (!title || !company) { ui.showAlert('情報不足', '「求人名」と「企業名」を入力してください。'); return; } const btn = $(this); btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>生成中...'); try { const result = await api.call('generateAIDescription', [title, company]); form.find('[name="description"]').val(result); } catch (e) { ui.showAlert('AIエラー', `生成に失敗: ${e}`); } finally { btn.prop('disabled', false).html('✨ AIで作成'); } });
             // $(document).on('click', '.ai-match-analysis-btn', async function() { const jobId = $(this).data('job-id'); ui.showModal('✨ AIマッチ度分析', '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const result = await api.call('generateAIMatchAnalysis', [jobId]); const scoreMatch = result.match(/総合評価:\s*(\d+)/); let scoreHtml = ''; let analysisText = result; if(scoreMatch) { scoreHtml = `<div class="bg-indigo-50 p-4 mb-6 rounded-lg"><h3 class="font-medium text-indigo-700">総合評価</h3><p class="text-4xl font-bold text-indigo-600 mt-1">${scoreMatch[1]}<span class="text-lg ml-1">点</span></p></div>`; analysisText = result.replace(/総合評価:\s*\d+点\n*/, ''); } const finalHtml = scoreHtml + `<div class="gemini-content prose">${marked.parse(analysisText)}</div>`; $('#modal-content').html(finalHtml); } catch (e) { $('#modal-content').html(`<p class="text-red-500">分析に失敗: ${e}</p>`); } });
-            $(document).on('click', '.ai-match-analysis-btn', async function() { 
-                const jobId = $(this).data('job-id'); 
-                ui.showModal('✨ AIマッチ度分析', '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); 
-                try { 
-                    const result = await api.call('generateAIMatchAnalysis', [jobId]); 
-                    const scoreMatch = result.match(/総合評価:\s*(\d+)/); 
-                    let scoreHtml = ''; 
-                    let analysisText = result; 
-                    if(scoreMatch) { 
-                        scoreHtml = `<div class="bg-indigo-50 p-4 mb-6 rounded-lg"><h3 class="font-medium text-indigo-700">総合評価</h3><p class="text-4xl font-bold text-indigo-600 mt-1">${scoreMatch[1]}<span class="text-lg ml-1">点</span></p></div>`; 
-                        analysisText = result.replace(/総合評価:\s*\d+点\n*/, ''); 
-                    } 
-                    const disclaimer = '<p class="text-sm text-slate-500 mb-4">※本分析のスコアや内容は変わることがあります</p>';
-                    const finalHtml = disclaimer + scoreHtml + `<div class="gemini-content prose">${marked.parse(analysisText)}</div>`; 
-                    $('#modal-content').html(finalHtml); 
-                } catch (e) { 
-                    $('#modal-content').html(`<p class="text-red-500">分析に失敗: ${e}</p>`); 
-                } 
+            $(document).on('click', '.ai-match-analysis-btn', async function() {
+                const jobId = $(this).data('job-id');
+                ui.showModal('✨ AIマッチ度分析', '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' });
+
+                try {
+                    // ④ ユーザープロファイルを取得し、希望年収を分析に含める
+                    const profile = await api.call('getMyProfile');
+                    const analysisPayload = {
+                        desired_salary: profile.desired_salary || ''
+                    };
+                    const result = await api.call('generateAIMatchAnalysis', [jobId, analysisPayload]);
+
+                    // ② おすすめ求人か確認
+                    const recommendation = ALL_RECOMMENDATIONS.find(rec => rec.job_id === jobId && rec.ai_score);
+
+                    let scoreHtml = '';
+                    let analysisText = result;
+
+                    if (recommendation) {
+                        // ② おすすめ求人の場合は、保存されているスコアを表示
+                        scoreHtml = `<div class="bg-indigo-50 p-4 mb-6 rounded-lg"><h3 class="font-medium text-indigo-700">総合評価</h3><p class="text-4xl font-bold text-indigo-600 mt-1">${recommendation.ai_score}<span class="text-lg ml-1">点</span></p></div>`;
+                        analysisText = result.replace(/総合評価:\s*\d+点\n*/, '');
+                    } else {
+                        // ③ おすすめでない場合は、生成されたスコアを表示
+                        const scoreMatch = result.match(/総合評価:\s*(\d+)/);
+                        if (scoreMatch) {
+                            scoreHtml = `<div class="bg-indigo-50 p-4 mb-6 rounded-lg"><h3 class="font-medium text-indigo-700">総合評価</h3><p class="text-4xl font-bold text-indigo-600 mt-1">${scoreMatch[1]}<span class="text-lg ml-1">点</span></p></div>`;
+                            analysisText = result.replace(/総合評価:\s*\d+点\n*/, '');
+                        }
+                    }
+
+                    // ⑤ 表示フォーマットを固定し、視認性を向上させる
+                    const disclaimer = '<p class="text-sm text-slate-500 mb-4 border-b pb-4">※本分析のスコアや内容は変わることがあります</p>';
+                    const formatAnalysis = (rawText) => {
+                        let html = '<div class="space-y-4">';
+                        const sections = rawText.split('## ').slice(1);
+                        if (sections.length > 0) {
+                            sections.forEach(section => {
+                                const parts = section.split('\n');
+                                const title = parts.shift().trim();
+                                const content = parts.join('\n').trim();
+                                if (title && content) {
+                                    html += `
+                                        <div class="bg-slate-50 rounded-lg p-4">
+                                            <h4 class="font-bold text-slate-700 mb-2">${title}</h4>
+                                            <div class="prose prose-sm max-w-none">${marked.parse(content)}</div>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        } else {
+                            html += `<div class="prose prose-sm max-w-none">${marked.parse(rawText)}</div>`;
+                        }
+                        html += '</div>';
+                        return html;
+                    };
+
+                    const finalHtml = disclaimer + scoreHtml + formatAnalysis(analysisText);
+                    $('#modal-content').html(finalHtml);
+
+                } catch (e) {
+                    $('#modal-content').html(`<p class="text-red-500">分析に失敗: ${e}</p>`);
+                }
             });
             $(document).on('click', '.ai-recommend-btn', async function() { const userId = $(this).data('user-id'); const user = ALL_USERS.find(u => u.user_id === userId); ui.showModal(`✨ ${user.name}さんへのAI推薦`, '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const jobs = await api.call('getAIRecommendations', [userId]); if(jobs.length === 0) { $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>'); return; } let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`).join('') + `<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`; $('#modal-content').html(html); } catch(e) { $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`); } });
             $(document).on('submit', '#ai-recommend-form', async function(e) { e.preventDefault(); const userId = $(this).data('user-id'); const jobs = []; $(this).find('input:checked').each(function() { jobs.push({ job_id: $(this).val(), reason: decodeURIComponent($(this).data('reason')), score: $(this).data('score') }); }); if(jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。'); try { await api.call('saveAIRecommendations', [userId, jobs]); ui.hideModal(); ui.showAlert('保存完了', `${jobs.length}件のAI推薦を保存しました。`); } catch(e) { ui.showAlert('保存エラー', `保存に失敗: ${e}`); } });
