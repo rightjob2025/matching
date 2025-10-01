@@ -831,6 +831,50 @@
             $(document).on('click', '.ai-recommend-btn', async function() { const userId = $(this).data('user-id'); const user = ALL_USERS.find(u => u.user_id === userId); ui.showModal(`✨ ${user.name}さんへのAI推薦`, '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', { size: 'max-w-3xl' }); try { const jobs = await api.call('getAIRecommendations', [userId]); if(jobs.length === 0) { $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>'); return; } let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`).join('') + `<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`; $('#modal-content').html(html); } catch(e) { $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`); } });
             $(document).on('submit', '#ai-recommend-form', async function(e) { e.preventDefault(); const userId = $(this).data('user-id'); const jobs = []; $(this).find('input:checked').each(function() { jobs.push({ job_id: $(this).val(), reason: decodeURIComponent($(this).data('reason')), score: $(this).data('score') }); }); if(jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。'); try { await api.call('saveAIRecommendations', [userId, jobs]); ui.hideModal(); ui.showAlert('保存完了', `${jobs.length}件のAI推薦を保存しました。`); } catch(e) { ui.showAlert('保存エラー', `保存に失敗: ${e}`); } });
         }
+
+            // --- Job Search ---
+            $(document).on('click', '#job-search-btn', performSearch);
+            $(document).on('change', '#sort-select', performSearch);
+            $(document).on('click', '#job-search-reset-btn', () => { 
+                $('#search-keyword').val('');
+                selectedIndustries = []; selectedJobTypes = []; selectedEmploymentTypes = []; selectedLocations = []; searchFreewords = []; activeSearchTags = [];
+                renderJobSearch(); // Re-render to reset components
+            });
+            $(document).on('click', '#apply-desired-conditions-btn', async () => {
+                try {
+                    const profile = await api.call('getMyProfile');
+                    if (!profile) {
+                        ui.showAlert('エラー', 'プロファイル情報の取得に失敗しました。');
+                        return;
+                    }
+
+                    // Set the search filters to the desired conditions
+                    selectedIndustries = profile.desired_industry?.split(',').map(s => s.trim()).filter(Boolean) || [];
+                    selectedJobTypes = profile.desired_job_type?.split(',').map(s => s.trim()).filter(Boolean) || [];
+                    selectedEmploymentTypes = profile.desired_employment_type?.split(',').map(s => s.trim()).filter(Boolean) || [];
+                    selectedLocations = profile.desired_location?.split(',').map(s => s.trim()).filter(Boolean) || [];
+                    searchFreewords = profile.desired_freewords?.split(',').map(s => s.trim()).filter(Boolean) || [];
+
+                    // Re-render the search components with the new selections
+                    multiSelect.create('industry-multi-select', MASTERS.industry || [], selectedIndustries, v => selectedIndustries = v);
+                    multiSelect.create('job-type-multi-select', MASTERS.job_type || [], selectedJobTypes, v => selectedJobTypes = v);
+                    multiSelect.create('employment-type-multi-select', EMPLOYMENT_TYPES, selectedEmploymentTypes, v => selectedEmploymentTypes = v);
+                    multiSelect.create('location-multi-select', PREFECTURES, selectedLocations, v => selectedLocations = v);
+                    freewordInput.create('search-freeword-input', searchFreewords, w => searchFreewords = w);
+
+                    // Perform the search
+                    performSearch();
+                } catch (e) {
+                    console.error("Failed to apply desired conditions:", e);
+                    ui.showAlert('エラー', `希望条件の適用に失敗しました: ${e}`);
+                }
+            });
+            $(document).on('click', '.tag-badge', function() {
+                $(this).toggleClass('bg-indigo-600 text-white bg-slate-100 text-slate-600');
+                activeSearchTags = $('.tag-badge.bg-indigo-600').map((i, el) => $(el).text()).get();
+                performSearch();
+            });
+            $(document).on('click', '#load-more-btn', () => { currentJobPage++; displayJobs(); });
         
         // ========================
         // Initializer
