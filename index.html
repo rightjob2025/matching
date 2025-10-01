@@ -388,31 +388,21 @@
                 const data = await api.call('getDashboardData'); 
                 const card = "bg-white rounded-xl shadow-md hover:shadow-lg p-6"; 
                 let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">ダッシュボード</h2>`; 
-                if (CURRENT_USER.role === 'user') { 
-                    let recsHtml = `<div class="${card} col-span-1 md:col-span-2"><h3 class="font-bold text-lg mb-4">あなたへのおすすめ求人</h3>`; 
-                    if (data.recommendations?.length > 0) { 
-                        recsHtml += '<div id="recommendations-container" class="space-y-4">' + data.recommendations.map(rec => {
-                            const isAI = rec.recommendation_type === 'ai';
-                            return `<div class="border rounded-lg p-4 recommendation-card">
-                                <div class="flex justify-between items-start">
-                                    <h4 class="font-bold">${rec.title}</h4>
-                                    ${isAI ? `<span class="text-lg font-bold text-indigo-600">${rec.ai_score || ''}点</span>` : ''}
-                                </div>
-                                <p class="text-sm text-slate-600 mb-2">${rec.company}</p>
-                                <p class="text-sm bg-slate-50 p-2 rounded-md">
-                                    <i class="fas ${isAI ? 'fa-robot text-indigo-500' : 'fa-user-tie text-green-500'} mr-2"></i>
-                                    ${rec.recommendation_reason || '担当コーチからのおすすめ'}
-                                </p>
-                                <div class="text-right mt-3 space-x-2">
-                                    <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-feedback-btn" data-rec-id="${rec.recommendation_id}" data-action="rejected">見送り</button>
-                                    <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white recommendation-feedback-btn" data-rec-id="${rec.recommendation_id}" data-action="view" data-job-id="${rec.job_id}">詳細を見る</button>
-                                </div>
-                            </div>`;
-                        }).join('') + '</div>'; 
-                    } else { 
-                        recsHtml += `<p class="text-slate-600">現在、おすすめの求人はありません。</p>`; 
-                    } 
-                    content += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${recsHtml}<div class="${card}"><h3 class="font-bold text-lg mb-4">選考中の求人</h3><p class="text-4xl font-bold text-indigo-600 mt-2">${data.inProgressCount||0}<span class="text-lg ml-1">件</span></p></div></div>`; 
+                if (CURRENT_USER.role === 'user') {
+                    const recommendationsCount = data.recommendations?.length || 0;
+                    const recsCardHtml = `
+                        <div class="card-link cursor-pointer" data-page="recommendations-list">
+                            <div class="${card}">
+                                <h3 class="font-bold text-lg mb-4">あなたへのおすすめ求人</h3>
+                                <p class="text-4xl font-bold text-indigo-600 mt-2">${recommendationsCount}<span class="text-lg ml-1">件</span></p>
+                            </div>
+                        </div>`;
+                    const inProgressCardHtml = `
+                        <div class="${card}">
+                            <h3 class="font-bold text-lg mb-4">選考中の求人</h3>
+                            <p class="text-4xl font-bold text-indigo-600 mt-2">${data.inProgressCount || 0}<span class="text-lg ml-1">件</span></p>
+                        </div>`;
+                    content += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${recsCardHtml}${inProgressCardHtml}</div>`;
                 } else { 
                     content += `<div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="${card} text-center"><h3 class="font-bold text-lg">${{'coach':'担当求職者数','admin':'登録ユーザー総数'}[CURRENT_USER.role]}</h3><p class="text-4xl font-bold text-indigo-600 mt-2">${data.totalAssignedUsers||data.totalUsers||0}<span class="text-lg ml-1">人</span></p></div><div class="${card} text-center"><h3 class="font-bold text-lg">${{'coach':'選考中の案件','admin':'公開求人総数'}[CURRENT_USER.role]}</h3><p class="text-4xl font-bold text-indigo-600 mt-2">${data.inProgressApplications||data.totalJobs||0}<span class="text-lg ml-1">件</span></p></div>${CURRENT_USER.role==='admin'?`<div class="${card} text-center"><h3 class="font-bold text-lg">応募総数</h3><p class="text-4xl font-bold text-indigo-600 mt-2">${data.totalApplications||0}<span class="text-lg ml-1">件</span></p></div>`:''}</div>`; 
                 } 
@@ -630,6 +620,13 @@ function initializeEvents() {
             $(document).on('click', '#sidebar-overlay', ui.closeSidebar);
 
             // --- Dashboard ---
+            $(document).on('click', '.card-link', function() {
+                const page = $(this).data('page');
+                if (page) {
+                    ui.navigateTo(page);
+                }
+            });
+    
             $(document).on('click', '.recommendation-feedback-btn', async function() {
                 const btn = $(this);
                 const recId = btn.data('rec-id');
