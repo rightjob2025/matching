@@ -631,8 +631,7 @@
             if (!job) return;
             let displayJob = { ...job };
             ui.showModal(displayJob.title, '<div class="spinner w-8 h-8 mx-auto"></div><p class="text-center mt-2">情報取得中...</p>', { size: 'max-w-3xl' });
-            if (String(displayJob.job_id).startsWith('http')) { try { const scrapedData = await api.call('scrapeJobDetails', [displayJob.job_id]); if (scrapedData.jobDescription) displayJob.description = `【外部サイト】\n${scrapedData.jobDescription}`; if (scrapedData.requirements) displayJob.qualifications = `【外部サイト】\n${scrapedData.requirements}`; } catch (e) { console.error('Scraping failed:', e); } }
-            
+
             const jobIdDisplay = String(displayJob.job_id).startsWith('http') ? `<a href="${displayJob.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (displayJob.job_id || 'N/A');
             
             let detailsHtml = `<div class="border-b py-2"><dt class="font-semibold text-slate-600">求人ID</dt><dd class="text-slate-800">${jobIdDisplay}</dd></div>`;
