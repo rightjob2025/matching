@@ -308,7 +308,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxwcd3vYUSsDh2zKv_qtdP65vbkzEUKcS-08USGttzTDTIYw_-Um5qHPuexmm-l4kxU/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzGu6xhGcIjNZXfI5JlNYMeCgJetnbueEIptEQiba9HQMdm-VMPzfCVP_0iZlQsdrnF/exec";
 
 
             let CURRENT_USER = null,
@@ -836,16 +836,12 @@
                     console.error("Progress render failed:", e);
                 }
             }
-
+            
             async function renderMyPage() {
                 try {
                     if (!MASTERS.industry) {
-                        const {
-                            masters
-                        } = await api.call('getJobsAndMasters');
-                        MASTERS = { ...MASTERS,
-                            ...masters
-                        };
+                        const { masters } = await api.call('getJobsAndMasters');
+                        MASTERS = { ...MASTERS, ...masters };
                     }
                     const profile = await api.call('getMyProfile');
                     if (!profile) throw new Error('Profile not found');
@@ -1365,9 +1361,24 @@
                 $(document).on('click', '.job-recommend-btn', async function() {
                     const jobId = $(this).data('job-id');
                     try {
-                        const users = await api.call('getAllUsers');
-                        const userOpts = users.filter(u => u.role === 'user').map(u => `<option value="${u.user_id}">${u.name}</option>`).join('');
-                        const content = `<form id="recommend-form" data-job-id="${jobId}"><p class="mb-4">紹介する求職者を選択してください。</p><div><label class="block text-sm">求職者</label><select name="targetUserId" class="mt-1 block w-full rounded-md border-slate-300">${userOpts}</select></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">紹介する</button></div></form>`;
+                        const allUsers = await api.call('getAllUsers');
+                        const { applications } = await api.call('getProgressData');
+                        const allRecommendations = await api.call('getAllRecommendations');
+                        
+                        const excludedUserIds = new Set([
+                            ...applications.filter(app => app.job_id === jobId).map(app => app.user_id),
+                            ...allRecommendations.filter(rec => rec.job_id === jobId).map(rec => rec.user_id)
+                        ]);
+                        
+                        const availableUsers = allUsers.filter(u => u.role === 'user' && !excludedUserIds.has(u.user_id));
+
+                        if (availableUsers.length === 0) {
+                            ui.showAlert('紹介対象なし', 'この求人を紹介できる対象ユーザーがいません。（既に応募済みまたは紹介済みです）');
+                            return;
+                        }
+
+                        const userOpts = availableUsers.map(u => `<option value="${u.user_id}">${u.name}</option>`).join('');
+                        const content = `<form id="recommend-form" data-job-id="${jobId}"><p class="mb-4">紹介する求職者を選択し、おすすめ理由を記入してください。</p><div><label class="block text-sm">求職者</label><select name="targetUserId" class="mt-1 block w-full rounded-md border-slate-300">${userOpts}</select></div><div class="mt-4"><label class="block text-sm font-medium text-slate-700">おすすめ理由</label><textarea name="recommendation_reason" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="4" placeholder="このユーザーになぜこの求人が合うのか、理由を記入してください。この内容は通知メールに記載されます。" required></textarea></div><div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">紹介する</button></div></form>`;
                         ui.showModal('求人を紹介', content);
                     } catch (e) {
                         ui.showAlert('エラー', `ユーザーの読込に失敗: ${e}`);
@@ -1377,8 +1388,9 @@
                     e.preventDefault();
                     const jobId = $(this).data('job-id');
                     const userId = $(this).find('[name=targetUserId]').val();
+                    const reason = $(this).find('[name=recommendation_reason]').val();
                     try {
-                        await api.call('recommendJobToUser', [userId, jobId]);
+                        await api.call('recommendJobToUser', [userId, jobId, reason]);
                         ui.hideModal();
                         ui.showAlert('成功', '求人を紹介しました。');
                     } catch (e) {
