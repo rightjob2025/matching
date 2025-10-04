@@ -1222,8 +1222,35 @@
                     performSearch();
                 });
                 $(document).on('change', '#sort-select', performSearch);
+                // $(document).on('click', '#job-search-reset-btn', () => {
+                //     renderJobSearch();
+                // });
                 $(document).on('click', '#job-search-reset-btn', () => {
-                    renderJobSearch();
+                // フィルターの状態をリセット
+                selectedIndustries = [];
+                selectedJobTypes = [];
+                selectedEmploymentTypes = [];
+                selectedLocations = [];
+                searchFreewords = [];
+                activeSearchTags = [];
+                isFavoritesOnlySearch = false;
+
+                // UIコンポーネントをリセット
+                $('#search-salary').val(300).trigger('input');
+                $('#search-job-exp').prop('checked', false);
+                $('#search-industry-exp').prop('checked', false);
+                $('.tag-badge').removeClass('bg-indigo-600 text-white').addClass('bg-slate-100 text-slate-600');
+                $('#job-search-favorites-btn').removeClass('bg-yellow-500').addClass('bg-yellow-400');
+
+                // マルチセレクトとフリーワード入力を再初期化して表示をクリア
+                multiSelect.create('industry-multi-select', MASTERS.industry || [], selectedIndustries, v => selectedIndustries = v);
+                multiSelect.create('job-type-multi-select', MASTERS.job_type || [], selectedJobTypes, v => selectedJobTypes = v);
+                multiSelect.create('employment-type-multi-select', EMPLOYMENT_TYPES, selectedEmploymentTypes, v => selectedEmploymentTypes = v);
+                multiSelect.create('location-multi-select', PREFECTURES, selectedLocations, v => selectedLocations = v);
+                freewordInput.create('search-freeword-input', searchFreewords, w => searchFreewords = w);
+
+                // リセットされた条件で検索を再実行
+                performSearch();
                 });
                 $(document).on('click', '#job-search-favorites-btn', function() {
                     isFavoritesOnlySearch = !isFavoritesOnlySearch;
