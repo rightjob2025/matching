@@ -279,6 +279,7 @@
                 <div id="mypage-page" class="page"></div>
                 <div id="user-management-page" class="page"></div>
                 <div id="job-management-page" class="page"></div>
+                <div id="login-history-page" class="page"></div>
             </main>
         </div>
     </div>
@@ -308,7 +309,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby7JE3AHuxScNDt21T62YUeLI-d8Lz94wgWe8KjCNeSdkNuzfaWpMmsXo0d8wPg1gs4/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec";
 
 
             let CURRENT_USER = null,
@@ -344,7 +345,7 @@
             const pagePermissions = {
                 'user': ['dashboard', 'job-search', 'progress', 'mypage', 'recommendations-list'],
                 'coach': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'recommendations-list'],
-                'admin': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'job-management', 'recommendations-list']
+                'admin': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'job-management', 'recommendations-list', 'login-history']
             };
 
             // ========================
@@ -514,7 +515,8 @@
                         'progress': '進捗管理',
                         'mypage': 'マイページ',
                         'user-management': 'ユーザー管理',
-                        'job-management': '求人管理'
+                        'job-management': '求人管理',
+                        'login-history': 'ログイン履歴'
                     };
                     $('#mobile-page-title').text(pageTitles[pageId] || 'ダッシュボード');
 
@@ -530,7 +532,8 @@
                         'mypage': renderMyPage,
                         'user-management': renderUserManagement,
                         'job-management': renderJobManagement,
-                        'recommendations-list': renderRecommendationsList
+                        'recommendations-list': renderRecommendationsList,
+                        'login-history': renderLoginHistory
                     };
                     pageRenderers[pageId]?.();
                     ui.closeSidebar();
@@ -941,6 +944,45 @@ async function renderProgress() {
                 }
             }
 
+            async function renderLoginHistory() {
+                try {
+                    const history = await api.call('getLoginHistory');
+                    let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">ログイン履歴</h2>`;
+                    
+                    if (!history || history.length === 0) {
+                        content += `<div class="bg-white rounded-xl shadow-md p-6"><p class="text-center text-slate-500">ログイン履歴はありません。</p></div>`;
+                    } else {
+                        const tableRows = history.map(log => `
+                            <tr class="border-b">
+                                <td class="p-3 font-medium text-slate-800">${log.name || 'N/A'}</td>
+                                <td class="p-3 text-slate-600">${log.email || 'N/A'}</td>
+                                <td class="p-3 text-sm text-slate-500">${new Date(log.timestamp).toLocaleString('ja-JP')}</td>
+                            </tr>
+                        `).join('');
+
+                        content += `
+                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                           <table class="w-full text-left min-w-[600px]">
+                               <thead class="bg-slate-50 border-b">
+                                   <tr>
+                                       <th class="p-3 text-sm font-semibold text-slate-600">氏名</th>
+                                       <th class="p-3 text-sm font-semibold text-slate-600">メールアドレス</th>
+                                       <th class="p-3 text-sm font-semibold text-slate-600">ログイン日時</th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+                                   ${tableRows}
+                               </tbody>
+                           </table>
+                        </div>`;
+                    }
+                    $('#login-history-page').html(content);
+                } catch (e) {
+                    console.error("Login History render failed:", e);
+                    $('#login-history-page').html(`<p class="text-red-500">ログイン履歴の読み込みに失敗しました。</p>`);
+                }
+            }
+
             // ========================
             // App Logic
             // ========================
@@ -960,11 +1002,12 @@ async function renderProgress() {
                     progress: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="progress"><i class="fas fa-tasks w-6 mr-3"></i><span>進捗管理</span></a>`,
                     mypage: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="mypage"><i class="fas fa-user-cog w-6 mr-3"></i><span>マイページ</span></a>`,
                     userManagement: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="user-management"><i class="fas fa-users w-6 mr-3"></i><span>ユーザー管理</span></a>`,
-                    jobManagement: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="job-management"><i class="fas fa-briefcase w-6 mr-3"></i><span>求人管理</span></a>`
+                    jobManagement: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="job-management"><i class="fas fa-briefcase w-6 mr-3"></i><span>求人管理</span></a>`,
+                    loginHistory: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="login-history"><i class="fas fa-history w-6 mr-3"></i><span>ログイン履歴</span></a>`
                 };
                 let navHtml = `${links.dashboard}${links.jobSearch}${links.recommendationsList}${links.progress}${links.mypage}`;
                 if (['admin', 'coach'].includes(CURRENT_USER.role)) navHtml += `<hr class="my-4 border-slate-700"><h3 class="px-4 py-2 text-xs font-semibold text-slate-400">管理メニュー</h3>${links.userManagement}`;
-                if (CURRENT_USER.role === 'admin') navHtml += `${links.jobManagement}`;
+                if (CURRENT_USER.role === 'admin') navHtml += `${links.jobManagement}${links.loginHistory}`;
                 $('#nav-menu').html(navHtml);
                 ui.navigateTo('dashboard');
             }
