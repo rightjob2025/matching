@@ -1771,12 +1771,16 @@ async function renderProgress() {
                             $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>');
                             return;
                         }
-                        let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`).join('') + `<div class="mt-6 text-right space-x-2"><button type="button" id="ai-exclude-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">選択した求人を推薦から除外</button><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`;
+                        let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => {
+                            const jobIdDisplay = String(job.job_id).startsWith('http') ? `<a href="${job.job_id}" target="_blank" class="text-indigo-600 hover:underline">${job.job_id} <i class="fas fa-external-link-alt text-xs"></i></a>` : (job.job_id || 'N/A');
+                            return `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="text-xs text-slate-400 mt-1">求人ID: ${jobIdDisplay}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`
+                        }).join('') + `<div class="mt-6 text-right space-x-2"><button type="button" id="ai-exclude-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">選択した求人を推薦から除外</button><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`;
                         $('#modal-content').html(html);
                     } catch (e) {
                         $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`);
                     }
                 });
+
                 $(document).on('submit', '#ai-recommend-form', async function(e) {
                     e.preventDefault();
                     const userId = $(this).data('user-id');
