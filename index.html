@@ -309,7 +309,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwlcvmbYZ_mz-06ZcExtb-DJaBxh-qdbdGCLCZhAgwoBAkEA7GK1mKr82Bv6Uo5wR_B/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxC7C_4iHBUiLJDhl6YdBcR0jdT7PeaDdOEH3qyPwlCZxnj5L5xryf6fBrZXKWouPj/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
 
@@ -1295,15 +1295,18 @@ async function renderProgress() {
                     const app = ALL_APPLICATIONS.find(a => a.application_id === appId);
                     if (!app) return;
                     const content = `<div class="space-y-3">
-                    <p><strong>応募者:</strong> ${app.user_name}</p>
-                    <p><strong>企業名:</strong> ${app.company_name}</p>
-                    <p><strong>求人名:</strong> ${app.job_title}</p>
-                    <p><strong>ステータス:</strong> ${app.status}</p>
-                    <p><strong>面接希望日時:</strong></p>
-                    <div class="pl-4 text-slate-600">${(app.interview_dates || '').split(',').map(d => d.trim()).join('<br>') || '未設定'}</div>
-                    <p><strong>メモ:</strong></p>
-                    <div class="pl-4 text-slate-600 whitespace-pre-wrap bg-slate-50 p-2 rounded-md">${app.memo || '未設定'}</div>
-                </div>`;
+                        <p><strong>応募者:</strong> ${app.user_name}</p>
+                        <p><strong>企業名:</strong> ${app.company_name}</p>
+                        <p><strong>求人名:</strong> ${app.job_title}</p>
+                        <p><strong>ステータス:</strong> ${app.status}</p>
+                        <p><strong>志望度:</strong> ${app.aspiration_level || '未設定'}</p>
+                        <p><strong>面接希望日時:</strong></p>
+                        <div class="pl-4 text-slate-600">${(app.interview_dates || '').split(',').map(d => d.trim()).join('<br>') || '未設定'}</div>
+                        <p><strong>伝達事項:</strong></p>
+                        <div class="pl-4 text-slate-600 whitespace-pre-wrap bg-slate-50 p-2 rounded-md">${app.notes || 'なし'}</div>
+                        <p><strong>メモ (社内用):</strong></p>
+                        <div class="pl-4 text-slate-600 whitespace-pre-wrap bg-slate-50 p-2 rounded-md">${app.memo || 'なし'}</div>
+                    </div>`;
                     ui.showModal('応募詳細', content, {
                         size: 'max-w-2xl'
                     });
@@ -1315,7 +1318,7 @@ async function renderProgress() {
                     const statusOptions = (MASTERS.application_status || []).map(s => `<option value="${s}" ${s === app.status ? 'selected' : ''}>${s}</option>`).join('');
                     let content = `<form id="update-status-form" data-id="${appId}">
                     <div><label for="new-status" class="block text-sm font-medium">新しいステータス</label><select id="new-status" class="mt-1 block w-full rounded-md border-slate-300">${statusOptions}</select></div>
-                    <div class="mt-4"><label for="new-memo" class="block text-sm font-medium">メモ</label><textarea id="new-memo" class="mt-1 block w-full rounded-md border-slate-300" rows="4">${app.memo || ''}</textarea></div>
+                    <div class="mt-4"><label for="new-memo" class="block text-sm font-medium">メモ (社内用)</label><textarea id="new-memo" class="mt-1 block w-full rounded-md border-slate-300" rows="4">${app.memo || ''}</textarea></div>
                     <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">更新</button></div>
                 </form>`;
                     ui.showModal('ステータス更新', content);
@@ -1342,9 +1345,7 @@ async function renderProgress() {
                     performSearch();
                 });
                 $(document).on('change', '#sort-select', performSearch);
-                // $(document).on('click', '#job-search-reset-btn', () => {
-                //     renderJobSearch();
-                // });
+                
                 $(document).on('click', '#job-search-reset-btn', () => {
                 // フィルターの状態をリセット
                 selectedIndustries = [];
@@ -1487,17 +1488,49 @@ async function renderProgress() {
                 $(document).on('click', '.job-details-btn', function() {
                     showJobDetailsModal($(this).data('job-id'));
                 });
+                
                 $(document).on('click', '.job-apply-btn', function() {
                     const jobId = $(this).data('job-id');
-                    const content = `<form id="apply-form" data-job-id="${jobId}"><p class="mb-4">面接希望日時を3つまで入力してください。</p>${[1,2,3].map(i => `<div class="mb-2"><label class="block text-sm">希望日時 ${i}</label><input type="datetime-local" class="mt-1 block w-full rounded-md border-slate-300 interview-date"></div>`).join('')}<div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">応募確定</button></div></form>`;
+                    const content = `<form id="apply-form" data-job-id="${jobId}">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">志望度 <span class="text-red-500">*</span></label>
+                                <select id="aspiration-level" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                                    <option value="">選択してください</option>
+                                    <option value="A">A: 第一志望群</option>
+                                    <option value="B">B: 第二志望群</option>
+                                    <option value="C">C: 第三志望群</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">伝達事項</label>
+                                <textarea id="application-notes" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" placeholder="何か伝えておきたいことがあれば入力してください。"></textarea>
+                            </div>
+                            <hr class="my-4">
+                            <div>
+                                <p class="mb-2 text-sm font-medium text-slate-700">面接希望日時 (3つまで)</p>
+                                ${[1,2,3].map(i => `<div class="mb-2"><label class="block text-xs text-slate-600">希望日時 ${i}</label><input type="datetime-local" class="mt-1 block w-full rounded-md border-slate-300 interview-date"></div>`).join('')}
+                            </div>
+                        </div>
+                        <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">応募確定</button></div>
+                    </form>`;
                     ui.showModal('応募の確認', content);
                 });
+
                 $(document).on('submit', '#apply-form', async function(e) {
                     e.preventDefault();
                     const jobId = $(this).data('job-id');
                     const dates = $('.interview-date').map((i, el) => $(el).val()).get().filter(Boolean);
+                    const notes = $('#application-notes').val();
+                    const aspirationLevel = $('#aspiration-level').val();
+
+                    if (!aspirationLevel) {
+                        ui.showAlert('必須入力です', '志望度を選択してください。');
+                        return;
+                    }
+
                     try {
-                        await api.call('applyForJob', [jobId, dates]);
+                        await api.call('applyForJob', [jobId, dates, notes, aspirationLevel]);
                         ui.hideModal();
                         ui.showAlert('応募完了', '応募が完了しました。');
                         renderProgress();
@@ -1505,6 +1538,7 @@ async function renderProgress() {
                         ui.showAlert('エラー', `応募に失敗: ${e}`);
                     }
                 });
+
                 $(document).on('click', '.job-recommend-btn', async function() {
                     const jobId = $(this).data('job-id');
                     try {
