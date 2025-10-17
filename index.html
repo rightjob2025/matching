@@ -350,7 +350,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxV8fI-2KZu0-VdYzHIJmSSNnxexsSK0HmaUAj7A5rsELf8THqsS-q7gwKJcfFGfR5H/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB7bPs2pjz6T9b2aSLdcNYp52RGY7536vmA4lFC-_vJQzU0d5_RRm-H_5hWuzlZrBI/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
             const skillDetails = {
@@ -1357,7 +1357,7 @@ async function renderProgress() {
                     return value ? `<div class="border-b py-2"><dt class="font-semibold text-slate-600">${label}</dt><dd class="text-slate-800 whitespace-pre-wrap">${value}</dd></div>` : ''
                 }).join('');
 
-                const finalContent = `<dl>${detailsHtml}</dl><div class="mt-6 pt-4 border-t text-right space-x-2">${CURRENT_USER.role === 'user' ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-cyan-500 text-white ai-match-analysis-btn" data-job-id="${displayJob.job_id}">✨ AIマッチ度分析</button><button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-apply-btn" data-job-id="${displayJob.job_id}">この求人に応募する</button>` : ''}${['admin','coach'].includes(CURRENT_USER.role) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-recommend-btn" data-job-id="${displayJob.job_id}">この求人を紹介する</button>` : ''}</div>`;
+                const finalContent = `<dl>${detailsHtml}</dl><div class="mt-6 pt-4 border-t text-right space-x-2">${CURRENT_USER.role === 'user' ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-cyan-500 text-white ai-match-analysis-btn" data-job-id="${displayJob.job_id}">✨ AIマッチ度分析</button><button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-apply-btn" data-job-id="${displayJob.job_id}">応募を依頼する</button>` : ''}${['admin','coach'].includes(CURRENT_USER.role) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-recommend-btn" data-job-id="${displayJob.job_id}">この求人を紹介する</button>` : ''}</div>`;
                 $('#modal-content').html(finalContent);
             }
 
@@ -1747,18 +1747,10 @@ async function renderProgress() {
                     const jobId = $(this).data('job-id');
                     try {
                         const allUsers = await api.call('getAllUsers');
-                        const { applications } = await api.call('getProgressData');
-                        const allRecommendations = await api.call('getAllRecommendations');
-                        
-                        const excludedUserIds = new Set([
-                            ...applications.filter(app => app.job_id === jobId).map(app => app.user_id),
-                            ...allRecommendations.filter(rec => rec.job_id === jobId).map(rec => rec.user_id)
-                        ]);
-                        
-                        const availableUsers = allUsers.filter(u => u.role === 'user' && !excludedUserIds.has(u.user_id));
+                        const availableUsers = allUsers.filter(u => u.role === 'user');
 
                         if (availableUsers.length === 0) {
-                            ui.showAlert('紹介対象なし', 'この求人を紹介できる対象ユーザーがいません。（既に応募済みまたは紹介済みです）');
+                            ui.showAlert('紹介対象なし', '紹介できる対象ユーザーがいません。');
                             return;
                         }
 
@@ -2172,3 +2164,5 @@ async function renderProgress() {
 </body>
 
 </html>
+
+
