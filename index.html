@@ -182,6 +182,46 @@
         .freeword-tag .remove-tag:hover {
             color: #b45309;
         }
+
+        /* Diagnosis Page Styles */
+        .result-content { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .strength-ranking-header, .job-recommendation-header { text-align: center; margin-bottom: 24px; }
+        .strength-ranking-crown, .job-recommendation-icon { width: 60px; margin: 0 auto 16px; }
+        .strength-ranking-title, .job-recommendation-title { font-size: 24px; font-weight: bold; color: #333; }
+        .strength-ranking-subtitle, .job-recommendation-subtitle { font-size: 14px; color: #666; line-height: 1.6; margin-top: 8px; }
+        .result-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 40px; }
+        .result-card-content { padding: 16px; }
+        .items-container .item { border-bottom: 1px solid #eee; padding: 16px 8px; }
+        .items-container .item:last-child { border-bottom: none; }
+        .skill-header-wrapper { display: flex; align-items: center; }
+        .rank-badge { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; margin-right: 12px; }
+        .rank-badge.gold { background-color: #ffd700; }
+        .rank-badge.silver { background-color: #c0c0c0; }
+        .rank-badge.bronze { background-color: #cd7f32; }
+        .rank-badge.blue { background-color: #4a90e2; }
+        .rank-badge img { width: 100%; height: 100%; }
+        .skill-content { flex-grow: 1; }
+        .skill-title { font-weight: bold; color: #333; }
+        .skill-description { font-size: 13px; color: #777; margin-top: 4px; }
+
+        /* Job recommendation styles */
+        .job-container { border: 1px solid #ddd; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .job-container.job-engineer { border-color: #4a90e2; }
+        .job-container.job-designer { border-color: #d0021b; }
+        .job-container.job-marketer { border-color: #f5a623; }
+        .job-rank-image { text-align: center; margin-bottom: 16px; }
+        .job-rank-no-image { width: 100px; }
+        .job-rank-badge { text-align: center; padding: 4px 0; border-radius: 20px; color: white; font-size: 12px; margin: 0 auto 16px; max-width: 250px; }
+        .job-rank-badge.badge-engineer { background: #4a90e2; }
+        .job-rank-badge.badge-designer { background: #d0021b; }
+        .job-rank-badge.badge-marketer { background: #f5a623; }
+        .job-name { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 24px; }
+        .job-section { margin-top: 24px; }
+        .job-section-title { font-weight: bold; margin-bottom: 8px; border-left: 4px solid #4a90e2; padding-left: 8px; }
+        .job-description-text, .job-career-path-text { font-size: 14px; line-height: 1.8; }
+        .job-skills-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .job-skill-tag { background: #eef5ff; color: #4a90e2; padding: 4px 12px; border-radius: 16px; font-size: 12px; }
+        .job-career-path .job-section-title { border-left-color: #50e3c2; }
     </style>
 </head>
 
@@ -277,6 +317,7 @@
                 <div id="recommendations-list-page" class="page"></div>
                 <div id="progress-page" class="page"></div>
                 <div id="mypage-page" class="page"></div>
+                <div id="diagnosis-page" class="page"></div>
                 <div id="user-management-page" class="page"></div>
                 <div id="job-management-page" class="page"></div>
                 <div id="login-history-page" class="page"></div>
@@ -309,9 +350,31 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxC7C_4iHBUiLJDhl6YdBcR0jdT7PeaDdOEH3qyPwlCZxnj5L5xryf6fBrZXKWouPj/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxV8fI-2KZu0-VdYzHIJmSSNnxexsSK0HmaUAj7A5rsELf8THqsS-q7gwKJcfFGfR5H/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
+            const skillDetails = {
+              '課題解決力': { iconClass: 'problem', description: '見つけた課題に対して、適切な解決策を提示できる力' },
+              'データ分析力': { iconClass: 'data', description: 'データや情報を正しく読み解き、意味合いや傾向を導き出す力' },
+              '仮説設計力': { iconClass: 'hypothesis', description: '断片的な情報から「こうではないか」という仮説を立て、検証プロセスを組み立てる力' },
+              '顧客理解力': { iconClass: 'customer', description: '顧客やユーザーの背景・思考・本質的な欲求を的確に捉え、アクションにつなげる力' },
+              '構築力': { iconClass: 'building', description: '仕組みやシステム、デザインを設計・実装し、問題解決に向けたアウトプットを形にできる力' },
+              '創造力': { iconClass: 'creativity', description: '新しいアイデアや独自性を生み出し、魅力的な成果物や提案を生み出す力' },
+              '言語化・情報伝達力': { iconClass: 'verbalize', description: '自分の考えをわかりやすい言葉で整理し、適切に周囲へ共有する力' },
+              'プレゼン力': { iconClass: 'presen', description: '伝えたい内容を効果的に構成し、相手に興味・納得を与えられるプレゼンテーションを行う力' },
+              'ヒアリング力': { iconClass: 'hearing', description: '相手の要望や課題を的確に引き出し、情報を整理しながら本質をつかむ力' },
+              '社交性': { iconClass: 'sociability', description: '多様な相手に対応し、初対面でもスムーズにやり取りできる力' },
+              '根気強さ・継続力': { iconClass: 'perserve', description: '失敗や断念があっても粘り強く取り組み、成果に結びつけるまで行動し続ける力' },
+              '慎重さ・几帳面さ': { iconClass: 'neatiness', description: 'ミスを防ぎ、正確性や細部を大切にしながら業務を進める力' },
+              '誠実・公正': { iconClass: 'integrity', description: '情報や相手を正しく扱い、倫理観やコンプライアンスを守りながら公正に対応する力' },
+              '自己学習力': { iconClass: 'self-learning', description: '新しい知識やスキルを主体的に身につけ、常に知見をアップデートする力' }
+            };
+
+            const jobDetails = {
+              "Webエンジニア": { className: "job-engineer", badgeClass: "badge-engineer", name: "Webエンジニア", image: "https://rightjob-tenshoku-shindan.website/assets/jobs/web-engineer-27c7e0a83bc4e14c39ab58a7c1b11acb792e7fc798fefa77fcd911c6cfa04f1e.png", alt: "Webエンジニアのイラスト", description: "Webエンジニアは、開発要件を整理し、適切なアルゴリズムやデータ構造を設計することで、システムの課題解決に取り組みます。またバグやエラーを特定して修正し、パフォーマンス向上のための最適化を行うことも重要な業務です。チームや関係者への技術的な説明も担当します。常に登場する新技術を学びながら開発を行います。", skills: ["言語化・情報伝達力", "構築力", "課題解決力"], passion: "作りたい機能を謎解きゲームの感覚で自分で作る面白さがあります。その機能に反響が合ったときのやりがいは大きいです。新しい技術を学ぶほど資産になり、エンジニアとして価値が高まります。", careerPath: "未経験の場合はサーバーサイドエンジニアからスタートしたり、プログラミングスクールに通って(学習時間500時間以上)、SESや受託開発企業に転職することが多いです。" },
+              "Webデザイナー": { className: "job-designer", badgeClass: "badge-designer", name: "Webデザイナー", image: "https://rightjob-tenshoku-shindan.website/assets/jobs/web-designer-69f2ea76f8da75ff4c80976a5ab31f6f06f627198d62ee6de1dc60fce09bd879.png", alt: "Webデザイナーのイラスト", description: "Webデザイナーは、お客様の要望を聞き取り、目的に合わせたWebサイトの見た目や構成を考える仕事です。具体的には、どこに何を配置すれば使いやすいかを考え、デザインの下書きを作ります。また、Figmaなどの専用ソフトを使って画面のデザインを作り、訪問者が迷わず、わかりやすく使えるサイトを目指します。見る人が魅力を感じ、使いやすいサイト作りを担当します。", skills: ["課題解決力", "構築力", "創造力"], passion: "自分の技術が形となって社会に残っていくやりがいがあります。また柔軟な働き方がしやすい良さもあります。", careerPath: "「未経験募集」だとしても、ポートフォリオは必要な場合が多いです。アルバイトや派遣から経験を積んで、正社員を目指す道もあります。" },
+              "Webマーケター": { className: "job-marketer", badgeClass: "badge-marketer", name: "Webマーケター", image: "https://rightjob-tenshoku-shindan.website/assets/jobs/web-marketer-ae3e1ce8ef1b3622da5e8cb300712a63c5acc50c76176808ce672e6570fc8fc2.png", alt: "Webマーケターのイラスト", description: "Webマーケターは、インターネットを活用して商品の宣伝や販売促進を行う専門家です。主な業務には、検索エンジンでの上位表示を目指すSEO対策、オンライン広告の運用、SNSの管理、ウェブサイトの分析と改善などがあります。データを分析し、顧客の行動や市場の動向を理解し、効果的な戦略を立てることが求められます。", skills: ["顧客理解力", "仮説設計力", "データ分析力"], passion: "仮説を立てて立証する、パズルを解くゲーム的面白さとサービスやプロダクトを広めることで社会を良くできるやりがいがあります。", careerPath: "広告代理店やメディア事業会社等で経験を積み、そのままポジションアップしたり事業会社にマーケティング部に転職するパターンが多くなっています。" },
+            };
 
             let CURRENT_USER = null,
                 ALL_JOBS = [],
@@ -344,9 +407,9 @@
             let isFavoritesOnlySearch = false;
 
             const pagePermissions = {
-                'user': ['dashboard', 'job-search', 'progress', 'mypage', 'recommendations-list'],
-                'coach': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'recommendations-list'],
-                'admin': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'job-management', 'recommendations-list', 'login-history']
+                'user': ['dashboard', 'job-search', 'progress', 'mypage', 'recommendations-list', 'diagnosis'],
+                'coach': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'recommendations-list', 'diagnosis'],
+                'admin': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'job-management', 'recommendations-list', 'login-history', 'diagnosis']
             };
 
             // ========================
@@ -515,6 +578,7 @@
                         'recommendations-list': 'おすすめ求人一覧',
                         'progress': '進捗管理',
                         'mypage': 'マイページ',
+                        'diagnosis': '天職診断結果',
                         'user-management': 'ユーザー管理',
                         'job-management': '求人管理',
                         'login-history': 'ログイン履歴'
@@ -531,6 +595,7 @@
                         'job-search': renderJobSearch,
                         'progress': renderProgress,
                         'mypage': renderMyPage,
+                        'diagnosis': renderDiagnosisPage,
                         'user-management': renderUserManagement,
                         'job-management': renderJobManagement,
                         'recommendations-list': renderRecommendationsList,
@@ -933,6 +998,138 @@ async function renderProgress() {
                 }
             }
 
+            function renderDiagnosisPage() {
+                const pageContainer = $('#diagnosis-page');
+
+                if (!CURRENT_USER || !CURRENT_USER.diagnosis_flg || !CURRENT_USER.diagnosis_data1 || !CURRENT_USER.diagnosis_data2) {
+                    pageContainer.html('<div class="text-center p-8 bg-white rounded-lg shadow-md"><p class="text-slate-600">診断データが見つかりません。</p></div>');
+                    return;
+                }
+
+                try {
+                    const strengthData = JSON.parse(CURRENT_USER.diagnosis_data1);
+                    const jobData = JSON.parse(CURRENT_USER.diagnosis_data2);
+
+                    const contentHtml = `
+                        <div class="result-content">
+                          <div class="strength-ranking-header">
+                            <img alt="王冠アイコン" class="strength-ranking-crown" src="https://rightjob-tenshoku-shindan.website/assets/results/crown_icon-16cd5862e0dccfa83dc55af655048e03eee7cebd8b391258d4caeb2399066d9d.png" />
+                            <h1 class="strength-ranking-title">あなたの強み順位</h1>
+                            <p class="strength-ranking-subtitle">診断結果をもとに、あなたの強みを<br>ランキング形式で表示しています。</p>
+                          </div>
+                          <div class="result-card">
+                            <div class="result-card-content">
+                              <div class="items-container" id="strengths-container-inner"></div>
+                            </div>
+                          </div>
+
+                          <div class="job-recommendation-header">
+                            <img alt="カバンアイコン" class="job-recommendation-icon" src="https://rightjob-tenshoku-shindan.website/assets/results/briefcase_icon-a46d3c3f25b25256c8a95a7bef7cfb88615b42fed04a0dec3e1f2e0285925875.png" />
+                            <h1 class="job-recommendation-title">あなたの天職（TOP3）</h1>
+                            <p class="job-recommendation-subtitle">診断結果をもとに、あなたに向いている職業<br>をランキング形式で表示しています。</p>
+                          </div>
+                          <div class="result-card">
+                            <div class="result-card-content">
+                              <div class="items-container" id="jobs-container-inner"></div>
+                            </div>
+                          </div>
+                        </div>`;
+
+                    pageContainer.html(contentHtml);
+
+                    renderStrengthsToDiagnosisPage(strengthData);
+                    renderJobsToDiagnosisPage(jobData);
+
+                } catch (e) {
+                    console.error("Failed to parse diagnosis data:", e);
+                    pageContainer.html('<div class="text-center p-8 bg-white rounded-lg shadow-md"><p class="text-red-500">診断データの解析に失敗しました。</p></div>');
+                }
+            }
+            function renderStrengthsToDiagnosisPage(data) {
+                const container = $('#strengths-container-inner');
+                if (!container.length) return;
+
+                const sortedStrengths = Object.entries(data)
+                    .map(([name, score]) => ({ name, score }))
+                    .sort((a, b) => b.score - a.score);
+
+                let html = '';
+                sortedStrengths.forEach((strength, index) => {
+                    const rank = index + 1;
+                    const detail = skillDetails[strength.name] || { iconClass: '', description: '' };
+                    
+                    let rankBadgeHtml = `<div class="rank-badge blue">${rank}</div>`;
+                    if (rank === 1) rankBadgeHtml = `<div class="rank-badge gold"><img alt="Rank 1" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_gold-bb47445ffbadc7cd324c7a242942bd2411fc133c4612dbf957fab78f499e6541.png" /></div>`;
+                    else if (rank === 2) rankBadgeHtml = `<div class="rank-badge silver"><img alt="Rank 2" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_silver-cbd9bf49e7bbd92e8eccb7b06c8cea7657efd763926feb78fabc8304ffe798a2.png" /></div>`;
+                    else if (rank === 3) rankBadgeHtml = `<div class="rank-badge bronze"><img alt="Rank 3" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_bronze-fd5fcc7d73ad72471dbd4f16b274f4eed38d27d5e76e7d16a7f774fdbf876770.png" /></div>`;
+
+                    html += `
+                      <div class="item skill-item">
+                        <div class="skill-header-wrapper">
+                          ${rankBadgeHtml}
+                          <div class="skill-content">
+                            <h3 class="skill-title">${strength.name}</h3>
+                            <p class="skill-description">${detail.description}</p>
+                          </div>
+                        </div>
+                      </div>`;
+                });
+                container.html(html);
+            }
+
+            function renderJobsToDiagnosisPage(data) {
+                const container = $('#jobs-container-inner');
+                if (!container.length) return;
+                const rankedJobs = Object.values(data).sort((a, b) => a.rank - b.rank);
+                
+                const rankImageUrls = {
+                    1: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no1-ebd1b3ea1cefba15829d9826e91a3b140597fbb6401d5a46a21a89e6564a99da.png',
+                    2: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no2-d4e7aa35cdbab3d098a9135244946c88354aeb9346f42b411f8c200594c1ba77.png',
+                    3: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no3-901884ea1cefba15829d9826e91a3b140597fbb6401d5a46a21a89e6564a99da.png'
+                };
+
+                let html = '';
+                rankedJobs.slice(0, 3).forEach(job => {
+                    const detail = jobDetails[job.job_type];
+                    if (!detail) return;
+
+                    const rank = job.rank;
+                    const rankImageUrl = rankImageUrls[rank];
+
+                    html += `
+                      <div class="job-container ${detail.className}">
+                        <div class="job-rank-image">
+                          <img alt="NO.${rank}" class="job-rank-no-image" src="${rankImageUrl}" />
+                        </div>
+                        <div class="job-rank-badge ${detail.badgeClass}">
+                          <p>あなたに向いている職種は・・・</p>
+                        </div>
+                        <h2 class="job-name">${detail.name}</h2>
+                        <div class="job-image">
+                          <img alt="${detail.alt}" style="width: 100%; height: auto; max-width: 400px; margin: 0 auto; display: block;" src="${detail.image}" />
+                        </div>
+                        <div class="job-section">
+                          <h3 class="job-section-title">仕事内容と求められる能力</h3>
+                          <p class="job-description-text">${detail.description}</p>
+                        </div>
+                        <div class="job-section">
+                          <h3 class="job-section-title">重要な強み</h3>
+                          <div class="job-skills-container">
+                            ${detail.skills.map(skill => `<span class="job-skill-tag">#${skill}</span>`).join('')}
+                          </div>
+                        </div>
+                        <div class="job-section">
+                          <h3 class="job-section-title">やりがい・面白さ</h3>
+                          <p class="job-description-text">${detail.passion}</p>
+                        </div>
+                        <div class="job-section job-career-path">
+                          <h3 class="job-career-path-title">キャリアパス</h3>
+                          <p class="job-career-path-text">${detail.careerPath}</p>
+                        </div>
+                      </div>`;
+                });
+                container.html(html);
+            }
             async function renderJobManagement() {
                 try {
                     const {
@@ -1040,6 +1237,11 @@ async function renderProgress() {
                     loginHistory: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="login-history"><i class="fas fa-history w-6 mr-3"></i><span>ログイン履歴</span></a>`
                 };
                 let navHtml = `${links.dashboard}${links.jobSearch}${links.recommendationsList}${links.progress}${links.mypage}`;
+                
+                if (CURRENT_USER.diagnosis_flg) {
+                    navHtml += `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="diagnosis"><i class="fas fa-chart-pie w-6 mr-3"></i><span>天職診断結果</span></a>`;
+                }
+
                 if (['admin', 'coach'].includes(CURRENT_USER.role)) navHtml += `<hr class="my-4 border-slate-700"><h3 class="px-4 py-2 text-xs font-semibold text-slate-400">管理メニュー</h3>${links.userManagement}`;
                 if (CURRENT_USER.role === 'admin') navHtml += `${links.jobManagement}${links.loginHistory}`;
                 $('#nav-menu').html(navHtml);
