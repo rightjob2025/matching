@@ -226,11 +226,11 @@
 </head>
 
 <body>
-    <div id="auth-container" class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div id="auth-container" class="min-h-screen bg-slate-100 flex items-center justify-center p-4 relative">
         <div class="w-full max-w-md">
             <div class="text-center mb-8">
-                <i class="fas fa-briefcase text-5xl text-indigo-600"></i>
-                <h1 class="mt-4 text-3xl font-bold text-slate-800">Rightjob マッチング</h1>
+                <img src="https://i.imgur.com/CnpEc9o.png" alt="Rightjob Logo" class="h-12 w-auto mx-auto">
+                <h1 class="mt-4 text-3xl font-bold text-slate-800"></h1>
             </div>
             <div id="login-form-container" class="bg-white p-8 rounded-2xl shadow-lg">
                 <form id="login-form" class="space-y-6">
@@ -266,9 +266,24 @@
                 <div class="mt-4 text-sm text-center"><a href="#" data-form="login" class="auth-link font-medium text-indigo-600 hover:text-indigo-500">ログイン画面に戻る</a></div>
             </div>
         </div>
+
+        <footer class="absolute bottom-0 left-0 w-full bg-slate-800 text-slate-300 p-4">
+            <div class="container mx-auto max-w-6xl px-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="text-xs">&copy; Copyright 2022 Right job.inc All right reserved.</p>
+                    </div>
+                    <div class="mt-2 sm:mt-0">
+                        <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline">
+                            運営会社
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
-    <div id="reset-password-container" class="hidden min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div id="reset-password-container" class="hidden min-h-screen bg-slate-100 flex items-center justify-center p-4 relative">
         <div class="w-full max-w-md">
             <div class="text-center mb-8">
                 <i class="fas fa-key text-5xl text-indigo-600"></i>
@@ -285,20 +300,34 @@
                 <div id="reset-password-error" class="mt-4 text-center text-sm text-red-600 font-medium"></div>
             </div>
         </div>
+
+        <footer class="absolute bottom-0 left-0 w-full bg-slate-800 text-slate-300 p-4">
+            <div class="container mx-auto max-w-6xl px-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="text-xs">&copy; Copyright 2022 Right job.inc All right reserved.</p>
+                    </div>
+                    <div class="mt-2 sm:mt-0">
+                        <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline">
+                            運営会社
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <div id="app-container" class="hidden">
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
         <aside id="sidebar" class="w-[var(--sidebar-width)] bg-slate-800 text-white h-screen fixed top-0 left-0 flex flex-col p-4 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40">
             <div class="text-center py-4 border-b border-slate-700">
-                <i class="fas fa-briefcase text-3xl text-indigo-400"></i>
-                <h1 class="mt-2 text-xl font-bold">Rightjob マッチング</h1>
+                <img src="https://i.imgur.com/CnpEc9o.png" alt="Rightjob Logo" class="h-8 w-auto mx-auto">
             </div>
             <nav id="nav-menu" class="mt-8 flex-grow space-y-2"></nav>
             <div class="mt-auto"><button id="logout-btn" class="w-full font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-700 hover:bg-red-600 text-white"><i class="fas fa-sign-out-alt mr-2"></i>ログアウト</button></div>
         </aside>
 
-        <div class="main-content md:ml-[var(--sidebar-width)]">
+        <div class="main-content md:ml-[var(--sidebar-width)] min-h-screen flex flex-col">
             <header class="bg-white h-[var(--header-height)] flex items-center justify-between md:justify-end px-4 md:px-8 border-b fixed top-0 right-0 w-full md:w-[calc(100%_-_var(--sidebar-width))] z-20">
                 <div class="flex items-center">
                     <button id="menu-toggle-btn" class="md:hidden text-2xl text-slate-600">
@@ -311,7 +340,8 @@
                     <span id="user-name-display" class="text-slate-700 font-medium hidden sm:block"></span>
                 </div>
             </header>
-            <main id="page-content" class="p-4 md:p-8 mt-[var(--header-height)]">
+            
+            <main id="page-content" class="p-4 md:p-8 mt-[var(--header-height)] flex-grow">
                 <div id="dashboard-page" class="page"></div>
                 <div id="job-search-page" class="page"></div>
                 <div id="recommendations-list-page" class="page"></div>
@@ -322,6 +352,21 @@
                 <div id="job-management-page" class="page"></div>
                 <div id="login-history-page" class="page"></div>
             </main>
+
+            <footer class="bg-slate-800 text-slate-300 p-8">
+                <div class="container mx-auto max-w-6xl">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-center md:text-left mb-4 md:mb-0">
+                            <p class="text-sm">&copy; Copyright 2022 Right job.inc All right reserved.</p>
+                        </div>
+                        <div class="text-center md:text-right">
+                            <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-white hover:underline">
+                                運営会社
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 
@@ -2216,4 +2261,3 @@ async function renderProgress() {
 </body>
 
 </html>
-
