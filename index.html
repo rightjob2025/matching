@@ -1522,7 +1522,13 @@ async function renderProgress() {
 
                     // 求人選択リストのHTMLを生成
                     let html = `<form id="ai-recommend-list-form" data-user-id="${userId}">
-                        <p class="text-sm text-slate-600 mb-4">希望条件に合致する求人です。スコアリングまたは除外したい求人を選択してください（最大10件）。</p>
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-slate-600">スコアリングまたは除外したい求人を選択してください（最大10件）。</p>
+                            <label class="flex items-center text-sm font-medium text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="ai-select-all-jobs" class="h-4 w-4 mr-2">
+                                すべてチェック (最大10件)
+                            </label>
+                        </div>
                         <div class="max-h-[60vh] overflow-y-auto pr-2">`;
 
 // ... (fetchAndRenderAiJobSelection 関数内) ...
@@ -2339,7 +2345,13 @@ async function renderProgress() {
 
                         // スコアリング結果表示用のHTMLを生成
                         let scoredHtml = `<form id="ai-save-form" data-user-id="${userId}">
-                            <p class="text-sm text-slate-600 mb-4">スコアリングが完了しました。保存する求人を選択してください。</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm text-slate-600">スコアリングが完了しました。保存または除外する求人を選択してください。</p>
+                                <label class="flex items-center text-sm font-medium text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="ai-save-all-jobs" class="h-4 w-4 mr-2" checked>
+                                    すべてチェック
+                                </label>
+                            </div>
                             <div class="max-h-[60vh] overflow-y-auto pr-2">`;
 
                         scoredJobs.sort((a, b) => b.score - a.score); // スコア順にソート
@@ -2365,6 +2377,7 @@ async function renderProgress() {
 
                         scoredHtml += `</div><div class="mt-6 text-right space-x-2">
                                         <button type="button" id="ai-back-to-list-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">戻る</button>
+                                        <button type="button" id="ai-exclude-scored-btn" class="font-bold py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white">選択した求人を除外</button>
                                         <button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を保存</button>
                                      </div></form>`;
 
@@ -2571,6 +2584,56 @@ async function renderProgress() {
                         ui.showAlert('送信エラー', `メール送信に失敗しました: ${e}`);
                     }
                 });
+            
+
+
+                                // ★ 追加: AI推薦(第1段階)の「すべてチェック」
+                                $(document).on('change', '#ai-select-all-jobs', function() {
+                                    const isChecked = $(this).prop('checked');
+                                    const checkboxes = $('.ai-job-checkbox');
+                                    
+                                    if (isChecked) {
+                                        // 10件の上限を守りながらチェック
+                                        checkboxes.prop('checked', false); // 念のためリセット
+                                        checkboxes.slice(0, 10).prop('checked', true);
+                                        if (checkboxes.length > 10) {
+                                            // ★ ui.showAlert から alert に変更
+                                            alert('最大10件まで選択できます。先頭の10件を選択しました。');
+                                        }
+                                    } else {
+                                        // すべて解除
+                                        checkboxes.prop('checked', false);
+                                    }
+                                });
+
+                                // ★ 追加: AI推薦(第2段階)の「すべてチェック」
+                                $(document).on('change', '#ai-save-all-jobs', function() {
+                                    const isChecked = $(this).prop('checked');
+                                    // 第2段階は10件以下なので、すべてチェック/解除してOK
+                                    $('#ai-save-form').find('input[name="selected_job"]').prop('checked', isChecked);
+                                });
+
+                                // ★ 追加: AI推薦(第2段階)の「除外」ボタン
+                                $(document).on('click', '#ai-exclude-scored-btn', async function() {
+                                    const form = $(this).closest('form');
+                                    const userId = form.data('user-id');
+                                    const jobIds = form.find('input:checked').map(function() { return $(this).val(); }).get();
+
+                                    if (jobIds.length === 0) {
+                                        return ui.showAlert('選択エラー', '除外する求人を1つ以上選択してください。');
+                                    }
+
+                                    try {
+                                        await api.call('excludeAIRecommendations', [userId, jobIds]);
+                                        
+                                        // モーダルを閉じずに、第1段階のリストを再描画
+                                        $('#modal-content').html('<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">除外しました。リストを更新中...</p></div>');
+                                        await fetchAndRenderAiJobSelection(userId); // 第1段階のリストを再描画
+
+                                    } catch (e) {
+                                        ui.showAlert('保存エラー', `除外処理に失敗: ${e}`);
+                                    }
+                                });
             } // end of initializeEvents()
 
 
