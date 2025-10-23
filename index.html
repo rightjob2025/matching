@@ -12,33 +12,33 @@
             --sidebar-width: 250px;
             --header-height: 64px;
         }
-        
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: #f8f9fa;
         }
-        
+
         .spinner {
             border-top-color: #4f46e5;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
         }
-        
+
         .page {
             display: none;
         }
-        
+
         .page.active {
             display: block;
         }
         /* On desktop, sidebar is visible and pushes content */
-        
+
         @media (min-width: 768px) {
             .sidebar {
                 transform: translateX(0);
@@ -47,17 +47,17 @@
                 margin-left: var(--sidebar-width);
             }
         }
-        
+
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
             background: transparent;
         }
-        
+
         input[type=range]:focus {
             outline: none;
         }
-        
+
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 16px;
@@ -68,7 +68,7 @@
             margin-top: -6px;
             box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
         }
-        
+
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
@@ -76,20 +76,20 @@
             background: #ddd;
             border-radius: 5px;
         }
-        
+
         .gemini-content>*:first-child {
             margin-top: 0;
         }
-        
+
         .prose {
             max-width: none;
         }
         /* Ensure prose styles don't constrain width */
-        
+
         .multi-select-container {
             position: relative;
         }
-        
+
         .multi-select-dropdown {
             position: absolute;
             top: 100%;
@@ -104,29 +104,29 @@
             z-index: 50;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        
+
         .multi-select-option {
             padding: 8px 12px;
             cursor: pointer;
             border-bottom: 1px solid #f3f4f6;
         }
-        
+
         .multi-select-option:hover {
             background-color: #f9fafb;
         }
-        
+
         .multi-select-option.selected {
             background-color: #eff6ff;
             color: #1d4ed8;
         }
-        
+
         .selection-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
             margin-top: 8px;
         }
-        
+
         .selection-tag {
             display: inline-flex;
             align-items: center;
@@ -138,21 +138,21 @@
             font-size: 12px;
             font-weight: 500;
         }
-        
+
         .selection-tag .remove-tag {
             cursor: pointer;
             color: #6366f1;
             font-weight: bold;
         }
-        
+
         .selection-tag .remove-tag:hover {
             color: #4338ca;
         }
-        
+
         .freeword-input {
             position: relative;
         }
-        
+
         .freeword-tags {
             display: flex;
             flex-wrap: wrap;
@@ -160,7 +160,7 @@
             margin-top: 8px;
             min-height: 24px;
         }
-        
+
         .freeword-tag {
             display: inline-flex;
             align-items: center;
@@ -172,13 +172,13 @@
             font-size: 12px;
             font-weight: 500;
         }
-        
+
         .freeword-tag .remove-tag {
             cursor: pointer;
             color: #d97706;
             font-weight: bold;
         }
-        
+
         .freeword-tag .remove-tag:hover {
             color: #b45309;
         }
@@ -340,7 +340,7 @@
                     <span id="user-name-display" class="text-slate-700 font-medium hidden sm:block"></span>
                 </div>
             </header>
-            
+
             <main id="page-content" class="p-4 md:p-8 mt-[var(--header-height)] flex-grow">
                 <div id="dashboard-page" class="page"></div>
                 <div id="job-search-page" class="page"></div>
@@ -395,7 +395,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB7bPs2pjz6T9b2aSLdcNYp52RGY7536vmA4lFC-_vJQzU0d5_RRm-H_5hWuzlZrBI/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQ8CETvp7oqtLiFUY-IAud3IixCRjAeysJbwdoapQ-IOGd_7mz2x2aFo2fGCIswE_x/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
             const skillDetails = {
@@ -628,7 +628,7 @@
                         'job-management': '求人管理',
                         'login-history': 'ログイン履歴'
                     };
-                    
+
                     // タイトルを動的に変更
                     let pageTitle = pageTitles[pageId] || 'ダッシュボード';
                     if (pageId === 'diagnosis' && options.userName) {
@@ -846,16 +846,25 @@
 
             async function renderRecommendationsList() {
                 try {
-                    const recs = await api.call('getAllRecommendations');
+                    const recs = await api.call('getAllRecommendations'); // ★ この行を追加
                     ALL_RECOMMENDATIONS = recs || [];
 
-                    recs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                     recs.sort((a, b) => {
+                        const aExcluded = a.user_reaction === 'excluded';
+                        const bExcluded = b.user_reaction === 'excluded';
                         const aRejected = a.user_reaction === 'rejected';
                         const bRejected = b.user_reaction === 'rejected';
+
+                        // 1. 'excluded' (AI除外) を最下部にソート
+                        if (aExcluded && !bExcluded) return 1;
+                        if (!aExcluded && bExcluded) return -1;
+
+                        // 2. 'rejected' (見送り) をその次に下部にソート
                         if (aRejected && !bRejected) return 1;
                         if (!aRejected && bRejected) return -1;
-                        return 0; // 日付順は維持
+
+                        // 3. それ以外は日付の新しい順にソート
+                        return new Date(b.created_at) - new Date(a.created_at);
                     });
 
                     const isManager = ['admin', 'coach'].includes(CURRENT_USER.role);
@@ -867,13 +876,18 @@
                                     </div>
                                     <div>
                                         <label class="text-sm font-medium text-slate-600">ステータス絞り込み</label>
-                                        <div id="recommendation-status-filter" class="flex items-center space-x-2 mt-2">
+                                        <div id="recommendation-status-filter" class="flex items-center space-x-2 mt-2 flex-wrap gap-y-2">
                                             <button class="rec-status-filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white" data-status="all">すべて</button>
-                                            <button class="rec-status-filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-status="pending">未対応</button>
                                             <button class="rec-status-filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-status="applied">応募済</button>
                                             <button class="rec-status-filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-status="rejected">見送り</button>
+                                            <button class="rec-status-filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-status="excluded">除外(AI)</button> </div> 
                                         </div>
                                     </div>
+                                </div>
+                            <div class="mt-4 pt-4 border-t flex justify-end">
+                                <button id="send-recommendation-email-btn" class="font-bold py-2 px-4   rounded-lg shadow-md bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        <i class="fas fa-envelope mr-2"></i>チェックした求人をメール送信
+                                    </button>
                                 </div>
                             </div>` : '';
 
@@ -894,24 +908,44 @@
                         'rejected': '見送り',
                         'applied': '応募済み'
                     }[r] || '未対応');
-                    const getStatus = r => r || 'pending';
+                    const getStatus = r => {
+                        if (r === 'excluded') return 'excluded';
+                        return r || 'pending';
+                    };
 
                     const tableRows = recs.map(rec => {
                         const isRejected = rec.user_reaction === 'rejected';
+                        const isExcluded = rec.user_reaction === 'excluded'; // ★ 追加
+
+                        // ★ スタイルを決定
+                        let rowStyle = '';
+                        if (isExcluded) {
+                            rowStyle = 'bg-slate-200 text-slate-600'; // 濃いグレー
+                        } else if (isRejected) {
+                            rowStyle = 'bg-slate-100 text-slate-500'; // 薄いグレー
+                        }
                         const recDate = new Date(rec.created_at).toLocaleDateString('ja-JP');
                         const isAI = rec.recommendation_type === 'ai';
                         const recommender = isAI ? `AI (${rec.ai_score||'N/A'}点)` : rec.recommender_name;
                         const managerCell = isManager ? `<td class="p-3">${rec.user_name}</td>` : '';
-                        const rejectButton = !isRejected ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">見送る</button>` : '';
+                        const rejectButton = (!isRejected && !isExcluded) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">見送る</button>` : ''; // ★ 条件変更
                         const reasonHtml = rec.recommendation_reason ? `<p class="text-xs font-normal text-slate-500 mt-1 pl-1 border-l-2 border-slate-200">${rec.recommendation_reason}</p>` : '';
                         const keywords = [rec.user_name, rec.title, rec.company].join(' ').toLowerCase();
                         const jobIdDisplay = String(rec.job_id).startsWith('http') ? `<a href="${rec.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (rec.job_id || 'N/A');
 
-                        return `<tr class="border-b recommendation-row ${isRejected ? 'bg-slate-100 text-slate-500' : ''}" data-status="${getStatus(rec.user_reaction)}" data-keywords="${keywords}">
-                                <td class="p-3 text-sm">${recDate}</td>
+                        return `<tr class="border-b recommendation-row ${rowStyle}" data-status="${getStatus(rec.user_reaction)}" data-keywords="${keywords}">
+                            <td class="p-3 text-center">
+                                <input type="checkbox" class="recommendation-check-item h-4 w-4"
+                                       data-user-id="${rec.user_id}" 
+                                       data-job-id="${rec.job_id}" 
+                                       data-title="${rec.title}" 
+                                       data-company="${rec.company}"
+                                       data-reason="${encodeURIComponent(rec.recommendation_reason || '')}"
+                                       ${isRejected || isExcluded ? 'disabled' : ''}>
+                            </td>
+                            <td class="p-3 text-sm">${recDate}</td>
                                 ${managerCell}
-                                <td class="p-3 font-medium ${isRejected ? '' : 'text-slate-800'}">
-                                    ${rec.title}
+                                <td class="p-3 font-medium ${isRejected || isExcluded ? '' : 'text-slate-800'}"> ${rec.title}
                                     ${reasonHtml}
                                 </td>
                                 <td class="p-3">${rec.company}</td>
@@ -924,8 +958,19 @@
                                 </td>
                             </tr>`;
                     }).join('');
-                    content += `<div class="bg-white rounded-xl shadow-md overflow-x-auto"><table class="w-full text-left min-w-[700px]"><thead class="bg-slate-50 border-b"><tr><th class="p-3 text-sm font-semibold text-slate-600">推薦日</th>${isManager ? '<th class="p-3 text-sm font-semibold text-slate-600">求職者名</th>':''}<th class="p-3 text-sm font-semibold text-slate-600">求人名</th><th class="p-3 text-sm font-semibold text-slate-600">企業名</th><th class="p-3 text-sm font-semibold text-slate-600">求人ID</th><th class="p-3 text-sm font-semibold text-slate-600">推薦者</th><th class="p-3 text-sm font-semibold text-slate-600">ユーザーの判断</th><th class="p-3"></th></tr></thead><tbody id="recommendations-table-body">${tableRows}</tbody></table></div>`;
+                                content += `<div class="bg-white rounded-xl shadow-md overflow-x-auto"><table class="w-full text-left min-w-[700px]"><thead class="bg-slate-50 border-b"><tr>
+                                <th class="p-3 text-center"><input type="checkbox" id="recommendation-check-all" class="h-4 w-4"></th>
+                                <th class="p-3 text-sm font-semibold text-slate-600">推薦日</th>
+                                ${isManager ? '<th class="p-3 text-sm font-semibold text-slate-600">求職者名</th>':''}
+                                <th class="p-3 text-sm font-semibold text-slate-600">求人名</th>
+                                <th class="p-3 text-sm font-semibold text-slate-600">企業名</th>
+                                <th class="p-3 text-sm font-semibold text-slate-600">求人ID</th>
+                                <th class="p-3 text-sm font-semibold text-slate-600">推薦者</th>
+                                <th class="p-3 text-sm font-semibold text-slate-600">ユーザーの判断</th>
+                                <th class="p-3"></th>
+                            </tr></thead><tbody id="recommendations-table-body">${tableRows}</tbody></table></div>`;
                     $('#recommendations-list-page').html(content);
+                    filterRecommendations();
                 } catch (e) {
                     console.error("Recs list render failed:", e);
                 }
@@ -952,7 +997,7 @@ async function renderProgress() {
             "選考終了(充足クローズ)": "bg-slate-100 text-slate-600",
             "選考終了(その他)": "bg-slate-100 text-slate-600"
         }[s] || 'bg-slate-100 text-slate-600');
-        
+
         const tableRows = apps => apps?.length > 0 ? apps.map(app => {
             let group = 'progress'; // Default group
             if (app.status === '内定') {
@@ -977,7 +1022,7 @@ async function renderProgress() {
                         </td>
                     </tr>`;
         }).join('') : `<tr><td colspan="7" class="text-center text-slate-500 py-8">該当する応募情報はありません。</td></tr>`;
-        
+
         const searchBoxHtml = ['admin', 'coach'].includes(CURRENT_USER.role) ? `<div>
                                         <label for="progress-keyword-search" class="text-sm font-medium text-slate-600">キーワード検索</label>
                                         <input id="progress-keyword-search" type="text" placeholder="求職者名, 企業名, 求人名..." class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500">
@@ -1020,7 +1065,7 @@ async function renderProgress() {
     } catch (e) {
         console.error("Progress render failed:", e);
     }
-}           
+}
             async function renderMyPage() {
                 try {
                     if (!MASTERS.industry) {
@@ -1061,7 +1106,7 @@ async function renderProgress() {
                 try {
                     if (targetUserId) {
                         // 他のユーザーのプロファイルを取得
-                        targetUser = await api.call('getMyProfile', [targetUserId]); 
+                        targetUser = await api.call('getMyProfile', [targetUserId]);
                     } else {
                         // ログイン中のユーザー
                         targetUser = CURRENT_USER;
@@ -1128,7 +1173,7 @@ async function renderProgress() {
                 sortedStrengths.forEach((strength, index) => {
                     const rank = index + 1;
                     const detail = skillDetails[strength.name] || { iconClass: '', description: '' };
-                    
+
                     let rankBadgeHtml = `<div class="rank-badge blue">${rank}</div>`;
                     if (rank === 1) rankBadgeHtml = `<div class="rank-badge gold"><img alt="Rank 1" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_gold-bb47445ffbadc7cd324c7a242942bd2411fc133c4612dbf957fab78f499e6541.png" /></div>`;
                     else if (rank === 2) rankBadgeHtml = `<div class="rank-badge silver"><img alt="Rank 2" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_silver-cbd9bf49e7bbd92e8eccb7b06c8cea7657efd763926feb78fabc8304ffe798a2.png" /></div>`;
@@ -1152,7 +1197,7 @@ async function renderProgress() {
                 const container = $('#jobs-container-inner');
                 if (!container.length) return;
                 const rankedJobs = Object.values(data).sort((a, b) => a.rank - b.rank);
-                
+
                 const rankImageUrls = {
                     1: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no1-ebd1b3ea1cefba15829d9826e91a3b140597fbb6401d5a46a21a89e6564a99da.png',
                     2: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no2-d4e7aa35cdbab3d098a9135244946c88354aeb9346f42b411f8c200594c1ba77.png',
@@ -1235,14 +1280,14 @@ async function renderProgress() {
                         const editBtn = `<button class="${btnSecondarySm} edit-user-btn" data-user-id="${user.user_id}">編集</button>`;
                         const recommendBtn = `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-sky-500 text-white ai-recommend-btn" data-user-id="${user.user_id}">✨ AI推薦</button>`;
                         const diagnosisBtn = user.diagnosis_flg ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-purple-500 hover:bg-purple-600 text-white view-diagnosis-btn" data-user-id="${user.user_id}" data-user-name="${user.name}">診断結果</button>` : '';
-                        
+
                         let actions = `${diagnosisBtn}`;
                         if (CURRENT_USER.role !== 'user' && user.role === 'user') {
                             actions += ` ${recommendBtn} ${editBtn}`;
                         } else if (CURRENT_USER.role === 'admin') {
                             actions += ` ${editBtn}`;
                         }
-                        
+
                         return `<tr class="border-b"><td class="p-3 font-medium">${user.name}</td><td class="p-3">${user.email}</td><td class="p-3">${user.role}</td><td class="p-3">${coaches.find(c => c.user_id === user.coach_id)?.name || '未割り当て'}</td><td class="p-3 text-right space-x-2">${actions.trim()}</td></tr>`;
                     }).join('');
 
@@ -1258,7 +1303,7 @@ async function renderProgress() {
                 try {
                     const history = await api.call('getLoginHistory');
                     let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">ログイン履歴</h2>`;
-                    
+
                     if (!history || history.length === 0) {
                         content += `<div class="bg-white rounded-xl shadow-md p-6"><p class="text-center text-slate-500">ログイン履歴はありません。</p></div>`;
                     } else {
@@ -1316,7 +1361,7 @@ async function renderProgress() {
                     loginHistory: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="login-history"><i class="fas fa-history w-6 mr-3"></i><span>ログイン履歴</span></a>`
                 };
                 let navHtml = `${links.dashboard}${links.jobSearch}${links.recommendationsList}${links.progress}${links.mypage}`;
-                
+
                 // 診断結果対象ユーザーの場合、診断結果ページへのリンクを追加します。
                 if (CURRENT_USER.diagnosis_flg) {
                     navHtml += `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="diagnosis"><i class="fas fa-chart-pie w-6 mr-3"></i><span>天職診断結果</span></a>`;
@@ -1328,12 +1373,12 @@ async function renderProgress() {
                 if (['admin', 'coach'].includes(CURRENT_USER.role)) {
                     navHtml += `<hr class="my-4 border-slate-700"><h3 class="px-4 py-2 text-xs font-semibold text-slate-400">管理メニュー</h3>${links.userManagement}`;
                 }
-                
+
                 // 'admin' 権限の場合にのみ、さらに追加の管理メニューを表示します。
                 if (CURRENT_USER.role === 'admin') {
                     navHtml += `${links.jobManagement}${links.loginHistory}`;
                 }
-                
+
                 $('#nav-menu').html(navHtml);
                 ui.navigateTo('dashboard');
             }
@@ -1450,6 +1495,79 @@ async function renderProgress() {
                 const finalContent = `<dl>${detailsHtml}</dl><div class="mt-6 pt-4 border-t text-right space-x-2">${CURRENT_USER.role === 'user' ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-cyan-500 text-white ai-match-analysis-btn" data-job-id="${displayJob.job_id}">✨ AIマッチ度分析</button><button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-apply-btn" data-job-id="${displayJob.job_id}">応募を依頼する</button>` : ''}${['admin','coach'].includes(CURRENT_USER.role) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white job-recommend-btn" data-job-id="${displayJob.job_id}">この求人を紹介する</button>` : ''}</div>`;
                 $('#modal-content').html(finalContent);
             }
+
+            // ★ 10/23 変更: AI推薦モーダルのロジックをヘルパー関数に分離
+            /**
+             * AI推薦の第1段階（求人選択リスト）をモーダルに描画する
+             * @param {string} userId - 対象のユーザーID
+             */
+            async function fetchAndRenderAiJobSelection(userId) {
+                // モーダル内容をローディング表示に
+                $('#modal-content').html('<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>');
+
+                try {
+                    // GASからスコアなしの求人リスト(最大50件)を取得
+                    const jobs = await api.call('getAIRecommendations', [userId]);
+                    const user = ALL_USERS.find(u => u.user_id === userId);
+
+                    // モーダルのタイトルを更新
+                    if (user) {
+                        $('#modal-title').text(`✨ ${user.name}さんへのAI推薦`);
+                    }
+
+                    if (jobs.length === 0) {
+                        $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>');
+                        return;
+                    }
+
+                    // 求人選択リストのHTMLを生成
+                    let html = `<form id="ai-recommend-list-form" data-user-id="${userId}">
+                        <p class="text-sm text-slate-600 mb-4">希望条件に合致する求人です。スコアリングまたは除外したい求人を選択してください（最大10件）。</p>
+                        <div class="max-h-[60vh] overflow-y-auto pr-2">`;
+
+// ... (fetchAndRenderAiJobSelection 関数内) ...
+
+                    html += jobs.map(job => {
+                        const jobIdDisplay = String(job.job_id).startsWith('http') ? `<a href="${job.job_id}" target="_blank" class="text-indigo-600 hover:underline">${job.job_id} <i class="fas fa-external-link-alt text-xs"></i></a>` : (job.job_id || 'N/A');
+                        
+                        // ★「職種未経験OK」バッジの生成
+                        const expOkBadge = (job.job_experience_ok === 'OK')
+                            ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">職種未経験OK</span>'
+                            : '';
+
+                        // ★ 概要（description）の先頭100文字を抽出
+                        let shortDesc = '概要なし';
+                        if (job.description) {
+                            shortDesc = job.description.replace(/\n/g, ' ').substring(0, 100); // 改行を削除し100文字抽出
+                            if (job.description.length > 100) shortDesc += '...';
+                        }
+
+                        return `<div class="p-4 border rounded-lg mb-3">
+                                    <div class="flex items-start">
+                                        <input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4 ai-job-checkbox">
+                                        <div class="ml-4 flex-1">
+                                            <h4 class="font-bold">${job.title}${expOkBadge}</h4>
+                                            <p class="text-sm text-slate-600">${job.company}</p>
+                                            <p class="text-xs text-slate-400 mt-1">求人ID: ${jobIdDisplay}</p>
+                                            <p class="mt-2 text-sm text-gray-700 bg-gray-50 p-2 rounded-md">${shortDesc}</p>
+                                        </div>
+                                    </div>
+                                </div>`
+                    }).join('');
+// ...
+
+                    html += `</div><div class="mt-6 text-right space-x-2">
+                                <button type="button" id="ai-exclude-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">選択した求人を除外</button>
+                                <button type="button" id="ai-score-btn" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人をAIスコアリング</button>
+                             </div></form>`;
+
+                    $('#modal-content').html(html);
+
+                } catch (e) {
+                    $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`);
+                }
+            }
+
 
             // ========================
             // Event Listeners
@@ -1639,7 +1757,7 @@ async function renderProgress() {
                     performSearch();
                 });
                 $(document).on('change', '#sort-select', performSearch);
-                
+
                 $(document).on('click', '#job-search-reset-btn', () => {
                 // フィルターの状態をリセット
                 selectedIndustries = [];
@@ -1772,6 +1890,7 @@ async function renderProgress() {
                         await api.call(data.job_id ? 'updateJob' : 'createNewJob', [data]);
                         ui.hideModal();
                         ui.showAlert('成功', `求人情報を${data.job_id ? '更新' : '登録'}しました。`);
+                        ALL_JOBS = []; // ★ この行を追加してキャッシュをクリア
                         renderJobManagement();
                     } catch (err) {
                         ui.showAlert('エラー', `処理に失敗: ${err}`);
@@ -1782,7 +1901,7 @@ async function renderProgress() {
                 $(document).on('click', '.job-details-btn', function() {
                     showJobDetailsModal($(this).data('job-id'));
                 });
-                
+
                 $(document).on('click', '.job-apply-btn', function() {
                     const jobId = $(this).data('job-id');
                     const content = `<form id="apply-form" data-job-id="${jobId}">
@@ -1920,10 +2039,18 @@ async function renderProgress() {
                     $('#recommendations-table-body .recommendation-row').each(function() {
                         const row = $(this);
                         const keywords = row.data('keywords');
-                        const status = row.data('status');
+                        const status = row.data('status'); // 'pending', 'applied', 'rejected', 'excluded' など
 
                         const keywordMatch = keywords.includes(searchTerm);
-                        const statusMatch = (activeStatus === 'all') || (status === activeStatus);
+
+                        let statusMatch = false;
+                        if (activeStatus === 'all') {
+                            // 「すべて」の時は 'excluded' 以外を表示
+                            statusMatch = (status !== 'excluded');
+                        } else {
+                            // それ以外の時は該当ステータスのみ表示
+                            statusMatch = (status === activeStatus);
+                        }
 
                         if (keywordMatch && statusMatch) {
                             row.show();
@@ -2049,7 +2176,11 @@ async function renderProgress() {
                     }
                 });
 
-                // --- AI Features ---
+                // ========================
+                // --- AI Features (★ 10/23 大幅変更) ---
+                // ========================
+
+                // (変更なし)
                 $(document).on('click', '#ai-generate-description-btn', async function() {
                     const form = $(this).closest('form');
                     const title = form.find('[name="title"]').val();
@@ -2069,6 +2200,8 @@ async function renderProgress() {
                         btn.prop('disabled', false).html('✨ AIで作成');
                     }
                 });
+
+                // (変更なし)
                 $(document).on('click', '.ai-match-analysis-btn', async function() {
                     const jobId = $(this).data('job-id');
                     ui.showModal('✨ AIマッチ度分析', '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', {
@@ -2126,66 +2259,8 @@ async function renderProgress() {
                         $('#modal-content').html(`<p class="text-red-500">分析に失敗: ${e}</p>`);
                     }
                 });
-                $(document).on('click', '.ai-recommend-btn', async function() {
-                    const userId = $(this).data('user-id');
-                    const user = ALL_USERS.find(u => u.user_id === userId);
-                    ui.showModal(`✨ ${user.name}さんへのAI推薦`, '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', {
-                        size: 'max-w-3xl'
-                    });
-                    try {
-                        const jobs = await api.call('getAIRecommendations', [userId]);
-                        if (jobs.length === 0) {
-                            $('#modal-content').html('<p class="text-center text-slate-500 py-8">推薦できる求人はありませんでした。</p>');
-                            return;
-                        }
-                        let html = `<form id="ai-recommend-form" data-user-id="${userId}">` + jobs.map(job => {
-                            const jobIdDisplay = String(job.job_id).startsWith('http') ? `<a href="${job.job_id}" target="_blank" class="text-indigo-600 hover:underline">${job.job_id} <i class="fas fa-external-link-alt text-xs"></i></a>` : (job.job_id || 'N/A');
-                            return `<div class="p-4 border rounded-lg mb-3"><div class="flex items-start"><input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}"><div class="ml-4 flex-1"><div class="flex justify-between items-center"><h4 class="font-bold">${job.title}</h4><span class="text-lg font-bold text-indigo-600">${job.score}点</span></div><p class="text-sm text-slate-600">${job.company}</p><p class="text-xs text-slate-400 mt-1">求人ID: ${jobIdDisplay}</p><p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason}</p></div></div></div>`
-                        }).join('') + `<div class="mt-6 text-right space-x-2"><button type="button" id="ai-exclude-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">選択した求人を推薦から除外</button><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を推薦として保存</button></div></form>`;
-                        $('#modal-content').html(html);
-                    } catch (e) {
-                        $('#modal-content').html(`<p class="text-red-500">AI推薦の処理中にエラー: ${e}</p>`);
-                    }
-                });
 
-                $(document).on('submit', '#ai-recommend-form', async function(e) {
-                    e.preventDefault();
-                    const userId = $(this).data('user-id');
-                    const jobs = [];
-                    $(this).find('input:checked').each(function() {
-                        jobs.push({
-                            job_id: $(this).val(),
-                            reason: decodeURIComponent($(this).data('reason')),
-                            score: $(this).data('score')
-                        });
-                    });
-                    if (jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。');
-                    try {
-                        await api.call('saveAIRecommendations', [userId, jobs]);
-                        ui.hideModal();
-                        ui.showAlert('保存完了', `${jobs.length}件のAI推薦を保存しました。`);
-                    } catch (e) {
-                        ui.showAlert('保存エラー', `保存に失敗: ${e}`);
-                    }
-                });
-                 $(document).on('click', '#ai-exclude-btn', async function(e) {
-                    e.preventDefault();
-                    const form = $(this).closest('form');
-                    const userId = form.data('user-id');
-                    const jobIds = form.find('input:checked').map(function() {
-                        return $(this).val();
-                    }).get();
-
-                    if (jobIds.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。');
-
-                    try {
-                        await api.call('excludeAIRecommendations', [userId, jobIds]);
-                        ui.hideModal();
-                        ui.showAlert('保存完了', `${jobIds.length}件の求人を今後のAI推薦から除外しました。`);
-                    } catch (e) {
-                        ui.showAlert('保存エラー', `除外処理に失敗: ${e}`);
-                    }
-                });
+                // (変更なし)
                 $(document).on('click', '#ai-generate-reason-btn', async function() {
                     const btn = $(this);
                     const form = btn.closest('form');
@@ -2208,14 +2283,296 @@ async function renderProgress() {
                         btn.prop('disabled', false).html('✨ おすすめ理由生成');
                     }
                 });
-                
+
                 // --- 診断結果 ---
                 $(document).on('click', '.view-diagnosis-btn', function() {
                     const userId = $(this).data('user-id');
                     const userName = $(this).data('user-name');
                     ui.navigateTo('diagnosis', { userId: userId, userName: userName });
                 });
-            }
+
+
+                // ★ 10/23 追加: AI推薦モーダル内のチェックボックス上限(10件)を監視
+                $(document).on('change', '.ai-job-checkbox', function() {
+                    const maxChecks = 10;
+                    const checkedCount = $('.ai-job-checkbox:checked').length;
+                    if (checkedCount > maxChecks) {
+                        $(this).prop('checked', false);
+                        ui.showAlert('選択上限', `一度にスコアリングまたは除外できるのは${maxChecks}件までです。`);
+                    }
+                });
+
+                // ★ 10/23 変更: AI推薦モーダルを開く (第1段階)
+                $(document).on('click', '.ai-recommend-btn', async function() {
+                    const userId = $(this).data('user-id');
+                    const user = ALL_USERS.find(u => u.user_id === userId);
+                    if (!user) return ui.showAlert('エラー', '対象ユーザーが見つかりません。');
+
+                    // モーダルをまず開く
+                    ui.showModal(`✨ ${user.name}さんへのAI推薦`, '<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIが分析中です...</p></div>', {
+                        size: 'max-w-3xl'
+                    });
+
+                    // ヘルパー関数を呼び出して中身を描画
+                    await fetchAndRenderAiJobSelection(userId);
+                });
+
+                // ★ 10/23 追加: AIスコアリング実行ボタン (第2段階へ)
+                $(document).on('click', '#ai-score-btn', async function() {
+                    const form = $(this).closest('form');
+                    const userId = form.data('user-id');
+                    const jobIds = form.find('input:checked').map(function() { return $(this).val(); }).get();
+
+                    if (jobIds.length === 0) {
+                        return ui.showAlert('選択エラー', 'スコアリングする求人を1つ以上選択してください。');
+                    }
+                    if (jobIds.length > 10) {
+                         return ui.showAlert('選択上限', `一度にスコアリングできるのは10件までです。現在 ${jobIds.length} 件選択されています。`);
+                    }
+
+                    // ローディング表示
+                    $('#modal-content').html('<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">AIがスコアリング中です...</p></div>');
+
+                    try {
+                        // GASのscoreAIRecommendationsを呼び出し
+                        const scoredJobs = await api.call('scoreAIRecommendations', [userId, jobIds]);
+
+                        // スコアリング結果表示用のHTMLを生成
+                        let scoredHtml = `<form id="ai-save-form" data-user-id="${userId}">
+                            <p class="text-sm text-slate-600 mb-4">スコアリングが完了しました。保存する求人を選択してください。</p>
+                            <div class="max-h-[60vh] overflow-y-auto pr-2">`;
+
+                        scoredJobs.sort((a, b) => b.score - a.score); // スコア順にソート
+
+                        scoredHtml += scoredJobs.map(job => {
+                            const jobIdDisplay = String(job.job_id).startsWith('http') ? `<a href="${job.job_id}" target="_blank" class="text-indigo-600 hover:underline">${job.job_id} <i class="fas fa-external-link-alt text-xs"></i></a>` : (job.job_id || 'N/A');
+                            return `<div class="p-4 border rounded-lg mb-3">
+                                <div class="flex items-start">
+                                    <input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" checked
+                                           data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score}">
+                                    <div class="ml-4 flex-1">
+                                        <div class="flex justify-between items-center">
+                                            <h4 class="font-bold">${job.title}</h4>
+                                            <span class="text-lg font-bold text-indigo-600">${job.score}点</span>
+                                        </div>
+                                        <p class="text-sm text-slate-600">${job.company}</p>
+                                        <p class="text-xs text-slate-400 mt-1">求人ID: ${jobIdDisplay}</p>
+                                        <p class="mt-2 text-sm bg-slate-50 p-2 rounded">${job.reason || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('');
+
+                        scoredHtml += `</div><div class="mt-6 text-right space-x-2">
+                                        <button type="button" id="ai-back-to-list-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">戻る</button>
+                                        <button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">選択した求人を保存</button>
+                                     </div></form>`;
+
+                        $('#modal-content').html(scoredHtml);
+
+                    } catch (e) {
+                        $('#modal-content').html(`<p class="text-red-500">AIスコアリングに失敗: ${e}</p><div class="mt-4 text-right"><button type="button" id="ai-back-to-list-btn" class="font-bold py-2 px-4 rounded-lg bg-slate-500 text-white">戻る</button></div>`);
+                    }
+                });
+
+                // ★ 10/23 追加: スコアリング画面から求人選択画面(第1段階)に戻る
+                $(document).on('click', '#ai-back-to-list-btn', async function() {
+                    const userId = $(this).closest('form').data('user-id');
+                    // ヘルパー関数を呼び出して第1段階のリストを再描画
+                    await fetchAndRenderAiJobSelection(userId);
+                });
+
+
+                // ★ 10/23 変更: フォームセレクタを `#ai-save-form` に変更
+                // (旧 `#ai-recommend-form` submit)
+                $(document).on('submit', '#ai-save-form', async function(e) {
+                    e.preventDefault();
+                    const userId = $(this).data('user-id');
+                    const jobs = [];
+                    $(this).find('input:checked').each(function() {
+                        jobs.push({
+                            job_id: $(this).val(),
+                            reason: decodeURIComponent($(this).data('reason')),
+                            score: $(this).data('score')
+                        });
+                    });
+                    if (jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。');
+                    try {
+                        // saveAIRecommendationsはメール送信しないようGAS側で修正済み
+                        await api.call('saveAIRecommendations', [userId, jobs]);
+                        ui.hideModal();
+                        ui.showAlert('保存完了', `${jobs.length}件のAI推薦を保存しました。`);
+                    } catch (e) {
+                        ui.showAlert('保存エラー', `保存に失敗: ${e}`);
+                    }
+                });
+
+                // ★ 10/23 変更: 除外ボタンの動作 (モーダルを閉じずにリストを更新)
+                 $(document).on('click', '#ai-exclude-btn', async function(e) {
+                    e.preventDefault();
+                    const form = $(this).closest('form');
+                    const userId = form.data('user-id');
+                    const jobIds = form.find('input:checked').map(function() {
+                        return $(this).val();
+                    }).get();
+
+                    if (jobIds.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。');
+
+                    if (jobIds.length > 10) {
+                         return ui.showAlert('選択上限', `一度に除外できるのは10件までです。現在 ${jobIds.length} 件選択されています。`);
+                    }
+
+                    try {
+                        await api.call('excludeAIRecommendations', [userId, jobIds]);
+
+                        // ★ モーダルを閉じずに、リストを更新
+                        $('#modal-content').html('<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">除外しました。リストを更新中...</p></div>');
+                        await fetchAndRenderAiJobSelection(userId); // 第1段階のリストを再描画
+
+                    } catch (e) {
+                        ui.showAlert('保存エラー', `除外処理に失敗: ${e}`);
+                    }
+                });
+
+            
+// --- Recommendation List Email Batch ---
+                function updateEmailButtonStatus() {
+                    const checkedItems = $('.recommendation-check-item:checked');
+                    const btn = $('#send-recommendation-email-btn');
+                    
+                    if (checkedItems.length === 0) {
+                        btn.prop('disabled', true);
+                        return;
+                    }
+
+                    // 異なるユーザーが選択されていないかチェック
+                    let firstUserId = null;
+                    let differentUsers = false;
+                    checkedItems.each(function() {
+                        const currentUserId = $(this).data('user-id');
+                        if (firstUserId === null) {
+                            firstUserId = currentUserId;
+                        } else if (firstUserId !== currentUserId) {
+                            differentUsers = true;
+                            return false; // break loop
+                        }
+                    });
+
+                    // 異なるユーザーが選択されている場合はボタンを無効化
+                    btn.prop('disabled', differentUsers);
+                    if (differentUsers) {
+                        btn.attr('title', '異なる求職者の求人を同時に送信することはできません。');
+                    } else {
+                        btn.removeAttr('title');
+                    }
+                }
+
+                $(document).on('change', '#recommendation-check-all', function() {
+                    $('.recommendation-check-item:not(:disabled)').prop('checked', $(this).prop('checked'));
+                    updateEmailButtonStatus();
+                });
+
+                $(document).on('change', '.recommendation-check-item', function() {
+                    if ($('.recommendation-check-item:checked').length === $('.recommendation-check-item:not(:disabled)').length) {
+                        $('#recommendation-check-all').prop('checked', true);
+                    } else {
+                        $('#recommendation-check-all').prop('checked', false);
+                    }
+                    updateEmailButtonStatus();
+                });
+
+                $(document).on('click', '#send-recommendation-email-btn', async function() {
+                    const checkedItems = $('.recommendation-check-item:checked');
+                    if (checkedItems.length === 0) {
+                        return ui.showAlert('エラー', '求人が選択されていません。');
+                    }
+
+                    let targetUserId = null;
+                    const selectedJobs = [];
+                    let userName = '求職者';
+
+                    checkedItems.each(function() {
+                        const el = $(this);
+                        if (targetUserId === null) {
+                            targetUserId = el.data('user-id');
+                        }
+                        selectedJobs.push({
+                            job_id: el.data('job-id'),
+                            title: el.data('title'),
+                            company: el.data('company'),
+                            reason: decodeURIComponent(el.data('reason') || '担当者からのおすすめです。')
+                        });
+                    });
+
+                    if (!targetUserId) {
+                         return ui.showAlert('エラー', '対象ユーザーの特定に失敗しました。');
+                    }
+
+                    // ユーザー名を取得
+                    try {
+                        // ALL_RECOMMENDATIONS はこのページを描画する際に取得済みのはず
+                        const rec = ALL_RECOMMENDATIONS.find(r => r.user_id === targetUserId);
+                        if (rec && rec.user_name) {
+                            userName = rec.user_name;
+                        } else if (ALL_USERS.length > 0) {
+                            // ユーザー管理ページを一度開いていればALL_USERSから取得
+                            const user = ALL_USERS.find(u => u.user_id === targetUserId);
+                            if (user) userName = user.name;
+                        }
+                    } catch(e) {
+                         console.warn("User name lookup failed, using default.");
+                    }
+
+                    // モーダルで確認
+                    let listHtml = selectedJobs.map((job, index) => {
+                        return `<li class="mb-4 border-b pb-2">
+                                    <p><b>${job.title}</b> (${job.company})</p>
+                                    <p class="text-sm text-slate-600 mt-1">${job.reason}</p>
+                                </li>`;
+                    }).join('');
+
+                    let content = `<form id="send-bulk-email-form">
+                                     <p class="mb-4"><b>${userName}さん</b>に、以下の <b>${selectedJobs.length}件</b> のおすすめ求人メールを送信します。よろしいですか？</p>
+                                     <ul class="max-h-60 overflow-y-auto bg-slate-50 p-4 rounded-md">${listHtml}</ul>
+                                     <div class="mt-6 text-right">
+                                         <button type="button" id="modal-cancel-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-slate-500 text-white mr-2">キャンセル</button>
+                                         <button type="submit" class="font-bold py-2 px-4 rounded-lg shadow-md bg-green-600 text-white">送信する</button>
+                                     </div>
+                                   </form>`;
+                    
+                    ui.showModal('おすすめ求人メール送信確認', content);
+                    
+                    // 送信データをフォームに一時保存
+                    $('#send-bulk-email-form').data('userId', targetUserId);
+                    $('#send-bulk-email-form').data('jobs', selectedJobs);
+                });
+
+                $(document).on('click', '#modal-cancel-btn', ui.hideModal);
+
+                $(document).on('submit', '#send-bulk-email-form', async function(e) {
+                    e.preventDefault();
+                    const userId = $(this).data('userId');
+                    const jobs = $(this).data('jobs');
+                    
+                    if (!userId || !jobs || jobs.length === 0) {
+                        return ui.showAlert('エラー', '送信データの準備に失敗しました。');
+                    }
+
+                    try {
+                        // ★GAS側で 'sendBulkRecommendationEmail' を呼び出す
+                        await api.call('sendBulkRecommendationEmail', [userId, jobs]);
+                        ui.hideModal();
+                        ui.showAlert('送信完了', 'おすすめメールを送信しました。');
+                        // チェックを外す
+                        $('#recommendation-check-all').prop('checked', false);
+                        $('.recommendation-check-item').prop('checked', false);
+                        $('#send-recommendation-email-btn').prop('disabled', true);
+                    } catch (e) {
+                        ui.showAlert('送信エラー', `メール送信に失敗しました: ${e}`);
+                    }
+                });
+            } // end of initializeEvents()
+
 
             // ========================
             // Initializer
