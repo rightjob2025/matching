@@ -2824,6 +2824,33 @@ async function renderProgress() {
                                 // syncAiJobSelectAll();
                             });
 
+                            // ★ 10/26 修正: スコアリング結果画面(第2段階)の「選択した求人を除外」ボタンのリスナーを追加
+                            $(document).on('click', '#ai-exclude-scored-btn', async function(e) {
+                                e.preventDefault();
+                                const form = $(this).closest('form'); // This is '#ai-save-form'
+                                const userId = form.data('user-id');
+                                const jobIds = form.find('input[name="selected_job"]:checked').map(function() {
+                                  return $(this).val();
+                                }).get();
+
+                                if (jobIds.length === 0) {
+                                    notifyInModal('除外する求人を1つ以上選択してください。'); 
+                                    return;
+                                }
+
+                                try {
+                                    // 除外APIを呼び出す
+                                    await api.call('excludeAIRecommendations', [userId, jobIds]);
+
+                                    // 成功したら、ローディングを表示し、第1段階の求人選択リストを再描画する
+                                    $('#modal-content').html('<div class="text-center"><div class="spinner w-8 h-8 mx-auto"></div><p class="mt-2 text-slate-600">除外しました。リストを更新中...</p></div>');
+                                    await fetchAndRenderAiJobSelection(userId); // 第1段階のリストを再描画
+
+                                } catch (e) {
+                                    ui.showAlert('除外エラー', `除外処理に失敗: ${e}`);
+                                }
+                            });
+
                         } // end of initializeEvents()
 
 
