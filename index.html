@@ -395,7 +395,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxI32WrFB4j-ExiWMCtXC_6g656bJ5wIseIbpI_AVhaiS9nLMUzMzu3GBGyz8tj_mQT/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyD8I2FwBeAvCkXuKv7H4xS-Cs1EtAWsUnpi2F1f7mFlDLIui58d8xkD13cx9sISTRd/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
             const skillDetails = {
@@ -622,7 +622,7 @@
                         'job-search': '求人を探す',
                         'recommendations-list': 'おすすめ求人',
                         'progress': '応募・選考状況',
-                        'mypage': 'マイページ',
+                        'mypage': 'プロフィール編集',
                         'diagnosis': 'あなたの天職診断', // デフォルトタイトル
                         'user-management': 'ユーザー管理',
                         'job-management': '求人管理',
@@ -872,7 +872,7 @@
                             </div>
                             <div class="flex justify-end mt-4">
                                 <button id="job-search-favorites-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-yellow-400 text-white mr-2"><i class="fas fa-star mr-2"></i>お気に入り</button>
-                                <button id="apply-desired-conditions-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-teal-500 text-white mr-2">マイページの条件で探す</button>
+                                <button id="apply-desired-conditions-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-teal-500 text-white mr-2">プロフィールに登録した条件で探す</button>
                                 <button id="job-search-reset-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-slate-500 text-white mr-2">条件をクリア</button>
                                 <button id="job-search-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-indigo-600 text-white">検索する</button>
                             </div>
@@ -1213,10 +1213,8 @@ async function renderProgress() {
                     const driveUrlButton = profile.drive_folder_url ? `<div class="mt-4"><a href="${profile.drive_folder_url}" target="_blank" class="font-bold py-2 px-4 rounded-lg shadow-md inline-block bg-blue-500 hover:bg-blue-600 text-white"><i class="fab fa-google-drive mr-2"></i>Google Driveを開く</a></div>` : '';
                     const lineUrlFieldHtml = CURRENT_USER.role === 'user' ? '' : `<div class="md:col-span-2"><label class="${fLabel}">LINE URL</label><input name="line_url" type="url" class="${fInput}" value="${profile.line_url||''}"></div>`;
 
-                    // ▼▼▼ [ここから修正] ▼▼▼
-                    // diagnosis_flg が true (または "TRUE" などの truthy な値) の場合に「経歴・スキル」セクションを表示する
                     let skillsSectionHtml = '';
-                    if (profile.diagnosis_flg) {  // ★ (profile.diagnosis_flg === true) から変更
+                    if (profile.diagnosis_flg) {
                         skillsSectionHtml = `
                         <div class="${card} mb-8">
                             <h3 class="text-xl font-bold text-slate-800 mb-4">経歴・スキル</h3>
@@ -1236,11 +1234,10 @@ async function renderProgress() {
                             </div>
                         </div>`;
                     }
-                    // ▲▲▲ [ここまで修正] ▲▲▲
 
-
-                    // ページ全体のHTMLを構築
-                    let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">マイページ</h2>
+                    // ▼▼▼ 変更箇所 ▼▼▼
+                    // ページ全体のHTMLを構築 (パスワード変更フィールドを追加)
+                    let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">プロフィール</h2>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="lg:col-span-2">
                             <form id="profile-form">
@@ -1251,6 +1248,16 @@ async function renderProgress() {
                                         <div><label class="${fLabel}">氏名</label><input name="name" type="text" class="${fInput}" value="${profile.name||''}"></div>
                                         <div><label class="${fLabel}">年齢</label><input name="age" type="number" class="${fInput}" value="${profile.age||''}"></div>
                                         <div class="md:col-span-2"><label class="${fLabel}">メール</label><input type="email" class="${fInput} bg-slate-100" value="${profile.email||''}" readonly></div>
+                                        
+                                        <div>
+                                            <label for="new_password" class="${fLabel}">新しいパスワード</label>
+                                            <input id="new_password" name="new_password" type="password" class="${fInput}" placeholder="変更する場合のみ入力">
+                                        </div>
+                                        <div>
+                                            <label for="confirm_password" class="${fLabel}">新しいパスワード（確認）</label>
+                                            <input id="confirm_password" name="confirm_password" type="password" class="${fInput}" placeholder="変更する場合のみ入力">
+                                        </div>
+                                        <div class="md:col-span-2 text-xs text-slate-500">※パスワードを変更しない場合は空欄のままにしてください。</div>
                                         ${lineUrlFieldHtml}
                                     </div>
                                     ${driveUrlButton}
@@ -1277,6 +1284,7 @@ async function renderProgress() {
                             </form>
                         </div>
                     </div>`;
+                    // ▲▲▲ 変更箇所 ▲▲▲
                     
                     // HTMLを描画
                     $('#mypage-page').html(content);
@@ -2102,6 +2110,29 @@ async function renderProgress() {
                                 const data = {};
                                 $(this).serializeArray().forEach(item => data[item.name] = item.value);
 
+                                // ▼▼▼ 変更箇所 ▼▼▼
+                                // パスワード変更の処理を追加
+                                const newPassword = $('#new_password').val();
+                                const confirmPassword = $('#confirm_password').val();
+
+                                // パスワードフィールドのどちらかに入力がある場合のみチェック
+                                if (newPassword || confirmPassword) {
+                                    if (newPassword !== confirmPassword) {
+                                        ui.showAlert('入力エラー', '新しいパスワードが一致しません。');
+                                        return; // 送信を中止
+                                    }
+                                    if (!newPassword) { // 確認用だけ入力されている場合
+                                        ui.showAlert('入力エラー', '新しいパスワードを入力してください。');
+                                        return; // 送信を中止
+                                    }
+                                    // パスワードが一致し、空でない場合は送信データに含める
+                                    data.password = newPassword; // バックエンド側で 'password' というキーで受け取ることを想定
+                                }
+                                // 不要なフィールドは削除
+                                delete data.new_password;
+                                delete data.confirm_password;
+                                // ▲▲▲ 変更箇所 ▲▲▲
+
                                 if (data.age === '') {
                                     data.age = null;
                                 }
@@ -2117,6 +2148,11 @@ async function renderProgress() {
                                 try {
                                     await api.call('updateMyProfile', [data]);
                                     ui.showAlert('成功', 'プロフィールを更新しました。');
+                                    // パスワード変更成功時は入力欄をクリア
+                                    if (data.password) {
+                                        $('#new_password').val('');
+                                        $('#confirm_password').val('');
+                                    }
                                 } catch (e) {
                                     ui.showAlert('エラー', `プロフィールの更新に失敗しました: ${e}`);
                                 }
