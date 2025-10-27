@@ -395,7 +395,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz3HeRxTZ4P3mo_SoTyE33wooD4l3eQo0l6_V14LRF-xVxhx1bdQ2ll0ao8J2XR8ZKw/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwU6kSdLtppeo_Q4zx0YLOrOptYQ16qc0DTmvRneuv2tQtES33RYOO5NqhnIm1Lm81f/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
             const skillDetails = {
@@ -1096,96 +1096,128 @@
                 }
             }
 
-async function renderProgress() {
-    try {
-        const {
-            applications,
-            statuses
-        } = await api.call('getProgressData');
-        ALL_APPLICATIONS = applications || [];
-        MASTERS.application_status = statuses || [];
-        const getBadge = s => ({
-            "内定": "bg-purple-100 text-purple-700",
-            "入社確認済": "bg-green-100 text-green-700",
-            "最終面接": "bg-blue-100 text-blue-700",
-            "一次面接": "bg-blue-100 text-blue-700",
-            "書類選考": "bg-yellow-100 text-yellow-700",
-            "応募完了": "bg-yellow-100 text-yellow-700",
-            "選考終了(書類)": "bg-slate-100 text-slate-600",
-            "選考終了(面接)": "bg-slate-100 text-slate-600",
-            "選考終了(内定辞退)": "bg-slate-100 text-slate-600",
-            "選考終了(充足クローズ)": "bg-slate-100 text-slate-600",
-            "選考終了(その他)": "bg-slate-100 text-slate-600"
-        }[s] || 'bg-slate-100 text-slate-600');
 
-        const tableRows = apps => apps?.length > 0 ? apps.map(app => {
-            let group = 'progress'; // Default group
-            if (app.status === '内定') {
-                group = 'offered';
-            } else if (app.status === '入社確認済') {
-                group = 'decided';
-            } else if ((app.status || '').startsWith('選考終了')) {
-                group = 'finished';
-            }
-            const keywords = [app.user_name, app.company_name, app.job_title].join(' ').toLowerCase();
-            const jobIdDisplay = String(app.job_id).startsWith('http') ? `<a href="${app.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (app.job_id || 'N/A');
-            return `<tr class="border-b" data-status-group="${group}" data-keywords="${keywords}">
-                        <td class="p-3 text-sm text-slate-600">${new Date(app.application_date).toLocaleDateString('ja-JP')}</td>
-                        <td class="p-3 font-medium text-slate-800">${app.company_name}</td>
-                        <td class="p-3 text-slate-700">${app.job_title}</td>
-                        <td class="p-3 text-sm text-slate-500">${jobIdDisplay}</td>
-                        ${['admin', 'coach'].includes(CURRENT_USER.role) ? `<td class="p-3 text-slate-600">${app.user_name}</td>` : ''}
-                        <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getBadge(app.status)}">${app.status || 'N/A'}</span></td>
-                        <td class="p-3 text-right space-x-2">
-                            <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white details-btn" data-id="${app.application_id}">詳細</button>
-                            ${['admin', 'coach'].includes(CURRENT_USER.role) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white edit-status-btn" data-id="${app.application_id}" data-current-status="${app.status}">編集</button>` : ''}
-                        </td>
-                    </tr>`;
-        }).join('') : `<tr><td colspan="7" class="text-center text-slate-500 py-8">該当する応募情報はありません。</td></tr>`;
+            async function renderProgress() {
+                try {
+                    const {
+                        applications,
+                        statuses
+                    } = await api.call('getProgressData');
+                    ALL_APPLICATIONS = applications || [];
+                    MASTERS.application_status = statuses || []; // ステータスマスタを保存
+                    const isManager = ['admin', 'coach'].includes(CURRENT_USER.role); // 管理者かどうかのフラグ
 
-        const searchBoxHtml = ['admin', 'coach'].includes(CURRENT_USER.role) ? `<div>
-                                        <label for="progress-keyword-search" class="text-sm font-medium text-slate-600">キーワード検索</label>
-                                        <input id="progress-keyword-search" type="text" placeholder="求職者名, 企業名, 求人名..." class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500">
-                                    </div>` : '<div class="hidden md:block"></div>';
+                    const getBadge = s => ({
+                        "内定": "bg-purple-100 text-purple-700",
+                        "入社確認済": "bg-green-100 text-green-700",
+                        "最終面接": "bg-blue-100 text-blue-700",
+                        "一次面接": "bg-blue-100 text-blue-700",
+                        "書類選考": "bg-yellow-100 text-yellow-700",
+                        "応募完了": "bg-yellow-100 text-yellow-700",
+                        "選考終了(書類)": "bg-slate-100 text-slate-600",
+                        "選考終了(面接)": "bg-slate-100 text-slate-600",
+                        "選考終了(内定辞退)": "bg-slate-100 text-slate-600",
+                        "選考終了(充足クローズ)": "bg-slate-100 text-slate-600",
+                        "選考終了(その他)": "bg-slate-100 text-slate-600"
+                    }[s] || 'bg-slate-100 text-slate-600');
 
-        let content = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-slate-800">応募・選考状況</h2></div>
-                           <div class="bg-white rounded-xl shadow-md p-4 mb-6">
-                               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                                   ${searchBoxHtml}
-                                   <div>
-                                       <label class="text-sm font-medium text-slate-600">ステータスで絞り込む</label>
-                                       <div class="flex items-center space-x-2 mt-2 flex-wrap gap-y-2">
-                                           <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white" data-filter="progress">選考中</button>
-                                           <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="offered">内定</button>
-                                           <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="decided">入社決定</button>
-                                           <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="finished">終了</button>
-                                           <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="all">すべて</button>
+                    // ▼▼▼ テーブル行生成ロジックを変更 ▼▼▼
+                    const tableRows = apps => apps?.length > 0 ? apps.map(app => {
+                        let group = 'progress';
+                        if (app.status === '内定') group = 'offered';
+                        else if (app.status === '入社確認済') group = 'decided';
+                        else if ((app.status || '').startsWith('選考終了')) group = 'finished';
+
+                        const keywords = [app.user_name, app.company_name, app.job_title].join(' ').toLowerCase();
+                        const jobIdDisplay = String(app.job_id).startsWith('http') ? `<a href="${app.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (app.job_id || 'N/A');
+
+                        // チェックボックスを追加 (管理者のみ)
+                        const checkboxHtml = isManager ? `
+                            <td class="p-3 text-center">
+                                <input type="checkbox" class="progress-check-item h-4 w-4"
+                                       data-app-id="${app.application_id}"
+                                       data-user-id="${app.user_id}"
+                                       data-user-name="${app.user_name || ''}">
+                            </td>` : '';
+
+                        return `<tr class="border-b progress-row" data-status-group="${group}" data-keywords="${keywords}">
+                                    ${checkboxHtml}
+                                    <td class="p-3 text-sm text-slate-600">${new Date(app.application_date).toLocaleDateString('ja-JP')}</td>
+                                    <td class="p-3 font-medium text-slate-800">${app.company_name}</td>
+                                    <td class="p-3 text-slate-700">${app.job_title}</td>
+                                    <td class="p-3 text-sm text-slate-500">${jobIdDisplay}</td>
+                                    ${isManager ? `<td class="p-3 text-slate-600">${app.user_name}</td>` : ''}
+                                    <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getBadge(app.status)}">${app.status || 'N/A'}</span></td>
+                                    <td class="p-3 text-right space-x-2 whitespace-nowrap">
+                                        <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white details-btn" data-id="${app.application_id}">詳細</button>
+                                        ${isManager ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white edit-status-btn" data-id="${app.application_id}" data-current-status="${app.status}">編集</button>` : ''}
+                                    </td>
+                                </tr>`;
+                    }).join('') : `<tr><td colspan="${isManager ? 8 : 7}" class="text-center text-slate-500 py-8">該当する応募情報はありません。</td></tr>`; // colspanを調整
+                    // ▲▲▲ テーブル行生成ロジックここまで ▲▲▲
+
+                    const searchBoxHtml = isManager ? `<div>
+                                                    <label for="progress-keyword-search" class="text-sm font-medium text-slate-600">キーワード検索</label>
+                                                    <input id="progress-keyword-search" type="text" placeholder="求職者名, 企業名, 求人名..." class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                                                </div>` : '<div class="hidden md:block"></div>';
+
+                    // ▼▼▼ 一括操作ボタンを追加 ▼▼▼
+                    const batchActionHtml = isManager ? `
+                        <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                            <div class="flex flex-col sm:flex-row justify-end items-center gap-2">
+                                <div class="mr-auto">
+                                    <span class="text-sm text-slate-600" id="progress-batch-action-label">チェックした応募を一括操作:</span>
+                                    <span class="text-sm font-medium text-red-500 hidden" id="progress-batch-action-warning"></span>
+                                </div>
+                                <button id="batch-status-update-btn" class="w-full sm:w-auto font-bold py-2 px-4 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50" disabled>
+                                    <i class="fas fa-edit mr-2"></i>ステータスを一括変更
+                                </button>
+                            </div>
+                        </div>` : '';
+                    // ▲▲▲ 一括操作ボタンここまで ▲▲▲
+
+                    let content = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-slate-800">応募・選考状況</h2></div>
+                                       <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                               ${searchBoxHtml}
+                                               <div>
+                                                   <label class="text-sm font-medium text-slate-600">ステータスで絞り込む</label>
+                                                   <div class="flex items-center space-x-2 mt-2 flex-wrap gap-y-2">
+                                                       <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white" data-filter="progress">選考中</button>
+                                                       <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="offered">内定</button>
+                                                       <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="decided">入社決定</button>
+                                                       <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="finished">終了</button>
+                                                       <button class="filter-btn font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-500 text-white" data-filter="all">すべて</button>
+                                                   </div>
+                                               </div>
+                                           </div>
                                        </div>
-                                   </div>
-                               </div>
-                           </div>
-                           <div class="bg-white rounded-xl shadow-md overflow-x-auto">
-                               <table class="w-full text-left min-w-[600px]">
-                                   <thead class="bg-slate-50 border-b">
-                                       <tr>
-                                           <th class="p-3 text-sm font-semibold text-slate-600">応募日</th>
-                                           <th class="p-3 text-sm font-semibold text-slate-600">企業名</th>
-                                           <th class="p-3 text-sm font-semibold text-slate-600">求人名</th>
-                                           <th class="p-3 text-sm font-semibold text-slate-600">求人ID</th>
-                                           ${['admin', 'coach'].includes(CURRENT_USER.role) ? '<th class="p-3 text-sm font-semibold text-slate-600">応募者</th>' : ''}
-                                           <th class="p-3 text-sm font-semibold text-slate-600">ステータス</th>
-                                           <th class="p-3"></th>
-                                       </tr>
-                                   </thead>
-                                   <tbody id="progress-table-body">${tableRows(ALL_APPLICATIONS)}</tbody>
-                               </table>
-                           </div>`;
-        $('#progress-page').html(content);
-        if (ALL_APPLICATIONS.length > 0) $('.filter-btn[data-filter="progress"]').click();
-    } catch (e) {
-        console.error("Progress render failed:", e);
-    }
-}
+                                       ${batchActionHtml} <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                                           <table class="w-full text-left min-w-[600px]">
+                                               <thead class="bg-slate-50 border-b">
+                                                   <tr>
+                                                       ${isManager ? '<th class="p-3 text-center"><input type="checkbox" id="progress-check-all" class="h-4 w-4"></th>' : ''} <th class="p-3 text-sm font-semibold text-slate-600">応募日</th>
+                                                       <th class="p-3 text-sm font-semibold text-slate-600">企業名</th>
+                                                       <th class="p-3 text-sm font-semibold text-slate-600">求人名</th>
+                                                       <th class="p-3 text-sm font-semibold text-slate-600">求人ID</th>
+                                                       ${isManager ? '<th class="p-3 text-sm font-semibold text-slate-600">応募者</th>' : ''}
+                                                       <th class="p-3 text-sm font-semibold text-slate-600">ステータス</th>
+                                                       <th class="p-3"></th>
+                                                   </tr>
+                                               </thead>
+                                               <tbody id="progress-table-body">${tableRows(ALL_APPLICATIONS)}</tbody>
+                                           </table>
+                                       </div>`;
+                    $('#progress-page').html(content);
+                    // デフォルトで「選考中」をフィルタリング
+                    if (ALL_APPLICATIONS.length > 0) filterProgress('progress');
+                    // 初期状態でチェックボックスの状態を同期
+                    if (isManager) syncProgressHeaderCheckbox();
+
+                } catch (e) {
+                    console.error("Progress render failed:", e);
+                }
+            }
             async function renderMyPage() {
                 try {
                     // マスターデータ（業種など）が未読み込みなら取得
@@ -3138,7 +3170,145 @@ async function renderProgress() {
                             });
 
 
+                            // --- Progress Page: Batch Status Update ---
 
+                            // ===== (Progress) 可視行のチェックボックスを取得 =====
+                            function visibleProgressCheckItems() {
+                              return $('#progress-table-body tr:visible .progress-check-item:not(:disabled)');
+                            }
+
+                            // ===== (Progress) ヘッダと一括ボタンの状態を同期 =====
+                            function syncProgressHeaderCheckbox() {
+                              const items = visibleProgressCheckItems();
+                              const checkedItems = items.filter(':checked');
+                              const checkedCount = checkedItems.length;
+
+                              // 1. ヘッダチェックボックス
+                              const allChecked = items.length > 0 && checkedCount === items.length;
+                              $('#progress-check-all').prop('checked', allChecked);
+
+                              // 2. 一括ボタンと警告ラベル
+                              const btnBatchUpdate = $('#batch-status-update-btn');
+                              const batchLabel = $('#progress-batch-action-label');
+                              const batchWarning = $('#progress-batch-action-warning');
+
+                              if (checkedCount === 0) {
+                                  batchLabel.text('チェックした応募を一括操作:');
+                                  batchWarning.text('').addClass('hidden');
+                                  btnBatchUpdate.prop('disabled', true);
+                                  return;
+                              }
+
+                              // 選択されたユーザーが単一かチェック
+                              let firstUserId = checkedItems.first().data('user-id');
+                              let firstUserName = checkedItems.first().data('user-name');
+                              let isSingleUserSelected = true;
+                              checkedItems.each(function() {
+                                  if ($(this).data('user-id') !== firstUserId) {
+                                      isSingleUserSelected = false;
+                                      return false; // loop break
+                                  }
+                              });
+
+                              if (isSingleUserSelected) {
+                                  batchLabel.text(`対象: ${firstUserName} さん`);
+                                  batchWarning.text('').addClass('hidden');
+                                  btnBatchUpdate.prop('disabled', false);
+                              } else {
+                                  batchLabel.text('チェックした応募を一括操作:');
+                                  batchWarning.text('複数ユーザーの応募を同時に変更できません。').removeClass('hidden');
+                                  btnBatchUpdate.prop('disabled', true);
+                              }
+                            }
+
+                            // --- (Progress) チェックボックスイベント ---
+                            $(document).on('change', '#progress-check-all', function () {
+                                const items = visibleProgressCheckItems();
+                                items.prop('checked', this.checked);
+                                syncProgressHeaderCheckbox();
+                            });
+                            $(document).on('change', '.progress-check-item', function () {
+                                syncProgressHeaderCheckbox();
+                            });
+                            // フィルタ変更時もチェック状態を同期
+                            $(document).on('click', '#progress-page .filter-btn', function() {
+                                syncProgressHeaderCheckbox();
+                            });
+                             $(document).on('input', '#progress-keyword-search', function() {
+                                syncProgressHeaderCheckbox();
+                             });
+
+
+                            // --- (Progress) 一括変更ボタンクリック -> モーダル表示 ---
+                            $(document).on('click', '#batch-status-update-btn', function() {
+                                const checkedItems = $('.progress-check-item:checked');
+                                if (checkedItems.length === 0) return;
+
+                                const targetUserName = checkedItems.first().data('user-name');
+                                const appCount = checkedItems.length;
+                                const statusOptions = (MASTERS.application_status || []) // 保存しておいたマスタを使用
+                                    .map(s => `<option value="${s}">${s}</option>`)
+                                    .join('');
+
+                                const content = `
+                                    <form id="batch-update-status-form">
+                                        <p class="mb-4"><b>${targetUserName}さん</b>の <b>${appCount}件</b> の応募ステータスを一括で変更します。</p>
+                                        <div class="mb-4">
+                                            <label for="batch-new-status" class="block text-sm font-medium text-slate-700">新しいステータス</label>
+                                            <select id="batch-new-status" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                                                <option value="">選択してください</option>
+                                                ${statusOptions}
+                                            </select>
+                                        </div>
+                                        <div class="mb-4">
+                                             <label for="batch-new-memo" class="block text-sm font-medium">メモ (社内用)</label>
+                                             <textarea id="batch-new-memo" class="mt-1 block w-full rounded-md border-slate-300" rows="3" placeholder="必要であれば共通のメモを入力"></textarea>
+                                        </div>
+                                        <div class="mb-6 border-t pt-4">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" id="batch-send-notification" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                <span class="ml-2 text-sm text-slate-700">応募者と関係者に変更通知メールを送信する</span>
+                                            </label>
+                                            <p class="text-xs text-slate-500 mt-1">※チェックしない場合、メール通知は送信されません。</p>
+                                        </div>
+                                        <div class="mt-6 text-right space-x-2">
+                                            <button type="button" id="modal-cancel-btn" class="font-bold py-2 px-4 rounded-lg shadow-md bg-slate-500 text-white">キャンセル</button>
+                                            <button type="submit" class="font-bold py-2 px-4 rounded-lg shadow-md bg-blue-600 text-white">変更を保存</button>
+                                        </div>
+                                    </form>
+                                `;
+                                ui.showModal('ステータス一括変更', content);
+                            });
+
+                            // --- (Progress) 一括変更モーダル -> 保存実行 ---
+                            $(document).on('submit', '#batch-update-status-form', async function(e) {
+                                e.preventDefault();
+                                const checkedItems = $('.progress-check-item:checked');
+                                const appIds = checkedItems.map((i, el) => $(el).data('app-id')).get();
+                                const newStatus = $('#batch-new-status').val();
+                                const newMemo = $('#batch-new-memo').val(); // メモを取得
+                                const sendNotification = $('#batch-send-notification').is(':checked');
+
+                                if (!newStatus) {
+                                    ui.showAlert('エラー', '新しいステータスを選択してください。');
+                                    return;
+                                }
+
+                                ui.hideModal();
+                                ui.showSpinner();
+
+                                try {
+                                    // バックエンドの新しい関数を呼び出す
+                                    await api.call('batchUpdateApplicationStatus', [appIds, newStatus, newMemo, sendNotification]); // メモも渡す
+                                    ui.showAlert('成功', `${appIds.length}件のステータスを変更しました。`);
+                                    // UIを更新するために再描画
+                                    renderProgress();
+                                } catch (err) {
+                                    ui.showAlert('エラー', `一括更新に失敗しました: ${err}`);
+                                } finally {
+                                    ui.hideSpinner();
+                                }
+                            });
 
 
                         } // end of initializeEvents()
