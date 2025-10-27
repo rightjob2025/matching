@@ -935,6 +935,8 @@
                     });
 
                     const isManager = ['admin', 'coach'].includes(CURRENT_USER.role);
+                    
+                    // ▼▼▼ 変更（管理者向けフィルター）▼▼▼
                     const searchFilterHtml = isManager ? `<div class="bg-white rounded-xl shadow-md p-4 mb-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -957,8 +959,25 @@
                                     </button>
                                 </div>
                             </div>` : '';
+                    // ▲▲▲ 変更（管理者向けフィルター）▲▲▲
+                    
+                    // ▼▼▼ 新規追加（ユーザー向け一括操作ボタン）▼▼▼
+                    const userBatchActionHtml = !isManager ? `
+                        <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                            <div class="flex flex-col sm:flex-row justify-end items-center gap-2">
+                                <span class="text-sm text-slate-600 mr-auto" id="batch-action-label">チェックした求人を一括操作:</span>
+                                <button id="batch-apply-btn" class="w-full sm:w-auto font-bold py-2 px-4 rounded-lg shadow-md bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50" disabled>
+                                    <i class="fas fa-check-double mr-2"></i>一括応募
+                                </button>
+                                <button id="batch-reject-btn" class="w-full sm:w-auto font-bold py-2 px-4 rounded-lg shadow-md bg-slate-500 hover:bg-slate-600 text-white disabled:opacity-50" disabled>
+                                    <i class="fas fa-times-circle mr-2"></i>一括見送り
+                                </button>
+                            </div>
+                        </div>` : '';
+                    // ▲▲▲ 新規追加（ユーザー向け一括操作ボタン）▲▲▲
 
-                    let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">おすすめ求人一覧</h2>${searchFilterHtml}`;
+                    let content = `<h2 class="text-3xl font-bold text-slate-800 mb-6">おすすめ求人一覧</h2>${searchFilterHtml}${userBatchActionHtml}`; // <-- 変更点
+                    
                     if (!recs || recs.length === 0) {
                         content += `<div class="bg-white rounded-xl shadow-md p-6"><p class="text-center text-slate-500">現在、おすすめの求人はありません。</p></div>`;
                         $('#recommendations-list-page').html(content);
@@ -977,30 +996,39 @@
                     }[r] || '未確認');
                     const getStatus = r => {
                         if (r === 'excluded') return 'excluded';
+                        if (r === 'applied') return 'applied'; // ★ 追加
                         return r || 'pending';
                     };
 
                     const tableRows = recs.map(rec => {
                         const isRejected = rec.user_reaction === 'rejected';
                         const isExcluded = rec.user_reaction === 'excluded'; 
+                        const isApplied = rec.user_reaction === 'applied'; // ★ 追加
+                        const isActionable = !isRejected && !isExcluded && !isApplied; // ★ 追加 (操作可能か)
 
                         let rowStyle = '';
                         if (isExcluded) {
                             rowStyle = 'bg-slate-200 text-slate-600'; 
                         } else if (isRejected) {
                             rowStyle = 'bg-slate-100 text-slate-500'; 
+                        } else if (isApplied) { // ★ 追加
+                            rowStyle = 'bg-green-50';
                         }
+                        
                         const recDate = new Date(rec.created_at).toLocaleDateString('ja-JP');
                         const isAI = rec.recommendation_type === 'ai';
                         const recommender = isAI ? `AI (${rec.ai_score||'N/A'}点)` : rec.recommender_name;
                         const managerCell = isManager ? `<td class="p-3">${rec.user_name}</td>` : '';
-                        const rejectButton = (!isRejected && !isExcluded) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">この求人は見送る</button>` : ''; 
+                        
+                        // ▼▼▼ 変更（ボタン定義）▼▼▼
+                        const rejectButton = isActionable ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">見送る</button>` : ''; 
+                        const applyButton = isActionable && !isManager ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white recommendation-list-apply-btn" data-job-id="${rec.job_id}" data-rec-id="${rec.recommendation_id}">応募</button>` : '';
+                        // ▲▲▲ 変更（ボタン定義）▲▲▲
+                        
                         const reasonHtml = rec.recommendation_reason ? `<p class="text-xs font-normal text-slate-500 mt-1 pl-1 border-l-2 border-slate-200">${rec.recommendation_reason}</p>` : '';
                         const keywords = [rec.user_name, rec.title, rec.company].join(' ').toLowerCase();
                         const jobIdDisplay = String(rec.job_id).startsWith('http') ? `<a href="${rec.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (rec.job_id || 'N/A');
 
-                        // ▼▼▼ 変更ここから ▼▼▼
-                        // 1. 未経験OKバッジ
                         const jobExpBadge = (rec.job_experience_ok === 'OK')
                             ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">職種未経験OK</span>'
                             : '';
@@ -1008,17 +1036,15 @@
                             ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">業種未経験OK</span>'
                             : '';
 
-                        // 2. 業務内容の概要
                         let shortDescHtml = '';
                         if (rec.description) {
-                            let desc = rec.description.replace(/\s+/g, ' ').substring(0, 60); // 改行を空白に置換し、60文字でカット
+                            let desc = rec.description.replace(/\s+/g, ' ').substring(0, 60);
                             if (rec.description.length > 60) desc += '...';
                             shortDescHtml = `<p class="text-xs font-normal text-gray-600 mt-1">${desc}</p>`;
                         }
                         
-                        // 3. 想定年収
                         const salaryHtml = rec.salary 
-                            ? `<p class="text-sm font-bold text-orange-600 mt-1">${rec.salary}</p>` // ★ text-red-600 を text-orange-600 に変更
+                            ? `<p class="text-sm font-bold text-orange-600 mt-1">${rec.salary}</p>` // (オレンジ色に変更済み)
                             : '';
 
                         return `<tr class="border-b recommendation-row ${rowStyle}" data-status="${getStatus(rec.user_reaction)}" data-keywords="${keywords}">
@@ -1028,23 +1054,27 @@
                                        data-job-id="${rec.job_id}" 
                                        data-title="${rec.title}" 
                                        data-company="${rec.company}"
+                                       data-rec-id="${rec.recommendation_id}"
                                        data-reason="${encodeURIComponent(rec.recommendation_reason || '')}"
-                                       ${isRejected || isExcluded ? 'disabled' : ''}>
-                            </td>
+                                       ${!isActionable ? 'disabled' : ''}>
+                                </td>
                             <td class="p-3 text-sm">${recDate}</td>
                                 ${managerCell}
                                 <td class="p-3 font-medium ${isRejected || isExcluded ? '' : 'text-slate-800'}"> 
-                                    ${rec.title} ${jobExpBadge} ${industryExpBadge} ${reasonHtml}
-                                    ${shortDescHtml} </td>
+                                    ${rec.title} ${jobExpBadge} ${industryExpBadge}
+                                    ${reasonHtml}
+                                    ${shortDescHtml} 
+                                </td>
                                 <td class="p-3">
                                     ${rec.company}
-                                    ${salaryHtml} </td>
+                                    ${salaryHtml} 
+                                </td>
                                 <td class="p-3 text-sm">${jobIdDisplay}</td>
                                 <td class="p-3"><i class="fas ${isAI?'fa-robot text-indigo-500':'fa-user-tie text-green-500'} mr-2"></i>${recommender}</td>
                                 <td class="p-3 status-badge"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getBadge(rec.user_reaction)}">${getBadgeText(rec.user_reaction)}</span></td>
-                                <td class="p-3 text-right space-x-2">
+                                <td class="p-3 text-right space-x-2 whitespace-nowrap">
                                     ${rejectButton}
-                                    <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white job-details-btn" data-job-id="${rec.job_id}">詳細を見る</button>
+                                    ${applyButton} <button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md transition-transform transform hover:scale-105 bg-slate-500 hover:bg-slate-600 text-white job-details-btn" data-job-id="${rec.job_id}">詳細</button>
                                 </td>
                             </tr>`;
                     }).join('');
@@ -2161,6 +2191,7 @@ async function renderProgress() {
                             $(document).on('submit', '#apply-form', async function(e) {
                                 e.preventDefault();
                                 const jobId = $(this).data('job-id');
+                                const recId = $(this).data('rec-id'); // ▼▼▼ 変更：rec-idを取得
                                 const dates = $('.interview-date').map((i, el) => $(el).val()).get().filter(Boolean);
                                 const notes = $('#application-notes').val();
                                 const aspirationLevel = $('#aspiration-level').val();
@@ -2172,11 +2203,25 @@ async function renderProgress() {
 
                                 try {
                                     await api.call('applyForJob', [jobId, dates, notes, aspirationLevel]);
+                                    
+                                    // ▼▼▼ 新規追加（応募と同時に推薦ステータスも更新）▼▼▼
+                                    if (recId) { 
+                                        await api.call('updateRecommendationStatus', [recId, 'applied']);
+                                        // Update the row in the UI
+                                        const row = $(`.recommendation-check-item[data-rec-id="${recId}"]`).closest('tr');
+                                        row.addClass('bg-green-50'); 
+                                        row.find('.status-badge').html(`<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">応募済み</span>`);
+                                        row.find('.recommendation-list-reject-btn, .recommendation-list-apply-btn').remove();
+                                        row.find('.recommendation-check-item').prop('checked', false).prop('disabled', true);
+                                        syncHeaderCheckbox();
+                                    }
+                                    // ▲▲▲ 新規追加 ▲▲▲
+
                                     ui.hideModal();
                                     ui.showAlert('応募完了', '求人への応募を受け付けました。「応募・選考状況」ページで確認できます。');
                                     renderProgress();
                                 } catch (e) {
-                                    ui.showAlert('応募に失敗しました。時間をおいて再度お試しください。', `応募に失敗: ${e}`);
+                                    ui.showAlert('応募に失敗しました。', `応募に失敗: ${e}`);
                                 }
                             });
 
@@ -2718,9 +2763,17 @@ async function renderProgress() {
                               const allChecked = items.length > 0 && items.filter(':checked').length === items.length;
                               $('#recommendation-check-all').prop('checked', allChecked);
 
-                              if (typeof updateEmailButtonStatus === 'function') {
-                                updateEmailButtonStatus();
+                              // ▼▼▼ 変更（ロールに応じてボタン制御を分岐）▼▼▼
+                              if (CURRENT_USER && CURRENT_USER.role === 'user') {
+                                  const checkedCount = items.filter(':checked').length;
+                                  $('#batch-apply-btn').prop('disabled', checkedCount === 0);
+                                  $('#batch-reject-btn').prop('disabled', checkedCount === 0);
+                              } else {
+                                  if (typeof updateEmailButtonStatus === 'function') {
+                                    updateEmailButtonStatus();
+                                  }
                               }
+                              // ▲▲▲ 変更（ロールに応じてボタン制御を分岐）▲▲▲
                             }
 
                             // ===== すべてチェック（ヘッダ） =====
@@ -2873,6 +2926,184 @@ async function renderProgress() {
                                     ui.showAlert('除外エラー', `除外処理に失敗: ${e}`);
                                 }
                             });
+
+
+// --- Recommendations List: Single Apply Button ---
+                            $(document).on('click', '.recommendation-list-apply-btn', function() {
+                                const jobId = $(this).data('job-id');
+                                const recId = $(this).data('rec-id'); // Get the rec-id
+                                // 既存の応募モーダルロジックを流用
+                                const content = `<form id="apply-form" data-job-id="${jobId}" data-rec-id="${recId}">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-700">志望度 <span class="text-red-500">*</span></label>
+                                                <select id="aspiration-level" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                                                    <option value="">選択してください</option>
+                                                    <option value="A">A: 第一志望群</option>
+                                                    <option value="B">B: 第二志望群</option>
+                                                    <option value="C">C: 第三志望群</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-700">伝達事項</label>
+                                                <textarea id="application-notes" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" placeholder="何か伝えておきたいことがあれば入力してください。"></textarea>
+                                            </div>
+                                            <hr class="my-4">
+                                            <div>
+                                                <p class="mb-2 text-sm font-medium text-slate-700">面接希望日時 (3つまで)</p>
+                                                ${[1,2,3].map(i => `<div class="mb-2"><label class="block text-xs text-slate-600">希望日時 ${i}</label><input type="datetime-local" class="mt-1 block w-full rounded-md border-slate-300 interview-date"></div>`).join('')}
+                                            </div>
+                                        </div>
+                                        <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">この内容で応募する</button></div>
+                                    </form>`;
+                                ui.showModal('応募内容の確認', content);
+                            });
+
+                            // --- Recommendations List: Batch Reject ---
+                            $(document).on('click', '#batch-reject-btn', async function() {
+                                const checkedItems = $('.recommendation-check-item:checked');
+                                if (checkedItems.length === 0) return;
+                                
+                                if (!confirm(`${checkedItems.length}件の求人を一括で見送ります。よろしいですか？`)) return;
+
+                                ui.showSpinner();
+                                const recIds = checkedItems.map((i, el) => $(el).data('rec-id')).get();
+                                
+                                const promises = recIds.map(recId => api.call('updateRecommendationStatus', [recId, 'rejected']));
+                                
+                                try {
+                                    await Promise.all(promises);
+                                    ui.showAlert('処理完了', `${checkedItems.length}件の求人を見送りました。`);
+                                    
+                                    // Update UI for each row
+                                    checkedItems.each(function() {
+                                        const row = $(this).closest('tr');
+                                        row.addClass('bg-slate-100 text-slate-500');
+                                        row.find('.font-medium').removeClass('text-slate-800');
+                                        row.find('.status-badge').html(`<span class="px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">見送り</span>`);
+                                        row.find('.recommendation-list-reject-btn, .recommendation-list-apply-btn').remove();
+                                        $(this).prop('checked', false).prop('disabled', true);
+                                    });
+                                    syncHeaderCheckbox(); // Update button states
+                                } catch (e) {
+                                    ui.showAlert('エラー', `一括見送り処理に失敗しました: ${e}`);
+                                } finally {
+                                    ui.hideSpinner();
+                                }
+                            });
+
+                            // --- Recommendations List: Batch Apply (Show Modal) ---
+                            $(document).on('click', '#batch-apply-btn', function() {
+                                const checkedItems = $('.recommendation-check-item:checked');
+                                if (checkedItems.length === 0) return;
+
+                                let jobListHtml = '<ul class="space-y-2">';
+                                const jobsToApply = [];
+                                
+                                checkedItems.each(function() {
+                                    const el = $(this);
+                                    const title = el.data('title');
+                                    const company = el.data('company');
+                                    const jobId = el.data('job-id');
+                                    const recId = el.data('rec-id');
+                                    
+                                    jobListHtml += `<li class="text-sm font-medium text-slate-700">${title} <span class="text-xs text-slate-500">(${company})</span></li>`;
+                                    jobsToApply.push({ jobId: jobId, recId: recId });
+                                });
+                                jobListHtml += '</ul>';
+
+                                // Get the standard apply form content
+                                const formContent = `
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700">志望度 <span class="text-red-500">*</span></label>
+                                            <select id="aspiration-level" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                                                <option value="">選択してください</option>
+                                                <option value="A">A: 第一志望群</option>
+                                                <option value="B">B: 第二志望群</option>
+                                                <option value="C">C: 第三志望群</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700">伝達事項</label>
+                                            <textarea id="application-notes" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" placeholder="何か伝えておきたいことがあれば入力してください。"></textarea>
+                                        </div>
+                                        <hr class="my-4">
+                                        <div>
+                                            <p class="mb-2 text-sm font-medium text-slate-700">面接希望日時 (3つまで)</p>
+                                            ${[1,2,3].map(i => `<div class="mb-2"><label class="block text-xs text-slate-600">希望日時 ${i}</label><input type="datetime-local" class="mt-1 block w-full rounded-md border-slate-300 interview-date"></div>`).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                const finalContent = `
+                                    <p class="mb-4">以下の ${jobsToApply.length} 件の求人について、応募内容を入力してください。</p>
+                                    <div class="max-h-40 overflow-y-auto bg-slate-50 p-3 rounded-md mb-4">${jobListHtml}</div>
+                                    <form id="batch-apply-form">
+                                        ${formContent}
+                                        <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">この内容で一括応募する</button></div>
+                                    </form>
+                                `;
+                                
+                                ui.showModal('一括応募の確認', finalContent, { size: 'max-w-2xl' });
+                                // Store jobs data on the form
+                                $('#batch-apply-form').data('jobs', jobsToApply);
+                            });
+
+                            // --- Recommendations List: Batch Apply (Submit) ---
+                            $(document).on('submit', '#batch-apply-form', async function(e) {
+                                e.preventDefault();
+                                
+                                const dates = $('.interview-date').map((i, el) => $(el).val()).get().filter(Boolean);
+                                const notes = $('#application-notes').val();
+                                const aspirationLevel = $('#aspiration-level').val();
+                                const jobsToApply = $(this).data('jobs');
+
+                                if (!aspirationLevel) {
+                                    ui.showAlert('必須入力です', '志望度を選択してください。');
+                                    return;
+                                }
+                                
+                                ui.showSpinner();
+                                ui.hideModal();
+
+                                try {
+                                    // 1. Apply for all jobs
+                                    const applyPromises = jobsToApply.map(job => 
+                                        api.call('applyForJob', [job.jobId, dates, notes, aspirationLevel])
+                                    );
+                                    await Promise.all(applyPromises);
+                                    
+                                    // 2. Update all recommendation statuses
+                                    const updatePromises = jobsToApply.map(job => 
+                                        api.call('updateRecommendationStatus', [job.recId, 'applied'])
+                                    );
+                                    await Promise.all(updatePromises);
+                                    
+                                    ui.showAlert('一括応募完了', `${jobsToApply.length}件の求人への応募を受け付けました。`);
+                                    
+                                    // 3. Update UI
+                                    jobsToApply.forEach(job => {
+                                        const row = $(`.recommendation-check-item[data-rec-id="${job.recId}"]`).closest('tr');
+                                        row.addClass('bg-green-50');
+                                        row.find('.status-badge').html(`<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">応募済み</span>`);
+                                        row.find('.recommendation-list-reject-btn, .recommendation-list-apply-btn').remove();
+                                        row.find('.recommendation-check-item').prop('checked', false).prop('disabled', true);
+                                    });
+                                    
+                                    syncHeaderCheckbox(); // Update button states
+                                    renderProgress(); // Refresh progress page data
+                                    
+                                } catch (e) {
+                                    ui.showAlert('一括応募に失敗しました。', `処理中にエラーが発生しました: ${e}`);
+                                } finally {
+                                    ui.hideSpinner();
+                                }
+                            });
+
+
+
+
 
                         } // end of initializeEvents()
 
