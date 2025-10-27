@@ -1409,25 +1409,22 @@
                 let html = '';
                 sortedStrengths.forEach((strength, index) => {
                     const rank = index + 1;
-                    const detail = skillDetails[strength.name] || { iconClass: '', description: '' };
 
-                    let rankBadgeHtml = `<div class="rank-badge blue">${rank}</div>`;
-                    if (rank === 1) rankBadgeHtml = `<div class="rank-badge gold"><img alt="Rank 1" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_gold-bb47445ffbadc7cd324c7a242942bd2411fc133c4612dbf957fab78f499e6541.png" /></div>`;
-                    else if (rank === 2) rankBadgeHtml = `<div class="rank-badge silver"><img alt="Rank 2" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_silver-cbd9bf49e7bbd92e8eccb7b06c8cea7657efd763926feb78fabc8304ffe798a2.png" /></div>`;
-                    else if (rank === 3) rankBadgeHtml = `<div class="rank-badge bronze"><img alt="Rank 3" class="rank-badge-img" src="https://rightjob-tenshoku-shindan.website/assets/results/rank_badge_bronze-fd5fcc7d73ad72471dbd4f16b274f4eed38d27d5e76e7d16a7f774fdbf876770.png" /></div>`;
+                    // 順位に応じたバッジクラスを決定
+                    let rankBadgeClass = 'rank-badge blue'; // デフォルトは青
+                    if (rank === 1) rankBadgeClass = 'rank-badge gold';
+                    else if (rank === 2) rankBadgeClass = 'rank-badge silver';
+                    else if (rank === 3) rankBadgeClass = 'rank-badge bronze';
 
+                    // ★ シンプルなリストアイテムHTMLを生成
                     html += `
-                        <div class="item skill-item">
-                            <div class="skill-header-wrapper">
-                                ${rankBadgeHtml}
-                                <div class="skill-content">
-                                    <h3 class="skill-title">${strength.name}</h3>
-                                    <p class="skill-description">${detail.description}</p>
-                                </div>
-                            </div>
+                        <div class="simple-list-item" style="display: flex; align-items: center; padding: 12px 8px; border-bottom: 1px solid #eee;">
+                            <span class="${rankBadgeClass}" style="width: 30px; height: 30px; font-size: 14px; margin-right: 15px;">${rank}</span>
+                            <span class="item-name" style="font-weight: 500; color: #333;">${strength.name}</span>
                         </div>`;
                 });
-                container.html(html);
+                // 最後のアイテムの下線を削除するスタイルを追加（任意）
+                 container.html(html).find('.simple-list-item:last-child').css('border-bottom', 'none');
             }
 
             function renderJobsToDiagnosisPage(data) {
@@ -1435,53 +1432,32 @@
                 if (!container.length) return;
                 const rankedJobs = Object.values(data).sort((a, b) => a.rank - b.rank);
 
-                const rankImageUrls = {
-                    1: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no1-ebd1b3ea1cefba15829d9826e91a3b140597fbb6401d5a46a21a89e6564a99da.png',
-                    2: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no2-d4e7aa35cdbab3d098a9135244946c88354aeb9346f42b411f8c200594c1ba77.png',
-                    3: 'https://rightjob-tenshoku-shindan.website/assets/results/rank_no3-901884ea1cefba15829d9826e91a3b140597fbb6401d5a46a21a89e6564a99da.png'
-                };
-
                 let html = '';
+                // TOP3のみ表示
                 rankedJobs.slice(0, 3).forEach(job => {
-                    const detail = jobDetails[job.job_type];
-                    if (!detail) return;
+                    const detail = jobDetails[job.job_type]; // jobDetailsから色情報等を取得するため参照は残す
+                    if (!detail) return; // jobDetailsにない職種はスキップ
 
                     const rank = job.rank;
-                    const rankImageUrl = rankImageUrls[rank];
 
+                    // 順位に応じたバッジクラスを決定
+                    let rankBadgeClass = 'rank-badge blue'; // デフォルトは青
+                    if (rank === 1) rankBadgeClass = 'rank-badge gold';
+                    else if (rank === 2) rankBadgeClass = 'rank-badge silver';
+                    else if (rank === 3) rankBadgeClass = 'rank-badge bronze';
+
+                     // 職種に応じたクラス (任意: 背景色などに利用可能)
+                    const jobColorClass = detail.className || '';
+
+                    // ★ シンプルなリストアイテムHTMLを生成
                     html += `
-                        <div class="job-container ${detail.className}">
-                            <div class="job-rank-image">
-                                <img alt="NO.${rank}" class="job-rank-no-image" src="${rankImageUrl}" />
-                            </div>
-                            <div class="job-rank-badge ${detail.badgeClass}">
-                                <p>あなたに向いている職種は・・・</p>
-                            </div>
-                            <h2 class="job-name">${detail.name}</h2>
-                            <div class="job-image">
-                                <img alt="${detail.alt}" style="width: 100%; height: auto; max-width: 400px; margin: 0 auto; display: block;" src="${detail.image}" />
-                            </div>
-                            <div class="job-section">
-                                <h3 class="job-section-title">仕事内容と求められる能力</h3>
-                                <p class="job-description-text">${detail.description}</p>
-                            </div>
-                            <div class="job-section">
-                                <h3 class="job-section-title">重要な強み</h3>
-                                <div class="job-skills-container">
-                                    ${detail.skills.map(skill => `<span class="job-skill-tag">#${skill}</span>`).join('')}
-                                </div>
-                            </div>
-                            <div class="job-section">
-                                <h3 class="job-section-title">やりがい・面白さ</h3>
-                                <p class="job-description-text">${detail.passion}</p>
-                            </div>
-                            <div class="job-section job-career-path">
-                                <h3 class="job-career-path-title">キャリアパス</h3>
-                                <p class="job-career-path-text">${detail.careerPath}</p>
-                            </div>
+                        <div class="simple-list-item ${jobColorClass}" style="display: flex; align-items: center; padding: 12px 8px; border-bottom: 1px solid #eee;">
+                           <span class="${rankBadgeClass}" style="width: 30px; height: 30px; font-size: 14px; margin-right: 15px;">${rank}</span>
+                           <span class="item-name" style="font-weight: 500; color: #333;">${detail.name}</span>
                         </div>`;
                 });
-                container.html(html);
+                 // 最後のアイテムの下線を削除するスタイルを追加（任意）
+                 container.html(html).find('.simple-list-item:last-child').css('border-bottom', 'none');
             }
             async function renderJobManagement() {
                 try {
