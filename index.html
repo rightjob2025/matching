@@ -395,7 +395,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxyK7VLqqx43NEgZxcYI-3XM3ODoK6Co0oj3a8O0p6BpYgEWSyn7lRA2T6jBmF6xiXl/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxI32WrFB4j-ExiWMCtXC_6g656bJ5wIseIbpI_AVhaiS9nLMUzMzu3GBGyz8tj_mQT/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
             const skillDetails = {
@@ -982,23 +982,44 @@
 
                     const tableRows = recs.map(rec => {
                         const isRejected = rec.user_reaction === 'rejected';
-                        const isExcluded = rec.user_reaction === 'excluded'; // ★ 追加
+                        const isExcluded = rec.user_reaction === 'excluded'; 
 
-                        // ★ スタイルを決定
                         let rowStyle = '';
                         if (isExcluded) {
-                            rowStyle = 'bg-slate-200 text-slate-600'; // 濃いグレー
+                            rowStyle = 'bg-slate-200 text-slate-600'; 
                         } else if (isRejected) {
-                            rowStyle = 'bg-slate-100 text-slate-500'; // 薄いグレー
+                            rowStyle = 'bg-slate-100 text-slate-500'; 
                         }
                         const recDate = new Date(rec.created_at).toLocaleDateString('ja-JP');
                         const isAI = rec.recommendation_type === 'ai';
                         const recommender = isAI ? `AI (${rec.ai_score||'N/A'}点)` : rec.recommender_name;
                         const managerCell = isManager ? `<td class="p-3">${rec.user_name}</td>` : '';
-                        const rejectButton = (!isRejected && !isExcluded) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">この求人は見送る</button>` : ''; // ★ 条件変更
+                        const rejectButton = (!isRejected && !isExcluded) ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">この求人は見送る</button>` : ''; 
                         const reasonHtml = rec.recommendation_reason ? `<p class="text-xs font-normal text-slate-500 mt-1 pl-1 border-l-2 border-slate-200">${rec.recommendation_reason}</p>` : '';
                         const keywords = [rec.user_name, rec.title, rec.company].join(' ').toLowerCase();
                         const jobIdDisplay = String(rec.job_id).startsWith('http') ? `<a href="${rec.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (rec.job_id || 'N/A');
+
+                        // ▼▼▼ 変更ここから ▼▼▼
+                        // 1. 未経験OKバッジ
+                        const jobExpBadge = (rec.job_experience_ok === 'OK')
+                            ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">職種未経験OK</span>'
+                            : '';
+                        const industryExpBadge = (rec.industry_experience_ok === 'OK')
+                            ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">業種未経験OK</span>'
+                            : '';
+
+                        // 2. 業務内容の概要
+                        let shortDescHtml = '';
+                        if (rec.description) {
+                            let desc = rec.description.replace(/\s+/g, ' ').substring(0, 60); // 改行を空白に置換し、60文字でカット
+                            if (rec.description.length > 60) desc += '...';
+                            shortDescHtml = `<p class="text-xs font-normal text-gray-600 mt-1">${desc}</p>`;
+                        }
+                        
+                        // 3. 想定年収
+                        const salaryHtml = rec.salary 
+                            ? `<p class="text-sm font-bold text-orange-600 mt-1">${rec.salary}</p>` // ★ text-red-600 を text-orange-600 に変更
+                            : '';
 
                         return `<tr class="border-b recommendation-row ${rowStyle}" data-status="${getStatus(rec.user_reaction)}" data-keywords="${keywords}">
                             <td class="p-3 text-center">
@@ -1012,10 +1033,12 @@
                             </td>
                             <td class="p-3 text-sm">${recDate}</td>
                                 ${managerCell}
-                                <td class="p-3 font-medium ${isRejected || isExcluded ? '' : 'text-slate-800'}"> ${rec.title}
-                                    ${reasonHtml}
-                                </td>
-                                <td class="p-3">${rec.company}</td>
+                                <td class="p-3 font-medium ${isRejected || isExcluded ? '' : 'text-slate-800'}"> 
+                                    ${rec.title} ${jobExpBadge} ${industryExpBadge} ${reasonHtml}
+                                    ${shortDescHtml} </td>
+                                <td class="p-3">
+                                    ${rec.company}
+                                    ${salaryHtml} </td>
                                 <td class="p-3 text-sm">${jobIdDisplay}</td>
                                 <td class="p-3"><i class="fas ${isAI?'fa-robot text-indigo-500':'fa-user-tie text-green-500'} mr-2"></i>${recommender}</td>
                                 <td class="p-3 status-badge"><span class="px-2 py-1 text-xs font-semibold rounded-full ${getBadge(rec.user_reaction)}">${getBadgeText(rec.user_reaction)}</span></td>
