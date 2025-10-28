@@ -1089,6 +1089,7 @@
                                        data-company="${rec.company}"
                                        data-rec-id="${rec.recommendation_id}"
                                        data-reason="${encodeURIComponent(rec.recommendation_reason || '')}"
+                                        data-user-name="${rec.user_name || ''}"
                                        ${!isActionable ? 'disabled' : ''}>
                                 </td>
                             <td class="p-3 text-sm">${recDate}</td>
