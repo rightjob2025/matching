@@ -274,14 +274,16 @@
         <footer class="absolute bottom-0 left-0 w-full bg-slate-800 text-slate-300 p-4">
             <div class="container mx-auto max-w-6xl px-4">
                 <div class="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
-                    <div class="mb-2 sm:mb-0">
-                        <p class="text-xs">&copy; Copyright 2022 Right job.inc All right reserved.</p>
-                    </div>
-                    <div class="mt-2 sm:mt-0">
-                        <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline">
+                    <div class="mt-2 sm:mt-0 flex flex-col sm:flex-row sm:gap-4"> <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline">
                             運営会社
                         </a>
-                    </div>
+                        <a href="https://rightjob.info/right-job-agent-privacy/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline mt-1 sm:mt-0">
+                            プライバシーポリシー
+                        </a>
+                        <a href="https://rightjob.info/right-job-agent-terms/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline mt-1 sm:mt-0">
+                            利用規約
+                        </a>
+                        </div>
                 </div>
             </div>
         </footer>
@@ -308,14 +310,16 @@
         <footer class="absolute bottom-0 left-0 w-full bg-slate-800 text-slate-300 p-4">
             <div class="container mx-auto max-w-6xl px-4">
                 <div class="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
-                    <div class="mb-2 sm:mb-0">
-                        <p class="text-xs">&copy; Copyright 2022 Right job.inc All right reserved.</p>
-                    </div>
-                    <div class="mt-2 sm:mt-0">
-                        <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline">
+                    <div class="mt-2 sm:mt-0 flex flex-col sm:flex-row sm:gap-4"> <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline">
                             運営会社
                         </a>
-                    </div>
+                        <a href="https://rightjob.info/right-job-agent-privacy/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline mt-1 sm:mt-0">
+                            プライバシーポリシー
+                        </a>
+                        <a href="https://rightjob.info/right-job-agent-terms/" target="_blank" rel="noopener noreferrer" class="text-xs hover:text-white hover:underline mt-1 sm:mt-0">
+                            利用規約
+                        </a>
+                        </div>
                 </div>
             </div>
         </footer>
@@ -355,20 +359,26 @@
                 <div id="user-management-page" class="page"></div>
                 <div id="job-management-page" class="page"></div>
                 <div id="login-history-page" class="page"></div>
+                <div id="contact-page" class="page"></div>
             </main>
 
             <footer class="bg-slate-800 text-slate-300 p-8">
                 <div class="container mx-auto max-w-6xl">
                     <div class="flex flex-col md:flex-row justify-between items-center">
                         <div class="text-center md:text-left mb-4 md:mb-0">
-                            <p class="text-sm">&copy; Copyright 2022 Right job.inc All right reserved.</p>
+                            <p class="text-sm">&copy; Copyright 2025 Right job.inc All right reserved.</p>
                         </div>
-                        <div class="text-center md:text-right">
-                            <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-white hover:underline">
-                                運営会社
-                            </a>
+                        <div class="text-center md:text-right flex flex-col md:flex-row md:gap-4"> <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-white hover:underline">
+                            運営会社
+                        </a>
+                        <a href="https://rightjob.info/right-job-agent-privacy/" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-white hover:underline mt-1 md:mt-0">
+                            プライバシーポリシー
+                        </a>
+                        <a href="https://rightjob.info/right-job-agent-terms/" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-white hover:underline mt-1 md:mt-0">
+                            利用規約
+                        </a>
                         </div>
-                    </div>
+                </div>
                 </div>
             </footer>
         </div>
@@ -456,11 +466,10 @@
             let isFavoritesOnlySearch = false;
 
             const pagePermissions = {
-                'user': ['dashboard', 'job-search', 'progress', 'mypage', 'recommendations-list', 'diagnosis'],
-                'coach': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'recommendations-list', 'diagnosis'],
-                'admin': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'job-management', 'recommendations-list', 'login-history', 'diagnosis']
+                'user': ['dashboard', 'job-search', 'progress', 'mypage', 'recommendations-list', 'diagnosis', 'contact'], // ← 追加
+                'coach': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'recommendations-list', 'diagnosis', 'contact'], // ← 追加
+                'admin': ['dashboard', 'job-search', 'progress', 'mypage', 'user-management', 'job-management', 'recommendations-list', 'login-history', 'diagnosis', 'contact'] // ← 追加
             };
-
             // ========================
             // API Handler
             // ========================
@@ -630,7 +639,8 @@
                         'diagnosis': 'あなたの天職診断', // デフォルトタイトル
                         'user-management': 'ユーザー管理',
                         'job-management': '求人管理',
-                        'login-history': 'ログイン履歴'
+                        'login-history': 'ログイン履歴',
+                        'contact': 'お問い合わせ' // ← この行を追加
                     };
 
                     // タイトルを動的に変更
@@ -656,7 +666,8 @@
                         'user-management': renderUserManagement,
                         'job-management': renderJobManagement,
                         'recommendations-list': renderRecommendationsList,
-                        'login-history': renderLoginHistory
+                        'login-history': renderLoginHistory,
+                        'contact': renderContactPage // ← この行を追加
                     };
                     pageRenderers[pageId]?.(options); // options を渡す
                     ui.closeSidebar();
@@ -1584,6 +1595,23 @@
                 }
             }
 
+            // ▼▼▼ お問い合わせページ レンダリング関数 ▼▼▼
+            async function renderContactPage() {
+                const content = `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6">お問い合わせ</h2>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <p class="text-slate-700 mb-6">サービスに関するお問い合わせは、こちらのフォームからお願いいたします。</p> <a href="https://docs.google.com/forms/d/e/1FAIpQLSefIHx_Uax6l-R0YcsQiANFl_XBRs6fEayv_lFDLvAPonCWzw/viewform?usp=dialog" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="inline-block font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <i class="fas fa-external-link-alt mr-2"></i>お問い合わせフォームを開く
+                    </a>
+                    </div>
+          `;
+                $('#contact-page').html(content);
+            }
+            // ▲▲▲ お問い合わせページ レンダリング関数 ▲▲▲
+
             // ========================
             // App Logic
             // ========================
@@ -1607,6 +1635,9 @@
                     loginHistory: `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="login-history"><i class="fas fa-history w-6 mr-3"></i><span>ログイン履歴</span></a>`
                 };
                 let navHtml = `${links.dashboard}${links.jobSearch}${links.recommendationsList}${links.progress}${links.mypage}`;
+                // ▼▼▼ お問い合わせリンクの追加 ▼▼▼
+                navHtml += `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="contact"><i class="fas fa-envelope w-6 mr-3"></i><span>お問い合わせ</span></a>`;
+                // ▲▲▲ お問い合わせリンクの追加 ▲▲▲
 
                 // 診断結果対象ユーザーの場合、診断結果ページへのリンクを追加します。
                 if (CURRENT_USER.diagnosis_flg) {
