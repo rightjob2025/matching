@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rightjobエージェント - AIが導く20代・30代の天職</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* フォント設定 */
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* 見出し用の力強いフォント */
+        .font-heavy {
+            font-weight: 900;
+        }
+        /* スムーズスクロール */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* グラデーションテキスト */
+        .gradient-text {
+            background: linear-gradient(to right, #3b82f6, #1e40af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* CTAボタンのホバーアニメーション */
+        .cta-button {
+            transition: all 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- ヘッダー -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-800">Rightjobエージェント</h1>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#features" class="text-gray-600 hover:text-blue-600">サービス特徴</a>
+                <a href="#cases" class="text-gray-600 hover:text-blue-600">転職実績</a>
+                <a href="#how" class="text-gray-600 hover:text-blue-600">ご利用の流れ</a>
+            </nav>
+            <a href="https://rightjob2025.github.io/matching/" class="cta-button bg-blue-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 hidden md:inline-block">
+                無料AIマッチング体験
+            </a>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main>
+
+        <!-- 1. ファーストビュー（FV） -->
+        <section class="bg-white pt-16 pb-20 md:pt-24 md:pb-28">
+            <div class="container mx-auto px-6 text-center">
+                <!-- メインキャッチコピー -->
+                <h2 class="text-4xl md:text-6xl font-heavy leading-tight mb-6">
+                    <span class="gradient-text">AIが導く、あなたの天職。</span><br>
+                    20代・30代の未経験転職、成功率90%以上。
+                </h2>
+                <!-- サブコピー -->
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10">
+                    高精度AIがあなたの経歴と5万件以上の求人を分析し、最適なキャリアを推薦。Rightjobで、本当に輝ける仕事を見つけよう。
+                </p>
+                <!-- 権威性・実績 -->
+                <div class="flex flex-wrap justify-center gap-4 md:gap-8 mb-12">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg px-6 py-3">
+                        <span class="block text-2xl font-bold text-blue-700">90%<span class="text-sm ml-1">以上</span></span>
+                        <span class="text-xs text-gray-600">キャリアチェンジ成功率</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg px-6 py-3">
+                        <span class="block text-2xl font-bold text-blue-700">5万件<span class="text-sm ml-1">以上</span></span>
+                        <span class="text-xs text-gray-600">求人データベース</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg px-6 py-3">
+                        <span class="block text-2xl font-bold text-blue-700">完全無料</span>
+                        <span class="text-xs text-gray-600">転職サポート</span>
+                    </div>
+                </div>
+                <!-- CTAボタン -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="https://rightjob2025.github.io/matching/" class="cta-button bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700">
+                        今すぐ無料で「AIマッチング」を体験する
+                    </a>
+                    <a href="https://calendar.app.google/v9tt1YvHimv35UWy7" class="cta-button bg-transparent border-2 border-blue-600 text-blue-600 font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-50">
+                        まずは無料でキャリア相談
+                    </a>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">サービスは完全無料です</p>
+            </div>
+        </section>
+
+        <!-- 2. 悩み・共感 -->
+        <section class="py-16 md:py-24 bg-gray-100">
+            <div class="container mx-auto px-6 max-w-4xl">
+                <h3 class="text-3xl md:text-4xl font-heavy text-center mb-12">
+                    キャリアのこんな<span class="text-blue-600">悩み</span>、ありませんか？
+                </h3>
+                <div class="bg-white p-8 md:p-12 rounded-xl shadow-lg space-y-6">
+                    <!-- 悩みリスト -->
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-lg md:text-xl text-gray-700">本当にやりたい仕事が分からない、このままでいいのか<span class="font-bold">不安</span>...</p>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-lg md:text-xl text-gray-700"><span class="font-bold">未経験の仕事に挑戦したい</span>が、スキルが無く諦めている...</p>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-lg md:text-xl text-gray-700">もっと<span class="font-bold">成長したい</span>が、どんな職種が向いているか分からない...</p>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-lg md:text-xl text-gray-700">転職活動の<span class="font-bold">進め方が分からない</span>、情報収集だけで疲れてしまう...</p>
+                    </div>
+                </div>
+                <!-- 解決の提示 -->
+                <div class="text-center mt-12">
+                    <p class="text-2xl font-bold text-gray-800 mb-4">その悩み、Rightjobエージェントが解決します！</p>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                        独自の「AIマッチングシステム」と「充実した選考サポート」で、あなたの理想のキャリア実現を支援します。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Rightjobからの転職支援実績 -->
+        <section id="cases" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <h3 class="text-3xl md:text-4xl font-heavy text-center mb-16">
+                    <span class="gradient-text">未経験から理想のキャリアへ</span><br>
+                    <span class="text-2xl md:text-3xl">20代・30代の転職成功事例</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- 事例カード 1 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                        <div class="p-8">
+                            <p class="text-lg font-bold text-blue-700 mb-4">25歳・男性</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500">Before</span>
+                                    <p class="text-lg font-semibold text-gray-800">大手電機メーカー</p>
+                                    <p class="text-gray-600">ルートセールス</p>
+                                </div>
+                                <div class="flex justify-center items-center">
+                                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-blue-600">After</span>
+                                    <p class="text-lg font-semibold text-blue-800">HRTech メガベンチャー</p>
+                                    <p class="text-blue-700 font-medium">カスタマーサクセス</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 事例カード 2 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                        <div class="p-8">
+                            <p class="text-lg font-bold text-blue-700 mb-4">24歳・女性</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500">Before</span>
+                                    <p class="text-lg font-semibold text-gray-800">大手広告代理店</p>
+                                    <p class="text-gray-600">クリエイター</p>
+                                </div>
+                                <div class="flex justify-center items-center">
+                                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-blue-600">After</span>
+                                    <p class="text-lg font-semibold text-blue-800">人材ベンチャー</p>
+                                    <p class="text-blue-700 font-medium">マーケティング</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 事例カード 3 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                        <div class="p-8">
+                            <p class="text-lg font-bold text-blue-700 mb-4">29歳・男性</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500">Before</span>
+                                    <p class="text-lg font-semibold text-gray-800">大手ITベンダ</p>
+                                    <p class="text-gray-600">SE (システムエンジニア)</p>
+                                </div>
+                                <div class="flex justify-center items-center">
+                                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-blue-600">After</span>
+                                    <p class="text-lg font-semibold text-blue-800">成長コンサルファーム</p>
+                                    <p class="text-blue-700 font-medium">ITコンサルタント</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Rightjobの仕組み -->
+        <section id="features" class="py-16 md:py-24 bg-gray-100">
+            <div class="container mx-auto px-6">
+                <h3 class="text-3xl md:text-4xl font-heavy text-center mb-16">
+                    AIと「5万件超の求人」で、<br class="md:hidden">
+                    <span class="text-blue-600">ミスマッチを防ぐ</span>仕組み
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <!-- 仕組み 1: AIマッチング -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+                        <span class="inline-block bg-blue-100 text-blue-800 text-sm font-bold px-4 py-1 rounded-full mb-4">仕組み 1</span>
+                        <h4 class="text-2xl font-bold text-gray-900 mb-4">AIがあなたの「最適」を自動で推薦</h4>
+                        <div class="space-y-4 text-gray-700">
+                            <p>あなたのプロフィールや希望条件をAIが詳細に分析。マッチ度の高い求人をAIや担当コーチが自動でおすすめします。</p>
+                            <p>メールや専用ダッシュボードで、<strong class="text-blue-700">有望な求人（AIスコアの高い順）をひと目で確認</strong>できます。</p>
+                            <p>気になる求人は「AIマッチ度分析」ボタンをクリック。あなたのスキルや経験が、その求人に<strong class="text-blue-700">なぜマッチするのか、具体的な評価ポイント</strong>をAIが提示します。</p>
+                        </div>
+                    </div>
+                    <!-- 仕組み 2: 豊富な求人とサポート -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+                        <span class="inline-block bg-blue-100 text-blue-800 text-sm font-bold px-4 py-1 rounded-full mb-4">仕組み 2</span>
+                        <h4 class="text-2xl font-bold text-gray-900 mb-4">豊富な求人と万全の無料サポート</h4>
+                        <div class="space-y-4 text-gray-700">
+                            <p>AI分析で見つかった「あなたの軸」に基づき、<strong class="text-blue-700">5万件以上の豊富な求人</strong>から最適な企業をご紹介します。</p>
+                            <p><strong class="text-blue-700">未経験から挑戦できる求人も多数</strong>ご用意しており、キャリアチェンジに最適です。</p>
+                            <p>書類通過率を上げる<strong class="text-blue-700">「応募書類作成支援」</strong>や、自信を持って臨める<strong class="text-blue-700">「企業別の面接対策」</strong>もすべて無料でサポートします。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 簡単にAIマッチングができる -->
+        <section id="how" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6 max-w-5xl">
+                <h3 class="text-3xl md:text-4xl font-heavy text-center mb-16">
+                    <span class="gradient-text">AIマッチング</span>は<br class="md:hidden">
+                    簡単な3ステップで利用開始
+                </h3>
+                <div class="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4">
+                    <!-- ステップ間の線（PCのみ） -->
+                    <div class="hidden md:block absolute w-full h-0.5 bg-blue-200" style="z-index: 0; top: 3rem; left: 0;"></div>
+                    
+                    <!-- Step 1 -->
+                    <div class="relative z-10 text-center p-6 bg-white rounded-xl shadow-lg border-2 border-blue-100">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 flex items-center justify-center bg-blue-600 text-white font-bold text-xl rounded-full border-4 border-white">
+                            1
+                        </div>
+                        <h4 class="text-xl font-bold text-blue-800 mt-8 mb-3">ログイン（簡単登録）</h4>
+                        <p class="text-gray-600 text-left">
+                            面倒な初期登録は不要。<br>
+                            ・<strong class="text-gray-800">ユーザ名:</strong> ご登録のメールアドレス<br>
+                            ・<strong class="text-gray-800">パスワード:</strong> あなたの生年月日<br>
+                            (例: 19950401)
+                        </p>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="relative z-10 text-center p-6 bg-white rounded-xl shadow-lg border-2 border-blue-100">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 flex items-center justify-center bg-blue-600 text-white font-bold text-xl rounded-full border-4 border-white">
+                            2
+                        </div>
+                        <h4 class="text-xl font-bold text-blue-800 mt-8 mb-3">希望条件の登録</h4>
+                        <p class="text-gray-600 text-left">
+                            ログイン後、「マイページ」で希望条件（業種、職種、年収など）を登録・更新します。<br>
+                            <strong class="text-blue-700">※ここの充実度がAI推薦の鍵です！</strong>
+                        </s
+>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="relative z-10 text-center p-6 bg-white rounded-xl shadow-lg border-2 border-blue-100">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 flex items-center justify-center bg-blue-600 text-white font-bold text-xl rounded-full border-4 border-white">
+                            3
+                        </div>
+                        <h4 class="text-xl font-bold text-blue-800 mt-8 mb-3">AIのおすすめを待つ</h4>
+                        <p class="text-gray-600 text-left">
+                            登録情報をもとに、AIがあなたに最適な求人を自動で推薦。ダッシュボードやメールで届くおすすめ求人をチェック！
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. クロージング（CTA） -->
+        <section id="cta" class="py-16 md:py-24 bg-blue-800 text-white">
+            <div class="container mx-auto px-6 text-center">
+                <h3 class="text-3xl md:text-4xl font-heavy mb-8">
+                    AIとプロのWサポートで、<br>あなたの可能性を最大化しよう
+                </h3>
+                <!-- サービスまとめ -->
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-4 max-w-3xl mx-auto text-lg mb-12">
+                    <span class="inline-flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <span>高精度AIがキャリアを分析・推薦</span>
+                    </span>
+                    <span class="inline-flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <span>5万件以上の豊富な求人</span>
+                    </span>
+                    <span class="inline-flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <span>プロによる選考サポート</span>
+                    </span>
+                    <span class="inline-flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <span>完全無料</span>
+                    </span>
+                </div>
+                <!-- CTAボタン -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="https://rightjob2025.github.io/matching/" class="cta-button bg-white text-blue-800 font-bold py-4 px-10 text-lg rounded-lg hover:bg-gray-100">
+                        今すぐ無料で「AIマッチング」を体験する
+                    </a>
+                    <a href="https://calendar.app.google/v9tt1YvHimv35UWy7" class="cta-button bg-transparent border-2 border-white text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700">
+                        まずは無料でキャリア相談
+                    </a>
+                </div>
+                <p class="text-sm text-blue-200 mt-6">※Rightjobマッチングシステムは現在ベータ版です。機能改善のため、随時アップデートを行っております。</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-gray-800 text-gray-400 py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-white mb-2">Rightjobエージェント</h2>
+                    <p class="text-sm">運営会社: Rightjob株式会社 (旧社名: one-Record株式会社)</p>
+                    <p class="text-sm">厚生労働大臣許可番号 13-ユ-316413</p>
+                </div>
+                <nav class="flex space-x-6 mt-6 md:mt-0">
+                    <a href="#features" class="text-gray-400 hover:text-white text-sm">サービス特徴</a>
+                    <a href="#cases" class="text-gray-400 hover:text-white text-sm">転職実績</a>
+                    <a href="#how" class="text-gray-400 hover:text-white text-sm">ご利用の流れ</a>
+                </nav>
+            </div>
+            <hr class="border-gray-700 my-8">
+            <p class="text-center text-sm">&copy; 2022 Rightjob.inc All right reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
+
