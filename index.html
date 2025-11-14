@@ -409,7 +409,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwU6kSdLtppeo_Q4zx0YLOrOptYQ16qc0DTmvRneuv2tQtES33RYOO5NqhnIm1Lm81f/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKw6zGYz7TSgecpVu6lNhaXdbyOHXTSGfLYa-l7cfAxYyQ5uJjqxo1WTlwbfPnQ7pH/exec";
             // https://script.google.com/macros/s/AKfycbz1E3BKqoz7numuXPcI3bbvm2qcWvFHd3NWjrg2SbzXXTWEjJphpYpVsMCTQIYU0PDA/exec
 
             const skillDetails = {
@@ -1822,6 +1822,13 @@
                                 <label for="ai-job-filter-input" class="sr-only">絞り込み</label>
                                 <input type="text" id="ai-job-filter-input" placeholder="求人名、企業名で絞り込み..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                             </div>
+
+                            <div class="mt-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="ai-job-filter-inexperienced-ok" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm text-slate-700">未経験OKの求人のみ表示</span>
+                                </label>
+                            </div>
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-semibold text-indigo-700">AIで診断したい求人をチェックしてください（最大10件）。</p>
                             </div>
@@ -1850,8 +1857,14 @@
                         // ★ data-keywords を追加
                         const keywords = [job.title, job.company].join(' ').toLowerCase();
 
+                        // ★★★ [ここから修正] ★★★
+                        // 未経験OKフラグ (「職種未経験OK」のみを判定)
+                        const isExperienceOk = (job.job_experience_ok === 'OK');
+
                         // ★ ai-job-item クラスを追加
-                        return `<div class="p-4 border rounded-lg mb-3 ai-job-item" data-keywords="${keywords}">
+                        return `<div class="p-4 border rounded-lg mb-3 ai-job-item" 
+                                     data-keywords="${keywords}"
+                                     data-inexperienced-ok="${isExperienceOk}">
                                     <div class="flex items-start">
                                         <input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4 ai-job-checkbox">
                                         <div class="ml-4 flex-1">
@@ -2821,32 +2834,90 @@
                                     });
 
                                     // 表示対象の求人のみを描画
+
+                                    // ★★★ ここから置き換え (11/15 修正) ★★★
                                     scoredHtml += jobsToDisplay.map(job => {
                                         const jobIdDisplay = String(job.job_id).startsWith('http') ? `<a href="${job.job_id}" target="_blank" class="text-indigo-600 hover:underline">${job.job_id} <i class="fas fa-external-link-alt text-xs"></i></a>` : (job.job_id || 'N/A');
                                         
-                                        // スコアが数値か、エラーメッセージか
+                                        // --- 1. 現行スコア ---
                                         const isError = (typeof job.score !== 'number' || isNaN(job.score));
                                         const scoreDisplay = isError
                                             ? `<span class="text-lg font-bold text-red-600">分析エラー</span>`
                                             : `<span class="text-lg font-bold text-indigo-600">${job.score}点</span>`;
+                                        const reasonClass = isError ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-700';
 
+                                        // --- 2. 社風スコア (A-E評価) ---
+                                        const cultureRating = job.culture_rating || "E"; // ★
+                                        const cultureReason = job.culture_reason || "分析エラー";
+                                        let cultureDisplayHtml = '';
+
+                                        let cultureReasonClass = 'bg-sky-50 text-sky-700'; // デフォルト (A, B)
+                                        let ratingColorClass = 'text-sky-600'; // A, B
+                                        
+                                        if (cultureRating === 'C') {
+                                            cultureReasonClass = 'bg-gray-100 text-gray-600';
+                                            ratingColorClass = 'text-gray-600';
+                                        } else if (cultureRating === 'D' || cultureRating === 'E') {
+                                            cultureReasonClass = 'bg-yellow-50 text-yellow-700';
+                                            ratingColorClass = 'text-yellow-700';
+                                        }
+                                        
+                                        if (cultureReason.includes('未評価')) {
+                                            cultureReasonClass = 'bg-gray-100 text-gray-500'; // 50点未満
+                                            ratingColorClass = 'text-gray-500';
+                                        } else if (cultureReason.includes('評価不可')) {
+                                            cultureReasonClass = 'bg-yellow-50 text-yellow-700'; // company_infoなし
+                                            ratingColorClass = 'text-yellow-700';
+                                        } else if (cultureReason.includes('失敗')) {
+                                            cultureReasonClass = 'bg-red-50 text-red-700'; // APIエラー
+                                            ratingColorClass = 'text-red-600';
+                                        }
+
+                                        // ★ 評価 (A-E) を表示
+                                        const cultureScoreDisplay = `<span class="text-3xl font-bold ${ratingColorClass}">${cultureRating}</span>`;
+
+                                        cultureDisplayHtml = `
+                                            <div class="mt-3 pt-3 border-t border-slate-200">
+                                                <div class="flex justify-between items-center">
+                                                    <h5 class="font-semibold text-sm text-sky-700">社風・カルチャー分析</h5>
+                                                    ${cultureScoreDisplay}
+                                                </div>
+                                                <p class="mt-1 text-sm ${cultureReasonClass} p-2 rounded">${cultureReason}</p>
+                                            </div>
+                                        `;
+
+                                        // --- 3. チェックボックス (data属性を rating に変更) ---
+                                        const checkboxHtml = `<input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" 
+                                                       ${isError ? 'disabled' : 'checked'}
+                                                       data-reason="${encodeURIComponent(job.reason)}" 
+                                                       data-score="${job.score || 0}"
+                                                       data-culture-reason="${encodeURIComponent(cultureReason)}"
+                                                       data-culture-rating="${cultureRating}">`; // ★
+
+                                        // --- 4. 描画 ---
                                         return `<div class="p-4 border rounded-lg mb-3">
                                             <div class="flex items-start">
-                                                <input type="checkbox" name="selected_job" value="${job.job_id}" class="mt-1 h-4 w-4" 
-                                                       ${isError ? 'disabled' : 'checked'}
-                                                       data-reason="${encodeURIComponent(job.reason)}" data-score="${job.score || 0}">
+                                                ${checkboxHtml}
                                                 <div class="ml-4 flex-1">
                                                     <div class="flex justify-between items-center">
-                                                        <h4 class="font-bold">${job.title}</h4>
-                                                        ${scoreDisplay}
+                                                        <div>
+                                                            <h4 class="font-bold">${job.title}</h4>
+                                                            <p class="text-sm text-slate-600">${job.company}</p>
+                                                            <p class="text-xs text-slate-400 mt-1">求人ID: ${jobIdDisplay}</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <h5 class="font-semibold text-sm text-indigo-700">マッチ度</h5>
+                                                            ${scoreDisplay}
+                                                        </div>
                                                     </div>
-                                                    <p class="text-sm text-slate-600">${job.company}</p>
-                                                    <p class="text-xs text-slate-400 mt-1">求人ID: ${jobIdDisplay}</p>
-                                                    <p class="mt-2 text-sm ${isError ? 'bg-red-50 text-red-700' : 'bg-slate-50'} p-2 rounded">${job.reason || 'N/A'}</p>
+                                                    <p class="mt-2 text-sm ${reasonClass} p-2 rounded">${job.reason || 'N/A'}</p>
+                                                    
+                                                    ${cultureDisplayHtml}
                                                 </div>
                                             </div>
                                         </div>`;
                                     }).join('');
+                                    // ★★★ ここまで置き換え ★★★
 
                                     scoredHtml += `</div></form>`;
                                     $('#modal-content').html(scoredHtml);
@@ -2866,15 +2937,34 @@
 
                             // ★ 10/23 変更: フォームセレクタを `#ai-save-form` に変更
                             // (旧 `#ai-recommend-form` submit)
+                            // ★★★ ここから置き換え (11/15 修正) ★★★
                             $(document).on('submit', '#ai-save-form', async function(e) {
                                 e.preventDefault();
                                 const userId = $(this).data('user-id');
                                 const jobs = [];
                                 $(this).find('input:checked').each(function() {
+                                    const el = $(this);
+                                    
+                                    const reason = decodeURIComponent(el.data('reason'));
+                                    const score = el.data('score');
+                                    const cultureReason = decodeURIComponent(el.data('culture-reason'));
+                                    const cultureRating = el.data('culture-rating'); // ★
+
+                                    // reason に 社風分析の結果も結合する
+                                    let combinedReason = reason; // 現行の理由
+                                    
+                                    // 社風分析が実行された場合（未評価や評価不可でない場合）
+                                    if (!cultureReason.includes('未評価') && !cultureReason.includes('評価不可') && !cultureReason.includes('失敗')) {
+                                        combinedReason += ` | [社風分析: ${cultureRating}評価] ${cultureReason}`; // ★
+                                    } else if (!cultureReason.includes('未評価')) {
+                                        // 50点未満(未評価)以外の場合（＝評価不可、失敗）
+                                        combinedReason += ` | [社風分析] ${cultureReason}`;
+                                    }
+
                                     jobs.push({
                                         job_id: $(this).val(),
-                                        reason: decodeURIComponent($(this).data('reason')),
-                                        score: $(this).data('score')
+                                        reason: combinedReason, // 結合した理由
+                                        score: score // スコアは現行スコアを採用
                                     });
                                 });
                                 if (jobs.length === 0) return ui.showAlert('選択エラー', '求人を1つ以上選択してください。');
@@ -2887,6 +2977,7 @@
                                     ui.showAlert('保存エラー', `保存に失敗: ${e}`);
                                 }
                             });
+                            // ★★★ ここまで置き換え ★★★
 
                             // ★ 10/23 変更: 除外ボタンの動作 (モーダルを閉じずにリストを更新)
                              $(document).on('click', '#ai-exclude-btn', async function(e) {
@@ -3125,19 +3216,39 @@
                             });
                     
                             // ★ 追加(10/26 変更): AI推薦モーダル(第1段階)のテキスト絞り込み + ヘッダ同期
+                            // ★ 10/26 追加(10/26 変更): AI推薦モーダル(第1段階)のテキスト絞り込み + ヘッダ同期
+                            // ★ 11/15 変更: 「未経験OK」絞り込み機能を追加
                             $(document).on('input', '#ai-job-filter-input', function() {
                                 const searchTerm = $(this).val().toLowerCase();
+                                // ★ チェックボックスの状態を取得
+                                const inexperiencedOnly = $('#ai-job-filter-inexperienced-ok').is(':checked');
+
                                 $('#ai-job-list-container .ai-job-item').each(function() {
-                                    const keywords = $(this).data('keywords');
-                                    if (keywords.includes(searchTerm)) {
-                                        $(this).show();
+                                    const item = $(this);
+                                    const keywords = item.data('keywords');
+                                    const isOk = item.data('inexperienced-ok') === true;// data-inexperienced-ok="true" を判定
+
+                                    // 1. テキストがマッチするか
+                                    const textMatch = keywords.includes(searchTerm);
+                                    
+                                    // 2. 未経験OKがマッチするか
+                                    // (チェックボックスがOFFなら常にtrue、ONならisOkがtrueの場合のみtrue)
+                                    const experienceMatch = !inexperiencedOnly || isOk;
+
+                                    if (textMatch && experienceMatch) {
+                                        item.show();
                                     } else {
-                                        $(this).hide();
+                                        item.hide();
                                     }
                                 });
                                 
                                 // ★ ヘッダの「すべてチェック」の状態を更新
-                                // syncAiJobSelectAll();
+                                // syncAiJobSelectAll(); // (この関数は存在しないようなのでコメントアウトのまま)
+                            });
+
+                            // ★ 11/15 追加: 未経験OKチェックボックス変更時にも、inputイベントを発火させて絞り込みを実行
+                            $(document).on('change', '#ai-job-filter-inexperienced-ok', function() {
+                                $('#ai-job-filter-input').trigger('input');
                             });
 
                             // ★ 10/26 修正: スコアリング結果画面(第2段階)の「選択した求人を除外」ボタンのリスナーを追加
