@@ -30,6 +30,7 @@
                             dark: '#0F172A',  // 信頼感のあるネイビー
                             orange: '#F59E0B', // アクセント
                             light: '#F0FDF4', // 背景用薄いグリーン
+                            blue: '#3B82F6',   // リンク/強調用ブルー
                         }
                     },
                     boxShadow: {
@@ -133,106 +134,150 @@
                         </a>
                         <!-- デモ予約ボタン -->
                         <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base font-bold text-slate-700 bg-white border-2 border-slate-200 rounded-full hover:bg-slate-50 transition shadow-sm hover:shadow-md">
-                            無料デモ画面を見る
+                            無料デモを申し込む
                         </a>
                     </div>
                     <p class="text-xs text-slate-500 mt-2 font-medium">※ 中小エージェント導入実績 拡大中</p>
                 </div>
                 
-                <!-- Visual (Reverted to UI Image) -->
+                <!-- Visual (UI Image) -->
                 <div class="w-full md:w-7/12 fade-up delay-200 mt-8 md:mt-0">
-                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-100 p-4 md:p-8 relative overflow-hidden">
+                    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200 p-2 md:p-6 relative overflow-hidden">
                         <!-- Background Grid -->
                         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
                         
-                        <div class="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                        <!-- UI Header Mock -->
+                        <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-2 px-2">
+                            <div class="flex gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                            </div>
+                            <div class="ml-2 px-3 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 font-mono w-48">AIマッチング実行中...</div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row items-stretch gap-4 relative z-10">
                             
-                            <!-- Left: Input (求人票 - Refined) -->
-                            <div class="w-full md:w-1/3 bg-white border border-slate-100 rounded-xl p-4 shadow-ui hover:shadow-ui-lg transform transition hover:-translate-y-1 duration-300">
-                                <div class="flex items-center gap-2 mb-3 border-b border-slate-100 pb-3">
-                                    <div class="p-1.5 bg-slate-100 rounded-md">
-                                        <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
-                                    </div>
-                                    <span class="text-sm font-bold text-slate-700">求人票 (JD)</span>
-                                    <span class="ml-auto text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-medium">募集中</span>
-                                </div>
-                                <div class="space-y-2.5">
-                                    <div class="h-2.5 bg-slate-100 rounded-sm w-3/4"></div>
-                                    <div class="h-2 bg-slate-50 rounded-sm w-full"></div>
-                                    <div class="h-2 bg-slate-50 rounded-sm w-5/6"></div>
-                                    <div class="h-2 bg-slate-50 rounded-sm w-4/5"></div>
-                                    <div class="h-2 bg-slate-50 rounded-sm w-full"></div>
-                                    <div class="h-2.5 bg-slate-100 rounded-sm w-2/3 mt-2"></div>
-                                </div>
-                                <div class="mt-4 pt-3 border-t border-slate-50">
-                                    <span class="text-[10px] font-bold text-slate-400 block mb-1.5">必須要件:</span>
-                                    <div class="flex flex-wrap gap-1.5">
-                                        <span class="bg-slate-50 border border-slate-100 text-slate-600 text-[9px] px-1.5 py-0.5 rounded font-medium">法人営業3年</span>
-                                        <span class="bg-slate-50 border border-slate-100 text-slate-600 text-[9px] px-1.5 py-0.5 rounded font-medium">マネジメント</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Center: Process (AI解析 - Refined) -->
-                            <div class="flex flex-col items-center justify-center text-brand-green z-20 relative">
-                                <!-- Connecting Lines -->
-                                <div class="absolute top-1/2 left-[-2rem] right-[-2rem] h-0.5 bg-gradient-to-r from-transparent via-emerald-200 to-transparent hidden md:block -z-10"></div>
-
-                                <div class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-full flex items-center justify-center animate-pulse shadow-lg shadow-emerald-200/50 border border-emerald-200">
-                                    <i data-lucide="sparkles" class="w-6 h-6 text-emerald-500"></i>
-                                </div>
-                                <div class="h-8 w-0.5 bg-gradient-to-b from-slate-200 via-emerald-300 to-slate-200 md:hidden my-2 opacity-50"></div> <!-- Vertical line for mobile -->
-                                <span class="text-[10px] font-bold text-emerald-600 mt-2 bg-white border border-emerald-100 px-2 py-0.5 rounded-full shadow-sm">AI解析中...</span>
-                            </div>
-
-                            <!-- Right: Output (候補者リスト - Refined) -->
-                            <div class="w-full md:w-1/2 flex flex-col gap-4">
-                                <!-- Candidate 1 (Active - Refined) -->
-                                <div class="bg-white border-2 border-brand-green rounded-xl p-4 shadow-ui-lg relative transform transition hover:scale-102 duration-300 z-10">
-                                    <div class="absolute -top-2 -right-2 bg-brand-green text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">BEST MATCH</div>
-                                    <div class="flex justify-between items-start mb-3">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 shadow-sm">
-                                                <i data-lucide="user" class="w-5 h-5"></i>
+                            <!-- Left: Input (Target Job) -->
+                            <div class="w-full md:w-1/3 flex flex-col">
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full relative group">
+                                    <div class="absolute -top-2 left-3 bg-slate-600 text-white text-[9px] px-2 py-0.5 rounded font-bold">TARGET JOB</div>
+                                    <div class="mt-2">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="p-1.5 bg-white border border-slate-100 rounded shadow-sm">
+                                                <i data-lucide="building-2" class="w-4 h-4 text-slate-400"></i>
                                             </div>
                                             <div>
-                                                <div class="font-bold text-slate-700 text-sm mb-0.5">候補者 A氏</div>
-                                                <div class="text-[10px] text-slate-500 flex items-center gap-1">
-                                                    <i data-lucide="briefcase" class="w-3 h-3"></i> 営業MG / 34歳
-                                                </div>
+                                                <div class="text-[10px] text-slate-400 font-bold">求人ID: JD-202488</div>
+                                                <div class="text-xs font-bold text-slate-800">株式会社C社</div>
                                             </div>
                                         </div>
-                                        <div class="text-right">
-                                            <span class="text-[10px] font-bold text-brand-green block mb-0.5">マッチ度</span>
-                                            <span class="text-2xl font-black text-brand-green leading-none tracking-tight">98<span class="text-base">%</span></span>
+                                        <div class="font-bold text-sm text-brand-dark leading-tight mb-3">カスタマーサクセス / SaaS事業立ち上げ</div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="bg-white p-2 rounded border border-slate-100">
+                                                <span class="text-[9px] text-slate-400 block font-bold mb-0.5">必須要件</span>
+                                                <div class="text-[10px] text-slate-600 font-medium">・法人営業経験 3年以上<br>・マネジメント経験尚可</div>
+                                            </div>
+                                            <div class="bg-white p-2 rounded border border-slate-100">
+                                                <span class="text-[9px] text-slate-400 block font-bold mb-0.5">求める人物像</span>
+                                                <div class="text-[10px] text-slate-600 font-medium">・課題解決型の提案ができる方<br>・カオスな環境を楽しめる方</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <!-- AI Comment Bubble (Refined) -->
-                                    <div class="bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] p-3 rounded-lg relative speech-bubble leading-relaxed shadow-sm">
-                                        <div class="flex items-center gap-1.5 mb-1 font-bold text-emerald-600">
-                                            <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-                                            AIコメント:
+                                    
+                                    <!-- Arrow for mobile -->
+                                    <div class="md:hidden flex justify-center py-2 text-brand-green">
+                                        <i data-lucide="arrow-down" class="w-5 h-5 animate-bounce"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Center: Connector (Desktop) -->
+                            <div class="hidden md:flex flex-col items-center justify-center relative w-8 shrink-0">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-full border-t-2 border-dashed border-emerald-200"></div>
+                                </div>
+                                <div class="w-8 h-8 bg-white border-2 border-brand-green rounded-full flex items-center justify-center z-10 shadow-sm">
+                                    <i data-lucide="arrow-right" class="w-4 h-4 text-brand-green"></i>
+                                </div>
+                            </div>
+
+                            <!-- Right: Output (Detailed Candidates) -->
+                            <div class="w-full md:flex-1 space-y-3">
+                                <!-- Candidate 1 (High Match) -->
+                                <div class="bg-white border-2 border-brand-green/30 rounded-xl p-3 md:p-4 shadow-ui hover:shadow-ui-lg transition transform hover:-translate-y-0.5 relative overflow-hidden">
+                                    <!-- Match Score Badge -->
+                                    <div class="absolute top-0 right-0 bg-brand-light pl-3 pb-2 pt-1 pr-2 rounded-bl-xl border-l border-b border-brand-green/20">
+                                        <div class="text-right">
+                                            <span class="text-[9px] font-bold text-brand-green block leading-none mb-0.5">マッチ度</span>
+                                            <span class="text-xl font-black text-brand-green leading-none">95<span class="text-xs">点</span></span>
                                         </div>
-                                        条件は一部異なりますが、過去の立ち上げ経験が本案件に最適です。
+                                    </div>
+
+                                    <!-- Candidate Info -->
+                                    <div class="flex items-start gap-3 mb-3 pr-16">
+                                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-200">
+                                            <i data-lucide="user" class="w-6 h-6"></i>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-sm text-slate-800">候補者S氏 (32歳)</span>
+                                                <span class="bg-brand-green text-white text-[9px] px-1.5 py-0.5 rounded font-bold">本命</span>
+                                            </div>
+                                            <div class="text-[10px] text-slate-500 mt-0.5">
+                                                経歴: 法人営業(5年) / ITコンサル(2年)
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- AI Analysis Block -->
+                                    <div class="space-y-2">
+                                        <!-- Skill Match -->
+                                        <div class="bg-brand-light/50 rounded-lg p-2.5 border border-brand-green/10">
+                                            <div class="flex items-start gap-2">
+                                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-brand-green mt-0.5 flex-shrink-0"></i>
+                                                <p class="text-[10px] leading-relaxed text-slate-700 font-medium">
+                                                    <span class="font-bold text-brand-dark">SaaS事業立ち上げ・システム導入経験</span>があり、応募資格を完全に満たします。顧客課題解決力とコンサルティング志向がCS業務と<span class="bg-yellow-100 px-0.5 rounded">高合致</span>。
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <!-- Culture Match -->
+                                        <div class="bg-blue-50/50 rounded-lg p-2.5 border border-blue-100">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="text-[9px] font-bold text-blue-600 flex items-center gap-1">
+                                                    <i data-lucide="sparkles" class="w-3 h-3"></i> 社風・カルチャー分析
+                                                </span>
+                                                <span class="text-[9px] font-black text-blue-600 bg-white px-1.5 border border-blue-200 rounded">ランク A</span>
+                                            </div>
+                                            <p class="text-[10px] leading-relaxed text-slate-600">
+                                                急成長企業での成果主義、事業開発を奨励するカルチャーは、S氏の「経営」「データ」志向と強く合致します。
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Candidate 2 (Inactive - Refined) -->
-                                <div class="bg-white border border-slate-100 rounded-xl p-4 shadow-ui opacity-75 hover:opacity-100 transition duration-300">
-                                    <div class="flex justify-between items-center">
+                                <!-- Candidate 2 (Medium Match) -->
+                                <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm opacity-90 hover:opacity-100 transition">
+                                    <div class="flex justify-between items-start mb-2">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-slate-300 shadow-sm">
+                                            <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100">
                                                 <i data-lucide="user" class="w-4 h-4"></i>
                                             </div>
                                             <div>
-                                                <div class="font-bold text-slate-600 text-sm mb-0.5">候補者 B氏</div>
-                                                <div class="text-[10px] text-slate-400">事業企画 / 31歳</div>
+                                                <div class="font-bold text-xs text-slate-700">候補者K氏 (29歳)</div>
+                                                <div class="text-[9px] text-slate-400">経歴: SIer SE(6年)</div>
                                             </div>
                                         </div>
                                         <div class="text-right">
-                                            <span class="text-[10px] font-bold text-slate-400 block mb-0.5">マッチ度</span>
-                                            <span class="text-lg font-bold text-slate-500 leading-none">92<span class="text-sm">%</span></span>
+                                            <span class="text-[10px] font-bold text-slate-400">マッチ度</span>
+                                            <span class="text-lg font-bold text-slate-600">70<span class="text-xs">点</span></span>
                                         </div>
+                                    </div>
+                                    <div class="bg-slate-50 rounded p-2 border border-slate-100">
+                                        <p class="text-[10px] leading-relaxed text-slate-500">
+                                            SIerでの開発経験は豊富ですが、キャリア志向が「企画」へシフトしており、開発メインの業務とは<span class="font-bold text-slate-600">ややミスマッチ</span>の可能性。
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -303,7 +348,7 @@
         </div>
     </section>
 
-    <!-- Solution Section (Updated Copy & GIF Image in Window) -->
+    <!-- Solution Section (GIF Image in Window) -->
     <section id="solution" class="py-20 bg-slate-900 text-white relative overflow-hidden">
         <!-- 装飾 -->
         <div class="absolute top-0 left-0 w-full h-full opacity-10">
@@ -313,7 +358,6 @@
 
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center max-w-4xl mx-auto mb-16 fade-up">
-                <!-- 新しい見出しとコピー -->
                 <span class="text-emerald-400 font-bold tracking-widest text-sm uppercase mb-3 block">AI PARTNER</span>
                 <h2 class="text-3xl md:text-4xl font-bold mb-6 leading-tight">
                     「探す」のではなく、<br>
@@ -340,7 +384,7 @@
                             <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
                         </div>
                         
-                        <!-- GIF Container - using local filename -->
+                        <!-- GIF Container -->
                         <div class="aspect-video bg-slate-900 relative z-10 flex items-center justify-center overflow-hidden">
                              <img src="ezgif-3a482422b1de8e48.gif" alt="AIスコアリング デモンストレーション" class="w-full h-full object-contain">
                             <!-- Overlay gradient to blend edges if needed -->
@@ -349,7 +393,7 @@
                     </div>
                 </div>
 
-                <!-- 3 Pillars (Refined) -->
+                <!-- 3 Pillars -->
                 <div class="w-full md:w-1/2 space-y-10 fade-up delay-200">
                     <div class="flex gap-5">
                         <div class="flex-shrink-0 w-14 h-14 bg-brand-green rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-emerald-900/30 border border-emerald-500/50">
@@ -389,7 +433,7 @@
         </div>
     </section>
 
-    <!-- Use Case Section (New! - Refined) -->
+    <!-- Use Case Section -->
     <section id="usecase" class="py-24 bg-emerald-50/50 relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -400,7 +444,7 @@
             </div>
 
             <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
-                <!-- Case 1: 求人起点 (Refined) -->
+                <!-- Case 1: 求人起点 -->
                 <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden fade-up hover:shadow-2xl transition duration-300">
                     <div class="bg-slate-800 text-white p-5 flex items-center justify-between relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-700 opacity-90"></div>
@@ -431,7 +475,7 @@
                             <p class="text-slate-800 text-lg font-bold mb-4 leading-snug">
                                 3年前に登録された<span class="text-brand-orange bg-orange-50 px-1 rounded">「営業部長（事業企画未経験）」</span>を<br>マッチ度95%で提案。
                             </p>
-                            <!-- AI Comment (Refined) -->
+                            <!-- AI Comment -->
                             <div class="bg-white p-4 rounded-xl border border-emerald-200 relative speech-bubble-top shadow-sm">
                                 <div class="flex items-center gap-1.5 mb-2 font-bold text-emerald-600 text-sm">
                                     <i data-lucide="bot" class="w-4 h-4"></i>
@@ -451,7 +495,7 @@
                     </div>
                 </div>
 
-                <!-- Case 2: 候補者起点 (Refined) -->
+                <!-- Case 2: 候補者起点 -->
                 <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden fade-up delay-100 hover:shadow-2xl transition duration-300">
                     <div class="bg-slate-800 text-white p-5 flex items-center justify-between relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-r from-slate-700 to-slate-800 opacity-90"></div>
@@ -482,7 +526,7 @@
                             <p class="text-slate-800 text-lg font-bold mb-4 leading-snug">
                                 自社の全求人から<span class="text-brand-orange bg-orange-50 px-1 rounded">「CFO候補」の案件</span>を<br>マッチ度98%で選定。
                             </p>
-                            <!-- AI Comment (Refined) -->
+                            <!-- AI Comment -->
                             <div class="bg-white p-4 rounded-xl border border-emerald-200 relative speech-bubble-top shadow-sm">
                                 <div class="flex items-center gap-1.5 mb-2 font-bold text-emerald-600 text-sm">
                                     <i data-lucide="bot" class="w-4 h-4"></i>
@@ -505,7 +549,7 @@
         </div>
     </section>
 
-    <!-- Proof Section (IMPACT 01 & 02 - Refined) -->
+    <!-- Proof Section (IMPACT 01 & 02) -->
     <section id="proof" class="py-24 bg-brand-light/50 relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-30 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -536,7 +580,7 @@
                     </ul>
                 </div>
                 
-                <!-- Rightjob Diagram (Refined) -->
+                <!-- Rightjob Diagram -->
                 <div class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl border-2 border-brand-green/20 w-full md:w-1/2 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-3 bg-brand-green"></div>
                     <div class="relative h-64 flex items-center justify-center">
@@ -564,7 +608,7 @@
 
             <!-- IMPACT 02 -->
             <div class="max-w-5xl mx-auto flex flex-col-reverse md:flex-row gap-12 items-center justify-center fade-up">
-                <!-- Efficiency Graph (Refined) -->
+                <!-- Efficiency Graph -->
                 <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-slate-200 w-full md:w-1/2 relative overflow-hidden">
                     <div class="flex flex-col md:flex-row gap-8 items-end justify-center h-full">
                         <div class="w-full md:w-1/3 text-center relative z-10">
@@ -627,7 +671,7 @@
         </div>
     </section>
 
-    <!-- Features Section (Refined) -->
+    <!-- Features Section -->
     <section class="py-24 bg-white relative overflow-hidden">
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center mb-16 fade-up">
@@ -640,7 +684,7 @@
             </div>
 
             <div class="grid md:grid-cols-3 gap-8 lg:gap-12">
-                <!-- Feature 1 (Refined) -->
+                <!-- Feature 1 -->
                 <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-green/50 transition group fade-up relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/50 opacity-0 group-hover:opacity-100 transition duration-500"></div>
                     <div class="relative z-10">
@@ -653,7 +697,7 @@
                         </p>
                     </div>
                 </div>
-                <!-- Feature 2 (Refined) -->
+                <!-- Feature 2 -->
                 <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-green/50 transition group fade-up delay-100 relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/50 opacity-0 group-hover:opacity-100 transition duration-500"></div>
                     <div class="relative z-10">
@@ -666,7 +710,7 @@
                         </p>
                     </div>
                 </div>
-                <!-- Feature 3 (Refined) -->
+                <!-- Feature 3 -->
                 <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-green/50 transition group fade-up delay-200 relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/50 opacity-0 group-hover:opacity-100 transition duration-500"></div>
                     <div class="relative z-10">
@@ -684,7 +728,7 @@
         </div>
     </section>
 
-    <!-- Support Section (Refined) -->
+    <!-- Support Section -->
     <section id="support" class="py-24 bg-emerald-50 relative overflow-hidden">
         <!-- Background decoration -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 -mr-48 -mt-48 pointer-events-none"></div>
@@ -706,7 +750,7 @@
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
-                    <!-- Support Point 1 (Refined) -->
+                    <!-- Support Point 1 -->
                     <div class="bg-white p-8 rounded-3xl shadow-lg border border-emerald-100 flex gap-6 items-start fade-up relative overflow-hidden hover:shadow-xl transition duration-300">
                         <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/30 pointer-events-none"></div>
                         <div class="w-16 h-16 bg-emerald-100 text-brand-green rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm relative z-10">
@@ -720,7 +764,7 @@
                         </div>
                     </div>
 
-                    <!-- Support Point 2 (Refined) -->
+                    <!-- Support Point 2 -->
                     <div class="bg-white p-8 rounded-3xl shadow-lg border border-emerald-100 flex gap-6 items-start fade-up delay-100 relative overflow-hidden hover:shadow-xl transition duration-300">
                         <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/30 pointer-events-none"></div>
                         <div class="w-16 h-16 bg-emerald-100 text-brand-green rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm relative z-10">
@@ -738,7 +782,7 @@
         </div>
     </section>
 
-    <!-- Pricing Section (Refined) -->
+    <!-- Pricing Section -->
     <section id="price" class="py-24 bg-white relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -815,7 +859,7 @@
         </div>
     </section>
 
-    <!-- FAQ Section (Refined) -->
+    <!-- FAQ Section -->
     <section id="faq" class="py-24 bg-white relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -841,7 +885,8 @@
                         <span class="transition group-open:rotate-180 bg-white rounded-full p-1 shadow-sm"><i data-lucide="chevron-down" class="w-5 h-5 text-slate-500"></i></span>
                     </summary>
                     <p class="text-slate-600 mt-6 text-base leading-relaxed font-medium bg-white p-4 rounded-xl border border-slate-100 shadow-inner">
-                        A. 非常に堅牢です。データは全て御社のGoogleドライブ内に保存されます。弊社や第三者のサーバーに個人情報を預ける必要がないため、セキュリティリスクを最小限に抑えられます。
+                        A. データは全て御社のGoogleドライブ内に保存されます。弊社や第三者のサーバーに個人情報を預ける必要がないため、セキュリティリスクを最小限に抑えられます。<br>
+                        <span class="text-sm mt-2 block text-slate-500">※Google Workspace 未利用の場合も安心の環境で運用します。</span>
                     </p>
                 </details>
 
@@ -858,7 +903,7 @@
         </div>
     </section>
 
-    <!-- CTA / Closing (Refined) -->
+    <!-- CTA / Closing -->
     <section id="contact" class="py-32 bg-brand-dark text-white text-center relative overflow-hidden">
         <!-- Background decoration -->
         <div class="absolute top-0 left-0 w-full h-full opacity-20">
