@@ -1201,7 +1201,20 @@
                         // フィルタリング：コーチの場合は担当ユーザーのみ
                         let availableUsers = ALL_USERS.filter(u => u.role === 'user');
                         if (CURRENT_USER.role === 'coach') {
-                            availableUsers = availableUsers.filter(u => u.assigned_coach_id === CURRENT_USER.user_id);
+                            // 【修正】assigned_coach_id と coach_id の両方をチェック
+                            availableUsers = availableUsers.filter(u => 
+                                u.assigned_coach_id === CURRENT_USER.user_id || 
+                                u.coach_id === CURRENT_USER.user_id
+                            );
+                            
+                            // デバッグ用ログ
+                            console.log('Coach User ID:', CURRENT_USER.user_id);
+                            console.log('All Users:', ALL_USERS.filter(u => u.role === 'user').map(u => ({
+                                name: u.name,
+                                coach_id: u.coach_id,
+                                assigned_coach_id: u.assigned_coach_id
+                            })));
+                            console.log('Available Users for Coach:', availableUsers.length);
                         }
 
                         targetUserSelectHtml = `
@@ -2146,17 +2159,39 @@
                 ui.navigateTo('dashboard');
             }
 
+            // 既存のgetMinSalary関数は残しておく（ソート用に使用）
             function getMinSalary(salaryString) {
                 if (!salaryString || typeof salaryString !== 'string') return 0;
                 const match = salaryString.match(/(\d+)/);
                 return match ? parseInt(match[1], 10) : 0;
             }
 
+            // 【修正箇所1】getMinSalary関数を拡張して、最低年収と最高年収を取得
+            // 約1091行目付近
+
+            function getSalaryRange(salaryString) {
+                if (!salaryString || typeof salaryString !== 'string') return { min: 0, max: 0 };
+                
+                // 数値を全て抽出（例: "450万円～600万円" → [450, 600]）
+                const matches = salaryString.match(/(\d+)/g);
+                if (!matches || matches.length === 0) return { min: 0, max: 0 };
+                
+                const numbers = matches.map(n => parseInt(n, 10));
+                
+                return {
+                    min: Math.min(...numbers),
+                    max: Math.max(...numbers)
+                };
+            }
+
+            // 【修正箇所2】getFilteredJobs関数内の年収フィルタリングロジック
+            // 約1119行目付近
+
             function getFilteredJobs() {
                 const jobExpOk = $('#search-job-exp').is(':checked');
                 const industryExpOk = $('#search-industry-exp').is(':checked');
                 const desiredSalary = parseInt($('#search-salary').val() || '300', 10);
-                const excludeAIRecommended = $('#exclude-ai-recommended').is(':checked'); // ★ 追加
+                const excludeAIRecommended = $('#exclude-ai-recommended').is(':checked');
 
                 let baseJobs = ALL_JOBS;
                 if (isFavoritesOnlySearch) {
@@ -2206,9 +2241,22 @@
                     if (jobExpOk && job.job_experience_ok !== 'OK') return false;
                     if (industryExpOk && job.industry_experience_ok !== 'OK') return false;
 
+                    // 【修正】年収フィルタリングロジック
                     if (desiredSalary > 300) {
-                        const jobMinSalary = getMinSalary(job.salary);
-                        if (jobMinSalary && jobMinSalary < desiredSalary) {
+                        const salaryRange = getSalaryRange(job.salary);
+                        
+                        // 年収情報がない場合は除外しない（表示する）
+                        if (salaryRange.min === 0 && salaryRange.max === 0) {
+                            // 年収情報なし → 表示する（除外しない）
+                            return true;
+                        }
+                        
+                        // 指定した年収が求人の年収レンジ内に含まれるか、
+                        // または求人の最低年収が指定年収以上の場合に表示
+                        // 例: 希望500万、求人450～600万 → 表示
+                        // 例: 希望500万、求人600万～ → 表示
+                        // 例: 希望500万、求人300～400万 → 非表示
+                        if (salaryRange.max < desiredSalary) {
                             return false;
                         }
                     }
