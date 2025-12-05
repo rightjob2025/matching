@@ -438,11 +438,7 @@
                     <i class="fas fa-briefcase w-5"></i>
                     <span class="ml-3">求人検索</span>
                 </a>
-                <a href="#" onclick="openFavoritesModal(); return false;"
-                    class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
-                    <i class="fas fa-heart w-5"></i>
-                    <span class="ml-3">お気に入り</span>
-                </a>
+
                 <a href="#" id="external-profile-analysis-link" onclick="openProfileAnalysisModal(); return false;"
                     class="nav-link hidden flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
                     <i class="fas fa-id-card-alt w-5"></i>
@@ -739,7 +735,7 @@
                             multiple="multiple" onchange="searchJobs()">
                         </select>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                         <select id="search-job-category" class="w-full px-4 py-2 border rounded-lg" multiple="multiple"
                             onchange="searchJobs()">
                         </select>
@@ -748,6 +744,12 @@
                         </select>
                         <input type="number" id="search-salary-min" placeholder="最低年収（万円）"
                             class="px-4 py-2 border rounded-lg" oninput="searchJobs()">
+                        <select id="search-sort" class="px-4 py-2 border rounded-lg" onchange="searchJobs()">
+                            <option value="created_at-desc">新着順</option>
+                            <option value="created_at-asc">登録順（古い順）</option>
+                            <option value="salary_max-desc">年収が高い順</option>
+                            <option value="salary_max-asc">年収が低い順</option>
+                        </select>
                     </div>
                     <div class="flex flex-wrap gap-6 mb-6 px-1">
                         <label class="flex items-center gap-2 cursor-pointer">
@@ -771,6 +773,12 @@
                             <input type="checkbox" id="search-exclude-matched" class="w-4 h-4 text-purple-600 rounded"
                                 onchange="searchJobs()">
                             <span class="text-sm text-purple-700 font-medium">AI紹介済みを除外</span>
+                        </label>
+                        <!-- お気に入り絞り込み -->
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="search-favorites-only" class="w-4 h-4 text-pink-500 rounded"
+                                onchange="searchJobs()">
+                            <span class="text-sm text-pink-600 font-medium">お気に入りのみ</span>
                         </label>
                     </div>
 
@@ -5385,7 +5393,8 @@
                     .select('*, companies(name)') // Join with companies
                     .eq('organization_id', currentUser.organization_id)
                     .eq('status', 'active')
-                    .order('created_at', { ascending: false })
+
+                // ソート順の適用は最後に移動しました
 
                 // キーワード検索 (AND/OR)
                 if (filters.keyword) {
@@ -5447,6 +5456,17 @@
                     query = query.eq('is_remote', true)
                 }
 
+                // お気に入りのみフィルタリング
+                if (filters.favoritesOnly) {
+                    if (favoriteJobIds.size > 0) {
+                        query = query.in('id', Array.from(favoriteJobIds));
+                    } else {
+                        // お気に入りが0件の場合は何も表示しない
+                        // id.in.() はエラーになる可能性があるため、あり得ない条件を入れる
+                        query = query.eq('id', '00000000-0000-0000-0000-000000000000'); // Dummy UUID
+                    }
+                }
+
                 // AIマッチング済み除外
                 if (filters.excludeMatched) {
                     const targetUserId = selectedTargetUserId || (currentUser.role === 'candidate' ? currentUser.id : null);
@@ -5466,6 +5486,12 @@
                         }
                     }
                 }
+
+                // ソート順の適用
+                const sortParam = filters.sort || 'created_at-desc';
+                console.log('Applying sort:', sortParam);
+                const [sortCol, sortOrder] = sortParam.split('-');
+                query = query.order(sortCol, { ascending: sortOrder === 'asc' });
 
                 const { data: jobs, error } = await query
 
@@ -5522,9 +5548,11 @@
             $('#search-industry-experience-ok').prop('checked', !!filters.industryExperienceOk);
             $('#search-is-remote').prop('checked', !!filters.isRemote);
             $('#search-exclude-matched').prop('checked', !!filters.excludeMatched);
+            $('#search-favorites-only').prop('checked', !!filters.favoritesOnly);
         }
 
         window.searchJobs = function () {
+            console.log('searchJobs called. Sort:', $('#search-sort').val());
             const filters = {
                 keyword: $('#search-keyword').val().trim(),
                 keywordMode: $('input[name="search-keyword-mode"]:checked').val(),
@@ -5536,8 +5564,11 @@
                 salaryMin: $('#search-salary-min').val(),
                 jobExperienceOk: $('#search-job-experience-ok').is(':checked'),
                 industryExperienceOk: $('#search-industry-experience-ok').is(':checked'),
+                industryExperienceOk: $('#search-industry-experience-ok').is(':checked'),
                 isRemote: $('#search-is-remote').is(':checked'),
-                excludeMatched: $('#search-exclude-matched').is(':checked')
+                excludeMatched: $('#search-exclude-matched').is(':checked'),
+                favoritesOnly: $('#search-favorites-only').is(':checked'),
+                sort: $('#search-sort').val()
             }
 
             // 検索条件を保存
@@ -5557,7 +5588,10 @@
             $('#search-salary-min').val('')
             $('#search-job-experience-ok').prop('checked', false)
             $('#search-industry-experience-ok').prop('checked', false)
+            $('#search-industry-experience-ok').prop('checked', false)
             $('#search-is-remote').prop('checked', false)
+            $('#search-favorites-only').prop('checked', false)
+            $('#search-sort').val('created_at-desc')
             loadJobs()
         }
 
@@ -5653,7 +5687,7 @@
 
         window.toggleFavorite = async function (jobId) {
             if (!currentUser) return
-            const btn = $(`#fav - btn - ${jobId} `)
+            const btn = $(`#fav-btn-${jobId}`)
             const icon = btn.find('i')
             const isFav = favoriteJobIds.has(jobId)
 
@@ -5729,7 +5763,8 @@
                 jobExperienceOk: $('#search-job-experience-ok').is(':checked'),
                 industryExperienceOk: $('#search-industry-experience-ok').is(':checked'),
                 isRemote: $('#search-is-remote').is(':checked'),
-                excludeMatched: $('#search-exclude-matched').is(':checked')
+                excludeMatched: $('#search-exclude-matched').is(':checked'),
+                favoritesOnly: $('#search-favorites-only').is(':checked')
             }
 
             try {
@@ -5768,6 +5803,8 @@
             $('#search-industry-experience-ok').prop('checked', !!c.industryExperienceOk)
             $('#search-is-remote').prop('checked', !!c.isRemote)
             $('#search-exclude-matched').prop('checked', !!c.excludeMatched)
+            $('#search-favorites-only').prop('checked', !!c.favoritesOnly)
+            $('#search-favorites-only').prop('checked', !!c.favoritesOnly)
 
             // 検索実行
             searchJobs()
@@ -11040,12 +11077,18 @@
         let currentRecommendationAppId = null;
 
         // 推薦文モーダルを開く
+        // 推薦文モーダルを開く
         window.openRecommendationModal = async function (applicationId) {
+            console.log('openRecommendationModal called with ID:', applicationId);
             currentRecommendationAppId = applicationId;
 
             // 既存の推薦文を取得
             try {
-                const { data: app, error } = await supabase
+                if (!window.supabase) {
+                    throw new Error('Supabase client is not initialized');
+                }
+
+                const { data: app, error } = await window.supabase
                     .from('applications')
                     .select('recommendation_text')
                     .eq('id', applicationId)
@@ -11053,12 +11096,14 @@
 
                 if (error) throw error;
 
+                console.log('Fetched application data:', app);
+
                 $('#recommendation-text').val(app.recommendation_text || '');
                 $('#recommendation-modal').removeClass('hidden');
 
             } catch (error) {
                 console.error('Failed to fetch recommendation:', error);
-                alert('データの取得に失敗しました');
+                alert('データの取得に失敗しました: ' + (error.message || error));
             }
         }
 
@@ -11077,7 +11122,9 @@
             btn.html('<i class="fas fa-spinner fa-spin mr-2"></i>生成中...').prop('disabled', true);
 
             try {
-                const { data, error } = await supabase.functions.invoke('generate-recommendation-letter', {
+                if (!window.supabase) throw new Error('Supabase client not initialized');
+
+                const { data, error } = await window.supabase.functions.invoke('generate-recommendation-letter', {
                     body: { applicationId: currentRecommendationAppId }
                 });
 
@@ -11088,7 +11135,7 @@
 
             } catch (error) {
                 console.error('Failed to generate recommendation:', error);
-                alert('推薦文の生成に失敗しました: ' + error.message);
+                alert('推薦文の生成に失敗しました: ' + (error.message || error));
             } finally {
                 btn.html(originalHtml).prop('disabled', false);
             }
@@ -11106,7 +11153,9 @@
 
             showLoading();
             try {
-                const { error } = await supabase
+                if (!window.supabase) throw new Error('Supabase client not initialized');
+
+                const { error } = await window.supabase
                     .from('applications')
                     .update({
                         recommendation_text: text,
@@ -11118,11 +11167,17 @@
 
                 alert('推薦文を保存しました');
                 closeRecommendationModal();
-                loadAdminApplicants(); // リストを更新
+
+                // リストを更新 (存在する場合のみ)
+                if (typeof loadAdminApplicants === 'function') {
+                    loadAdminApplicants();
+                } else if (typeof loadApplications === 'function') {
+                    loadApplications();
+                }
 
             } catch (error) {
                 console.error('Failed to save recommendation:', error);
-                alert('保存に失敗しました');
+                alert('保存に失敗しました: ' + (error.message || error));
             } finally {
                 hideLoading();
             }
