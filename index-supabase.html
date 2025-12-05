@@ -1956,6 +1956,30 @@
         </div>
     </div>
 
+    <!-- AI詳細分析モーダル -->
+    <div id="ai-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+        style="z-index: 10003;">
+        <div class="bg-white rounded-lg w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-chart-bar text-indigo-600 mr-2"></i>AI詳細分析
+                </h3>
+                <button onclick="closeAIDetailModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="ai-detail-modal-content">
+                <!-- Content will be injected here -->
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="closeAIDetailModal()"
+                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 一括推薦モーダル -->
     <div id="bulk-recommend-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
         style="z-index: 10002;">
@@ -4285,11 +4309,16 @@
 
         // 詳細ボタンのクリックイベントハンドラ
         window.openAIDetail = function (itemId) {
-            const data = window.aiResultDetails[itemId];
+            console.log('openAIDetail called with itemId:', itemId);
+            console.log('Current aiResultDetails:', window.aiResultDetails);
+
+            const data = window.aiResultDetails ? window.aiResultDetails[itemId] : null;
             if (data) {
+                console.log('Found detail data:', data);
                 showAIDetailModal(data.jobId, data.jobTitle, data.company, data.score, data.details);
             } else {
                 console.error('AI detail data not found for itemId:', itemId);
+                alert('詳細データが見つかりません');
             }
         };
 
@@ -11077,7 +11106,6 @@
         let currentRecommendationAppId = null;
 
         // 推薦文モーダルを開く
-        // 推薦文モーダルを開く
         window.openRecommendationModal = async function (applicationId) {
             console.log('openRecommendationModal called with ID:', applicationId);
             currentRecommendationAppId = applicationId;
@@ -11098,8 +11126,20 @@
 
                 console.log('Fetched application data:', app);
 
+                const modal = $('#recommendation-modal');
+                console.log('Modal element found:', modal.length > 0);
+
+                // モーダルをbodyの最後に移動して、親要素の影響を受けないようにする
+                $('body').append(modal);
+
                 $('#recommendation-text').val(app.recommendation_text || '');
-                $('#recommendation-modal').removeClass('hidden');
+
+                // 強制的に表示
+                modal.removeClass('hidden');
+                modal.attr('style', 'display: flex !important; z-index: 99999 !important;');
+
+                console.log('Modal moved to body end and forced to display');
+                // alert('推薦文モーダルを開きました'); // デバッグ用アラート
 
             } catch (error) {
                 console.error('Failed to fetch recommendation:', error);
@@ -11109,13 +11149,18 @@
 
         // 推薦文モーダルを閉じる
         window.closeRecommendationModal = function () {
-            $('#recommendation-modal').addClass('hidden');
+            // インラインスタイルを上書きして非表示にする
+            $('#recommendation-modal').addClass('hidden').css('display', 'none');
             currentRecommendationAppId = null;
         }
 
         // AIで推薦文を生成
         window.generateRecommendation = async function () {
-            if (!currentRecommendationAppId) return;
+            console.log('generateRecommendation called');
+            if (!currentRecommendationAppId) {
+                console.error('No currentRecommendationAppId set');
+                return;
+            }
 
             const btn = $('#generate-recommendation-btn');
             const originalHtml = btn.html();
@@ -11124,6 +11169,7 @@
             try {
                 if (!window.supabase) throw new Error('Supabase client not initialized');
 
+                console.log('Invoking generate-recommendation-letter for:', currentRecommendationAppId);
                 const { data, error } = await window.supabase.functions.invoke('generate-recommendation-letter', {
                     body: { applicationId: currentRecommendationAppId }
                 });
@@ -11131,7 +11177,8 @@
                 if (error) throw error;
                 if (!data.success) throw new Error(data.error || '生成に失敗しました');
 
-                $('#recommendation-text').val(data.recommendation_text);
+                console.log('Generation success:', data);
+                $('#recommendation-text').val(data.text);
 
             } catch (error) {
                 console.error('Failed to generate recommendation:', error);
