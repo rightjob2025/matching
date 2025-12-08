@@ -1251,17 +1251,16 @@
                 `;
             }
             if (type === 'scoutGeneration') {
-                // スカウト文面の改行を最適化
+                // スカウト文面の改行を最適化 (インデント修正済み)
                 return `
                     <div class="bg-white border-2 border-brand-orange/30 rounded-xl p-4 shadow-ui relative">
                         <div class="font-bold text-sm text-slate-800 mb-3">AI生成スカウト文面 (ドラフト)</div>
                         <div class="bg-orange-50/50 rounded-lg p-2.5 border border-brand-orange/10">
-                            <p class="text-[10px] leading-relaxed text-slate-700 whitespace-pre-wrap-jp">
-                                【AIによる個別最適化】
-                                〇〇様へ。貴殿の「組織構築、M&A後のPMI経験」は、現在弊社が担当するA社の「急成長に伴う管理部門の再構築」という重大課題に直結します。
-                                貴殿の「安定よりも挑戦」という志向性から、0→1フェーズを重視するA社の経営層直下のポジションは、最高のキャリアパスになると確信しております。
+                            <p class="text-[10px] leading-relaxed text-slate-700 whitespace-pre-wrap-jp">【AIによる個別最適化】
+〇〇様へ。貴殿の「組織構築、M&A後のPMI経験」は、現在弊社が担当するA社の「急成長に伴う管理部門の再構築」という重大課題に直結します。
+貴殿の「安定よりも挑戦」という志向性から、0→1フェーズを重視するA社の経営層直下のポジションは、最高のキャリアパスになると確信しております。
                                 
-                                <span class="block mt-2 text-[9px] text-brand-orange font-bold">⇒ 工数95%削減 & 返信率UPに貢献</span>
+<span class="block mt-2 text-[9px] text-brand-orange font-bold">⇒ 工数95%削減 & 返信率UPに貢献</span>
                             </p>
                         </div>
                     </div>
@@ -1274,15 +1273,14 @@
                 `;
             }
             if (type === 'recommendationGeneration') {
-                // 推薦文の改行を最適化
+                // 推薦文の改行を最適化 (インデント修正済み)
                 return `
                     <div class="bg-white border-2 border-brand-orange/30 rounded-xl p-4 shadow-ui relative">
                         <div class="font-bold text-sm text-slate-800 mb-3">AI生成 企業向け推薦文 (ドラフト)</div>
                         <div class="bg-orange-50/50 rounded-lg p-2.5 border border-brand-orange/10">
-                            <p class="text-[10px] leading-relaxed text-slate-700 whitespace-pre-wrap-jp">
-                                【推薦ポイント】
-                                候補者B氏は、前職にて売上20%増を実現した営業部門のリーダーを務めており、実務的な<span class="font-bold">「現場改善力」</span>に特化しています。
-                                特に、面談での「泥臭い現場改善が得意」という発言は、貴社が求める<span class="font-bold">組織立ち上げフェーズ</span>に極めて重要であると判断します。単なる管理職ではなく、現場レベルで成果を出せる人物です。
+                            <p class="text-[10px] leading-relaxed text-slate-700 whitespace-pre-wrap-jp">【推薦ポイント】
+候補者B氏は、前職にて売上20%増を実現した営業部門のリーダーを務めており、実務的な<span class="font-bold">「現場改善力」</span>に特化しています。
+特に、面談での「泥臭い現場改善が得意」という発言は、貴社が求める<span class="font-bold">組織立ち上げフェーズ</span>に極めて重要であると判断します。単なる管理職ではなく、現場レベルで成果を出せる人物です。
                             </p>
                         </div>
                     </div>
