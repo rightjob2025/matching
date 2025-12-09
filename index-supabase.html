@@ -2895,7 +2895,7 @@
         };
 
         // 現在の環境に合わせて設定を選択
-        // const config = isLocal ? DEV_CONFIG : PROD_CONFIG;
+        const config = isLocal ? DEV_CONFIG : PROD_CONFIG;
 
         // Supabaseクライアントの初期化
         const { createClient } = supabase
