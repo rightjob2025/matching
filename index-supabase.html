@@ -325,10 +325,11 @@
 
 <body>
     <!-- Loading Spinner -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+        style="z-index: 20000;">
         <div class="bg-white rounded-lg p-6 flex flex-col items-center">
             <div class="spinner border-4 border-gray-200 rounded-full w-16 h-16 mb-4"></div>
-            <p class="text-gray-700 font-medium">読み込み中...</p>
+            <p id="loading-message" class="text-gray-700 font-medium">読み込み中...</p>
         </div>
     </div>
 
@@ -568,6 +569,14 @@
                 <div class="flex items-center justify-between">
                     <h1 id="page-title" class="text-2xl font-bold text-gray-900">ダッシュボード</h1>
                     <div class="flex items-center gap-4">
+                        <!-- Organization Switcher (Super Admin only) -->
+                        <div id="org-switcher-container" class="hidden">
+                            <select id="org-switcher"
+                                class="border border-red-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-red-50 text-red-900 font-medium">
+                                <option value="">組織を選択...</option>
+                            </select>
+                        </div>
+
                         <!-- Notification Bell -->
                         <div class="relative">
                             <button id="notification-btn" class="relative p-2 text-gray-600 hover:text-gray-900">
@@ -929,6 +938,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">希望勤務地</label>
                                 <div class="flex gap-2">
                                     <select id="profile-prefecture" class="w-1/3 px-2 py-2 border rounded-lg select2"
+                                        multiple="multiple">
                                         style="width: 40%">
                                         <option value="">都道府県</option>
                                     </select>
@@ -1185,18 +1195,20 @@
                             </p>
                         </div>
 
-                        <!-- ユーザーインポート -->
+                        <!-- 求職者インポート -->
                         <div class="border rounded-lg p-6">
                             <h3 class="font-semibold mb-3 flex items-center">
-                                <i class="fas fa-users mr-2 text-green-600"></i>ユーザーデータ
+                                <i class="fas fa-user-tie mr-2 text-green-600"></i>求職者データ
                             </h3>
-                            <input type="file" id="csv-users-file" accept=".csv" class="mb-3 w-full">
-                            <button onclick="importUsersCSV()"
+                            <p class="text-sm text-gray-600 mb-4">
+                                求職者情報をCSVファイルから一括登録できます。
+                            </p>
+                            <button onclick="openUserCsvImportModal()"
                                 class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full">
-                                <i class="fas fa-upload mr-2"></i>インポート
+                                <i class="fas fa-file-csv mr-2"></i>求職者CSVインポート
                             </button>
                             <p class="text-xs text-gray-500 mt-2">
-                                形式: name, email, role, desired_job_type, desired_location, skills
+                                ※ ロールは自動的に「求職者」に設定されます
                             </p>
                         </div>
                     </div>
@@ -1341,6 +1353,23 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">有効期限</label>
                             <input type="date" id="org-valid-until" class="w-full px-4 py-2 border rounded-lg">
                         </div>
+
+                        <!-- 組織設定 -->
+                        <div class="border-t pt-4 mt-4">
+                            <h4 class="font-medium text-gray-800 mb-3">求職者登録設定</h4>
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="org-setting-email-required"
+                                        class="rounded text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-700">求職者のメールアドレスを必須にする</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="org-setting-password-required"
+                                        class="rounded text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-700">求職者のパスワードを必須にする</span>
+                                </label>
+                            </div>
+                        </div>
                         <div class="flex justify-end gap-3 mt-6">
                             <button type="button" onclick="closeOrganizationModal()"
                                 class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -1401,7 +1430,7 @@
             </div>
 
             <!-- Admin: User Edit Modal -->
-            <div id="admin-user-edit-modal"
+            <div id="admin-user-modal"
                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
                     <div class="flex justify-between items-center mb-4">
@@ -1467,6 +1496,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">希望勤務地</label>
                                 <div class="flex gap-2">
                                     <select id="admin-user-prefecture" class="w-1/3 px-2 py-2 border rounded-lg select2"
+                                        multiple="multiple">
                                         style="width: 40%">
                                         <option value="">都道府県</option>
                                     </select>
@@ -1516,7 +1546,7 @@
                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white rounded-lg w-full max-w-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold">ユーザーCSVインポート</h3>
+                        <h3 class="text-xl font-bold">求職者CSVインポート</h3>
                         <button onclick="closeUserCsvImportModal()" class="text-gray-500 hover:text-gray-700">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1526,13 +1556,17 @@
                             <p class="font-bold mb-2">CSVフォーマットについて</p>
                             <p>以下のカラムを持つCSVファイルを作成してください：</p>
                             <ul class="list-disc list-inside ml-2 mt-1">
-                                <li>name (必須): 名前</li>
-                                <li>email (必須): メールアドレス</li>
-                                <li>role (必須): 権限 (admin, coach, candidateなど)</li>
-                                <li>password (必須): 初期パスワード</li>
+                                <li>name (必須): 氏名</li>
+                                <li>email (組織設定により必須/任意): メールアドレス</li>
+                                <li>age (任意): 年齢</li>
+                                <li>desired_job_type (任意): 希望職種</li>
+                                <li>desired_location (任意): 希望勤務地</li>
+                                <li>desired_salary (任意): 希望年収（万円）</li>
+                                <li>skills (任意): スキル</li>
                             </ul>
+                            <p class="mt-2 text-xs">※ ロールは自動的に「求職者」に設定されます</p>
                             <div class="mt-3">
-                                <a href="#" onclick="downloadUserCsvTemplate(event)"
+                                <a href="#" onclick="downloadCandidateCsvTemplate(event)"
                                     class="text-blue-600 hover:underline">
                                     <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
                                 </a>
@@ -1846,6 +1880,20 @@
                         class="w-full text-sm text-gray-600 hover:text-gray-800 underline">
                         入力内容をリセット
                     </button>
+
+                    <!-- スカウト修正指示エリア (初期非表示) -->
+                    <div id="scout-instruction-container" class="hidden mt-6 pt-6 border-t border-gray-200">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-pen-fancy mr-1"></i>スカウト文面の修正指示
+                        </label>
+                        <textarea id="scout-instruction-text" rows="3"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 mb-2"
+                            placeholder="例: もっとカジュアルなトーンにして、年収の魅力は控えめに..."></textarea>
+                        <button id="regenerate-scout-btn" onclick="regenerateScoutsWithInstruction()"
+                            class="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-bold shadow-sm hover:bg-indigo-200 transition flex items-center justify-center">
+                            <i class="fas fa-sync-alt mr-2"></i>指示を反映して再生成
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 右側: 解析結果エリア -->
@@ -2034,6 +2082,22 @@
                 <button onclick="showMasterForm()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
                     <i class="fas fa-plus mr-2"></i>新規作成
                 </button>
+                <button onclick="updateJobCategoriesMaster()"
+                    class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 ml-2">
+                    <i class="fas fa-sync mr-2"></i>職種マスタ初期化
+                </button>
+                <button onclick="updateIndustryCategoriesMaster()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 ml-2">
+                    <i class="fas fa-sync mr-2"></i>業種マスタ初期化
+                </button>
+                <button onclick="updateSelectionStatusMaster()"
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 ml-2">
+                    <i class="fas fa-sync mr-2"></i>進捗ステータス初期化
+                </button>
+                <button onclick="updatePromptMaster()"
+                    class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 ml-2">
+                    <i class="fas fa-sync mr-2"></i>プロンプト初期化
+                </button>
             </div>
             <div class="border-b border-gray-200 mb-4">
                 <nav class="-mb-px flex space-x-8" id="master-tabs">
@@ -2048,6 +2112,10 @@
                     <button onclick="switchMasterTab('job_category')"
                         class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                         職種カテゴリ
+                    </button>
+                    <button onclick="switchMasterTab('industry_category')"
+                        class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        業種カテゴリ
                     </button>
                 </nav>
                 <input type="hidden" id="master-filter-type" value="">
@@ -2241,6 +2309,7 @@
                     <select id="master-type" required class="w-full px-4 py-2 border rounded-lg">
                         <option value="employment_type">雇用形態</option>
                         <option value="job_category">職種カテゴリ</option>
+                        <option value="industry_category">業種カテゴリ</option>
                     </select>
                 </div>
 
@@ -2270,7 +2339,22 @@
                     </label>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4">
+                <!-- AI自動補完オプション -->
+                <div class="mb-6 bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="csv-ai-augment" class="w-5 h-5 text-indigo-600 rounded mt-0.5">
+                        <div>
+                            <span class="font-bold text-gray-900">AIによる自動補完を行う</span>
+                            <p class="text-xs text-gray-600 mt-1">
+                                職種カテゴリ、業界カテゴリ、リモートワーク可否などの項目が空欄の場合、<br>
+                                求人詳細などのテキスト情報からAIが自動的に推測して補完します。<br>
+                                <span class="text-red-500">※処理に時間がかかる場合があります。</span>
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t">
                     <button type="button" onclick="closeMasterModal()"
                         class="px-6 py-2 border rounded-lg hover:bg-gray-50">
                         キャンセル
@@ -2467,6 +2551,27 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">選考フロー</label>
                     <textarea id="job-interview-process" rows="3" placeholder="例: 書類選考 → 一次面接 → 最終面接"
                         class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">求人URL</label>
+                    <input type="url" id="job-url" placeholder="https://example.com/job/..."
+                        class="w-full px-4 py-2 border rounded-lg">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">担当者1</label>
+                        <select id="job-pic-user-1" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">担当者2</label>
+                        <select id="job-pic-user-2" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
@@ -2679,13 +2784,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス *</label>
-                        <input type="email" id="reg-email" required class="w-full px-4 py-2 border rounded-lg">
+                        <input type="email" id="reg-email" class="w-full px-4 py-2 border rounded-lg">
                     </div>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">パスワード *</label>
-                    <input type="password" id="reg-password" required minlength="6"
-                        class="w-full px-4 py-2 border rounded-lg">
+                    <input type="password" id="reg-password" minlength="6" class="w-full px-4 py-2 border rounded-lg">
                 </div>
 
                 <!-- Role Selection (for User Management) -->
@@ -2781,12 +2885,32 @@
         // ========================
         // Supabase Configuration
         // ========================
-        const SUPABASE_URL = 'https://npjsmoxxzlqkpopzjyyz.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wanNtb3h4emxxa3BvcHpqeXl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzOTQ5MzYsImV4cCI6MjA3Njk3MDkzNn0.SInkweULu_GTr33JV7RCVtj4HBUfNFfK0_yrZghd38o'
+        // 環境判定とSupabase設定
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
+
+        // 本番環境 (Production)
+        const PROD_CONFIG = {
+            url: 'https://npjsmoxxzlqkpopzjyyz.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wanNtb3h4emxxa3BvcHpqeXl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE3MjE4NTEsImV4cCI6MjA0NzI5Nzg1MX0.L2I2j_e8L3l8I4u4w4u4w4u4w4u4w4u4w4u4w4u4w4u4w4u4w4u4' // (既存のキー)
+        };
+
+        // 開発環境 (Development)
+        const DEV_CONFIG = {
+            url: 'https://sgkhqtqdnyiliqpksiej.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNna2hxdHFkbnlpbGlxcGtzaWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjU1MjIsImV4cCI6MjA4MDU0MTUyMn0.gx_E7OWW0mFwb4gCXh1NrU7pp0d-5vlL3PPSXUe-ZWE'
+        };
+
+        // 現在の環境に合わせて設定を選択
+        const config = isLocal ? DEV_CONFIG : PROD_CONFIG;
 
         // Supabaseクライアントの初期化
         const { createClient } = supabase
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        const supabaseClient = createClient(config.url, config.key)
+
+        // 開発環境の場合はコンソールに表示（わかりやすくするため）
+        if (isLocal) {
+            console.log('%c[Dev Mode] Connected to Development Supabase', 'color: #4f46e5; font-weight: bold; background: #e0e7ff; padding: 4px 8px; border-radius: 4px;');
+        }
 
         // グローバルに公開
         window.supabase = supabaseClient
@@ -2815,28 +2939,43 @@
         // ========================
         let masterIndustries = [];
         let masterJobCategories = [];
+        let masterSelectionStatuses = [];
 
         async function initMasterDataDropdowns() {
+            if (!currentUser) {
+                console.warn('initMasterDataDropdowns called but currentUser is null');
+                return;
+            }
+
             try {
-                // 業界マスタ取得
-                const { data: industries, error: indError } = await supabase
-                    .from('industries')
-                    .select('name')
-                    .or(`organization_id.is.null,organization_id.eq.${currentUser.organization_id}`)
-                    .order('name');
+                // master_data テーブルから業界と職種を取得
+                const { data: masters, error } = await supabase
+                    .from('master_data')
+                    .select('*')
+                    .in('type', ['industry_category', 'job_category', 'selection_status'])
+                    .eq('is_active', true)
+                    .order('sort_order');
 
-                if (indError) throw indError;
-                masterIndustries = industries.map(i => i.name);
+                if (error) throw error;
 
-                // 職種マスタ取得
-                const { data: categories, error: catError } = await supabase
-                    .from('job_categories')
-                    .select('name')
-                    .or(`organization_id.is.null,organization_id.eq.${currentUser.organization_id}`)
-                    .order('name');
+                // フィルタリング（グローバル または 自社用）
+                const validMasters = masters.filter(m =>
+                    m.organization_id === null || m.organization_id === currentUser.organization_id
+                );
 
-                if (catError) throw catError;
-                masterJobCategories = categories.map(c => c.name);
+                // 業界マスタ
+                masterIndustries = validMasters
+                    .filter(m => m.type === 'industry_category')
+                    .map(m => m.label);
+
+                // 職種マスタ
+                masterJobCategories = validMasters
+                    .filter(m => m.type === 'job_category')
+                    .map(m => m.label);
+
+                // 進捗ステータスマスタ
+                masterSelectionStatuses = validMasters
+                    .filter(m => m.type === 'selection_status');
 
                 // 各プルダウンの初期化（検索画面など、常に表示されているもの）
                 populateSelectOptions('search-industry-category', masterIndustries);
@@ -2849,10 +2988,374 @@
                 populateSelectOptions('job-industry-category', masterIndustries);
                 populateSelectOptions('job-category', masterJobCategories);
 
+                // 管理者用モーダルのプルダウンも更新
+                populateSelectOptions('admin-user-industry', masterIndustries);
+                populateSelectOptions('admin-user-job-type', masterJobCategories);
+
             } catch (error) {
-                console.error('マスタデータの読み込みに失敗しました:', error);
+                console.error('Error loading master data:', error);
             }
         }
+
+        // 職種マスタ一括更新用関数
+        window.updateJobCategoriesMaster = async function () {
+            if (!currentUser || !currentUser.organization_id) {
+                alert('組織情報が取得できませんでした。');
+                return;
+            }
+            if (currentUser.role !== 'super_admin') {
+                alert('この操作はスーパー管理者のみ可能です。');
+                return;
+            }
+            if (!confirm('自組織の職種マスタを初期化して、新しいリストで更新しますか？\n既存の職種カテゴリは全て削除されます。')) return;
+
+            const newJobCategories = [
+                "その他営業系",
+                "法人営業 (BtoB)",
+                "個人営業 (BtoC)",
+                "海外営業",
+                "代理店営業",
+                "MR (医薬情報担当者)",
+                "営業企画・営業アシスタント",
+                "その他企画・マーケティング系",
+                "経営企画・事業企画",
+                "商品企画・サービス企画",
+                "マーケティング・販促",
+                "広報・PR・IR",
+                "Webマーケティング・デジタルマーケティング",
+                "その他事務・管理系",
+                "人事・労務",
+                "経理・財務・会計",
+                "法務・コンプライアンス",
+                "総務",
+                "秘書・受付",
+                "一般事務・営業事務",
+                "その他ITエンジニア系",
+                "システムエンジニア (SE)",
+                "プログラマー (PG)",
+                "Webエンジニア（フロントエンド/バックエンド）",
+                "インフラエンジニア（サーバー/ネットワーク）",
+                "社内SE",
+                "データサイエンティスト・アナリスト",
+                "プロジェクトマネージャー (PM)",
+                "ITコンサルタント",
+                "品質管理・テストエンジニア",
+                "その他クリエイティブ系",
+                "Webデザイナー・UI/UXデザイナー",
+                "グラフィックデザイナー",
+                "Webディレクター・プロデューサー",
+                "編集・ライター・コピーライター",
+                "ゲームクリエイター（プランナー/デザイナー/シナリオライター）",
+                "映像・音響クリエイター",
+                "その他技術・製造系",
+                "研究・開発 (R&D)",
+                "設計・開発（機械/電気/電子）",
+                "生産技術・製造技術",
+                "品質管理・品質保証",
+                "生産管理・工程管理",
+                "購買・調達",
+                "その他販売・サービス系",
+                "販売・接客スタッフ",
+                "店長・エリアマネージャー",
+                "スーパーバイザー (SV)",
+                "カスタマーサポート・コールセンター",
+                "ホテル・旅行関連スタッフ",
+                "飲食店スタッフ",
+                "その他コンサルタント・専門職系",
+                "戦略コンサルタント",
+                "ITコンサルタント",
+                "財務・会計コンサルタント",
+                "人事コンサルタント",
+                "金融専門職（アナリスト、ファンドマネージャー等）",
+                "士業（弁護士、会計士、税理士、弁理士など）",
+                "その他医療・福祉・教育系",
+                "医師・看護師・薬剤師",
+                "医療技術者（臨床検査技師など）",
+                "介護福祉士・ケアマネージャー",
+                "教師・講師・インストラクター",
+                "キャリアアドバイザー",
+                "キャリアコーディネーター",
+                "人材系営業",
+                "キャリアコーチ",
+                "その他"
+            ];
+
+            try {
+                // 1. 既存の職種カテゴリを削除 (自組織のみ対象)
+                const { error: deleteError } = await supabase
+                    .from('master_data')
+                    .delete()
+                    .eq('type', 'job_category')
+                    .eq('organization_id', currentUser.organization_id);
+
+                if (deleteError) throw deleteError;
+
+                // 2. 新しい職種カテゴリを追加
+                const insertData = newJobCategories.map((label, index) => ({
+                    type: 'job_category',
+                    label: label,
+                    value: label,
+                    sort_order: (index + 1) * 10,
+                    is_active: true,
+                    organization_id: currentUser.organization_id
+                }));
+
+                const { error: insertError } = await supabase
+                    .from('master_data')
+                    .insert(insertData);
+
+                if (insertError) throw insertError;
+
+                alert('職種マスタを更新しました。画面をリロードしてください。');
+                location.reload();
+
+            } catch (error) {
+                console.error('Error updating job categories:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        }
+
+        // 進捗ステータスマスタ一括更新用関数
+        window.updateSelectionStatusMaster = async function () {
+            if (!currentUser || !currentUser.organization_id) {
+                alert('組織情報が取得できませんでした。');
+                return;
+            }
+            if (currentUser.role !== 'super_admin') {
+                alert('この操作はスーパー管理者のみ可能です。');
+                return;
+            }
+            if (!confirm('自組織の進捗ステータスマスタを初期化して、デフォルト値で更新しますか？\n既存のステータス設定は全て削除されます。')) return;
+
+            // デフォルトのステータス定義
+            const defaultStatuses = [
+                { value: 'pending', label: '書類選考中', sort_order: 10 },
+                { value: 'screening', label: '書類選考中(審査中)', sort_order: 20 },
+                { value: 'interview', label: '面接予定', sort_order: 30 },
+                { value: 'offered', label: '内定', sort_order: 40 },
+                { value: 'rejected', label: '不合格', sort_order: 50 },
+                { value: 'withdrawn', label: '辞退', sort_order: 60 }
+            ];
+
+            try {
+                // 1. 既存のステータスを削除 (自組織のみ対象)
+                const { error: deleteError } = await supabase
+                    .from('master_data')
+                    .delete()
+                    .eq('type', 'selection_status')
+                    .eq('organization_id', currentUser.organization_id);
+
+                if (deleteError) throw deleteError;
+
+                // 2. 新しいステータスを追加
+                const insertData = defaultStatuses.map(status => ({
+                    type: 'selection_status',
+                    label: status.label,
+                    value: status.value,
+                    sort_order: status.sort_order,
+                    is_active: true,
+                    organization_id: currentUser.organization_id
+                }));
+
+                const { error: insertError } = await supabase
+                    .from('master_data')
+                    .insert(insertData);
+
+                if (insertError) throw insertError;
+
+                alert('進捗ステータスマスタを更新しました。画面をリロードしてください。');
+                location.reload();
+
+            } catch (error) {
+                console.error('Error updating selection statuses:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        }
+
+        // プロンプトマスタ一括更新用関数
+        window.updatePromptMaster = async function () {
+            if (!currentUser || !currentUser.organization_id) {
+                alert('組織情報が取得できませんでした。');
+                return;
+            }
+            if (currentUser.role !== 'super_admin') {
+                alert('この操作はスーパー管理者のみ可能です。');
+                return;
+            }
+            if (!confirm('自組織のプロンプトマスタを初期化して、デフォルト値で更新しますか？\n既存のプロンプト設定は全て削除されます。')) return;
+
+            // デフォルトのプロンプト定義（loadPromptsからコピー）
+            const defaultScoring = `
+あなたは転職支援のプロフェッショナルです。以下の求人と求職者情報から、マッチ度を0-100点で評価し、詳細な分析を提供してください。
+
+【求人情報】
+- 企業名: \${jobDetails.company}
+- 職種: \${jobDetails.title}
+- 業種: \${jobDetails.industrycategory}
+- 職種カテゴリ: \${jobDetails.jobcategory}
+- 給与: \${jobDetails.salary}
+- 勤務地: \${jobDetails.location}
+- 雇用形態: \${jobDetails.employment_type}
+- 業務内容: \${jobDetails.description}
+- 必須スキル: \${jobDetails.qualifications}
+
+あなたは企業文化と人材のフィット分析の専門家です。以下の企業情報と求職者情報から、社風・カルチャーのフィット度を評価してください。
+
+【企業情報】
+- 企業名: \${jobDetails.company}
+- 業種: \${jobDetails.industrycategory}
+- 企業文化・特徴: \${jobDetails.company_info}
+
+【求職者情報】
+- スキル・PR: \${userData.notes || 'N/A'}
+- 履歴書: \${userData.resume || 'N/A'}
+- 職務経歴書: \${userData.work_history || 'N/A'}
+
+以下の基準で評価し、指定された形式で回答してください：
+
+評価基準:
+- A: 非常に適合（価値観・働き方が高度に一致）
+- B: 適合（おおむね一致）
+- C: 中立（判断材料不足、または一長一短）
+- D: やや不適合（一部ミスマッチの可能性）
+- E: 不適合（明確なミスマッチ）
+
+回答形式（他の文章は一切含めないでください）：
+
+評価: A
+理由: （50文字程度で簡潔に）
+
+
+【求職者情報】
+- 年齢: \${userData.age}
+- 希望業種: \${userData.desired_industry}
+- 希望職種: \${userData.desired_job_type}
+- 希望年収: \${userData.desired_salary}
+- 希望勤務地: \${userData.desired_location}
+- 職種未経験OK希望: \${userProfile.desired_job_experience_ok ? 'はい' : 'いいえ'}
+- 業種未経験OK希望: \${userProfile.desired_industry_experience_ok ? 'はい' : 'いいえ'}
+- スキル・経験: \${userData.notes}
+`;
+
+            const defaultReason = `
+あなたはキャリアアドバイザーです。以下の求職者に対して、この求人を紹介する理由を300文字程度で作成してください。
+求職者の希望やスキルと、求人の特徴を結びつけて、魅力的に伝えてください。
+
+【求職者情報】
+- 希望職種: \${userData.desired_job_type}
+- 希望業種: \${userData.desired_industry}
+- スキル: \${userData.notes}
+
+【求人情報】
+- 企業名: \${jobDetails.company}
+- 職種: \${jobDetails.title}
+- 魅力: \${jobDetails.description}
+`;
+
+            const defaultRecommendationLetter = `
+あなたは人材紹介会社のエージェントです。以下の求職者を企業に推薦するための推薦文を作成してください。
+400-600文字程度で、以下の構成で作成してください。
+
+【求職者情報】
+- 氏名: \${userData.name}
+- 年齢: \${userData.age}
+- 現職: \${userData.current_position || 'N/A'}
+- スキル・経験: \${userData.notes}
+- アピールポイント: \${userData.self_pr || 'N/A'}
+
+【応募先企業・求人】
+- 企業名: \${jobDetails.company}
+- 職種: \${jobDetails.title}
+
+構成:
+1. 冒頭の挨拶
+2. 求職者の強みと実績
+3. 求人とのマッチング理由
+4. 推薦の結び
+`;
+
+            const defaultScoutMessage = `
+あなたは企業の採用担当者です。以下の求職者に対して、魅力的なスカウトメッセージを作成してください。
+
+【求職者情報】
+- 氏名: \${candidateName}
+- 現職: \${currentPosition}
+- スキル・経験: \${skills}
+- 希望条件: \${desiredConditions}
+
+【自社・求人情報】
+- 企業名: \${companyName}
+- 職種: \${jobTitle}
+- 業務内容: \${jobDescription}
+- 魅力: \${companyStrengths}
+- 待遇: \${benefits}
+
+以下の構成で、300-500文字程度のスカウトメッセージを作成してください：
+
+1. 求職者への敬意と関心の表明
+2. 自社・求人の魅力
+3. 求職者のスキルとのマッチング
+4. 面談・応募への誘導
+`;
+
+            const prompts = [
+                { key: 'ai_matching_scoring', label: defaultScoring.trim() },
+                { key: 'ai_recommendation_reason', label: defaultReason.trim() },
+                { key: 'recommendation_letter', label: defaultRecommendationLetter.trim() },
+                { key: 'scout_message', label: defaultScoutMessage.trim() }
+            ];
+
+            try {
+                // 1. 既存のシステムプロンプトを取得（あれば上書き）
+                const { data: systemPrompts } = await supabase
+                    .from('system_prompts')
+                    .select('*')
+                    .in('key', prompts.map(p => p.key));
+
+                if (systemPrompts && systemPrompts.length > 0) {
+                    systemPrompts.forEach(sp => {
+                        const target = prompts.find(p => p.key === sp.key);
+                        if (target) {
+                            target.label = sp.content; // system_promptsの内容を優先
+                        }
+                    });
+                }
+
+                // 2. 既存のプロンプトマスタを削除 (自組織のみ対象)
+                const { error: deleteError } = await supabase
+                    .from('master_data')
+                    .delete()
+                    .eq('type', 'prompt')
+                    .eq('organization_id', currentUser.organization_id);
+
+                if (deleteError) throw deleteError;
+
+                // 3. 新しいプロンプトを追加
+                const insertData = prompts.map((p, index) => ({
+                    type: 'prompt',
+                    label: p.label, // プロンプト本文
+                    value: p.key,   // プロンプトキー
+                    sort_order: (index + 1) * 10,
+                    is_active: true,
+                    organization_id: currentUser.organization_id
+                }));
+
+                const { error: insertError } = await supabase
+                    .from('master_data')
+                    .insert(insertData);
+
+                if (insertError) throw insertError;
+
+                alert('プロンプトマスタを更新しました。画面をリロードしてください。');
+                location.reload();
+
+            } catch (error) {
+                console.error('Error updating prompts:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        }
+
+
 
         function populateSelectOptions(elementId, options, selectedValue = null) {
             const select = document.getElementById(elementId);
@@ -2895,7 +3398,8 @@
                 select.value = currentVal;
             }
         }
-        function showLoading() {
+        function showLoading(message = '読み込み中...') {
+            $('#loading-message').text(message);
             $('#loading-overlay').removeClass('hidden')
         }
 
@@ -4658,15 +5162,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 text-sm text-gray-600">
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-briefcase text-gray-400"></i>
-                                    <span>${candidate.desired_job_type || '希望職種未設定'}</span>
+                                    <span>${Array.isArray(candidate.desired_job_type) ? candidate.desired_job_type.join(' / ') : (candidate.desired_job_type || '希望職種未設定')}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-map-marker-alt text-gray-400"></i>
-                                    <span>${candidate.desired_location || '希望勤務地未設定'}</span>
+                                    <span>${Array.isArray(candidate.desired_location) ? candidate.desired_location.join(' / ') : (candidate.desired_location || '希望勤務地未設定')}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-yen-sign text-gray-400"></i>
-                                    <span>${candidate.desired_salary ? (candidate.desired_salary / 10000) + '万円' : '希望年収未設定'}</span>
+                                    <span>${candidate.desired_salary ? Math.round(candidate.desired_salary / 10000).toLocaleString() + '万円' : '希望年収未設定'}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-envelope text-gray-400"></i>
@@ -4852,6 +5356,38 @@
                 throw error;
             }
         }
+        // ヘルパー関数: JSON配列文字列かもしれない値をパースして配列または文字列として返す
+        window.safeParseList = function (val) {
+            if (!val) return null;
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'string') {
+                val = val.trim();
+                if (val.startsWith('[') && val.endsWith(']')) {
+                    try {
+                        return JSON.parse(val);
+                    } catch (e) {
+                        // シングルクォートの場合や、不正なJSONの場合のリカバリ
+                        try {
+                            // シングルクォートをダブルクォートに置換して再トライ
+                            return JSON.parse(val.replace(/'/g, '"'));
+                        } catch (e2) {
+                            return val;
+                        }
+                    }
+                }
+            }
+            return val;
+        }
+
+        // ヘルパー関数: 配列または文字列を表示用にフォーマット
+        window.formatArrayValue = function (val) {
+            const parsed = window.safeParseList(val);
+            if (Array.isArray(parsed)) {
+                return parsed.join(' / ');
+            }
+            return parsed || '-';
+        }
+
         // 候補者プロフィール表示（プレビュー専用）
         window.viewCandidateProfile = async function (candidateId) {
             if (!candidateId) {
@@ -4897,16 +5433,16 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">希望職種</p>
-                                <p class="font-medium text-gray-900">${candidate.desired_job_type || '未設定'}</p>
+                                <p class="font-medium text-gray-900">${Array.isArray(candidate.desired_job_type) ? candidate.desired_job_type.join(' / ') : (candidate.desired_job_type || '未設定')}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">希望勤務地</p>
-                                <p class="font-medium text-gray-900">${candidate.desired_location || '未設定'}</p>
+                                <p class="font-medium text-gray-900">${Array.isArray(candidate.desired_location) ? candidate.desired_location.join(' / ') : (candidate.desired_location || '未設定')}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">希望年収</p>
                                 <p class="font-medium text-gray-900 text-lg text-indigo-600">
-                                    ${candidate.desired_salary ? '¥' + (candidate.desired_salary / 10000).toLocaleString() + '万円' : '未設定'}
+                                    ${candidate.desired_salary ? '¥' + Math.round(candidate.desired_salary / 10000).toLocaleString() + '万円' : '未設定'}
                                 </p>
                             </div>
                             <div>
@@ -5201,6 +5737,35 @@
                     handleFileUpload(Array.from(e.originalEvent.dataTransfer.files));
                 }
             });
+
+            // Paste event handling
+            $(document).on('paste', function (e) {
+                const items = (e.originalEvent.clipboardData || e.clipboardData).items;
+                const files = [];
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) {
+                            // Create a dummy name if not present (often 'image.png' from clipboard)
+                            if (!file.name || file.name === 'image.png') {
+                                const ext = items[i].type.split('/')[1];
+                                const timestamp = new Date().getTime();
+                                // Create a new File object with a custom name
+                                const newFile = new File([file], `pasted_image_${timestamp}.${ext}`, { type: file.type });
+                                files.push(newFile);
+                            } else {
+                                files.push(file);
+                            }
+                        }
+                    }
+                }
+                if (files.length > 0) {
+                    handleFileUpload(files);
+                    // Optional: Provide visual feedback that a paste occurred
+                    $('#file-drop-area').addClass('bg-indigo-50');
+                    setTimeout(() => $('#file-drop-area').removeClass('bg-indigo-50'), 200);
+                }
+            });
         }
 
         function handleFileUpload(files) {
@@ -5222,13 +5787,15 @@
             $('#profile-file-input').val('');
             $('#file-list').empty();
             $('#profile-text-input').val('');
+            $('#scout-instruction-text').val(''); // 追加: 指示テキストもクリア
+            $('#scout-instruction-container').addClass('hidden'); // 追加: 指示エリアを隠す
             $('#analysis-placeholder').removeClass('hidden');
             $('#analysis-loading').addClass('hidden');
             $('#analysis-results').addClass('hidden');
             $('#suggested-jobs-container').empty();
         }
 
-        window.analyzeProfile = async function () {
+        window.analyzeProfile = async function (instruction = null) {
             if (!currentUser) return;
 
             const textInput = $('#profile-text-input').val().trim();
@@ -5240,9 +5807,19 @@
 
             // UI更新
             $('#analyze-profile-btn').prop('disabled', true);
-            $('#analysis-placeholder').addClass('hidden');
-            $('#analysis-loading').removeClass('hidden');
-            $('#analysis-results').addClass('hidden');
+            $('#regenerate-scout-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>再生成中...'); // 再生成ボタンの状態更新
+
+            // 初回解析時はプレースホルダーを隠してローディングを表示
+            if (!instruction) {
+                $('#analysis-placeholder').addClass('hidden');
+                // $('#analysis-loading').removeClass('hidden'); // 全画面ローディングを使用するためコメントアウト
+                showLoading('プロフィールを解析中...');
+                $('#analysis-results').addClass('hidden');
+            } else {
+                // 再生成時は結果エリアを半透明にするなどのフィードバックがあると良いが、今回はローディング表示に切り替える
+                $('#analysis-results').addClass('opacity-50');
+                showLoading('指示に基づいて再生成中...');
+            }
 
             try {
                 // 最初のファイルをBase64に変換（画像またはPDF）
@@ -5260,6 +5837,7 @@
                     } else if (file.type === 'application/pdf') {
                         // PDFを画像(JPEG)に変換
                         try {
+
                             const arrayBuffer = await file.arrayBuffer();
                             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                             const page = await pdf.getPage(1); // 1ページ目のみ
@@ -5290,7 +5868,8 @@
                         mime_type: mimeType || 'image/jpeg', // MIMEタイプも明示的に送信
                         text_input: textInput || null,
                         organization_id: currentUser.organization_id,
-                        user_id: currentUser.id
+                        user_id: currentUser.id,
+                        instruction: instruction // 追加: 修正指示
                     }
                 });
 
@@ -5305,16 +5884,36 @@
             } catch (error) {
                 console.error('Analysis error:', error);
                 alert('解析に失敗しました: ' + error.message);
-                $('#analysis-loading').addClass('hidden');
-                $('#analysis-placeholder').removeClass('hidden');
+                if (!instruction) {
+                    $('#analysis-loading').addClass('hidden');
+                    $('#analysis-placeholder').removeClass('hidden');
+                }
             } finally {
                 $('#analyze-profile-btn').prop('disabled', false);
+                $('#regenerate-scout-btn').prop('disabled', false).html('<i class="fas fa-sync-alt mr-2"></i>指示を反映して再生成');
+                $('#analysis-results').removeClass('opacity-50');
+                hideLoading();
             }
         }
+
+        // 再生成ボタンのハンドラ
+        window.regenerateScoutsWithInstruction = function () {
+            const instruction = $('#scout-instruction-text').val().trim();
+            if (!instruction) {
+                alert('修正指示を入力してください');
+                return;
+            }
+            analyzeProfile(instruction);
+        }
+
+        let currentAnalysisMatches = [];
+        let currentAnalysisOffset = 0;
+        const ANALYSIS_BATCH_SIZE = 3;
 
         function renderAnalysisResults(data) {
             $('#analysis-loading').addClass('hidden');
             $('#analysis-results').removeClass('hidden');
+            $('#scout-instruction-container').removeClass('hidden'); // 追加: 指示エリアを表示
 
             // サマリー表示
             $('#candidate-summary-text').text(data.candidate_summary || '解析結果なし');
@@ -5323,20 +5922,47 @@
             const container = $('#suggested-jobs-container');
             container.empty();
 
+            console.log('Analysis results:', data);
+            console.log('Matches count:', data.matches ? data.matches.length : 0);
+
             if (!data.matches || data.matches.length === 0) {
                 container.html('<p class="text-gray-500 text-center">マッチする求人が見つかりませんでした</p>');
+                $('#load-more-analysis-container').addClass('hidden');
                 return;
             }
 
-            data.matches.forEach(match => {
+            currentAnalysisMatches = data.matches;
+            currentAnalysisOffset = 0;
+
+            // Load Moreボタンのコンテナがなければ追加
+            if ($('#load-more-analysis-container').length === 0) {
+                container.after(`
+                    <div id="load-more-analysis-container" class="text-center mt-4 hidden">
+                        <button id="load-more-analysis-btn" onclick="loadMoreAnalysisMatches()" 
+                            class="px-6 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition">
+                            もっと見る
+                        </button>
+                    </div>
+                `);
+            }
+
+            loadMoreAnalysisMatches();
+        }
+
+        window.loadMoreAnalysisMatches = function () {
+            const container = $('#suggested-jobs-container');
+            const nextMatches = currentAnalysisMatches.slice(currentAnalysisOffset, currentAnalysisOffset + ANALYSIS_BATCH_SIZE);
+
+            nextMatches.forEach(match => {
                 const html = `
-                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition">
+                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition mb-4">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-2">
                                 <h5 class="text-lg font-bold text-gray-900">${match.job_title}</h5>
+                                ${match.match_score ? `<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full">マッチ度 ${match.match_score}%</span>` : ''}
                                 <a href="#" onclick="showJobDetailModal('${match.job_id}'); return false;" 
-                                    class="text-xs text-indigo-600 hover:text-indigo-800 underline">
+                                    class="text-xs text-indigo-600 hover:text-indigo-800 underline ml-2">
                                     詳細を見る
                                 </a>
                             </div>
@@ -5370,6 +5996,14 @@
                 `;
                 container.append(html);
             });
+
+            currentAnalysisOffset += nextMatches.length;
+
+            if (currentAnalysisOffset < currentAnalysisMatches.length) {
+                $('#load-more-analysis-container').removeClass('hidden');
+            } else {
+                $('#load-more-analysis-container').addClass('hidden');
+            }
         }
 
         window.copyToClipboard = function (btn) {
@@ -5526,7 +6160,7 @@
 
                 if (error) throw error
 
-                renderJobs(jobs)
+                await renderJobs(jobs)
             } catch (error) {
                 console.error('Load jobs error:', error)
                 $('#jobs-container').html('<p class="text-red-500">求人の読み込みに失敗しました</p>')
@@ -5855,11 +6489,13 @@
             const isCandidate = currentUser && currentUser.role === 'candidate'
 
             // 選択中のユーザーIDを取得
-            const selectedUserId = $('#target-user-select').val();
+            const selectedUserId = selectedTargetUserId;
+            console.log('renderJobs - selectedUserId:', selectedUserId);
 
             // AI推薦済み求人IDを取得
             // 管理者/コーチ/CAが対象ユーザーを選択している場合、または求職者が自分自身の場合
             const targetUserId = isAdminOrCoach ? selectedUserId : (isCandidate ? currentUser.id : null);
+            console.log('renderJobs - targetUserId:', targetUserId);
 
             let recommendedJobsMap = new Map(); // job_id -> score のマップ
             let appliedJobIds = new Set();
@@ -5871,6 +6507,8 @@
                         .from('recommendations')
                         .select('job_id, score')
                         .eq('user_id', targetUserId);
+
+                    console.log('renderJobs - recommendations:', recommendations, 'error:', recError);
 
                     if (!recError && recommendations) {
                         recommendations.forEach(r => {
@@ -5905,18 +6543,18 @@
                                     ${showCheckbox ? `
                     <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
                         <input type="checkbox" 
-                            class="w-6 h-6 text-purple-600 rounded border-gray-300 focus:ring-purple-500 ${isRecommended ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
+                            class="w-6 h-6 text-purple-600 rounded border-gray-300 focus:ring-purple-500 ${isRecommended ? 'cursor-not-allowed opacity-50 bg-gray-100' : 'cursor-pointer'}"
                             onchange="toggleJobSelection('${job.id}')"
                             ${isSelected ? 'checked' : ''}
                             ${isRecommended ? 'disabled' : ''}>
                         ${isApplied ? `
-                        <span class="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full whitespace-nowrap shadow-sm">
                             <i class="fas fa-check-circle mr-1"></i>応募済み
                         </span>
                         ` : ''}
                         ${isRecommended ? `
-                        <span class="px-3 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded-full whitespace-nowrap">
-                            <i class="fas fa-magic mr-1"></i>AI推薦済: ${recommendationScore}%
+                        <span class="px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full whitespace-nowrap shadow-sm">
+                            <i class="fas fa-robot mr-1"></i>AIマッチ済 ${recommendationScore}%
                         </span>
                         ` : ''}
                     </div>
@@ -5947,7 +6585,14 @@
                     <div class="flex flex-wrap gap-2 mb-4 text-sm text-gray-600">
                         <span class="flex items-center"><i class="fas fa-map-marker-alt mr-1"></i> ${job.location}</span>
                         <span class="flex items-center ml-3"><i class="fas fa-briefcase mr-1"></i> ${job.employment_type}</span>
+                        ${job.url ? `<a href="${job.url}" target="_blank" rel="noopener noreferrer" class="flex items-center ml-3 text-indigo-600 hover:text-indigo-800 hover:underline" onclick="event.stopPropagation();"><i class="fas fa-external-link-alt mr-1"></i> 求人元URL</a>` : ''}
                     </div>
+
+                    ${job.description ? `
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 line-clamp-3">${job.description}</p>
+                    </div>
+                    ` : ''}
 
                     <p class="text-gray-600 text-sm mb-4 line-clamp-2">${job.description || '詳細なし'}</p>
 
@@ -6169,13 +6814,33 @@
                 return
             }
 
-            const statusConfig = {
+            // デフォルトのステータス設定（マスタデータがない場合のフォールバック）
+            let statusConfig = {
                 'pending': { label: '書類選考中', color: 'bg-yellow-100 text-yellow-800' },
                 'screening': { label: '書類選考中', color: 'bg-yellow-100 text-yellow-800' },
                 'interview': { label: '面接予定', color: 'bg-blue-100 text-blue-800' },
                 'offered': { label: '内定', color: 'bg-green-100 text-green-800' },
                 'rejected': { label: '不合格', color: 'bg-red-100 text-red-800' },
                 'withdrawn': { label: '辞退', color: 'bg-gray-100 text-gray-800' }
+            };
+
+            // マスタデータがある場合は上書き
+            if (typeof masterSelectionStatuses !== 'undefined' && masterSelectionStatuses.length > 0) {
+                const statusColorMap = {
+                    'pending': 'bg-yellow-100 text-yellow-800',
+                    'screening': 'bg-yellow-100 text-yellow-800',
+                    'interview': 'bg-blue-100 text-blue-800',
+                    'offered': 'bg-green-100 text-green-800',
+                    'rejected': 'bg-red-100 text-red-800',
+                    'withdrawn': 'bg-gray-100 text-gray-800'
+                };
+
+                masterSelectionStatuses.forEach(s => {
+                    statusConfig[s.value] = {
+                        label: s.label,
+                        color: statusColorMap[s.value] || 'bg-gray-100 text-gray-800'
+                    };
+                });
             }
 
             const html = applications.map(app => {
@@ -6926,11 +7591,16 @@
                 setPrefectureOptions('#reg-prefecture');
                 setPrefectureOptions('#admin-user-prefecture');
 
-                // 雇用形態、職種カテゴリ、業界カテゴリを取得
+                // マスタデータが未ロードの場合はロードする
+                if (masterJobCategories.length === 0 || masterIndustries.length === 0) {
+                    await initMasterDataDropdowns();
+                }
+
+                // 雇用形態を取得 (master_dataから)
                 const { data: masters, error } = await supabase
                     .from('master_data')
                     .select('*')
-                    .in('type', ['employment_type', 'job_category', 'industry_category'])
+                    .eq('type', 'employment_type')
                     .eq('is_active', true)
                     .order('sort_order')
 
@@ -6941,35 +7611,56 @@
                     m.organization_id === null || m.organization_id === currentUser.organization_id
                 )
 
-                // ターゲット設定
-                const targets = [
-                    { type: 'employment_type', selectors: ['#profile-employment-type', '#reg-employment-type', '#admin-user-employment-type'] },
-                    { type: 'job_category', selectors: ['#profile-job-type', '#reg-job-type', '#admin-user-job-type'] },
-                    { type: 'industry_category', selectors: ['#profile-industry', '#reg-industry', '#admin-user-industry'] }
-                ];
-
-                // 既存のオプションをクリア
-                targets.forEach(t => {
-                    t.selectors.forEach(s => $(s).empty());
+                // 雇用形態のプルダウン生成
+                const empTargets = ['#profile-employment-type', '#reg-employment-type', '#admin-user-employment-type'];
+                empTargets.forEach(s => {
+                    const select = $(s);
+                    select.empty();
+                    validMasters.forEach(m => {
+                        select.append(`<option value="${m.value}">${m.label}</option>`);
+                    });
                 });
 
-                // オプション追加
-                validMasters.forEach(m => {
-                    targets.forEach(t => {
-                        if (m.type === t.type) {
-                            t.selectors.forEach(s => {
-                                $(s).append(`<option value="${m.value}">${m.label}</option>`);
-                            });
-                        }
+                // 職種カテゴリのプルダウン生成 (共通マスタ使用)
+                const jobTargets = ['#profile-job-type', '#reg-job-type', '#admin-user-job-type'];
+                jobTargets.forEach(s => {
+                    const select = $(s);
+                    select.empty();
+                    masterJobCategories.forEach(c => {
+                        select.append(`<option value="${c}">${c}</option>`);
+                    });
+                });
+
+                // 業界カテゴリのプルダウン生成 (共通マスタ使用)
+                const indTargets = ['#profile-industry', '#reg-industry', '#admin-user-industry'];
+                indTargets.forEach(s => {
+                    const select = $(s);
+                    select.empty();
+                    masterIndustries.forEach(i => {
+                        select.append(`<option value="${i}">${i}</option>`);
                     });
                 });
 
                 // ユーザーの選択値をセット (プロフィール編集時のみ)
                 if (user) {
-                    const setSelect2Val = (selectId, valStr) => {
-                        if (!valStr) return;
-                        const val = valStr.includes(',') ? valStr.split(',') : [valStr];
-                        $(selectId).val(val).trigger('change');
+                    console.log('Before parse:', user.desired_location, typeof user.desired_location);
+
+                    // 値を正規化（JSON文字列ならパースする）
+                    user.desired_job_type = window.safeParseList(user.desired_job_type);
+                    user.desired_industry = window.safeParseList(user.desired_industry);
+                    user.desired_employment_type = window.safeParseList(user.desired_employment_type);
+                    user.desired_location = window.safeParseList(user.desired_location);
+
+                    console.log('After parse:', user.desired_location, Array.isArray(user.desired_location));
+
+                    const setSelect2Val = (selectId, val) => {
+                        if (!val) return;
+                        if (Array.isArray(val)) {
+                            $(selectId).val(val).trigger('change');
+                        } else {
+                            const v = val.toString().includes(',') ? val.split(',') : [val];
+                            $(selectId).val(v).trigger('change');
+                        }
                     };
 
                     // プロフィールフォーム
@@ -6984,25 +7675,59 @@
 
                     // 勤務地の分割セット
                     if (user.desired_location) {
-                        // 都道府県が含まれているかチェック
-                        let foundPref = '';
-                        for (const pref of prefectures) {
-                            if (user.desired_location.startsWith(pref)) {
-                                foundPref = pref;
-                                break;
+                        let locations = Array.isArray(user.desired_location) ? user.desired_location : [user.desired_location];
+
+                        // 要素内にスラッシュが含まれている場合は展開する (例: ["A/B"] -> ["A", "B"])
+                        let flatLocations = [];
+                        locations.forEach(loc => {
+                            if (typeof loc === 'string') {
+                                // 半角/全角スラッシュ、カンマ、読点、スペースで分割
+                                const parts = loc.split(/[\/\uff0f,、\s]+/).map(s => s.trim()).filter(s => s);
+                                if (parts.length > 0) {
+                                    flatLocations.push(...parts);
+                                } else {
+                                    flatLocations.push(loc);
+                                }
+                            } else {
+                                flatLocations.push(loc);
                             }
-                        }
+                        });
+                        locations = flatLocations;
+                        console.log('Flat locations:', locations);
 
-                        if (foundPref) {
-                            $('#profile-prefecture').val(foundPref).trigger('change');
-                            $('#profile-city').val(user.desired_location.substring(foundPref.length));
+                        const matchedPrefs = [];
+                        const unmatched = [];
 
-                            $('#admin-user-prefecture').val(foundPref).trigger('change');
-                            $('#admin-user-city').val(user.desired_location.substring(foundPref.length));
-                        } else {
-                            $('#profile-city').val(user.desired_location);
-                            $('#admin-user-city').val(user.desired_location);
-                        }
+                        locations.forEach(loc => {
+                            // "東京都" or "東京都xxx区" の場合、"東京都" を抽出してマッチさせる
+                            let found = false;
+                            for (const pref of prefectures) {
+                                if (loc === pref || loc.startsWith(pref)) {
+                                    if (!matchedPrefs.includes(pref)) {
+                                        matchedPrefs.push(pref);
+                                    }
+                                    const rest = loc.substring(pref.length);
+                                    if (rest) unmatched.push(rest);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                unmatched.push(loc);
+                            }
+                        });
+
+                        console.log('Matched Prefs:', matchedPrefs);
+                        console.log('Unmatched:', unmatched);
+
+                        // プルダウンにセット（複数選択）
+                        $('#profile-prefecture').val(matchedPrefs).trigger('change');
+                        $('#admin-user-prefecture').val(matchedPrefs).trigger('change');
+
+                        // 残りをテキストボックスにセット
+                        const restStr = unmatched.join(' / ');
+                        $('#profile-city').val(restStr);
+                        $('#admin-user-city').val(restStr);
                     }
                 }
 
@@ -7034,7 +7759,7 @@
                 $('#profile-email').val(user.email)
                 // 職種、業界、雇用形態、勤務地は loadMasterDataForProfile でセット済み
 
-                $('#profile-salary').val(user.desired_salary ? user.desired_salary / 10000 : '')
+                $('#profile-salary').val(user.desired_salary ? Math.floor(user.desired_salary / 10000) : '')
                 $('#profile-freewords').val(user.desired_freewords || '')
                 $('#profile-job-experience-ok').prop('checked', user.desired_job_experience_ok)
                 $('#profile-industry-experience-ok').prop('checked', user.desired_industry_experience_ok)
@@ -7237,9 +7962,9 @@
                         return;
                     }
 
-                    if (!confirm(`${validJobs.length}件の求人を一括登録しますか？`)) return;
+                    if (!confirm(`${validJobs.length}件のデータをインポートしますか？`)) return;
 
-                    showLoading();
+                    showLoading('CSVデータをインポート中...');
                     try {
                         const { error } = await supabase
                             .from('jobs')
@@ -7263,6 +7988,17 @@
                     alert('CSVの解析に失敗しました');
                 }
             });
+        }
+
+        window.executeCSVImport = async function () {
+            if (!currentCSVData || currentCSVData.length === 0) {
+                alert('インポートするデータがありません');
+                return;
+            }
+
+            if (!confirm(`${currentCSVData.length}件のデータをインポートしますか？`)) return;
+
+            showLoading('CSVデータをインポート中...');
         }
 
         window.exportJobsCsv = function () {
@@ -7302,6 +8038,7 @@
                     .from('jobs')
                     .select('*, companies(name)') // Join with companies
                     .eq('organization_id', currentUser.organization_id)
+                    .is('deleted_at', null)
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
@@ -7383,7 +8120,7 @@
             try {
                 const { error } = await supabase
                     .from('jobs')
-                    .delete()
+                    .update({ deleted_at: new Date().toISOString() })
                     .eq('id', jobId)
 
                 if (error) throw error
@@ -7392,6 +8129,103 @@
                 loadAdminJobs()
             } catch (error) {
                 console.error('Delete job error:', error)
+                alert('削除に失敗しました: ' + error.message)
+            } finally {
+                hideLoading()
+            }
+        }
+
+        // 業種マスタ一括更新用関数
+        window.updateIndustryCategoriesMaster = async function () {
+            if (!currentUser || !currentUser.organization_id) {
+                alert('組織情報が取得できませんでした。');
+                return;
+            }
+            if (currentUser.role !== 'super_admin') {
+                alert('この操作はスーパー管理者のみ可能です。');
+                return;
+            }
+            if (!confirm('自組織の業種マスタを初期化して、新しいリストで更新しますか？\n既存の業種カテゴリは全て削除されます。')) return;
+
+            const newIndustryCategories = [
+                "IT・通信・インターネット",
+                "メーカー（機械・電気・電子）",
+                "メーカー（素材・化学・食品・その他）",
+                "商社（総合・専門）",
+                "金融・保険",
+                "建設・不動産・住宅",
+                "物流・運輸",
+                "流通・小売・サービス",
+                "広告・出版・マスコミ",
+                "コンサルティング・調査",
+                "人材サービス",
+                "医療・医薬・福祉",
+                "教育・官公庁・その他",
+                "エネルギー・インフラ",
+                "旅行・宿泊・レジャー",
+                "その他"
+            ];
+
+            try {
+                // 1. 既存の業種カテゴリを削除 (自組織のみ対象)
+                const { error: deleteError } = await supabase
+                    .from('master_data')
+                    .delete()
+                    .eq('type', 'industry_category')
+                    .eq('organization_id', currentUser.organization_id);
+
+                if (deleteError) throw deleteError;
+
+                // 2. 新しい業種カテゴリを追加
+                const insertData = newIndustryCategories.map((label, index) => ({
+                    type: 'industry_category',
+                    label: label,
+                    value: label,
+                    sort_order: (index + 1) * 10,
+                    is_active: true,
+                    organization_id: currentUser.organization_id
+                }));
+
+                const { error } = await supabase
+                    .from('master_data')
+                    .insert(insertData);
+
+                if (error) throw error;
+
+                alert('業種マスタを初期化しました');
+                // マスタ管理画面が開いていれば再読み込み
+                if ($('#admin-master-content').is(':visible')) {
+                    loadMasterData();
+                }
+
+            } catch (error) {
+                console.error('Failed to update industry categories:', error);
+                alert('業種マスタの更新に失敗しました: ' + error.message);
+            }
+        }
+
+        window.deleteUser = async function (userId) {
+            if (!confirm('このユーザーを削除しますか？\n（論理削除され、一覧から非表示になります）')) return
+
+            showLoading()
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ deleted_at: new Date().toISOString() })
+                    .eq('id', userId)
+
+                if (error) throw error
+
+                alert('削除しました')
+
+                // リロード
+                if ($('#admin-users-content').is(':visible')) {
+                    loadAdminUsers();
+                } else if ($('#admin-candidates-content').is(':visible')) {
+                    loadAdminCandidates();
+                }
+            } catch (error) {
+                console.error('Delete user error:', error)
                 alert('削除に失敗しました: ' + error.message)
             } finally {
                 hideLoading()
@@ -7451,6 +8285,11 @@
         }
 
         window.showJobForm = async function (jobId = null) {
+            // マスタデータが未ロードならロードする
+            if (masterJobCategories.length === 0 || masterIndustries.length === 0) {
+                await initMasterDataDropdowns();
+            }
+
             $('#job-form')[0].reset()
             $('#job-id').val('')
 
@@ -7476,14 +8315,35 @@
                 console.error('Failed to load companies for select:', e);
             }
 
+            // 担当者リストのロード (管理者・コーチ・CA)
+            try {
+                const { data: picUsers } = await supabase
+                    .from('users')
+                    .select('id, name')
+                    .eq('organization_id', currentUser.organization_id)
+                    .in('role', ['admin', 'super_admin', 'coach', 'ca'])
+                    .order('name');
+
+                const picSelect1 = $('#job-pic-user-1');
+                const picSelect2 = $('#job-pic-user-2');
+
+                const defaultOption = '<option value="">選択してください</option>';
+                picSelect1.empty().append(defaultOption);
+                picSelect2.empty().append(defaultOption);
+
+                if (picUsers) {
+                    picUsers.forEach(u => {
+                        const option = `<option value="${u.id}">${u.name}</option>`;
+                        picSelect1.append(option);
+                        picSelect2.append(option);
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to load users for PIC select:', e);
+            }
+
             // マスタデータのプルダウン初期化（値なし）
-            populateSelectOptions('job-employment-type', ['正社員', '契約社員', '派遣社員', '業務委託']); // 雇用形態は固定マスタかDBマスタか？今回はDBマスタは使っていないようなので固定でいくか、あるいはDBマスタにするか。
-            // ユーザー要望は「マスタデータをロード」なので、DBマスタを使うべきか？
-            // しかし employment_type は industries/job_categories とは別。
-            // 今回のSQLでは industries と job_categories しか作っていない。
-            // 雇用形態のマスタテーブルはないので、既存の固定値のままにするか、あるいは job_categories に入れるものではない。
-            // ここでは job-employment-type は既存のまま（HTMLで定義済み）にするが、
-            // job-category と job-industry-category はマスタを使う。
+            populateSelectOptions('job-employment-type', ['正社員', '契約社員', '派遣社員', '業務委託']);
 
             populateSelectOptions('job-category', masterJobCategories);
             populateSelectOptions('job-industry-category', masterIndustries);
@@ -7512,6 +8372,12 @@
                     $('#job-holidays').val(job.holidays)
                     $('#job-benefits').val(job.benefits)
                     $('#job-interview-process').val(job.interview_process)
+
+                    // 追加項目
+                    $('#job-url').val(job.url || '');
+                    $('#job-pic-user-1').val(job.pic_user_id_1 || '');
+                    $('#job-pic-user-2').val(job.pic_user_id_2 || '');
+
                     $('#job-employment-type').val(job.employment_type)
                     $('#job-is-remote').prop('checked', job.is_remote)
                     $('#job-experience-ok').prop('checked', job.job_experience_ok === '可')
@@ -7562,7 +8428,7 @@
                 organization_id: currentUser.organization_id,
                 title: $('#job-title').val(),
                 company_id: $('#job-company-id').val(),
-                // company: $('#job-company-select option:selected').text(), // Legacy support if needed
+                company: $('#job-company-select option:selected').text(), // Legacy support but required by DB constraint
                 location: $('#job-location').val(),
                 employment_type: $('#job-employment-type').val(),
                 salary_min: salaryMin ? parseInt(salaryMin) * 10000 : null,
@@ -7578,6 +8444,9 @@
                 holidays: $('#job-holidays').val(),
                 benefits: $('#job-benefits').val(),
                 interview_process: $('#job-interview-process').val(),
+                url: $('#job-url').val() || null,
+                pic_user_id_1: $('#job-pic-user-1').val() || null,
+                pic_user_id_2: $('#job-pic-user-2').val() || null,
                 updated_at: new Date()
             }
 
@@ -7659,17 +8528,22 @@
             }
 
             // ユーザー情報を取得
-            const { data: user, error } = await supabase
+            const { data: userData, error } = await supabase
                 .from('users')
-                .select('*')
+                .select('*, candidate_profiles(*)')
                 .eq('id', userId)
                 .single();
 
-            if (error || !user) {
+            if (error || !userData) {
                 console.error('Error fetching user:', error);
                 alert('ユーザー情報の取得に失敗しました');
                 return;
             }
+
+            // フラット化
+            const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
+            const user = { ...userData, ...profile };
+            user.id = userData.id; // ID確保
 
             // 権限チェック: コーチ/CAは担当求職者のみ編集可能
             if (['coach', 'ca'].includes(currentUser.role)) {
@@ -7719,7 +8593,9 @@
                     // エラーが出てもフォームは開くようにする（ただし値はセットされない可能性がある）
                 }
 
-                $('#admin-user-salary').val(user.desired_salary ? user.desired_salary / 10000 : '');
+                const salary = user.desired_salary ? Math.floor(user.desired_salary / 10000) : '';
+                // 異常値（10億円以上など、Int32上限オーバーフロー由来の値）は表示しない
+                $('#admin-user-salary').val(salary > 100000 ? '' : salary);
                 $('#admin-user-skills').val(user.skills || '');
                 $('#admin-user-history').val(user.work_history || '');
             } else {
@@ -7778,18 +8654,42 @@
 
             showLoading();
             try {
-                const { error } = await supabase
-                    .from('users')
-                    .update(updates)
-                    .eq('id', userId);
+                // 基本情報 (usersテーブル) の更新
+                const usersUpdates = {};
+                if ('name' in updates) usersUpdates.name = updates.name;
+                if ('email' in updates) usersUpdates.email = updates.email;
+                if ('role' in updates) usersUpdates.role = updates.role;
+                if ('coach_id' in updates) usersUpdates.coach_id = updates.coach_id;
 
-                if (error) throw error;
+                // usersテーブル更新
+                if (Object.keys(usersUpdates).length > 0) {
+                    const { error: usersError } = await supabase
+                        .from('users')
+                        .update(usersUpdates)
+                        .eq('id', userId);
+                    if (usersError) throw usersError;
+                }
 
-                // ログ記録 (auditLogオブジェクトが存在する場合のみ)
-                if (typeof auditLog !== 'undefined' && auditLog.userUpdated) {
-                    await auditLog.userUpdated(userId, { updates: updates });
-                } else if (typeof logAuditAction === 'function') {
-                    await logAuditAction('update', 'user', userId, { updates: updates });
+                // プロフィール情報 (candidate_profilesテーブル) の更新
+                // roleがcandidateの場合のみ
+                const currentRole = $('#admin-user-role').val(); // 現在のフォーム値
+                if (currentRole === 'candidate') {
+                    const profileUpdates = { ...updates };
+                    // usersテーブルのカラムを除外
+                    delete profileUpdates.name;
+                    delete profileUpdates.email;
+                    delete profileUpdates.role;
+                    delete profileUpdates.coach_id;
+                    delete profileUpdates.organization_id;
+
+                    if (Object.keys(profileUpdates).length > 0) {
+                        // 行が存在するか確認して、なければINSERT、あればUPDATE (Upsert)
+                        const { error: profileError } = await supabase
+                            .from('candidate_profiles')
+                            .upsert({ user_id: userId, ...profileUpdates })
+                            .select();
+                        if (profileError) throw profileError;
+                    }
                 }
 
                 alert('ユーザー情報を更新しました');
@@ -7818,14 +8718,24 @@
                 // organization_idでフィルタリング（自組織の候補者のみ）
                 const { data: users, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('*, candidate_profiles(*)')
                     .eq('organization_id', currentUser.organization_id)
                     .eq('role', 'candidate')
+                    .is('deleted_at', null)
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
 
-                adminCandidatesCache = users || [];
+                // データをフラット化（後方互換性のため）
+                const flattenedUsers = users.map(u => {
+                    const profile = Array.isArray(u.candidate_profiles) ? u.candidate_profiles[0] : u.candidate_profiles;
+                    const combined = { ...u, ...profile };
+                    // idだけはusersのものを維持（同じはずだが念のため）
+                    combined.id = u.id;
+                    return combined;
+                });
+
+                adminCandidatesCache = flattenedUsers || [];
                 renderAdminCandidates(adminCandidatesCache);
             } catch (error) {
                 console.error('Load candidates error:', error)
@@ -7851,8 +8761,8 @@
                         <div class="text-sm text-gray-500">${u.email}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900">${u.desired_job_type || '-'}</div>
-                        <div class="text-xs text-gray-500">${u.desired_location || '-'}</div>
+                        <div class="text-sm text-gray-900">${Array.isArray(u.desired_job_type) ? u.desired_job_type.join(' / ') : (u.desired_job_type || '-')}</div>
+                        <div class="text-xs text-gray-500">${Array.isArray(u.desired_location) ? u.desired_location.join(' / ') : (u.desired_location || '-')}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -7860,8 +8770,11 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="showAdminUserModal('${u.id}')" class="text-indigo-600 hover:text-indigo-900">
+                        <button onclick="showAdminUserModal('${u.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             編集
+                        </button>
+                        <button onclick="deleteUser('${u.id}')" class="text-red-600 hover:text-red-900">
+                            削除
                         </button>
                     </td>
                 </tr>
@@ -7872,20 +8785,25 @@
 
         window.showUserProfile = async function (userId) {
             try {
-                const { data: user, error } = await supabase
+                const { data: userData, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('*, candidate_profiles(*)')
                     .eq('id', userId)
                     .single();
 
                 if (error) throw error;
 
+                // フラット化
+                const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
+                const user = { ...userData, ...profile };
+                user.id = userData.id;
+
                 const info = `
 名前: ${user.name}
 メール: ${user.email}
-希望職種: ${user.desired_job_type || '-'}
-希望勤務勤務地: ${user.desired_location || '-'}
-希望年収: ${user.desired_salary ? (user.desired_salary / 10000) + '万円' : '-'}
+希望職種: ${Array.isArray(user.desired_job_type) ? user.desired_job_type.join(' / ') : (user.desired_job_type || '-')}
+希望勤務勤務地: ${Array.isArray(user.desired_location) ? user.desired_location.join(' / ') : (user.desired_location || '-')}
+希望年収: ${user.desired_salary ? Math.round(user.desired_salary / 10000).toLocaleString() + '万円' : '-'}
 スキル: ${user.skills || '-'}
 職歴: ${user.work_history || '-'}
                 `;
@@ -7908,18 +8826,15 @@
             }
             showLoading();
             try {
+                // master_dataからプロンプトを取得 (自組織のもの)
                 const { data: prompts, error } = await supabase
-                    .from('system_prompts')
+                    .from('master_data')
                     .select('*')
-                    .in('key', ['ai_matching_scoring', 'ai_recommendation_reason', 'recommendation_letter', 'scout_message']);
+                    .eq('type', 'prompt')
+                    .eq('organization_id', currentUser.organization_id)
+                    .in('value', ['ai_matching_scoring', 'ai_recommendation_reason', 'recommendation_letter', 'scout_message']);
 
-                if (error) {
-                    if (error.code === '42P01') {
-                        console.warn('system_prompts table does not exist yet.');
-                    } else {
-                        throw error;
-                    }
-                }
+                if (error) throw error;
 
                 const defaultScoring = `
 あなたは転職支援のプロフェッショナルです。以下の求人と求職者情報から、マッチ度を0-100点で評価し、詳細な分析を提供してください。
@@ -7971,55 +8886,39 @@
 - 職種未経験OK希望: \${userProfile.desired_job_experience_ok ? 'はい' : 'いいえ'}
 - 業種未経験OK希望: \${userProfile.desired_industry_experience_ok ? 'はい' : 'いいえ'}
 - スキル・経験: \${userData.notes}
-- 履歴書: \${userData.resume}
-- 職務経歴書: \${userData.work_history}
-
-以下の形式で回答してください：
-
-総合評価: XX点
-
-## マッチする点
-（具体的に3-5点列挙）
-
-## 懸念点・検討すべき点
-（具体的に2-3点列挙）
-
-## アドバイス
-（キャリアアップの観点から具体的なアドバイス）
 `;
+
                 const defaultReason = `
-あなたは転職エージェントです。以下の求人を求職者におすすめする理由を、100文字程度で簡潔に記述してください。
+あなたはキャリアアドバイザーです。以下の求職者に対して、この求人を紹介する理由を300文字程度で作成してください。
+求職者の希望やスキルと、求人の特徴を結びつけて、魅力的に伝えてください。
+
+【求職者情報】
+- 希望職種: \${userData.desired_job_type}
+- 希望業種: \${userData.desired_industry}
+- スキル: \${userData.notes}
 
 【求人情報】
 - 企業名: \${jobDetails.company}
 - 職種: \${jobDetails.title}
-- 業種: \${jobDetails.industrycategory}
-- 業務内容: \${jobDetails.description}
-
-【求職者情報】
-- 希望業種: \${userData.desired_industry}
-- 希望職種: \${userData.desired_job_type}
-- スキル: \${userData.notes}
+- 魅力: \${jobDetails.description}
 `;
 
                 const defaultRecommendationLetter = `
-あなたは転職エージェントです。以下の求職者を企業に推薦する推薦文を作成してください。
+あなたは人材紹介会社のエージェントです。以下の求職者を企業に推薦するための推薦文を作成してください。
+400-600文字程度で、以下の構成で作成してください。
 
 【求職者情報】
-- 氏名: \${candidateName}
-- 年齢: \${candidateAge}
-- 現職: \${currentPosition}
-- スキル・経験: \${skills}
-- 職務経歴: \${workHistory}
+- 氏名: \${userData.name}
+- 年齢: \${userData.age}
+- 現職: \${userData.current_position || 'N/A'}
+- スキル・経験: \${userData.notes}
+- アピールポイント: \${userData.self_pr || 'N/A'}
 
-【推薦先企業・求人情報】
-- 企業名: \${companyName}
-- 職種: \${jobTitle}
-- 業務内容: \${jobDescription}
-- 必須スキル: \${requiredSkills}
+【応募先企業・求人】
+- 企業名: \${jobDetails.company}
+- 職種: \${jobDetails.title}
 
-以下の構成で、400-600文字程度の推薦文を作成してください：
-
+構成:
 1. 冒頭の挨拶
 2. 求職者の強みと実績
 3. 求人とのマッチング理由
@@ -8039,7 +8938,7 @@
 - 企業名: \${companyName}
 - 職種: \${jobTitle}
 - 業務内容: \${jobDescription}
-- 魅力・強み: \${companyStrengths}
+- 魅力: \${companyStrengths}
 - 待遇: \${benefits}
 
 以下の構成で、300-500文字程度のスカウトメッセージを作成してください：
@@ -8050,21 +8949,22 @@
 4. 面談・応募への誘導
 `;
 
+
                 let scoringContent = defaultScoring.trim();
                 let reasonContent = defaultReason.trim();
                 let recommendationLetterContent = defaultRecommendationLetter.trim();
                 let scoutMessageContent = defaultScoutMessage.trim();
 
                 if (prompts) {
-                    const scoring = prompts.find(p => p.key === 'ai_matching_scoring');
-                    const reason = prompts.find(p => p.key === 'ai_recommendation_reason');
-                    const letter = prompts.find(p => p.key === 'recommendation_letter');
-                    const scout = prompts.find(p => p.key === 'scout_message');
+                    const scoring = prompts.find(p => p.value === 'ai_matching_scoring');
+                    const reason = prompts.find(p => p.value === 'ai_recommendation_reason');
+                    const letter = prompts.find(p => p.value === 'recommendation_letter');
+                    const scout = prompts.find(p => p.value === 'scout_message');
 
-                    if (scoring) scoringContent = scoring.content;
-                    if (reason) reasonContent = reason.content;
-                    if (letter) recommendationLetterContent = letter.content;
-                    if (scout) scoutMessageContent = scout.content;
+                    if (scoring) scoringContent = scoring.label;
+                    if (reason) reasonContent = reason.label;
+                    if (letter) recommendationLetterContent = letter.label;
+                    if (scout) scoutMessageContent = scout.label;
                 }
 
                 $('#prompt-scoring').val(scoringContent);
@@ -8081,6 +8981,10 @@
         }
 
         window.savePrompts = async function () {
+            if (!currentUser || currentUser.role !== 'super_admin') {
+                alert('この操作はスーパー管理者のみ可能です。');
+                return;
+            }
             if (!confirm('プロンプト設定を保存しますか？')) return;
 
             showLoading();
@@ -8091,37 +8995,36 @@
                 const scoutMessageContent = $('#prompt-scout-message').val();
 
                 const updates = [
-                    {
-                        key: 'ai_matching_scoring',
-                        description: 'AI紹介時のスコアリングプロンプト',
-                        content: scoringContent,
-                        updated_at: new Date()
-                    },
-                    {
-                        key: 'ai_recommendation_reason',
-                        description: '求職者に対する紹介理由を生成するプロンプト',
-                        content: reasonContent,
-                        updated_at: new Date()
-                    },
-                    {
-                        key: 'recommendation_letter',
-                        description: '推薦文作成プロンプト',
-                        content: recommendationLetterContent,
-                        updated_at: new Date()
-                    },
-                    {
-                        key: 'scout_message',
-                        description: 'スカウト文面作成プロンプト',
-                        content: scoutMessageContent,
-                        updated_at: new Date()
-                    }
+                    { key: 'ai_matching_scoring', content: scoringContent, sort_order: 10 },
+                    { key: 'ai_recommendation_reason', content: reasonContent, sort_order: 20 },
+                    { key: 'recommendation_letter', content: recommendationLetterContent, sort_order: 30 },
+                    { key: 'scout_message', content: scoutMessageContent, sort_order: 40 }
                 ];
 
-                const { error } = await supabase
-                    .from('system_prompts')
-                    .upsert(updates, { onConflict: 'key' });
+                // 1. 既存のプロンプトを削除
+                const { error: deleteError } = await supabase
+                    .from('master_data')
+                    .delete()
+                    .eq('type', 'prompt')
+                    .eq('organization_id', currentUser.organization_id);
 
-                if (error) throw error;
+                if (deleteError) throw deleteError;
+
+                // 2. 新しいプロンプトを挿入
+                const insertData = updates.map(u => ({
+                    type: 'prompt',
+                    label: u.content,
+                    value: u.key,
+                    sort_order: u.sort_order,
+                    is_active: true,
+                    organization_id: currentUser.organization_id
+                }));
+
+                const { error: insertError } = await supabase
+                    .from('master_data')
+                    .insert(insertData);
+
+                if (insertError) throw insertError;
 
                 alert('プロンプト設定を保存しました');
             } catch (error) {
@@ -8159,6 +9062,9 @@
             $('#admin-user-csv-modal').removeClass('hidden');
         }
 
+        // エイリアス: openUserCsvImportModal
+        window.openUserCsvImportModal = window.showUserCsvImportModal;
+
         window.closeUserCsvImportModal = function () {
             $('#admin-user-csv-modal').addClass('hidden');
         }
@@ -8177,6 +9083,20 @@
             document.body.removeChild(link);
         }
 
+        window.downloadCandidateCsvTemplate = function (e) {
+            e.preventDefault();
+            const csvContent = "name,email,password,age,desired_job_type,desired_location,desired_salary,skills,work_history,academic_background,languages,certifications,matching_info,internal_info,other_info\n山田太郎,yamada@example.com,pass123,28,エンジニア,\"東京都,神奈川県\",600,JavaScript・Python,○○株式会社でWebエンジニアとして3年勤務,○○大学情報学部卒業,英語(TOEIC800点),基本情報技術者,マッチング情報サンプル,社内情報サンプル,その他情報サンプル\n鈴木花子,suzuki@example.com,pass456,32,営業,\"大阪府,兵庫県\",500,営業経験5年,△△株式会社で法人営業として5年勤務,○○大学経済学部卒業,英語(日常会話レベル),普通自動車免許,,,";
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM付き
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "candidate_import_template.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         window.processUserCsvImport = function () {
             const fileInput = document.getElementById('user-csv-file');
             const file = fileInput.files[0];
@@ -8186,83 +9106,36 @@
                 return;
             }
 
+            showLoading('CSVファイルを読み込み中...');
+
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
                 complete: async function (results) {
-                    const users = results.data;
-                    if (users.length === 0) {
+                    hideLoading();
+
+                    const data = results.data;
+                    if (data.length === 0) {
                         alert('データが含まれていません');
                         return;
                     }
 
-                    // バリデーション
-                    const errors = [];
-                    const validUsers = [];
+                    // CSVのヘッダー（カラム名）を取得
+                    const csvHeaders = Object.keys(data[0]);
 
-                    users.forEach((user, index) => {
-                        const rowNum = index + 2; // ヘッダー分+1始まり
-                        if (!user.name || !user.email || !user.role || !user.password) {
-                            errors.push(`${rowNum}行目: 必須項目(name, email, role, password)が不足しています`);
-                            return;
-                        }
-                        // 簡易的なメールチェック
-                        if (!user.email.includes('@')) {
-                            errors.push(`${rowNum}行目: メールアドレスの形式が不正です (${user.email})`);
-                            return;
-                        }
-                        validUsers.push(user);
-                    });
+                    // グローバル変数に保存（既存のCSVインポートフローで使用）
+                    currentCSVData = data;
+                    currentCSVHeaders = csvHeaders;
+                    currentImportType = 'candidates'; // 求職者専用
 
-                    if (errors.length > 0) {
-                        alert('以下のエラーがあります:\n' + errors.slice(0, 10).join('\n') + (errors.length > 10 ? '\n...' : ''));
-                        return;
-                    }
+                    // モーダルを閉じる
+                    closeUserCsvImportModal();
 
-                    if (!confirm(`${validUsers.length}件のユーザーを一括登録しますか？`)) return;
-
-                    showLoading();
-                    try {
-                        let successCount = 0;
-                        let failCount = 0;
-
-                        // Edge Functionを使ってユーザー作成（管理者権限が必要なため）
-                        // 既存の create-user 関数をループで呼ぶか、バルク用の関数を作るのが理想だが
-                        // ここでは既存の create-user をループで呼ぶ（件数が多いと遅いが実装は確実）
-
-                        for (const user of validUsers) {
-                            try {
-                                const { error } = await supabase.functions.invoke('create-user', {
-                                    body: {
-                                        email: user.email,
-                                        password: user.password,
-                                        name: user.name,
-                                        role: user.role,
-                                        organization_id: currentUser.organization_id,
-                                        profileData: {} // 必要に応じて追加
-                                    }
-                                });
-
-                                if (error) throw error;
-                                successCount++;
-                            } catch (err) {
-                                console.error(`Failed to create user ${user.email}:`, err);
-                                failCount++;
-                            }
-                        }
-
-                        alert(`インポート完了\n成功: ${successCount}件\n失敗: ${failCount}件`);
-                        closeUserCsvImportModal();
-                        loadAdminUsers();
-
-                    } catch (error) {
-                        console.error('Import error:', error);
-                        alert('インポート中にエラーが発生しました');
-                    } finally {
-                        hideLoading();
-                    }
+                    // AIマッピングモーダルを表示（既存の関数を使用）
+                    showCSVMappingModal('users'); // 'users' タイプを使用（userFieldsを参照）
                 },
                 error: function (error) {
+                    hideLoading();
                     console.error('CSV parse error:', error);
                     alert('CSVの解析に失敗しました');
                 }
@@ -8301,13 +9174,20 @@
                 // 全ユーザーを取得（自組織のみ）
                 const { data: users, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('*, candidate_profiles(*)')
                     .eq('organization_id', currentUser.organization_id)
+                    .is('deleted_at', null)
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
 
-                adminUsersCache = users || [];
+                // フラット化（一覧表示でプロフィール情報が必要な場合のため）
+                const flattenedUsers = (users || []).map(u => {
+                    const profile = Array.isArray(u.candidate_profiles) ? u.candidate_profiles[0] : u.candidate_profiles;
+                    return { ...u, ...profile, id: u.id };
+                });
+
+                adminUsersCache = flattenedUsers;
                 renderAdminUsers(adminUsersCache);
             } catch (error) {
                 console.error('Load users error:', error)
@@ -8343,6 +9223,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button onclick="showAdminUserModal('${u.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             編集
+                        </button>
+                        <button onclick="deleteUser('${u.id}')" class="text-red-600 hover:text-red-900">
+                            削除
                         </button>
                     </td>
                 </tr>
@@ -8479,16 +9362,35 @@
         window.handleUserRegistration = async function (event) {
             event.preventDefault();
 
-            const email = $('#reg-email').val().trim();
-            const password = $('#reg-password').val();
+            let email = $('#reg-email').val().trim();
+            let password = $('#reg-password').val();
             const name = $('#reg-name').val().trim();
 
             let role = $('#reg-role').val();
             if (!role) {
-                role = $('#reg-role-select').val();
+                // ロール選択がない場合は管理者登録画面からの呼び出しとみなす（通常はありえないが念のため）
+                // しかし showUserRegistrationModal('candidate') では hidden にして 'candidate' をセットしている
+                // ここではフォームの値を確認
+                if ($('#reg-candidate-fields').is(':visible') || $('#user-reg-title').text().includes('求職者')) {
+                    role = 'candidate';
+                } else {
+                    role = 'user'; // デフォルト
+                }
             }
 
-            if (!email || !password || !name || !role) {
+            // 求職者の場合、メアド・パスワード未入力なら自動生成
+            if (role === 'candidate') {
+                if (!email) {
+                    const uuid = crypto.randomUUID();
+                    email = `candidate-${Date.now()}-${uuid.substring(0, 8)}@placeholder.local`;
+                }
+
+                if (!password) {
+                    password = crypto.randomUUID();
+                }
+            }
+
+            if ((role !== 'candidate' && (!email || !password)) || !name) {
                 alert('必須項目を入力してください');
                 return;
             }
@@ -8520,9 +9422,11 @@
                     password,
                     name,
                     role,
-                    organization_id: currentUser.organization_id,
+                    organizationId: currentUser.organization_id,
                     profileData
                 };
+
+
 
                 console.log('Sending user registration request:', requestBody);
 
@@ -8550,6 +9454,7 @@
                     console.error('Edge Function returned error:', data);
                     throw new Error(data.error + (data.details ? '\n詳細: ' + data.details : ''));
                 }
+
 
                 alert('ユーザーを登録しました');
                 closeUserRegistrationModal();
@@ -8750,6 +9655,7 @@
                     .from('companies')
                     .select('*')
                     .eq('organization_id', currentUser.organization_id)
+                    .is('deleted_at', null)
                     .order('name', { ascending: true })
 
                 if (error) throw error
@@ -8877,12 +9783,17 @@
         }
 
         window.deleteCompany = async function (id) {
-            if (!confirm('本当に削除しますか？\n※この企業に紐づく求人がある場合、エラーになる可能性があります。')) return
+            if (!confirm('本当に削除しますか？\n（論理削除され、一覧から非表示になります）')) return
 
             showLoading()
             try {
-                const { error } = await supabase.from('companies').delete().eq('id', id)
+                const { error } = await supabase
+                    .from('companies')
+                    .update({ deleted_at: new Date().toISOString() })
+                    .eq('id', id)
                 if (error) throw error
+
+                alert('削除しました')
                 loadCompanies()
             } catch (error) {
                 console.error('Delete company error:', error)
@@ -8920,18 +9831,29 @@
         ];
 
         const userFields = [
-            { key: 'name', label: '氏名', required: true, aliases: ['名前', 'ユーザー名'] },
+            // 基本情報
+            { key: 'name', label: '氏名', required: true, aliases: ['名前', 'ユーザー名', '氏名'] },
             { key: 'email', label: 'メールアドレス', required: true, aliases: ['メール', 'Email', 'E-mail'] },
+            { key: 'password', label: 'パスワード', required: false, aliases: ['パスワード', 'Password', 'pass'] },
             { key: 'role', label: '権限', aliases: ['ロール', '役割'] },
-            { key: 'desired_job_type', label: '希望職種', aliases: ['希望職種名'] },
-            { key: 'desired_location', label: '希望勤務地', aliases: ['希望場所'] },
-            { key: 'desired_salary', label: '希望年収(万円)', aliases: ['希望給与'] },
-            { key: 'skills', label: 'スキル', aliases: ['技術', '技能'] },
-            { key: 'work_history', label: '職歴・自己PR', aliases: ['経歴', '自己紹介'] },
-            { key: 'academic_background', label: '学歴', aliases: ['最終学歴', '学校'] },
-            { key: 'certifications', label: '資格', aliases: ['免許'] },
-            { key: 'languages', label: '言語スキル', aliases: ['語学'] },
-            { key: 'status', label: 'ステータス', aliases: ['状態'] }
+            { key: 'age', label: '年齢', aliases: ['年齢'] },
+
+            // 希望条件
+            { key: 'desired_job_type', label: '希望職種', aliases: ['希望職種名', '職種'] },
+            { key: 'desired_location', label: '希望勤務地', aliases: ['希望場所', '勤務地'] },
+            { key: 'desired_salary', label: '希望年収(万円)', aliases: ['希望給与', '年収'] },
+
+            // スキル・経歴
+            { key: 'skills', label: 'スキル', aliases: ['技術', '技能', '保有スキル'] },
+            { key: 'work_history', label: '職歴・自己PR', aliases: ['経歴', '自己紹介', '職務経歴'] },
+            { key: 'academic_background', label: '学歴', aliases: ['最終学歴', '学校', '出身校'] },
+            { key: 'certifications', label: '資格', aliases: ['免許', '保有資格'] },
+            { key: 'languages', label: '言語スキル', aliases: ['語学', '語学力'] },
+
+            // 管理用情報（本人非表示）
+            { key: 'matching_info', label: 'マッチング情報', aliases: ['マッチングメモ', 'マッチング'] },
+            { key: 'internal_info', label: '社内情報', aliases: ['社内メモ', '内部情報'] },
+            { key: 'other_info', label: 'その他情報', aliases: ['その他', '備考2'] }
         ];
 
         let currentCSVData = [];
@@ -9012,7 +9934,9 @@
             tbody.empty();
 
             // 保存済み設定のプルダウンを更新
-            updateSavedMappingSelect(type);
+            // candidatesタイプの場合は、usersの設定を読み込む
+            const mappingType = (currentImportType === 'candidates') ? 'users' : type;
+            updateSavedMappingSelect(mappingType);
             $('#new-mapping-name').val(''); // 入力欄クリア
 
             fields.forEach(field => {
@@ -9094,7 +10018,14 @@
 
         window.applySavedMapping = function (name) {
             if (!name) return;
-            const mappings = getSavedMappings(currentImportType);
+
+            // candidatesタイプの場合は、usersの設定も読み込む
+            let importType = currentImportType;
+            if (importType === 'candidates') {
+                importType = 'users';
+            }
+
+            const mappings = getSavedMappings(importType);
             const target = mappings.find(m => m.name === name);
             if (!target) return;
 
@@ -9139,12 +10070,15 @@
                 const saved = localStorage.getItem(MAPPING_STORAGE_KEY);
                 let settings = saved ? JSON.parse(saved) : [];
 
+                // candidatesタイプの場合は、usersとして保存
+                const saveType = (currentImportType === 'candidates') ? 'users' : currentImportType;
+
                 // 既存チェック
-                const idx = settings.findIndex(s => s.name === name && s.type === currentImportType && s.organization_id === currentUser.organization_id);
+                const idx = settings.findIndex(s => s.name === name && s.type === saveType && s.organization_id === currentUser.organization_id);
 
                 const newSetting = {
                     name,
-                    type: currentImportType,
+                    type: saveType,
                     organization_id: currentUser.organization_id,
                     mapping,
                     updated_at: new Date().toISOString()
@@ -9159,7 +10093,10 @@
 
                 localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(settings));
                 alert('設定を保存しました');
-                updateSavedMappingSelect(currentImportType);
+
+                // 保存済み設定のプルダウンを更新
+                const mappingType = (currentImportType === 'candidates') ? 'users' : currentImportType;
+                updateSavedMappingSelect(mappingType);
                 $('#saved-mapping-select').val(name);
 
             } catch (e) {
@@ -9217,6 +10154,12 @@
                     } else {
                         const field = fields.find(f => f.key === key);
                         if (field && field.required) {
+                            // メールアドレスの必須チェックを組織設定に基づいてスキップ
+                            if (currentImportType === 'users' && field.key === 'email') {
+                                if (currentUser.organizations && currentUser.organizations.settings && currentUser.organizations.settings.candidate_email_required === false) {
+                                    return; // スキップ
+                                }
+                            }
                             missingRequired.push(field.label);
                         }
                     }
@@ -9270,6 +10213,60 @@
                         importData.organization_id = currentUser.organization_id;
 
                         if (currentImportType === 'jobs') {
+                            // AI自動補完
+                            const useAI = $('#csv-ai-augment').is(':checked');
+                            if (useAI) {
+                                // 補完対象の項目が空かどうかチェック（簡易的に、主要項目が空ならAI実行）
+                                const needsAugment = !importData.job_category || !importData.industry_category || importData.is_remote === undefined;
+
+                                if (needsAugment) {
+                                    // 進捗表示（簡易）
+                                    const progressMsg = `AI解析中... (${i + 1}/${currentCSVData.length})`;
+                                    // ローディング表示のテキスト更新機能がないため、コンソールに出力
+                                    console.log(progressMsg);
+
+                                    const jobText = `
+                                        タイトル: ${importData.title || ''}
+                                        会社名: ${importData.company || ''}
+                                        詳細: ${importData.description || ''}
+                                        勤務地: ${importData.location || ''}
+                                        勤務時間: ${importData.work_hours || ''}
+                                        休日休暇: ${importData.holidays || ''}
+                                        福利厚生: ${importData.benefits || ''}
+                                    `;
+
+                                    const options = {
+                                        job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
+                                        industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
+                                    };
+
+                                    try {
+                                        // analyzeDocumentWithAI は内部で supabase.functions.invoke を呼ぶ
+                                        let aiResult = await analyzeDocumentWithAI(jobText, 'job_description', options);
+                                        if (Array.isArray(aiResult)) aiResult = aiResult[0] || {};
+
+                                        if (aiResult) {
+                                            if (!importData.job_category && aiResult.job_category) importData.job_category = aiResult.job_category;
+                                            if (!importData.industry_category && aiResult.industry_category) importData.industry_category = aiResult.industry_category;
+
+                                            // boolean値の補完
+                                            if (importData.is_remote === undefined && aiResult.is_remote !== undefined) importData.is_remote = aiResult.is_remote;
+
+                                            // '可'/'不可' 形式への変換が必要な場合
+                                            if (!importData.job_experience_ok && aiResult.job_experience_ok !== undefined) {
+                                                importData.job_experience_ok = aiResult.job_experience_ok ? '可' : '不可';
+                                            }
+                                            if (!importData.industry_experience_ok && aiResult.industry_experience_ok !== undefined) {
+                                                importData.industry_experience_ok = aiResult.industry_experience_ok ? '可' : '不可';
+                                            }
+                                        }
+                                    } catch (aiError) {
+                                        console.error(`AI augmentation failed for row ${i}:`, aiError);
+                                        // AIエラーは無視してインポート続行
+                                    }
+                                }
+                            }
+
                             // 必須項目チェック
                             if (!importData.title) throw new Error('求人タイトルは必須です');
                             if (!importData.company) throw new Error('企業名は必須です');
@@ -9309,7 +10306,24 @@
                             // Auth連携はできないため、DBへのインサートのみ
                             // パスワード等は設定できないため、招待フローが必要
                             if (!importData.role) importData.role = 'candidate'; // デフォルト
-                            if (!importData.email) throw new Error('メールアドレスは必須です');
+
+                            // 組織設定の確認
+                            let emailRequired = true;
+                            if (importData.role === 'candidate' && currentUser.organizations && currentUser.organizations.settings) {
+                                if (currentUser.organizations.settings.candidate_email_required === false) {
+                                    emailRequired = false;
+                                }
+                            }
+
+                            if (!importData.email) {
+                                if (emailRequired) {
+                                    throw new Error('メールアドレスは必須です');
+                                } else {
+                                    // ダミーメール生成
+                                    const uuid = crypto.randomUUID();
+                                    importData.email = `candidate-${Date.now()}-${uuid.substring(0, 8)}@placeholder.local`;
+                                }
+                            }
                             if (!importData.name) throw new Error('氏名は必須です');
 
                             // 重複チェック（email）
@@ -9325,6 +10339,158 @@
                             } else {
                                 const { error } = await supabase.from('users').insert(importData);
                                 if (error) throw error;
+                            }
+
+                        } else if (currentImportType === 'candidates') {
+                            // 求職者専用インポート（Edge Function使用）
+                            // ロールを強制的にcandidateに設定
+                            importData.role = 'candidate';
+
+                            // 組織設定を取得
+                            const orgSettings = currentUser.organizations?.settings || {};
+                            const emailRequired = orgSettings.candidate_email_required !== false;
+                            const passwordRequired = orgSettings.candidate_password_required !== false;
+
+                            // メールアドレスの処理
+                            if (!importData.email || importData.email.trim() === '') {
+                                if (emailRequired) {
+                                    throw new Error('メールアドレスは組織設定により必須です');
+                                } else {
+                                    // ダミーメール生成
+                                    const timestamp = Date.now();
+                                    const uuid = Math.random().toString(36).substring(2, 10);
+                                    importData.email = `candidate-${timestamp}-${uuid}@placeholder.local`;
+                                }
+                            }
+
+                            // パスワードの処理
+                            console.log('Password before processing:', importData.password);
+                            if (!importData.password || importData.password.trim() === '') {
+                                if (passwordRequired) {
+                                    throw new Error('パスワードは組織設定により必須です');
+                                } else {
+                                    // ダミーパスワード生成
+                                    const uuid = Math.random().toString(36).substring(2, 15);
+                                    importData.password = `dummyPass${uuid}`;
+                                    console.log('Generated dummy password:', importData.password);
+                                }
+                            }
+                            console.log('Password after processing:', importData.password);
+
+                            // 氏名チェック
+                            if (!importData.name || importData.name.trim() === '') {
+                                throw new Error('氏名は必須です');
+                            }
+
+                            // Edge Functionを使用してユーザー作成
+                            const { data, error } = await supabase.functions.invoke('create-user', {
+                                body: {
+                                    email: importData.email,
+                                    password: importData.password,
+                                    name: importData.name,
+                                    role: 'candidate',
+                                    organizationId: currentUser.organization_id,
+                                    profileData: {
+                                        // 基本情報
+                                        age: importData.age || null,
+
+                                        // 希望条件（フロントエンドでの分割処理）
+                                        desired_job_type: (() => {
+                                            const val = importData.desired_job_type;
+                                            if (!val) return null;
+                                            if (typeof val !== 'string') return val;
+                                            // JSONパースを試みる
+                                            if (val.trim().startsWith('[') && val.trim().endsWith(']')) {
+                                                try {
+                                                    const parsed = JSON.parse(val);
+                                                    if (Array.isArray(parsed)) return parsed;
+                                                } catch (e) { }
+                                            }
+                                            // 区切り文字で分割
+                                            return val.split(/[,/／\uff0f、\s　]+/)
+                                                .map(s => s.trim())
+                                                .filter(s => s.length > 0);
+                                        })(),
+
+                                        desired_location: (() => {
+                                            const val = importData.desired_location;
+                                            if (!val) return null;
+                                            if (typeof val !== 'string') return val;
+                                            if (val.trim().startsWith('[') && val.trim().endsWith(']')) {
+                                                try {
+                                                    const parsed = JSON.parse(val);
+                                                    if (Array.isArray(parsed)) return parsed;
+                                                } catch (e) { }
+                                            }
+                                            return val.split(/[,/／\uff0f、\s　]+/)
+                                                .map(s => s.trim())
+                                                .filter(s => s.length > 0);
+                                        })(),
+
+                                        desired_salary: (() => {
+                                            if (!importData.desired_salary) return null;
+                                            // 文字列からの変換（カンマ除去など）
+                                            const valStr = String(importData.desired_salary).replace(/[^0-9.]/g, '');
+                                            const salary = parseFloat(valStr);
+
+                                            if (isNaN(salary)) return null;
+                                            // 万円単位を円に変換（10000倍）
+                                            // ただし、PostgreSQL integerの最大値（2,147,483,647）を超えないようにする
+                                            const salaryInYen = salary * 10000;
+                                            if (salaryInYen > 2147483647) {
+                                                console.warn(`Salary ${salary}万円 is too large, capping at max integer value`);
+                                                return null; // オーバーフローは空にする（異常値として登録しない）
+                                            }
+                                            return salaryInYen;
+                                        })(),
+
+                                        // スキル・経歴
+                                        skills: importData.skills || null,
+                                        work_history: importData.work_history || null,
+                                        academic_background: importData.academic_background || null,
+                                        languages: importData.languages || null,
+                                        certifications: importData.certifications || null,
+
+                                        // 管理用情報
+                                        matching_info: importData.matching_info || null,
+                                        internal_info: importData.internal_info || null,
+                                        other_info: importData.other_info || null
+                                    }
+                                }
+                            });
+
+                            console.log('Edge Function invoked with:', {
+                                email: importData.email,
+                                password: importData.password ? '***set***' : 'NOT SET',
+                                name: importData.name,
+                                organizationId: currentUser.organization_id
+                            });
+
+                            // errorがある場合でも、dataにエラーメッセージが含まれている可能性がある
+                            console.log('Edge Function response - error:', error);
+                            console.log('Edge Function response - data:', data);
+
+                            if (error) {
+                                // dataにエラーメッセージがあるかチェック
+                                if (data && data.error) {
+                                    console.error('Edge Function error from data:', data.error);
+                                    throw new Error(data.error);
+                                } else {
+                                    console.error('Edge Function error:', error);
+                                    console.error('Error message:', error.message);
+                                    throw new Error(error.message || 'Edge Functionエラー');
+                                }
+                            }
+
+                            if (!data) {
+                                throw new Error('Edge Functionからレスポンスがありません');
+                            }
+
+                            if (!data.success) {
+                                const errorMsg = data.error || 'ユーザー作成に失敗しました';
+                                console.error('User creation failed:', errorMsg);
+                                console.error('Full response data:', data);
+                                throw new Error(errorMsg);
                             }
                         }
 
@@ -9626,6 +10792,11 @@
                     $('#org-initial-admin-fields').addClass('hidden');
                     $('#org-admin-name').removeAttr('required');
                     $('#org-admin-email').removeAttr('required');
+
+                    // 設定の読み込み
+                    const settings = org.settings || {};
+                    $('#org-setting-email-required').prop('checked', settings.candidate_email_required !== false); // デフォルトtrue
+                    $('#org-setting-password-required').prop('checked', settings.candidate_password_required !== false); // デフォルトtrue
                 }
             } else {
                 $('#org-modal-title').text('新規組織作成');
@@ -9636,6 +10807,10 @@
                 $('#org-initial-admin-fields').removeClass('hidden');
                 $('#org-admin-name').attr('required', 'required');
                 $('#org-admin-email').attr('required', 'required');
+
+                // デフォルト設定
+                $('#org-setting-email-required').prop('checked', true);
+                $('#org-setting-password-required').prop('checked', true);
             }
 
             $('#organization-modal').removeClass('hidden');
@@ -9661,9 +10836,31 @@
                 valid_until: $('#org-valid-until').val() ? new Date($('#org-valid-until').val()).toISOString() : null
             };
 
+            // 既存の設定をマージ
+            let currentSettings = {};
+            if (orgId && typeof superAdminOrgsCache !== 'undefined') {
+                const existingOrg = superAdminOrgsCache.find(o => o.id === orgId);
+                if (existingOrg && existingOrg.settings) {
+                    currentSettings = existingOrg.settings;
+                }
+            }
+
+            orgData.settings = {
+                ...currentSettings,
+                candidate_email_required: $('#org-setting-email-required').is(':checked'),
+                candidate_password_required: $('#org-setting-password-required').is(':checked')
+            };
+
             // 初期管理者情報（新規作成時のみ）
             const adminName = $('#org-admin-name').val().trim();
             const adminEmail = $('#org-admin-email').val().trim();
+
+            // デバッグ: 現在のユーザー情報を確認
+            console.log('Current user info:', {
+                id: currentUser.id,
+                role: currentUser.role,
+                organization_id: currentUser.organization_id
+            });
 
             showLoading();
             try {
@@ -9714,7 +10911,11 @@
 
             } catch (error) {
                 console.error('Save organization error:', error);
-                alert('保存に失敗しました: ' + error.message);
+                let errorMessage = '保存に失敗しました: ' + error.message;
+                if (error.code) errorMessage += `\nエラーコード: ${error.code}`;
+                if (error.details) errorMessage += `\n詳細: ${error.details}`;
+                if (error.hint) errorMessage += `\nヒント: ${error.hint}`;
+                alert(errorMessage);
             } finally {
                 hideLoading();
             }
@@ -10096,7 +11297,8 @@
 
                 const typeLabels = {
                     'employment_type': '雇用形態',
-                    'job_category': '職種カテゴリ'
+                    'job_category': '職種カテゴリ',
+                    'industry_category': '業種カテゴリ'
                 }
 
                 const html = masters.map(m => {
@@ -10355,15 +11557,77 @@
             return fullText
         }
 
-        async function analyzeDocumentWithAI(text, type) {
+        async function analyzeDocumentWithAI(text, type, options = {}) {
             // Edge Function 'analyze-document' を呼び出す
             // type: 'resume' | 'job_description'
             const { data, error } = await supabase.functions.invoke('analyze-document', {
-                body: { text, type }
+                body: { text, type, options }
             })
 
             if (error) throw error
             return data
+        }
+
+        // 文字列の類似度を計算（レーベンシュタイン距離ベース）
+        function calculateSimilarity(str1, str2) {
+            if (!str1 || !str2) return 0;
+
+            const s1 = str1.toLowerCase().trim();
+            const s2 = str2.toLowerCase().trim();
+
+            // 完全一致
+            if (s1 === s2) return 1.0;
+
+            // 部分一致チェック
+            if (s1.includes(s2) || s2.includes(s1)) return 0.8;
+
+            // レーベンシュタイン距離を計算
+            const matrix = [];
+            for (let i = 0; i <= s1.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= s2.length; j++) {
+                matrix[0][j] = j;
+            }
+
+            for (let i = 1; i <= s1.length; i++) {
+                for (let j = 1; j <= s2.length; j++) {
+                    if (s1.charAt(i - 1) === s2.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+
+            const distance = matrix[s1.length][s2.length];
+            const maxLength = Math.max(s1.length, s2.length);
+            return 1 - (distance / maxLength);
+        }
+
+        // マスタ値から最も類似した値を見つける
+        function findClosestMasterValue(extractedValue, masterValues) {
+            if (!extractedValue || !masterValues || masterValues.length === 0) {
+                return null;
+            }
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const masterValue of masterValues) {
+                const score = calculateSimilarity(extractedValue, masterValue);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = masterValue;
+                }
+            }
+
+            // 類似度が0.3以上の場合のみ採用（あまりにも違う場合は null を返す）
+            return bestScore >= 0.3 ? bestMatch : null;
         }
 
         window.handleResumeUpload = async function (input) {
@@ -10425,19 +11689,50 @@
             // 複数ファイルの場合は、フォーム入力ではなく直接登録フローにする
             const isBulkMode = fileCount > 1;
 
-            showLoading()
+            showLoading('PDFを解析中...')
             try {
                 let successCount = 0;
                 let skipCount = 0;
 
+                // マスタデータの準備
+                const options = {
+                    job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
+                    industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
+                };
+
                 for (let i = 0; i < fileCount; i++) {
                     const file = input.files[i];
 
-                    // 進捗表示（ローディングオーバーレイのテキスト更新などが理想だが、今回は簡易的に）
+                    // 進捗表示
                     console.log(`Processing file ${i + 1}/${fileCount}: ${file.name}`);
 
                     const text = await extractTextFromPDF(file);
-                    let result = await analyzeDocumentWithAI(text, 'job_description');
+                    console.log(`Extracted text length: ${text.length} characters`);
+
+                    if (!text || text.trim().length === 0) {
+                        alert(`ファイル「${file.name}」からテキストを抽出できませんでした。スキャン画像PDFの可能性があります。`);
+                        skipCount++;
+                        continue;
+                    }
+
+                    let result;
+                    try {
+                        result = await analyzeDocumentWithAI(text, 'job_description', options);
+                    } catch (apiError) {
+                        console.error('API Error Details:', apiError);
+                        // Supabase FunctionsHttpErrorの場合、詳細なレスポンスが含まれている可能性がある
+                        let errorMessage = apiError.message;
+                        if (apiError.context && apiError.context.json) {
+                            try {
+                                const errorJson = await apiError.context.json();
+                                if (errorJson.error) errorMessage += `\nServer Error: ${errorJson.error}`;
+                                if (errorJson.details) errorMessage += `\nDetails: ${errorJson.details}`;
+                            } catch (e) {
+                                // JSON parse error, ignore
+                            }
+                        }
+                        throw new Error(`AI解析エラー: ${errorMessage}`);
+                    }
 
                     if (Array.isArray(result)) {
                         result = result[0] || {};
@@ -10523,13 +11818,15 @@
                             interview_process: result.interview_process || null,
                             employment_type: result.employment_type || '正社員',
                             is_remote: result.is_remote || false,
-                            job_experience_ok: result.job_experience_ok ? '可' : '不可', // DBのカラム定義に合わせて調整が必要かも（booleanならtrue/false）
+                            job_experience_ok: result.job_experience_ok ? '可' : '不可',
                             industry_experience_ok: result.industry_experience_ok ? '可' : '不可',
+                            job_category: result.job_category || null,
+                            industry_category: result.industry_category || null,
                             status: 'active'
                         };
 
                         // 確認ダイアログ
-                        const confirmSave = confirm(`【${i + 1}/${fileCount}】以下の内容で登録しますか？\n\n会社名: ${result.company}\nタイトル: ${jobData.title}\n勤務地: ${jobData.location}\n年収: ${jobData.salary_min ? jobData.salary_min / 10000 + '万' : '-'} ~ ${jobData.salary_max ? jobData.salary_max / 10000 + '万' : '-'}`);
+                        const confirmSave = confirm(`【${i + 1}/${fileCount}】以下の内容で登録しますか？\n\n会社名: ${result.company}\nタイトル: ${jobData.title}\n勤務地: ${jobData.location}\n年収: ${jobData.salary_min ? jobData.salary_min / 10000 + '万' : '-'} ~ ${jobData.salary_max ? jobData.salary_max / 10000 + '万' : '-'}\n職種: ${jobData.job_category || '-'}\n業界: ${jobData.industry_category || '-'}`);
 
                         if (confirmSave) {
                             const { error } = await supabase.from('jobs').insert(jobData);
@@ -10569,7 +11866,27 @@
 
                         if (result.is_remote !== undefined) $('#job-is-remote').prop('checked', result.is_remote);
                         if (result.job_experience_ok !== undefined) $('#job-experience-ok').prop('checked', result.job_experience_ok);
-                        if (result.industry_experience_ok !== undefined) $('#job-industry-experience-ok').prop('checked', result.industry_industry_experience_ok);
+                        if (result.industry_experience_ok !== undefined) $('#job-industry-experience-ok').prop('checked', result.industry_experience_ok);
+
+                        // カテゴリのセット（マスタ値から最も近い値を選択）
+                        if (result.job_category) {
+                            const closestJobCategory = findClosestMasterValue(result.job_category, masterJobCategories);
+                            if (closestJobCategory) {
+                                $('#job-category').val(closestJobCategory);
+                                console.log(`Job category: "${result.job_category}" -> "${closestJobCategory}"`);
+                            } else {
+                                console.warn(`No matching job category found for: "${result.job_category}"`);
+                            }
+                        }
+                        if (result.industry_category) {
+                            const closestIndustryCategory = findClosestMasterValue(result.industry_category, masterIndustries);
+                            if (closestIndustryCategory) {
+                                $('#job-industry-category').val(closestIndustryCategory);
+                                console.log(`Industry category: "${result.industry_category}" -> "${closestIndustryCategory}"`);
+                            } else {
+                                console.warn(`No matching industry category found for: "${result.industry_category}"`);
+                            }
+                        }
 
                         alert('解析が完了しました。内容を確認してください。');
                     }
@@ -10817,6 +12134,64 @@
             updateBulkRecommendBar(); // ボタン状態更新
         }
 
+        // スーパー管理者用：組織切り替え機能
+        async function initOrgSwitcher() {
+            try {
+                // 全組織を取得
+                const { data: orgs, error } = await supabase
+                    .from('organizations')
+                    .select('id, name')
+                    .order('name');
+
+                if (error) throw error;
+
+                const switcher = $('#org-switcher');
+                switcher.empty();
+
+                // 自分の所属組織（デフォルト）も選択肢に含めるか、あるいは「選択解除」で戻るか
+                // ここではシンプルに全組織リストを表示し、現在のorganization_idを選択状態にする
+
+                orgs.forEach(org => {
+                    const option = $('<option>').val(org.id).text(org.name);
+                    if (org.id === currentUser.organization_id) {
+                        option.prop('selected', true);
+                    }
+                    switcher.append(option);
+                });
+
+                // 表示
+                $('#org-switcher-container').removeClass('hidden');
+
+                // Select2を適用
+                switcher.select2({
+                    width: '300px',
+                    placeholder: '組織を選択...',
+                    allowClear: false,
+                    dropdownAutoWidth: true,
+                    language: {
+                        noResults: function () {
+                            return "見つかりません";
+                        }
+                    }
+                });
+
+                // イベントリスナー
+                switcher.off('change').on('change', function () {
+                    const newOrgId = $(this).val();
+                    if (newOrgId) {
+                        localStorage.setItem('super_admin_target_org_id', newOrgId);
+                    } else {
+                        localStorage.removeItem('super_admin_target_org_id');
+                    }
+                    // リロードして設定を反映
+                    location.reload();
+                });
+
+            } catch (error) {
+                console.error('Failed to init org switcher:', error);
+            }
+        }
+
         $(document).ready(function () {
 
             // ログインフォーム
@@ -10990,9 +12365,31 @@
                         .select('*, organizations(*)')
                         .eq('id', session.user.id)
                         .single()
-                        .then(({ data }) => {
+                        .then(async ({ data }) => {
                             if (data) {
                                 currentUser = data
+
+                                // スーパー管理者の場合、組織切り替えロジックを適用
+                                if (currentUser.role === 'super_admin') {
+                                    const targetOrgId = localStorage.getItem('super_admin_target_org_id');
+                                    if (targetOrgId && targetOrgId !== currentUser.organization_id) {
+                                        // 切り替え先の組織情報を取得
+                                        const { data: targetOrg } = await supabase
+                                            .from('organizations')
+                                            .select('*')
+                                            .eq('id', targetOrgId)
+                                            .single();
+
+                                        if (targetOrg) {
+                                            // 組織IDと組織情報を上書き（メモリ上のみ）
+                                            currentUser.organization_id = targetOrgId;
+                                            currentUser.organizations = targetOrg;
+                                            console.log('Super Admin: Switched to organization', targetOrg.name, targetOrgId);
+                                        }
+                                    }
+                                    // 組織切り替えUIの初期化
+                                    initOrgSwitcher();
+                                }
 
                                 // 管理者メニューの表示制御
                                 if (currentUser.role === 'org_admin' || currentUser.role === 'admin' || currentUser.role === 'super_admin') {
