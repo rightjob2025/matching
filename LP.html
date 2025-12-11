@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NLTBHQ4');</script>
+<!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rightjobマッチング - AIマッチングで「埋もれた成約」を掘り起こし、売上を最大化する。</title>
-    <meta name="description" content="条件検索だけでは見つからない「隠れたマッチング」をAIが発見。機会損失を防ぎ、成約率を向上させる人材紹介システム「Rightjobマッチング」。">
+    <!-- タイトルをAIアシスタントからAIマッチングへ修正 -->
+    <title>【工数94.5%削減】AIが業務の「量とスピード」を解放。エージェントは「質の高い対話」に集中する - Rightjob AI マッチング</title>
+    <meta name="description" content="マッチング（検索・登録作業等）をAIが代行し、工数を94.5%削減。解放された時間を、人にしかできない「質の高いマッチング」と「深いフォロー」に振り向け、売上を最大化します。">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -83,6 +91,40 @@
             border-right: 8px solid transparent;
             border-bottom: 8px solid #F0FDF4;
         }
+        /* --- デモ専用スタイル (LP2から追加) --- */
+        .demo-card {
+            min-height: 500px;
+            background-color: #f7fafc; /* bg-gray-50 */
+        }
+        .ai-processing::after {
+            content: 'AI処理中';
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0%, 100% { content: 'AI処理中'; }
+            33% { content: 'AI処理中.'; }
+            66% { content: 'AI処理中..'; }
+        }
+        .arrow-pulse {
+            animation: pulse-arrow 1.5s infinite;
+        }
+        @keyframes pulse-arrow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        /* スクロールバーの非表示 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 改行の最適化 */
+        .whitespace-pre-wrap-jp {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
     </style>
 
 　　<script async src="https://www.googletagmanager.com/gtag/js?id=G-GT52HGDNZW"></script>
@@ -94,61 +136,70 @@
   　</script>
 </head>
 <body class="text-slate-800 bg-white antialiased">
+    <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NLTBHQ4"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 
     <!-- Header -->
     <header class="fixed w-full bg-white/90 backdrop-blur-md z-50 border-b border-slate-200 shadow-sm">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-brand-green rounded flex items-center justify-center text-white font-bold text-xl shadow-sm">R</div>
-                <span class="font-bold text-xl tracking-tight text-slate-800">Rightjobマッチング</span>
+                <span class="font-bold text-xl tracking-tight text-slate-800">Rightjob AI マッチング</span>
             </div>
+            <!-- ナビゲーションをLP2に合わせて調整 -->
             <nav class="hidden md:flex gap-6 text-sm font-medium text-slate-600">
-                <a href="#problem" class="hover:text-brand-green transition">課題</a>
-                <a href="#solution" class="hover:text-brand-green transition">解決策</a>
-                <a href="#usecase" class="hover:text-brand-green transition">事例</a>
+                <a href="#problem" class="hover:text-brand-green transition">課題提起</a>
+                <a href="#solution" class="hover:text-brand-green transition">分業体制</a>
+                <a href="#demo" class="hover:text-brand-green transition font-black text-brand-orange">デモ</a>
+                <a href="#features" class="hover:text-brand-green transition">機能</a>
+                <a href="#scene" class="hover:text-brand-green transition">成功事例</a>
                 <a href="#price" class="hover:text-brand-green transition">料金</a>
             </nav>
-            <!-- デモ予約ボタン -->
-            <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center justify-center px-5 py-2 text-sm font-bold text-white bg-brand-green rounded-full hover:bg-emerald-600 transition shadow-md">
-                無料デモを申し込む
+            <!-- CTAを「無料デモ」に統一し、強調 -->
+            <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center justify-center px-5 py-2 text-sm font-black text-white bg-brand-orange rounded-full hover:bg-amber-600 transition shadow-lg">
+                無料デモを申し込む (30分)
             </a>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="relative pt-24 pb-16 md:pt-40 md:pb-32 overflow-hidden bg-brand-light">
+    <!-- Hero Section (LP1ベース + LP2のH1とUI画像) -->
+    <section class="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-brand-light">
         <!-- 背景装飾 -->
         <div class="absolute inset-0 spreadsheet-grid opacity-30"></div>
         <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-100/50 to-transparent pointer-events-none"></div>
 
         <div class="container mx-auto px-4 relative z-10">
-            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                <!-- Copy -->
+            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                <!-- Copy (LP2のH1とサブコピーを反映) -->
                 <div class="w-full md:w-5/12 space-y-4 md:space-y-6 text-center md:text-left fade-up">
                     <h1 class="text-3xl md:text-5xl lg:text-6xl font-black leading-tight text-slate-900 tracking-tight">
-                        「条件検索」で見逃していた<br>
-                        <span class="text-brand-green">逸材</span>をAIが発掘。<br>
-                        <span class="text-brand-orange">成約数</span>を最大化させる。
+                        AIが業務の<span class="text-brand-green">量とスピード</span>を解放。<br>
+                        エージェントは<br>
+                        <span class="text-brand-orange">「質の高い対話」</span>に集中する。
                     </h1>
+                    <!-- サブコピーの日本語を最終調整 -->
                     <p class="text-base md:text-lg text-slate-600 leading-relaxed font-medium">
-                        これまでの検索では拾えなかった「実は相性抜群」な求人と求職者をAIがマッチング。<br class="hidden md:block">
-                        機会損失を防ぎ、あなたのエージェント事業の売上を底上げします。
+                        <span class="text-2xl font-black text-brand-dark block mb-2">【工数94.5%削減の実績】</span>
+                        マッチング（検索・登録作業等）の<span class="font-bold">煩雑な事務作業をAIが完全に代行</span>します。<br class="hidden md:block">
+                        解放された時間を、人にしかできない<span class="font-bold">「深いヒアリング」や「戦略的な交渉」</span>に振り向け、売上を最大化します。
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start pt-2 md:pt-4">
-                        <!-- 資料請求ボタン -->
-                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfzY0ihL6N7baFQWyXoTOXJy2tYRZScyGrgQTFL1WLrT2Erdg/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base font-bold text-white bg-brand-green rounded-full hover:bg-emerald-600 transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                            3分でわかる資料をダウンロード
-                            <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
+                        <!-- CTAを「無料デモ」に統一し、強調（最重要） -->
+                        <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-4 md:px-8 md:py-5 text-xl font-black text-white bg-brand-orange rounded-full hover:bg-amber-600 transition shadow-xl hover:shadow-amber-500/50 transform hover:-translate-y-1">
+                            無料デモを申し込む (30分)
+                            <i data-lucide="arrow-right" class="ml-2 w-6 h-6"></i>
                         </a>
-                        <!-- デモ予約ボタン -->
-                        <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base font-bold text-slate-700 bg-white border-2 border-slate-200 rounded-full hover:bg-slate-50 transition shadow-sm hover:shadow-md">
-                            無料デモを申し込む
+                        <!-- 資料請求ボタンをサブに配置 -->
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfzY0ihL6N7baFQWyXoTOXJy2tYRZScyGrgQTFL1WLrT2Erdg/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-6 py-4 md:px-8 md:py-5 text-base font-bold text-slate-700 bg-white border-2 border-slate-200 rounded-full hover:bg-slate-50 transition shadow-sm hover:shadow-md">
+                            3分でわかる資料をダウンロード
                         </a>
                     </div>
-                    <p class="text-xs text-slate-500 mt-2 font-medium"></p>
+                    <p class="text-xs text-slate-500 mt-2 font-medium">※ 無料デモで、貴社の工数削減効果を試算します。</p>
                 </div>
                 
-                <!-- Visual (UI Image) -->
+                <!-- Visual (UI Image) - LP2の内容に置き換え -->
                 <div class="w-full md:w-7/12 fade-up delay-200 mt-8 md:mt-0">
                     <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200 p-2 md:p-6 relative overflow-hidden">
                         <!-- Background Grid -->
@@ -292,12 +343,18 @@
 
                         </div>
                     </div>
+                    <!-- ライブデモへの誘導ボタンを画像の下に配置 -->
+                    <div class="text-center mt-6">
+                        <a href="#demo" class="inline-flex items-center justify-center px-6 py-3 text-lg font-bold text-white bg-brand-orange rounded-full hover:bg-amber-600 transition shadow-lg transform hover:-translate-y-0.5">
+                            ライブデモを体験する <i data-lucide="arrow-down" class="ml-2 w-5 h-5"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Problem Section -->
+    <!-- Problem Section (LP1ベース) -->
     <section id="problem" class="py-20 bg-white">
         <div class="container mx-auto px-4">
             <div class="text-center max-w-3xl mx-auto mb-16 fade-up">
@@ -356,7 +413,7 @@
         </div>
     </section>
 
-    <!-- Solution Section -->
+    <!-- Solution Section (LP2の3つの柱とキャッチコピーに置き換え) -->
     <section id="solution" class="py-20 bg-slate-900 text-white relative overflow-hidden">
         <!-- 装飾 -->
         <div class="absolute top-0 left-0 w-full h-full opacity-10">
@@ -366,41 +423,20 @@
 
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center max-w-4xl mx-auto mb-16 fade-up">
-                <span class="text-emerald-400 font-bold tracking-widest text-sm uppercase mb-3 block">AI PARTNER</span>
+                <span class="text-emerald-400 font-bold tracking-widest text-sm uppercase mb-3 block">SOLUTION</span>
                 <h2 class="text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                    「探す」のではなく、<br>
-                    AIからの<span class="text-brand-green">「提案」</span>を選ぶだけ。
-                </h2>
-                <p class="text-slate-300 leading-relaxed text-lg font-medium">
-                    Rightjobマッチングは、単なる検索ツールではありません。<br>
-                    あなたの代わりに膨大なデータを読み込み、<br>
-                    「この人が決まります」と提案してくれるパートナーです。<br>
-                    <br>
                     あなたは、AIが出した「マッチ度順のリスト」を見て、<br>
                     アプローチするか判断するだけです。
+                </h2>
+                <p class="text-slate-300 leading-relaxed text-lg font-medium">
+                    Rightjob AI マッチングが実現する、<span class="font-bold">最適化されたワークフロー</span>。<br>
+                    AIと人間がそれぞれの強みを活かし、非効率な「探す・入力する」作業から解放します。
                 </p>
             </div>
 
             <div class="flex flex-col md:flex-row items-center gap-12">
-                <!-- Visual (GIF Image in Window - Solution Side) -->
-                <div class="w-full md:w-1/2 fade-up">
-                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden relative">
-                        <!-- Window Header -->
-                        <div class="bg-slate-900/50 backdrop-blur-md h-10 w-full flex items-center px-4 space-x-2 border-b border-slate-600/50 relative z-10">
-                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
-                        </div>
-                        <!-- GIF Container -->
-                        <div class="aspect-video bg-slate-900 relative z-10 flex items-center justify-center overflow-hidden">
-                             <img src="ezgif-3a482422b1de8e48.gif" alt="AIスコアリング デモンストレーション" class="w-full h-full object-contain">
-                            <!-- Overlay gradient to blend edges if needed -->
-                            <div class="absolute inset-0 bg-gradient-to-tr from-slate-900/20 to-transparent pointer-events-none"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3 Pillars -->
+                
+                <!-- LP2の3つの柱を移植 (LP1の3つの柱を流用して見た目を調整) -->
                 <div class="w-full md:w-1/2 space-y-10 fade-up delay-200">
                     <div class="flex gap-5">
                         <div class="flex-shrink-0 w-14 h-14 bg-brand-green rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-emerald-900/30 border border-emerald-500/50">
@@ -436,11 +472,167 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Visual (Image Placeholder for LP2 UI) -->
+                <!-- LP2のUI画像を挿入するスペースとして、プレースホルダー画像を挿入 -->
+                <div class="w-full md:w-1/2 fade-up">
+                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden relative">
+                        <!-- Window Header -->
+                        <div class="bg-slate-900/50 backdrop-blur-md h-10 w-full flex items-center px-4 space-x-2 border-b border-slate-600/50 relative z-10">
+                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        </div>
+                        <!-- UI Image (LP2のHero Sectionと同じUIモックを使用) -->
+                        <div class="p-4 md:p-6 bg-white/90 relative z-10">
+                            <div class="flex flex-col md:flex-row items-stretch gap-4">
+                                
+                                <!-- Left: Input (Target Job) -->
+                                <div class="w-full md:w-1/3 flex flex-col">
+                                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full relative group min-h-[300px]">
+                                        <div class="absolute -top-2 left-3 bg-slate-600 text-white text-[9px] px-2 py-0.5 rounded font-bold">TARGET JOB</div>
+                                        <div class="mt-2 text-center text-slate-400 pt-16">
+                                            求人情報
+                                            <i data-lucide="building-2" class="w-10 h-10 mx-auto mt-4"></i>
+                                            <p class="text-xs mt-2">（AIが処理するターゲット）</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Center: Connector (Desktop) -->
+                                <div class="hidden md:flex flex-col items-center justify-center relative w-8 shrink-0">
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-full border-t-2 border-dashed border-emerald-200"></div>
+                                    </div>
+                                    <div class="w-8 h-8 bg-white border-2 border-brand-green rounded-full flex items-center justify-center z-10 shadow-sm">
+                                        <i data-lucide="arrow-right" class="w-4 h-4 text-brand-green"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Output (Detailed Candidates) -->
+                                <div class="w-full md:flex-1 space-y-3">
+                                    <!-- Candidate 1 (High Match) -->
+                                    <div class="bg-white border-2 border-brand-green/30 rounded-xl p-3 md:p-4 shadow-ui relative">
+                                        <div class="absolute top-0 right-0 bg-brand-light pl-3 pb-2 pt-1 pr-2 rounded-bl-xl">
+                                            <div class="text-right">
+                                                <span class="text-[9px] font-bold text-brand-green block leading-none mb-0.5">マッチ度</span>
+                                                <span class="text-xl font-black text-brand-green leading-none">95<span class="text-xs">点</span></span>
+                                            </div>
+                                        </div>
+                                        <div class="font-bold text-sm text-slate-800 mb-3 pr-16">候補者S氏 (32歳)</div>
+                                        <p class="text-[10px] leading-relaxed text-slate-700 font-medium bg-brand-light/50 p-2 rounded">
+                                            AI分析: SaaS事業立ち上げ経験があり、社風カルチャーも<span class="font-bold text-brand-dark">高合致</span>。
+                                        </p>
+                                    </div>
+
+                                    <!-- Candidate 2 (Medium Match) -->
+                                    <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                                        <div class="flex justify-between items-start">
+                                            <div class="font-bold text-xs text-slate-700">候補者K氏 (29歳)</div>
+                                            <span class="text-lg font-bold text-slate-600">70<span class="text-xs">点</span></span>
+                                        </div>
+                                        <p class="text-[10px] leading-relaxed text-slate-500 mt-1">
+                                            AI分析: キャリア志向が「企画」へシフトしており、開発メインの業務とは<span class="font-bold">ややミスマッチ</span>の可能性。
+                                        </p>
+                                    </div>
+                                    <div class="text-center pt-4 text-sm text-slate-500">（さらに100件以上の候補者をスコアリング済み）</div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-center text-slate-400 text-sm mt-4">AIが膨大なデータベースから瞬時に分析した結果</p>
+                </div>
+                
             </div>
         </div>
     </section>
 
-    <!-- Use Case Section -->
+    <!-- === 3.5 デモセクションの統合 (LP2からそのまま移植) === -->
+    <section id="demo" class="py-16 bg-f7fafc relative">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center max-w-4xl mx-auto mb-12 fade-up">
+                <span class="text-brand-orange font-bold tracking-widest text-sm uppercase mb-3 block">LIVE DEMO</span>
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-6 leading-tight">
+                    AIマッチングの「スピード」と「精度」を<br class="md:hidden">今すぐご体感ください。
+                </h2>
+                <p class="text-slate-700 leading-relaxed text-lg font-medium">
+                    煩雑な作業が<span class="font-bold">数秒</span>で完了する様子を、デモイメージでご確認ください。<br>
+                    これが、貴社の工数94.5%削減の原動力となります。
+                </p>
+            </div>
+
+            <div class="max-w-4xl mx-auto demo-card fade-up">
+                <div class="max-w-4xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200 p-4 md:p-6 relative overflow-hidden min-h-[500px]">
+                    
+                    <!-- UI Header Mock -->
+                    <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-2 px-2">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                        </div>
+                        <div id="status-bar" class="ml-2 px-3 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 font-mono w-48 transition duration-500">
+                            準備完了
+                        </div>
+                    </div>
+
+                    <!-- 機能選択ボタン -->
+                    <div class="flex flex-wrap justify-center gap-3 mb-6">
+                        <button onclick="startDemo('jobToCandidate')" class="px-3 py-2 text-xs font-bold rounded-full bg-brand-green text-white hover:bg-emerald-600 transition shadow-sm">
+                            求人 → 求職者マッチング
+                        </button>
+                        <button onclick="startDemo('candidateToJob')" class="px-3 py-2 text-xs font-bold rounded-full bg-brand-green text-white hover:bg-emerald-600 transition shadow-sm">
+                            求職者 → 求人マッチング
+                        </button>
+                        <button onclick="startDemo('scoutGeneration')" class="px-3 py-2 text-xs font-bold rounded-full bg-brand-orange text-white hover:bg-amber-600 transition shadow-sm">
+                            スカウト文面生成
+                        </button>
+                        <button onclick="startDemo('recommendationGeneration')" class="px-3 py-2 text-xs font-bold rounded-full bg-brand-orange text-white hover:bg-amber-600 transition shadow-sm">
+                            企業推薦文生成
+                        </button>
+                    </div>
+
+                    <!-- デモコンテンツエリア -->
+                    <div class="flex flex-col md:flex-row items-stretch gap-4 relative z-10">
+                        
+                        <!-- 左側: 入力 (TARGET) -->
+                        <div id="input-pane" class="w-full md:w-1/3 flex flex-col transition duration-500 hide-scrollbar overflow-y-auto">
+                            <!-- 初期コンテンツ -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full min-h-[300px] flex items-center justify-center text-slate-400 font-medium">
+                                デモボタンを押して開始
+                            </div>
+                        </div>
+
+                        <!-- 中央: アクション (コネクタ) -->
+                        <div id="connector-pane" class="flex flex-col items-center justify-center relative w-full md:w-8 shrink-0 py-4 md:py-0">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-full border-t-2 border-dashed border-slate-200 md:w-0 md:h-full md:border-t-0 md:border-l-2"></div>
+                            </div>
+                            <div id="connector-icon" class="w-8 h-8 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center z-10 shadow-sm text-slate-400">
+                                <i data-lucide="chevrons-right" class="w-4 h-4 md:rotate-0 rotate-90"></i>
+                            </div>
+                        </div>
+
+                        <!-- 右側: 出力 (RESULT) -->
+                        <div id="output-pane" class="w-full md:flex-1 space-y-3 transition duration-500 hide-scrollbar overflow-y-auto">
+                            <!-- 初期コンテンツ -->
+                            <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm min-h-[300px] flex items-center justify-center text-slate-400 font-medium">
+                                結果待ち...
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- 全体メッセージエリア -->
+                    <div id="result-message" class="mt-6 text-center text-xl font-bold text-slate-700 h-8"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- === /デモセクションの統合 === -->
+
+    <!-- Use Case Section (LP1ベース) -->
     <section id="usecase" class="py-24 bg-emerald-50/50 relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -556,7 +748,7 @@
         </div>
     </section>
 
-    <!-- Proof Section (IMPACT 01 & 02) -->
+    <!-- Proof Section (IMPACT 01 & 02) - LP1ベース -->
     <section id="proof" class="py-24 bg-brand-light/50 relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-30 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -573,14 +765,14 @@
                     </p>
                     <ul class="space-y-3">
                         <li class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-brand-green">
-                                <i data-lucide="trending-up" class="w-5 h-5"></i>
+                            <div class="w-10 h-10 bg-emerald-100 rounded-full p-1 mr-3 flex-shrink-0">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-brand-green"></i>
                             </div>
                             <span class="text-slate-700 font-bold">スカウト返信率 UP</span>
                         </li>
                         <li class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-brand-green">
-                                <i data-lucide="file-check" class="w-5 h-5"></i>
+                            <div class="w-10 h-10 bg-emerald-100 rounded-full p-1 mr-3 flex-shrink-0">
+                                <i data-lucide="file-check" class="w-5 h-5 text-brand-green"></i>
                             </div>
                             <span class="text-slate-700 font-bold">書類通過率 UP</span>
                         </li>
@@ -678,8 +870,8 @@
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="py-24 bg-white relative overflow-hidden">
+    <!-- Features Section (LP1ベース) -->
+    <section id="features" class="py-24 bg-white relative overflow-hidden">
         <div class="container mx-auto px-4 relative z-10">
             <div class="text-center mb-16 fade-up">
                 <span class="text-brand-green font-bold tracking-widest text-sm uppercase mb-3 block">FEATURES</span>
@@ -733,7 +925,7 @@
                     </div>
                 </div>
 
-                <!-- Feature 4: AIレジュメ・パーサー (内容を修正) -->
+                <!-- Feature 4: AIレジュメ・パーサー (変更なし) -->
                 <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-green/50 transition group fade-up delay-150 relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/50 opacity-0 group-hover:opacity-100 transition duration-500"></div>
                     <div class="relative z-10">
@@ -747,7 +939,7 @@
                     </div>
                 </div>
                 
-                <!-- Feature 5 (NEW): 自社データ学習による精度向上 (追加) -->
+                <!-- Feature 5 (NEW): 自社データ学習による精度向上 (変更なし) -->
                 <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-green/50 transition group fade-up delay-200 relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/50 opacity-0 group-hover:opacity-100 transition duration-500"></div>
                     <div class="relative z-10">
@@ -761,7 +953,7 @@
                     </div>
                 </div>
 
-                <!-- Feature 6: 求職者マイページ連携 (位置を移動) -->
+                <!-- Feature 6: 求職者マイページ連携 (変更なし) -->
                 <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-brand-green/50 transition group fade-up delay-250 relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-br from-transparent to-emerald-50/50 opacity-0 group-hover:opacity-100 transition duration-500"></div>
                     <div class="relative z-10">
@@ -778,7 +970,7 @@
         </div>
     </section>
 
-    <!-- Support Section -->
+    <!-- Support Section (LP1ベース) -->
     <section id="support" class="py-24 bg-emerald-50 relative overflow-hidden">
         <!-- Background decoration -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 -mr-48 -mt-48 pointer-events-none"></div>
@@ -832,7 +1024,7 @@
         </div>
     </section>
 
-    <!-- Pricing Section (Modified) -->
+    <!-- Pricing Section (LP1ベース) -->
     <section id="price" class="py-24 bg-white relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -885,9 +1077,9 @@
                         </li>
                     </ul>
 
-                    <!-- 料金表・詳細ボタン -> 資料請求URL -->
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfzY0ihL6N7baFQWyXoTOXJy2tYRZScyGrgQTFL1WLrT2Erdg/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" class="block w-full py-5 bg-brand-orange text-white font-bold text-lg rounded-2xl hover:bg-amber-600 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                        料金表・詳細を見る
+                    <!-- 料金表・詳細ボタン -> デモ予約ボタンへ変更 -->
+                    <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="block w-full py-5 bg-brand-orange text-white font-black text-xl rounded-2xl hover:bg-amber-600 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        無料デモを申し込む (30分で工数削減効果を試算)
                     </a>
                 </div>
             </div>
@@ -912,7 +1104,7 @@
         </div>
     </section>
 
-    <!-- FAQ Section (Modified) -->
+    <!-- FAQ Section (LP1ベース) -->
     <section id="faq" class="py-24 bg-white relative">
         <div class="absolute inset-0 spreadsheet-grid opacity-10 pointer-events-none"></div>
         <div class="container mx-auto px-4 relative z-10">
@@ -947,7 +1139,7 @@
         </div>
     </section>
 
-    <!-- CTA / Closing -->
+    <!-- CTA / Closing (LP1ベース) -->
     <section id="contact" class="py-32 bg-brand-dark text-white text-center relative overflow-hidden">
         <!-- Background decoration -->
         <div class="absolute top-0 left-0 w-full h-full opacity-20">
@@ -967,7 +1159,7 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-6 justify-center">
                 <!-- デモ予約ボタン -->
-                <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-10 py-5 text-xl font-bold text-white bg-brand-green rounded-full hover:bg-emerald-500 transition shadow-lg hover:shadow-emerald-500/50 transform hover:-translate-y-1">
+                <a href="https://calendar.app.google/nR8TC7g9fAfsrTwA8" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-10 py-5 text-xl font-black text-white bg-brand-orange rounded-full hover:bg-amber-500 transition shadow-lg hover:shadow-amber-500/50 transform hover:-translate-y-1">
                     無料デモを予約する (30分)
                     <i data-lucide="arrow-right" class="ml-3 w-6 h-6"></i>
                 </a>
@@ -981,12 +1173,12 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Footer (LP1ベース) -->
     <footer class="bg-slate-950 text-slate-500 py-12 text-sm border-t border-slate-900">
         <div class="container mx-auto px-4 text-center">
             <div class="flex items-center justify-center gap-2 mb-6">
                 <div class="w-8 h-8 bg-brand-green rounded flex items-center justify-center text-white font-bold text-xl shadow-sm">R</div>
-                <span class="font-bold text-2xl tracking-tight text-slate-300">Rightjobマッチング</span>
+                <span class="font-bold text-2xl tracking-tight text-slate-300">Rightjob AI マッチング</span>
             </div>
             <!-- 運営会社リンクを追加 -->
             <div class="mb-6">
@@ -998,13 +1190,287 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Scripts (LP2のデモロジックを統合) -->
     <script>
-        // Initialize Icons
-        lucide.createIcons();
+        // --- デモのJavaScriptロジックを統合 ---
+        const DOM = {
+            statusBar: document.getElementById('status-bar'),
+            inputPane: document.getElementById('input-pane'),
+            connectorIcon: document.getElementById('connector-icon'),
+            outputPane: document.getElementById('output-pane'),
+            resultMessage: document.getElementById('result-message'),
+        };
 
-        // Scroll Animation
+        const generateMockInput = (type) => {
+            if (type === 'job') {
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full">
+                        <div class="font-bold text-sm text-brand-dark leading-tight mb-3 border-b pb-2">
+                            <i data-lucide="file-text" class="w-4 h-4 inline mr-1 text-brand-green"></i> 
+                            求人情報: SaaS事業責任者
+                        </div>
+                        <div class="text-xs text-slate-700 space-y-1">
+                            <p class="font-bold">必須要件:</p>
+                            <ul class="list-disc list-inside ml-2">
+                                <li>SaaS B2B営業経験 5年以上</li>
+                                <li>マネジメント経験（5名以上）</li>
+                            </ul>
+                            <p class="font-bold pt-2">求める人物像:</p>
+                            <ul class="list-disc list-inside ml-2">
+                                <li>データドリブンな意思決定能力</li>
+                                <li>新規事業の立ち上げ経験</li>
+                            </ul>
+                            <p class="mt-4 text-xs text-slate-500">※ 社内DBに登録済みの求人情報を使用</p>
+                        </div>
+                    </div>
+                `;
+            }
+            if (type === 'candidate') {
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full">
+                        <div class="font-bold text-sm text-brand-dark leading-tight mb-3 border-b pb-2">
+                            <i data-lucide="user" class="w-4 h-4 inline mr-1 text-brand-green"></i> 
+                            求職者情報: 候補者A氏 (35歳)
+                        </div>
+                        <div class="text-xs text-slate-700 space-y-1">
+                            <p class="font-bold">最終職歴:</p>
+                            <ul class="list-disc list-inside ml-2">
+                                <li>ITコンサルタント (8年)</li>
+                                <li>新規事業開発リーダー (3年)</li>
+                            </ul>
+                            <p class="font-bold pt-2">志向性 (面談メモより):</p>
+                            <ul class="list-disc list-inside ml-2">
+                                <li>成長企業での裁量権</li>
+                                <li>ビジネス全体を俯瞰する役割</li>
+                            </ul>
+                            <p class="mt-4 text-xs text-slate-500">※ 社内DBに登録済みの求職者情報を使用</p>
+                        </div>
+                    </div>
+                `;
+            }
+            if (type === 'external_resume') {
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full">
+                        <div class="font-bold text-sm text-brand-dark leading-tight mb-3 border-b pb-2">
+                            <i data-lucide="file-input" class="w-4 h-4 inline mr-1 text-brand-orange"></i> 
+                            外部DBレジュメ情報
+                        </div>
+                        <div class="text-xs text-slate-700 space-y-1">
+                            <textarea id="resume-text" class="w-full h-48 p-2 text-xs border rounded-md" placeholder="外部DBの経歴をコピー＆ペースト... (例：現職: 〇〇部長、得意領域: 組織構築、年収: 1200万円など)">現職: 人事部部長 (5年)
+得意領域: 組織構築、M&A後のPMI
+スキル: 英語ビジネスレベル
+志向性: 安定よりも挑戦、経営層直下を希望</textarea>
+                            <button onclick="simulateInput()" class="w-full py-1 bg-brand-orange text-white text-xs rounded-full mt-2 hover:bg-amber-600">
+                                情報をAIアシスタントに入力
+                            </button>
+                            <p class="mt-2 text-xs text-slate-500">※ 経歴情報を入力し、AIによる分析をシミュレート</p>
+                        </div>
+                    </div>
+                `;
+            }
+            if (type === 'recommendation_input') {
+                return `
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full">
+                        <div class="font-bold text-sm text-brand-dark leading-tight mb-3 border-b pb-2">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 inline mr-1 text-brand-orange"></i> 
+                            推薦文作成の入力情報
+                        </div>
+                        <div class="text-xs text-slate-700 space-y-1">
+                            <p class="font-bold">求職者:</p>
+                            <p class="text-xs ml-2">候補者B氏 (30歳, 営業部長経験あり)</p>
+                            <p class="font-bold pt-2">求人:</p>
+                            <p class="text-xs ml-2">A社 - 営業組織立ち上げマネージャー</p>
+                            <p class="font-bold pt-2">面談ハイライト:</p>
+                            <p class="text-xs ml-2">「泥臭い現場改善が得意。トップダウンの組織には興味なし。」</p>
+                            <p class="mt-4 text-xs text-slate-500">※ 企業と候補者情報、面談メモをAIが参照</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return `<div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full min-h-[300px] flex items-center justify-center text-slate-400 font-medium">デモボタンを押して開始</div>`;
+        };
+
+        const generateMockOutput = (type) => {
+            if (type === 'jobToCandidate') {
+                return `
+                    <div class="bg-white border-2 border-brand-green/30 rounded-xl p-4 shadow-ui relative">
+                        <div class="absolute top-0 right-0 bg-brand-light pl-3 pb-2 pt-1 pr-2 rounded-bl-xl border-l border-b border-brand-green/20">
+                            <span class="text-xl font-black text-brand-green leading-none">96<span class="text-xs">点</span></span>
+                        </div>
+                        <div class="font-bold text-sm text-slate-800 mb-3 pr-16">求職者: 候補者A氏 (35歳)</div>
+                        <div class="bg-brand-light/50 rounded-lg p-2.5 border border-brand-green/10">
+                            <p class="text-[10px] leading-relaxed text-slate-700 font-medium">
+                                <span class="font-bold text-brand-dark">新規事業開発の経験</span>が求人要件に高合致。面談メモの「ビジネス全体を俯瞰したい」志向が、事業責任者の役割と一致します。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                        <div class="font-bold text-xs text-slate-700 mb-2">求職者: 候補者D氏 (38歳) - マッチ度 85点</div>
+                        <p class="text-[10px] leading-relaxed text-slate-500">
+                            スキルは合致しますが、志向性が「安定」に寄っており、急成長フェーズの企業カルチャーとは<span class="font-bold">ややミスマッチ</span>の可能性。
+                        </p>
+                    </div>
+                    <div class="text-center pt-4 text-sm text-slate-500">（さらに100件以上の候補者をスコアリング済み）</div>
+                `;
+            }
+            if (type === 'candidateToJob') {
+                return `
+                    <div class="bg-white border-2 border-brand-green/30 rounded-xl p-4 shadow-ui relative">
+                        <div class="absolute top-0 right-0 bg-brand-light pl-3 pb-2 pt-1 pr-2 rounded-bl-xl border-l border-b border-brand-green/20">
+                            <span class="text-xl font-black text-brand-green leading-none">92<span class="text-xs">点</span></span>
+                        </div>
+                        <div class="font-bold text-sm text-slate-800 mb-3 pr-16">求人: 株式会社X - 経営企画</div>
+                        <div class="bg-brand-light/50 rounded-lg p-2.5 border border-brand-green/10">
+                            <p class="text-[10px] leading-relaxed text-slate-700 font-medium">
+                                候補者A氏の<span class="font-bold text-brand-dark">コンサル経験と事業開発の経験</span>が、この求人の「ビジネス全体を俯瞰する」という要件に高合致しています。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                        <div class="font-bold text-xs text-slate-700 mb-2">求人: 株式会社Y - ITサービス開発部長 - マッチ度 78点</div>
+                        <p class="text-[10px] leading-relaxed text-slate-500">
+                            スキルは合致しますが、求人側が求めるのは現場の技術力。候補者の志向する「ビジネス全体」とは<span class="font-bold">ミスマッチ</span>の傾向。
+                        </p>
+                    </div>
+                    <div class="text-center pt-4 text-sm text-slate-500">（過去の膨大な求人情報からスコアリング）</div>
+                `;
+            }
+            if (type === 'scoutGeneration') {
+                // スカウト文面の改行を最適化 (インデント修正済み)
+                return `
+                    <div class="bg-white border-2 border-brand-orange/30 rounded-xl p-4 shadow-ui relative">
+                        <div class="font-bold text-sm text-slate-800 mb-3">AI生成スカウト文面 (ドラフト)</div>
+                        <div class="bg-orange-50/50 rounded-lg p-2.5 border border-brand-orange/10">
+                            <p class="text-[10px] leading-relaxed text-slate-700 whitespace-pre-wrap-jp">【AIによる個別最適化】
+〇〇様へ。貴殿の「組織構築、M&A後のPMI経験」は、現在弊社が担当するA社の「急成長に伴う管理部門の再構築」という重大課題に直結します。
+貴殿の「安定よりも挑戦」という志向性から、0→1フェーズを重視するA社の経営層直下のポジションは、最高のキャリアパスになると確信しております。
+                                
+<span class="block mt-2 text-[9px] text-brand-orange font-bold">⇒ 工数95%削減 & 返信率UPに貢献</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                        <div class="font-bold text-xs text-slate-700 mb-2">AIによる行動分析</div>
+                        <p class="text-[10px] leading-relaxed text-slate-500">
+                            貴殿は過去に「成長性」の高い求人を優先的に閲覧しています。この求人を特に高く推薦します。
+                        </p>
+                    </div>
+                `;
+            }
+            if (type === 'recommendationGeneration') {
+                // 推薦文の改行を最適化 (インデント修正済み)
+                return `
+                    <div class="bg-white border-2 border-brand-orange/30 rounded-xl p-4 shadow-ui relative">
+                        <div class="font-bold text-sm text-slate-800 mb-3">AI生成 企業向け推薦文 (ドラフト)</div>
+                        <div class="bg-orange-50/50 rounded-lg p-2.5 border border-brand-orange/10">
+                            <p class="text-[10px] leading-relaxed text-slate-700 whitespace-pre-wrap-jp">【推薦ポイント】
+候補者B氏は、前職にて売上20%増を実現した営業部門のリーダーを務めており、実務的な<span class="font-bold">「現場改善力」</span>に特化しています。
+特に、面談での「泥臭い現場改善が得意」という発言は、貴社が求める<span class="font-bold">組織立ち上げフェーズ</span>に極めて重要であると判断します。単なる管理職ではなく、現場レベルで成果を出せる人物です。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                        <div class="font-bold text-xs text-slate-700 mb-2">AIによるリスク分析</div>
+                        <p class="text-[10px] leading-relaxed text-slate-500">
+                            候補者はトップダウン組織を避ける志向があるため、貴社への提案時は<span class="font-bold text-red-600">裁量権の大きさを強調</span>することを推奨します。
+                        </p>
+                    </div>
+                `;
+            }
+            return `<div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full min-h-[300px] flex items-center justify-center text-slate-400 font-medium">デモボタンを押して開始</div>`;
+        };
+
+        const updateUI = (state, content) => {
+            DOM.inputPane.innerHTML = content.input;
+            DOM.outputPane.innerHTML = content.output;
+            DOM.connectorIcon.innerHTML = `<i data-lucide="${state === 'processing' ? 'loader-2' : 'chevrons-right'}" class="w-4 h-4 md:rotate-0 rotate-90"></i>`;
+            
+            if (state === 'ready') {
+                DOM.statusBar.textContent = '準備完了';
+                DOM.statusBar.classList.remove('ai-processing', 'bg-brand-green/20', 'text-brand-green');
+                DOM.statusBar.classList.add('bg-slate-100', 'text-slate-500');
+                DOM.connectorIcon.classList.remove('arrow-pulse', 'border-brand-green', 'text-brand-green');
+                DOM.connectorIcon.classList.add('border-slate-300', 'text-slate-400');
+            } else if (state === 'processing') {
+                DOM.statusBar.textContent = 'AI処理中...';
+                DOM.statusBar.classList.add('ai-processing', 'bg-brand-green/20', 'text-brand-green', 'font-bold');
+                DOM.statusBar.classList.remove('bg-slate-100', 'text-slate-500');
+                DOM.connectorIcon.classList.add('arrow-pulse', 'border-brand-green', 'text-brand-green');
+                DOM.connectorIcon.classList.remove('border-slate-300', 'text-slate-400');
+                DOM.resultMessage.textContent = '';
+            } else if (state === 'done') {
+                DOM.statusBar.textContent = '処理完了！';
+                DOM.statusBar.classList.remove('ai-processing', 'bg-slate-100', 'text-slate-500');
+                DOM.statusBar.classList.add('bg-brand-green/20', 'text-brand-green', 'font-bold');
+                DOM.connectorIcon.classList.remove('arrow-pulse', 'border-slate-300', 'text-slate-400');
+                DOM.connectorIcon.classList.add('border-brand-green', 'text-brand-green');
+            }
+            lucide.createIcons(); // アイコンを再描画
+        };
+
+        const simulateInput = () => {
+            // 外部レジュメ入力ボタンが押されたときの特別な処理
+            startDemo('scoutGeneration');
+        };
+
+        const startDemo = (demoType) => {
+            let inputType, outputType, message;
+
+            switch (demoType) {
+                case 'jobToCandidate':
+                    inputType = 'job';
+                    outputType = 'jobToCandidate';
+                    message = 'マッチ度の高い求職者が12件見つかりました';
+                    break;
+                case 'candidateToJob':
+                    inputType = 'candidate';
+                    outputType = 'candidateToJob';
+                    message = 'マッチ度の高い求人が8件見つかりました';
+                    break;
+                case 'scoutGeneration':
+                    inputType = 'external_resume';
+                    outputType = 'scoutGeneration';
+                    message = 'パーソナルなスカウト文面が生成されました';
+                    break;
+                case 'recommendationGeneration':
+                    inputType = 'recommendation_input';
+                    outputType = 'recommendationGeneration';
+                    message = '企業への最適な推薦文が生成されました';
+                    break;
+                default:
+                    return;
+            }
+
+            // ステップ 1: 準備完了状態に戻す
+            updateUI('ready', {
+                input: generateMockInput(inputType),
+                output: `<div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm min-h-[300px] flex items-center justify-center text-slate-400 font-medium">結果待ち...</div>`
+            });
+            DOM.resultMessage.textContent = '処理を開始します...';
+
+            // ステップ 2: 処理中状態
+            setTimeout(() => {
+                updateUI('processing', {
+                    input: generateMockInput(inputType),
+                    output: `<div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm min-h-[300px] flex items-center justify-center text-slate-400 font-medium text-lg ai-processing">AI処理中...</div>`
+                });
+            }, 500);
+
+            // ステップ 3: 結果表示
+            setTimeout(() => {
+                updateUI('done', {
+                    input: generateMockInput(inputType),
+                    output: generateMockOutput(outputType)
+                });
+                DOM.resultMessage.textContent = message;
+            }, 3000); // 3秒間の処理時間
+        };
+        
+        // Initialize Icons and Scroll Animation
         document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // Scroll Animation Logic
             const observerOptions = {
                 root: null,
                 rootMargin: '0px',
@@ -1023,6 +1489,13 @@
             document.querySelectorAll('.fade-up').forEach(el => {
                 observer.observe(el);
             });
+            
+            // デモの初期状態設定
+            updateUI('ready', {
+                input: `<div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm h-full min-h-[300px] flex items-center justify-center text-slate-400 font-medium">左上のボタンでデモを選択してください</div>`,
+                output: `<div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm min-h-[300px] flex items-center justify-center text-slate-400 font-medium">結果待ち...</div>`
+            });
+            DOM.resultMessage.textContent = '';
         });
     </script>
 </body>
