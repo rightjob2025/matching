@@ -7958,71 +7958,13 @@
                 return;
             }
 
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: async function (results) {
-                    const jobs = results.data;
-                    if (jobs.length === 0) {
-                        alert('データが含まれていません');
-                        return;
-                    }
+            // 共通のCSV処理フロー（マッピングモーダル表示）へ委譲
+            processCSVFile(file, 'jobs');
 
-                    // バリデーション
-                    const errors = [];
-                    const validJobs = [];
-
-                    jobs.forEach((job, index) => {
-                        const rowNum = index + 2;
-                        if (!job.title || !job.company || !job.salary_min || !job.salary_max || !job.location) {
-                            errors.push(`${rowNum}行目: 必須項目(title, company, salary_min, salary_max, location)が不足しています`);
-                            return;
-                        }
-                        // 数値チェック
-                        if (isNaN(job.salary_min) || isNaN(job.salary_max)) {
-                            errors.push(`${rowNum}行目: 年収は数値で入力してください`);
-                            return;
-                        }
-                        validJobs.push({
-                            ...job,
-                            organization_id: currentUser.organization_id,
-                            created_by: currentUser.id,
-                            salary_min: parseInt(job.salary_min),
-                            salary_max: parseInt(job.salary_max)
-                        });
-                    });
-
-                    if (errors.length > 0) {
-                        alert('以下のエラーがあります:\n' + errors.slice(0, 10).join('\n') + (errors.length > 10 ? '\n...' : ''));
-                        return;
-                    }
-
-                    if (!confirm(`${validJobs.length}件のデータをインポートしますか？`)) return;
-
-                    showLoading('CSVデータをインポート中...');
-                    try {
-                        const { error } = await supabase
-                            .from('jobs')
-                            .insert(validJobs);
-
-                        if (error) throw error;
-
-                        alert('インポートが完了しました');
-                        closeJobCsvImportModal();
-                        loadAdminJobs();
-
-                    } catch (error) {
-                        console.error('Import error:', error);
-                        alert('インポート中にエラーが発生しました: ' + error.message);
-                    } finally {
-                        hideLoading();
-                    }
-                },
-                error: function (error) {
-                    console.error('CSV parse error:', error);
-                    alert('CSVの解析に失敗しました');
-                }
-            });
+            // シンプルなインポートモーダルは閉じる
+            if (typeof closeJobCsvImportModal === 'function') {
+                closeJobCsvImportModal();
+            }
         }
 
         window.executeCSVImport = async function () {
