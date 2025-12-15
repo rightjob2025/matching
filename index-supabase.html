@@ -13751,7 +13751,7 @@
             }
         }
 
-        async function loadMasterData() {
+        window.loadMasterData = async function () {
             // 権限チェック
             if (!currentUser || !['super_admin', 'org_admin', 'admin'].includes(currentUser.role)) {
                 alert('権限がありません');
