@@ -15250,10 +15250,10 @@
 
                                 // 求職者検索メニューの制御（求職者には非表示）
                                 if (currentUser.role === 'candidate') {
-                                    $('#nav-candidate-search').hide();
+                                    $('#nav-candidate-search').addClass('hidden');
                                     $('#profile-search-btn').removeClass('hidden'); // プロフィール検索ボタン表示
                                 } else {
-                                    $('#nav-candidate-search').show();
+                                    $('#nav-candidate-search').removeClass('hidden');
                                     $('#profile-search-btn').addClass('hidden');
                                 }
 
