@@ -3645,7 +3645,13 @@
 
                 // Select2の適用・再適用（検索フォーム用）
                 // closeOnSelect: false により、複数選択時に閉じなくする
-                $('#search-job-category, #search-industry-category, #search-employment-type, #search-prefecture').select2({
+                const searchSelects = $('#search-job-category, #search-industry-category, #search-employment-type, #search-prefecture');
+                searchSelects.each(function () {
+                    if ($(this).hasClass("select2-hidden-accessible")) {
+                        $(this).select2('destroy');
+                    }
+                });
+                searchSelects.select2({
                     closeOnSelect: false,
                     width: '100%',
                     allowClear: true,
@@ -4447,6 +4453,9 @@
 
                 // 都道府県
                 const prefSelect = $('#search-prefecture');
+                if (prefSelect.hasClass("select2-hidden-accessible")) {
+                    prefSelect.select2('destroy');
+                }
                 prefSelect.empty();
                 window.prefectures.forEach(pref => {
                     prefSelect.append(`<option value="${pref}">${pref}</option>`);
@@ -4482,6 +4491,9 @@
 
                 // 雇用形態
                 const empSelect = $('#search-employment-type');
+                if (empSelect.hasClass("select2-hidden-accessible")) {
+                    empSelect.select2('destroy');
+                }
                 empSelect.empty();
                 validMasters.filter(m => m.type === 'employment_type').forEach(m => {
                     empSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -4495,6 +4507,9 @@
 
                 // 職種カテゴリ
                 const catSelect = $('#search-job-category');
+                if (catSelect.hasClass("select2-hidden-accessible")) {
+                    catSelect.select2('destroy');
+                }
                 catSelect.empty();
                 validMasters.filter(m => m.type === 'job_category').forEach(m => {
                     catSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -4508,6 +4523,9 @@
 
                 // 業界カテゴリ
                 const indSelect = $('#search-industry-category');
+                if (indSelect.hasClass("select2-hidden-accessible")) {
+                    indSelect.select2('destroy');
+                }
                 indSelect.empty();
                 validMasters.filter(m => m.type === 'industry_category').forEach(m => {
                     indSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -7321,6 +7339,9 @@
 
             // 都道府県
             const prefSelect = $('#c-search-prefecture');
+            if (prefSelect.hasClass("select2-hidden-accessible")) {
+                prefSelect.select2('destroy');
+            }
             prefSelect.empty();
             window.prefectures.forEach(pref => {
                 prefSelect.append(`<option value="${pref}">${pref}</option>`);
@@ -7342,6 +7363,9 @@
 
             // 雇用形態
             const empSelect = $('#c-search-employment-type');
+            if (empSelect.hasClass("select2-hidden-accessible")) {
+                empSelect.select2('destroy');
+            }
             empSelect.empty();
             validMasters.filter(m => m.type === 'employment_type').forEach(m => {
                 empSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -7350,6 +7374,9 @@
 
             // 職種
             const catSelect = $('#c-search-job-category');
+            if (catSelect.hasClass("select2-hidden-accessible")) {
+                catSelect.select2('destroy');
+            }
             catSelect.empty();
             validMasters.filter(m => m.type === 'job_category').forEach(m => {
                 catSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -7358,6 +7385,9 @@
 
             // 業界
             const indSelect = $('#c-search-industry-category');
+            if (indSelect.hasClass("select2-hidden-accessible")) {
+                indSelect.select2('destroy');
+            }
             indSelect.empty();
             validMasters.filter(m => m.type === 'industry_category').forEach(m => {
                 indSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -7370,6 +7400,9 @@
 
             // 職種 (t-job-category)
             const tjCatSelect = $('#t-job-category');
+            if (tjCatSelect.hasClass("select2-hidden-accessible")) {
+                tjCatSelect.select2('destroy');
+            }
             tjCatSelect.empty();
             validMasters.filter(m => m.type === 'job_category').forEach(m => {
                 tjCatSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -7378,6 +7411,9 @@
 
             // 業界 (t-industry)
             const tjIndSelect = $('#t-industry');
+            if (tjIndSelect.hasClass("select2-hidden-accessible")) {
+                tjIndSelect.select2('destroy');
+            }
             tjIndSelect.empty();
             validMasters.filter(m => m.type === 'industry_category').forEach(m => {
                 tjIndSelect.append(`<option value="${m.label}">${m.label}</option>`);
@@ -7386,6 +7422,9 @@
 
             // 勤務地 (t-location) - 都道府県
             const tjLocSelect = $('#t-location');
+            if (tjLocSelect.hasClass("select2-hidden-accessible")) {
+                tjLocSelect.select2('destroy');
+            }
             tjLocSelect.empty();
             window.prefectures.forEach(pref => {
                 tjLocSelect.append(`<option value="${pref}">${pref}</option>`);
@@ -9678,6 +9717,11 @@
                 });
 
                 // Select2の初期化（オプション設定後に実行）
+                $('.select2').each(function () {
+                    if ($(this).hasClass("select2-hidden-accessible")) {
+                        $(this).select2('destroy');
+                    }
+                });
                 $('.select2').select2({
                     language: "ja",
                     width: 'resolve'
