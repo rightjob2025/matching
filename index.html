@@ -718,7 +718,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWbhMbIBGjRGLoJbSrxvtEA1BHyxG3ofNtq3HyPFlkWfntDhmxYAAFPcdfbItfy4d5/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwiBBgK9hqeAqWyA3JMCKHNtBkCIYL70tpQoCnMS1w89p9oGs2dcUjF7gabgK_UV9kU/exec";
 
             const skillDetails = {
                 '課題解決力': { iconClass: 'problem', description: '見つけた課題に対して、適切な解決策を提示できる力' },
@@ -1567,7 +1567,17 @@
                         const applyButton = isManager ? applyButtonManager : applyButtonUser;
 
 
-                        const reasonHtml = rec.recommendation_reason ? `<p class="text-xs font-normal text-slate-500 mt-1 pl-1 border-l-2 border-slate-200">${rec.recommendation_reason}</p>` : '';
+                        const reasonHtml = rec.recommendation_reason
+                            ? `<div class="mt-2 mb-1 p-2 bg-blue-50 border border-blue-100 rounded text-xs text-slate-700">
+                                 <div class="font-bold text-blue-700 mb-1 flex items-center">
+                                   <span class="w-1 h-4 bg-blue-500 rounded mr-2"></span>
+                                   スキルマッチ
+                                 </div>
+                                 <div class="leading-relaxed pl-3">
+                                   ${rec.recommendation_reason.replace(/\n/g, '<br>')}
+                                 </div>
+                               </div>`
+                            : '';
                         const keywords = [rec.user_name, rec.title, rec.company].join(' ').toLowerCase();
                         const jobIdDisplay = String(rec.job_id).startsWith('http') ? `<a href="${rec.job_id}" target="_blank" class="text-indigo-600 hover:underline">リンクを開く <i class="fas fa-external-link-alt text-xs"></i></a>` : (rec.job_id || 'N/A');
 
@@ -1608,8 +1618,8 @@
                                         ${rec.title} ${jobExpBadge} ${industryExpBadge}
                                     </div>
 
-                                    ${reasonHtml}
                                     ${shortDescHtml}
+                                    ${reasonHtml}
 
                                     ${(() => {
                                 if (!rec.culture_rating && !rec.culture_reason) return '';
@@ -4394,11 +4404,19 @@
                         if (targetUserId === null) {
                             targetUserId = el.data('user-id');
                         }
+
+                        // ★ 全データから詳細情報を取得 (社風マッチ含む)
+                        const recId = el.data('rec-id');
+                        const rec = ALL_RECOMMENDATIONS.find(r => r.recommendation_id === recId) || {};
+
                         selectedJobs.push({
                             job_id: el.data('job-id'),
                             title: el.data('title'),
                             company: el.data('company'),
-                            reason: decodeURIComponent(el.data('reason') || '担当者からのおすすめです。')
+                            reason: decodeURIComponent(el.data('reason') || '担当者からのおすすめです。'),
+                            culture_rating: rec.culture_rating,
+                            culture_reason: rec.culture_reason,
+                            ai_score: rec.ai_score
                         });
                     });
 
@@ -4423,9 +4441,13 @@
 
                     // モーダルで確認
                     let listHtml = selectedJobs.map((job, index) => {
+                        const cultureHtml = job.culture_rating ? `<p class="text-xs text-orange-600 mt-1"><b>社風マッチ: ${job.culture_rating}</b> ${job.culture_reason || ''}</p>` : '';
+                        const scoreHtml = job.ai_score ? `<span class="text-xs font-bold text-blue-600 ml-2">マッチ度: ${job.ai_score}点</span>` : '';
+
                         return `<li class="mb-4 border-b pb-2">
-                                                <p><b>${job.title}</b> (${job.company})</p>
+                                                <p><b>${job.title}</b> (${job.company}) ${scoreHtml}</p>
                                                 <p class="text-sm text-slate-600 mt-1">${job.reason}</p>
+                                                ${cultureHtml}
                                             </li>`;
                     }).join('');
 
