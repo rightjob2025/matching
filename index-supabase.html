@@ -271,7 +271,7 @@
             font-size: 12px;
         }
 
-        /* Sidebar Styles (Override if needed) */
+        /* Sidebar Styles (Mobile Optimized) */
         .sidebar {
             position: fixed;
             left: 0;
@@ -280,28 +280,50 @@
             height: 100vh;
             background: white;
             border-right: 1px solid #e5e7eb;
-            z-index: 40;
+            z-index: 50;
+            transform: translateX(-100%);
+            /* Default hidden */
+            transition: transform 0.3s ease-in-out;
         }
 
         .main-content {
-            margin-left: var(--sidebar-width);
+            margin-left: 0;
+            /* Default no margin */
             min-height: 100vh;
+            transition: margin-left 0.3s;
         }
 
-        /* Mobile */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 45;
+            display: none;
+        }
 
-            .sidebar.open {
-                transform: translateX(0);
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Desktop Override */
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0) !important;
             }
 
             .main-content {
-                margin-left: 0;
+                margin-left: var(--sidebar-width) !important;
             }
+
+            .sidebar-overlay {
+                display: none !important;
+            }
+        }
+
+        /* Open State (Mobile) */
+        .sidebar.open {
+            transform: translateX(0);
         }
 
         /* Animations */
@@ -788,6 +810,8 @@
                 </button>
             </div>
         </aside>
+        <!-- Sidebar Overlay -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -15249,9 +15273,28 @@
             })
 
             // モバイルメニュー
-            $('#mobile-menu-btn').on('click', function () {
-                $('.sidebar').toggleClass('open')
-            })
+            // モバイルメニュー制御
+            function toggleSidebar() {
+                $('.sidebar').toggleClass('open');
+                $('#sidebar-overlay').toggleClass('active');
+            }
+
+            $('#mobile-menu-btn').on('click', function (e) {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+
+            $('#sidebar-overlay').on('click', function () {
+                toggleSidebar();
+            });
+
+            // メニュー項目クリック時に閉じる（モバイルのみ）
+            $('.nav-link').on('click', function () {
+                if ($(window).width() < 768) {
+                    $('.sidebar').removeClass('open');
+                    $('#sidebar-overlay').removeClass('active');
+                }
+            });
 
             // URLパラメータから招待トークンを取得
             const urlParams = new URLSearchParams(window.location.search)
