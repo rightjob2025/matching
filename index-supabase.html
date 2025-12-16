@@ -3615,14 +3615,14 @@
                 );
 
                 // 業界マスタ
-                masterIndustries = validMasters
+                masterIndustries = [...new Set(validMasters
                     .filter(m => m.type === 'industry_category')
-                    .map(m => m.label);
+                    .map(m => m.label))];
 
                 // 職種マスタ
-                masterJobCategories = validMasters
+                masterJobCategories = [...new Set(validMasters
                     .filter(m => m.type === 'job_category')
-                    .map(m => m.label);
+                    .map(m => m.label))];
 
                 // 進捗ステータスマスタ
                 masterSelectionStatuses = validMasters
@@ -4495,8 +4495,9 @@
                     empSelect.select2('destroy');
                 }
                 empSelect.empty();
-                validMasters.filter(m => m.type === 'employment_type').forEach(m => {
-                    empSelect.append(`<option value="${m.label}">${m.label}</option>`);
+                const uniqueEmps = [...new Set(validMasters.filter(m => m.type === 'employment_type').map(m => m.label))];
+                uniqueEmps.forEach(label => {
+                    empSelect.append(`<option value="${label}">${label}</option>`);
                 });
                 empSelect.select2({
                     placeholder: "雇用形態（全て）",
@@ -4511,8 +4512,9 @@
                     catSelect.select2('destroy');
                 }
                 catSelect.empty();
-                validMasters.filter(m => m.type === 'job_category').forEach(m => {
-                    catSelect.append(`<option value="${m.label}">${m.label}</option>`);
+                const uniqueCats = [...new Set(validMasters.filter(m => m.type === 'job_category').map(m => m.label))];
+                uniqueCats.forEach(label => {
+                    catSelect.append(`<option value="${label}">${label}</option>`);
                 });
                 catSelect.select2({
                     placeholder: "職種カテゴリ（全て）",
@@ -4527,8 +4529,9 @@
                     indSelect.select2('destroy');
                 }
                 indSelect.empty();
-                validMasters.filter(m => m.type === 'industry_category').forEach(m => {
-                    indSelect.append(`<option value="${m.label}">${m.label}</option>`);
+                const uniqueInds = [...new Set(validMasters.filter(m => m.type === 'industry_category').map(m => m.label))];
+                uniqueInds.forEach(label => {
+                    indSelect.append(`<option value="${label}">${label}</option>`);
                 });
                 indSelect.select2({
                     placeholder: "業界カテゴリ（全て）",
@@ -7367,8 +7370,9 @@
                 empSelect.select2('destroy');
             }
             empSelect.empty();
-            validMasters.filter(m => m.type === 'employment_type').forEach(m => {
-                empSelect.append(`<option value="${m.label}">${m.label}</option>`);
+            const uniqueEmps = [...new Set(validMasters.filter(m => m.type === 'employment_type').map(m => m.label))];
+            uniqueEmps.forEach(label => {
+                empSelect.append(`<option value="${label}">${label}</option>`);
             });
             empSelect.select2({ placeholder: "雇用形態", allowClear: true, width: '100%' });
 
@@ -7378,8 +7382,9 @@
                 catSelect.select2('destroy');
             }
             catSelect.empty();
-            validMasters.filter(m => m.type === 'job_category').forEach(m => {
-                catSelect.append(`<option value="${m.label}">${m.label}</option>`);
+            const uniqueCats = [...new Set(validMasters.filter(m => m.type === 'job_category').map(m => m.label))];
+            uniqueCats.forEach(label => {
+                catSelect.append(`<option value="${label}">${label}</option>`);
             });
             catSelect.select2({ placeholder: "職種カテゴリ", allowClear: true, width: '100%' });
 
@@ -7389,8 +7394,9 @@
                 indSelect.select2('destroy');
             }
             indSelect.empty();
-            validMasters.filter(m => m.type === 'industry_category').forEach(m => {
-                indSelect.append(`<option value="${m.label}">${m.label}</option>`);
+            const uniqueInds = [...new Set(validMasters.filter(m => m.type === 'industry_category').map(m => m.label))];
+            uniqueInds.forEach(label => {
+                indSelect.append(`<option value="${label}">${label}</option>`);
             });
             indSelect.select2({ placeholder: "業界カテゴリ", allowClear: true, width: '100%' });
 
@@ -7404,8 +7410,9 @@
                 tjCatSelect.select2('destroy');
             }
             tjCatSelect.empty();
-            validMasters.filter(m => m.type === 'job_category').forEach(m => {
-                tjCatSelect.append(`<option value="${m.label}">${m.label}</option>`);
+            const uniqueTjCats = [...new Set(validMasters.filter(m => m.type === 'job_category').map(m => m.label))];
+            uniqueTjCats.forEach(label => {
+                tjCatSelect.append(`<option value="${label}">${label}</option>`);
             });
             tjCatSelect.select2({ placeholder: "職種で絞り込み", allowClear: true, width: '100%' });
 
@@ -7415,8 +7422,9 @@
                 tjIndSelect.select2('destroy');
             }
             tjIndSelect.empty();
-            validMasters.filter(m => m.type === 'industry_category').forEach(m => {
-                tjIndSelect.append(`<option value="${m.label}">${m.label}</option>`);
+            const uniqueTjInds = [...new Set(validMasters.filter(m => m.type === 'industry_category').map(m => m.label))];
+            uniqueTjInds.forEach(label => {
+                tjIndSelect.append(`<option value="${label}">${label}</option>`);
             });
             tjIndSelect.select2({ placeholder: "業界で絞り込み", allowClear: true, width: '100%' });
 
@@ -9682,9 +9690,17 @@
                 if (error) throw error
 
                 // フィルタリング（グローバル または 自社用）
-                const validMasters = masters.filter(m =>
+                let validMasters = masters.filter(m =>
                     m.organization_id === null || m.organization_id === currentUser.organization_id
                 )
+
+                // 重複排除 (value ベース)
+                const seenValues = new Set();
+                validMasters = validMasters.filter(m => {
+                    if (seenValues.has(m.value)) return false;
+                    seenValues.add(m.value);
+                    return true;
+                });
 
                 // 雇用形態のプルダウン生成
                 const empTargets = ['#profile-employment-type', '#reg-employment-type', '#admin-user-employment-type'];
