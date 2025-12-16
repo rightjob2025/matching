@@ -10997,7 +10997,7 @@
 
                     const { error: profileError } = await supabase
                         .from('candidate_profiles')
-                        .upsert({ user_id: userId, ...profileUpdates });
+                        .upsert({ user_id: userId, ...profileUpdates }, { onConflict: 'user_id' });
 
                     if (profileError) throw profileError;
                 }
