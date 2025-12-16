@@ -4583,6 +4583,20 @@
             const user = targetUsersCache.find(u => u.id === userId);
             if (!user) return;
 
+            // フォームをリセット (以前の値をクリア)
+            $('#search-keyword').val('');
+            $('#search-location').val(''); // 詳細エリアを確実にクリア
+            $('#search-prefecture').val([]).trigger('change');
+            $('#search-employment-type').val([]).trigger('change');
+            $('#search-job-category').val([]).trigger('change');
+            $('#search-industry-category').val([]).trigger('change');
+            $('#search-salary-min').val('');
+            $('#search-job-experience-ok').prop('checked', false);
+            $('#search-industry-experience-ok').prop('checked', false);
+            $('#search-is-remote').prop('checked', false);
+            $('#search-exclude-matched').prop('checked', false);
+            $('#search-favorites-only').prop('checked', false);
+
             // ユーザーの希望条件を検索フォームにセット
             // ユーザーの希望条件を検索フォームにセット
             if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
