@@ -1970,6 +1970,26 @@
                                 </label>
                             </div>
 
+                            <!-- 構造化された職歴 (New) -->
+                            <div class="mb-6 border-t border-gray-200 pt-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">詳細職歴 (最大10社)</label>
+                                    <button type="button" onclick="addWorkHistoryItem()"
+                                        class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center font-medium">
+                                        <i class="fas fa-plus-circle mr-1"></i>職歴を追加
+                                    </button>
+                                </div>
+                                <div id="work-history-list" class="space-y-4 mb-2">
+                                    <!-- JSで動的に追加 -->
+                                </div>
+
+                                <div class="flex items-center gap-4 mt-2 mb-4">
+                                    <label class="text-xs text-gray-500">過去転職回数 (自動計算):</label>
+                                    <input type="number" id="admin-user-job-change-count"
+                                        class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm" readonly>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">職務経歴書 (詳細テキスト)</label>
                                 <textarea id="admin-user-work-history-detail" rows="10"
@@ -9960,7 +9980,7 @@
                     case 'work_hours': return 'フレックスタイム制';
                     case 'holidays': return '完全週休2日制';
                     case 'employment_type': return '正社員';
-                    case 'benefits': return '書籍購入補助、リモートワーク手当';
+                    case 'benefits': '書籍購入補助、リモートワーク手当';
                     case 'is_remote': return 'はい';
                     case 'experience_level': return '実務経験3年以上';
                     case 'industry': return 'Webサービス';
@@ -10645,6 +10665,14 @@
                 $('#admin-user-drive-url').val(user.drive_folder_url || '');
                 $('#admin-user-notebooklm-url').val(user.notebooklm_url || '');
                 $('#admin-user-line-url').val(user.line_url || '');
+
+                // 詳細職歴
+                $('#work-history-list').empty();
+                if (user.work_history_structured && Array.isArray(user.work_history_structured)) {
+                    user.work_history_structured.forEach(item => addWorkHistoryItem(item));
+                }
+                updateJobChangeCount();
+
             } else {
                 $('#admin-candidate-fields').addClass('hidden');
             }
@@ -10654,6 +10682,60 @@
         window.closeAdminUserModal = function () {
             $('#admin-user-modal').addClass('hidden');
         }
+
+        // 職歴リスト操作関数
+        window.addWorkHistoryItem = function (data = {}) {
+            const count = $('#work-history-list').children().length;
+            if (count >= 10) {
+                alert('職歴項目は最大10件までです。');
+                return;
+            }
+            const index = count + 1;
+            const $item = $(`
+                <div class="work-history-item bg-gray-50 p-4 rounded-lg border border-gray-200 relative">
+                    <button type="button" onclick="$(this).closest('.work-history-item').remove(); updateJobChangeCount();" 
+                        class="absolute top-2 right-2 text-gray-400 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h5 class="text-sm font-bold text-indigo-700 mb-2">職歴 ${index}</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">会社名</label>
+                            <input type="text" class="wh-company w-full px-3 py-2 border rounded text-sm bg-white" placeholder="会社名">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">在籍期間</label>
+                            <input type="text" class="wh-period w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: 2020/04 - 2023/03">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs text-gray-500 mb-1">役割・役職</label>
+                        <input type="text" class="wh-role w-full px-3 py-2 border rounded text-sm bg-white" placeholder="役割・役職">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">職務内容</label>
+                        <textarea class="wh-description w-full px-3 py-2 border rounded text-sm bg-white" rows="3" placeholder="職務内容"></textarea>
+                    </div>
+                </div>
+            `);
+
+            $item.find('.wh-company').val(data.company_name || '');
+            $item.find('.wh-period').val(data.period || '');
+            $item.find('.wh-role').val(data.role || '');
+            $item.find('.wh-description').val(data.description || '');
+
+            $('#work-history-list').append($item);
+            updateJobChangeCount();
+        };
+
+        window.updateJobChangeCount = function () {
+            const count = $('#work-history-list').children().length;
+            $('#admin-user-job-change-count').val(count);
+            // 番号振り直し
+            $('#work-history-list .work-history-item').each(function (i) {
+                $(this).find('h5').text(`職歴 ${i + 1}`);
+            });
+        };
 
         // 管理者用: PDFからの自動入力ハンドラ
         window.handleAdminUserPdfUpload = async function (input) {
@@ -10709,6 +10791,13 @@
                 // 職歴
                 if (result.work_history) {
                     $('#admin-user-history').val(result.work_history);
+                }
+
+                // 構造化された職歴
+                if (result.work_history_structured && Array.isArray(result.work_history_structured)) {
+                    $('#work-history-list').empty();
+                    result.work_history_structured.forEach(item => addWorkHistoryItem(item));
+                    updateJobChangeCount();
                 }
 
                 // --- マスタデータの自動マッチング (職種・業界) ---
@@ -10770,6 +10859,7 @@
             const userId = $('#admin-user-id').val();
             const role = $('#admin-user-role').val();
 
+            // Usersテーブル用更新データ
             const updates = {
                 name: $('#admin-user-name').val().trim(),
                 furigana: $('#admin-user-furigana').val().trim(),
@@ -10778,129 +10868,96 @@
                 updated_at: new Date().toISOString()
             };
 
-            // 管理者のみ権限変更可能
             if (['org_admin', 'admin', 'super_admin'].includes(currentUser.role)) {
                 updates.role = role;
             }
 
+            // candidate固有のUsersテーブル更新項目
             if (role === 'candidate') {
-                // 管理者のみ担当コーチ変更可能
                 if (['org_admin', 'admin', 'super_admin'].includes(currentUser.role)) {
-                    const coachId = $('#admin-user-coach').val();
-                    updates.coach_id = coachId || null;
+                    updates.coach_id = $('#admin-user-coach').val() || null;
                 }
-
-                const jobType = $('#admin-user-job-type').val();
-                updates.desired_job_type = jobType ? jobType.join(',') : null;
-
-                const industry = $('#admin-user-industry').val();
-                updates.desired_industry = industry ? industry.join(',') : null;
-
-                const prefs = $('#admin-user-prefecture').val();
-                const city = $('#admin-user-city').val() || '';
-                let location = '';
-
-                if (Array.isArray(prefs) && prefs.length > 0) {
-                    location = prefs.join(',');
-                    if (city) {
-                        if (prefs.length > 1) {
-                            location += ' ' + city;
-                        } else {
-                            location = prefs[0] + city;
-                        }
-                    }
-                } else if (prefs) {
-                    location = prefs + city;
-                } else if (city) {
-                    location = city;
-                }
-                updates.desired_location = location || null;
-
-                const empType = $('#admin-user-employment-type').val();
-                updates.desired_employment_type = empType ? empType.join(',') : null;
-
-                const salary = $('#admin-user-salary').val();
-                updates.desired_salary = salary ? parseInt(salary) * 10000 : null;
-                updates.birth_date = $('#admin-user-birth-date').val() || null;
-                const age = $('#admin-user-age').val();
-                updates.age = age ? parseInt(age) : null;
-                updates.education = $('#admin-user-education').val().trim() || null;
-                updates.skills = $('#admin-user-skills').val().trim();
-                updates.skills = $('#admin-user-skills').val().trim();
-
-                // work_historyは詳細側を優先
-                const workHistoryDetail = $('#admin-user-work-history-detail').val().trim();
-                const workHistorySummary = $('#admin-user-history').val().trim();
-                updates.work_history = workHistoryDetail || workHistorySummary;
-
-                // 新規追加フィールド
-                updates.phone = $('#admin-user-phone').val().trim() || null;
-                updates.resume = $('#admin-user-resume-detail').val().trim() || null;
-                updates.notes = $('#admin-user-notes').val().trim() || null;
                 updates.drive_folder_url = $('#admin-user-drive-url').val().trim() || null;
                 updates.notebooklm_url = $('#admin-user-notebooklm-url').val().trim() || null;
                 updates.line_url = $('#admin-user-line-url').val().trim() || null;
-                updates.desired_job_experience_ok = $('#admin-user-job-exp-ok').is(':checked');
-                updates.desired_industry_experience_ok = $('#admin-user-industry-exp-ok').is(':checked');
             }
 
             showLoading();
             try {
-                // 基本情報 (usersテーブル) の更新
-                const usersUpdates = {};
-                if ('name' in updates) usersUpdates.name = updates.name;
-                if ('furigana' in updates) usersUpdates.furigana = updates.furigana;
-                if ('email' in updates) usersUpdates.email = updates.email;
-                if ('role' in updates) usersUpdates.role = updates.role;
-                if ('coach_id' in updates) usersUpdates.coach_id = updates.coach_id;
-                if ('drive_folder_url' in updates) usersUpdates.drive_folder_url = updates.drive_folder_url;
-                if ('notebooklm_url' in updates) usersUpdates.notebooklm_url = updates.notebooklm_url;
-                if ('line_url' in updates) usersUpdates.line_url = updates.line_url;
+                // 1. usersテーブル更新
+                const { error: usersError } = await supabase
+                    .from('users')
+                    .update(updates)
+                    .eq('id', userId);
 
-                // usersテーブル更新
-                if (Object.keys(usersUpdates).length > 0) {
-                    const { error: usersError } = await supabase
-                        .from('users')
-                        .update(usersUpdates)
-                        .eq('id', userId);
-                    if (usersError) throw usersError;
-                }
+                if (usersError) throw usersError;
 
-                // プロフィール情報 (candidate_profilesテーブル) の更新
-                // roleがcandidateの場合のみ
-                const currentRole = $('#admin-user-role').val(); // 現在のフォーム値
+                // 2. candidate_profilesテーブル更新 (role === 'candidate' の場合のみ)
+                const currentRole = $('#admin-user-role').val();
                 if (currentRole === 'candidate') {
-                    const profileUpdates = { ...updates };
-                    // usersテーブルのカラムを除外
-                    delete profileUpdates.name;
-                    delete profileUpdates.furigana;
-                    delete profileUpdates.email;
-                    delete profileUpdates.role;
-                    delete profileUpdates.coach_id;
-                    delete profileUpdates.organization_id;
-                    delete profileUpdates.drive_folder_url;
-                    delete profileUpdates.notebooklm_url;
-                    delete profileUpdates.line_url;
+                    const jobType = $('#admin-user-job-type').val();
+                    const industry = $('#admin-user-industry').val();
+                    const prefs = $('#admin-user-prefecture').val();
+                    const city = $('#admin-user-city').val() || '';
+                    let locationStr = '';
+                    if (Array.isArray(prefs) && prefs.length > 0) {
+                        locationStr = prefs.join(',');
+                        if (city && prefs.length > 1) locationStr += ' ' + city;
+                        else if (city) locationStr = prefs[0] + city;
+                    } else if (prefs) locationStr = prefs + city;
+                    else if (city) locationStr = city;
 
-                    if (Object.keys(profileUpdates).length > 0) {
-                        // 行が存在するか確認して、なければINSERT、あればUPDATE (Upsert)
-                        const { error: profileError } = await supabase
-                            .from('candidate_profiles')
-                            .upsert({ user_id: userId, ...profileUpdates })
-                            .select();
-                        if (profileError) throw profileError;
-                    }
+                    const empType = $('#admin-user-employment-type').val();
+
+                    // 詳細職歴リスト
+                    const workHistoryList = [];
+                    $('#work-history-list .work-history-item').each(function () {
+                        workHistoryList.push({
+                            company_name: $(this).find('.wh-company').val(),
+                            period: $(this).find('.wh-period').val(),
+                            role: $(this).find('.wh-role').val(),
+                            description: $(this).find('.wh-description').val()
+                        });
+                    });
+
+                    // 明示的にプロパティを指定してオブジェクトを作成 (statusなどは含めない)
+                    const profileUpdates = {
+                        desired_job_type: jobType ? jobType.join(',') : null,
+                        desired_industry: industry ? industry.join(',') : null,
+                        desired_location: locationStr,
+                        desired_employment_type: empType ? empType.join(',') : null,
+                        desired_salary: $('#admin-user-salary').val() ? parseInt($('#admin-user-salary').val()) * 10000 : null,
+                        skills: $('#admin-user-skills').val().trim(),
+                        work_history: $('#admin-user-history').val().trim(),
+                        work_history_structured: workHistoryList,
+                        job_change_count: workHistoryList.length,
+                        desired_job_experience_ok: $('#admin-user-job-exp-ok').is(':checked'),
+                        desired_industry_experience_ok: $('#admin-user-industry-exp-ok').is(':checked'),
+                        work_history_detail: $('#admin-user-work-history-detail').val().trim(),
+                        resume_detail: $('#admin-user-resume-detail').val().trim(),
+                        notes: $('#admin-user-notes').val(),
+                        birth_date: $('#admin-user-birth-date').val() || null,
+                        age: $('#admin-user-age').val() ? parseInt($('#admin-user-age').val()) : null,
+                        education: $('#admin-user-education').val().trim() || null,
+                        phone: $('#admin-user-phone').val().trim() || null,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    console.log('Upserting profile:', profileUpdates); // Debug
+
+                    const { error: profileError } = await supabase
+                        .from('candidate_profiles')
+                        .upsert({ user_id: userId, ...profileUpdates });
+
+                    if (profileError) throw profileError;
                 }
 
                 alert('ユーザー情報を更新しました');
                 closeAdminUserModal();
 
-                // リストをリロード
-                if ($('#admin-users-content').is(':visible')) {
-                    loadAdminUsers();
-                } else if ($('#admin-candidates-content').is(':visible')) {
-                    loadAdminCandidates();
-                }
+                // リロード
+                if ($('#admin-users-content').is(':visible')) loadAdminUsers();
+                else if ($('#admin-candidates-content').is(':visible')) loadAdminCandidates();
 
             } catch (error) {
                 console.error('Update user error:', error);
