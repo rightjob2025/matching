@@ -10920,7 +10920,13 @@
                         });
                     });
 
-                    // 明示的にプロパティを指定してオブジェクトを作成 (statusなどは含めない)
+                    // 値の取得
+                    const workHistorySummary = $('#admin-user-history').val().trim();
+                    const workHistoryDetailText = $('#admin-user-work-history-detail').val().trim();
+                    const resumeDetailText = $('#admin-user-resume-detail').val().trim();
+                    const notes = $('#admin-user-notes').val();
+
+                    // 明示的にプロパティを指定してオブジェクトを作成
                     const profileUpdates = {
                         desired_job_type: jobType ? jobType.join(',') : null,
                         desired_industry: industry ? industry.join(',') : null,
@@ -10928,14 +10934,21 @@
                         desired_employment_type: empType ? empType.join(',') : null,
                         desired_salary: $('#admin-user-salary').val() ? parseInt($('#admin-user-salary').val()) * 10000 : null,
                         skills: $('#admin-user-skills').val().trim(),
-                        work_history: $('#admin-user-history').val().trim(),
+
+                        // work_historyは詳細テキストがあればそちらを優先、なければ要約
+                        work_history: workHistoryDetailText || workHistorySummary,
+
+                        // 構造化データ
                         work_history_structured: workHistoryList,
                         job_change_count: workHistoryList.length,
+
                         desired_job_experience_ok: $('#admin-user-job-exp-ok').is(':checked'),
                         desired_industry_experience_ok: $('#admin-user-industry-exp-ok').is(':checked'),
-                        work_history_detail: $('#admin-user-work-history-detail').val().trim(),
-                        resume_detail: $('#admin-user-resume-detail').val().trim(),
-                        notes: $('#admin-user-notes').val(),
+
+                        // カラム名の修正 (DBに存在しない _detail カラムを使わない)
+                        resume: resumeDetailText,
+
+                        notes: notes,
                         birth_date: $('#admin-user-birth-date').val() || null,
                         age: $('#admin-user-age').val() ? parseInt($('#admin-user-age').val()) : null,
                         education: $('#admin-user-education').val().trim() || null,
