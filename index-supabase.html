@@ -3486,6 +3486,38 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">職歴・自己PR</label>
                             <textarea id="reg-history" rows="4" class="w-full px-4 py-2 border rounded-lg"></textarea>
                         </div>
+
+                        <!-- 構造化された職歴 -->
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium text-gray-700">詳細職歴</label>
+                                <button type="button" onclick="addRegWorkHistoryItem()"
+                                    class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i>追加
+                                </button>
+                            </div>
+                            <div id="reg-work-history-list" class="space-y-4 mb-2"></div>
+                            <div class="flex items-center gap-4 mt-2">
+                                <label class="text-xs text-gray-500">過去転職回数:</label>
+                                <input type="number" id="reg-job-change-count"
+                                    class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm" readonly
+                                    value="0">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">職務経歴書 (詳細テキスト)</label>
+                            <textarea id="reg-work-history-detail" rows="10"
+                                class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
+                                placeholder="職務経歴の詳細テキスト"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">履歴書 (詳細テキスト)</label>
+                            <textarea id="reg-resume-detail" rows="6"
+                                class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
+                                placeholder="履歴書の詳細テキスト"></textarea>
+                        </div>
                     </div>
 
                     <div class="flex justify-end gap-3 mt-6">
@@ -10654,6 +10686,7 @@
                 $('#admin-user-education').val(user.education || '');
                 $('#admin-user-skills').val(user.skills || '');
                 $('#admin-user-history').val(user.work_history || '');
+                $('#admin-user-work-history-detail').val(user.work_history_detail || '');
 
                 // 追加詳細項目のセット
                 $('#admin-user-phone').val(user.phone || '');
@@ -10791,6 +10824,9 @@
                 // 職歴
                 if (result.work_history) {
                     $('#admin-user-history').val(result.work_history);
+                }
+                if (result.work_history_detail) {
+                    $('#admin-user-work-history-detail').val(result.work_history_detail);
                 }
 
                 // 構造化された職歴
@@ -10935,8 +10971,9 @@
                         desired_salary: $('#admin-user-salary').val() ? parseInt($('#admin-user-salary').val()) * 10000 : null,
                         skills: $('#admin-user-skills').val().trim(),
 
-                        // work_historyは詳細テキストがあればそちらを優先、なければ要約
-                        work_history: workHistoryDetailText || workHistorySummary,
+                        // work_historyとdetailを別々に保存
+                        work_history: workHistorySummary,
+                        work_history_detail: workHistoryDetailText,
 
                         // 構造化データ
                         work_history_structured: workHistoryList,
@@ -11724,6 +11761,56 @@
             $('#user-registration-modal').addClass('hidden');
         }
 
+        // 登録用職歴リスト操作関数
+        window.addRegWorkHistoryItem = function (data = {}) {
+            const count = $('#reg-work-history-list').children().length;
+            if (count >= 10) return;
+            const index = count + 1;
+            const $item = $(`
+                <div class="reg-work-history-item bg-gray-50 p-4 rounded-lg border border-gray-200 relative mb-2">
+                    <button type="button" onclick="$(this).closest('.reg-work-history-item').remove(); updateRegJobChangeCount();" 
+                        class="absolute top-2 right-2 text-gray-400 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h5 class="text-sm font-bold text-indigo-700 mb-2">職歴 ${index}</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">会社名</label>
+                            <input type="text" class="wh-company w-full px-3 py-2 border rounded text-sm bg-white" placeholder="会社名">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">在籍期間</label>
+                            <input type="text" class="wh-period w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: 2020/04 - 2023/03">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs text-gray-500 mb-1">役割・役職</label>
+                        <input type="text" class="wh-role w-full px-3 py-2 border rounded text-sm bg-white" placeholder="役割・役職">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">職務内容</label>
+                        <textarea class="wh-description w-full px-3 py-2 border rounded text-sm bg-white" rows="3" placeholder="職務内容"></textarea>
+                    </div>
+                </div>
+            `);
+
+            $item.find('.wh-company').val(data.company_name || '');
+            $item.find('.wh-period').val(data.period || '');
+            $item.find('.wh-role').val(data.role || '');
+            $item.find('.wh-description').val(data.description || '');
+
+            $('#reg-work-history-list').append($item);
+            updateRegJobChangeCount();
+        };
+
+        window.updateRegJobChangeCount = function () {
+            const count = $('#reg-work-history-list').children().length;
+            $('#reg-job-change-count').val(count);
+            $('#reg-work-history-list .reg-work-history-item').each(function (i) {
+                $(this).find('h5').text(`職歴 ${i + 1}`);
+            });
+        };
+
         window.handleRegResumeUpload = async function (input) {
             if (input.files.length === 0) return;
 
@@ -11756,6 +11843,15 @@
                 if (result.desired_salary) $('#reg-salary').val(Math.floor(result.desired_salary / 10000));
                 if (result.skills) $('#reg-skills').val(result.skills);
                 if (result.work_history) $('#reg-history').val(result.work_history);
+                if (result.work_history_detail) $('#reg-work-history-detail').val(result.work_history_detail);
+                if (result.resume) $('#reg-resume-detail').val(result.resume); // resumeは詳細テキスト扱い
+
+                // 構造化された職歴
+                if (result.work_history_structured && Array.isArray(result.work_history_structured)) {
+                    $('#reg-work-history-list').empty();
+                    result.work_history_structured.forEach(item => addRegWorkHistoryItem(item));
+                    updateRegJobChangeCount();
+                }
 
                 alert('解析が完了し、フォームに入力しました。\n内容を確認して登録してください。');
             } catch (error) {
@@ -11848,6 +11944,21 @@
                     profileData.desired_salary = salary ? parseInt(salary) * 10000 : null;
                     profileData.skills = $('#reg-skills').val() || null;
                     profileData.work_history = $('#reg-history').val() || null;
+                    profileData.work_history_detail = $('#reg-work-history-detail').val() || null;
+                    profileData.resume = $('#reg-resume-detail').val() || null;
+
+                    // 構造化データ収集
+                    const workHistoryList = [];
+                    $('#reg-work-history-list .reg-work-history-item').each(function () {
+                        workHistoryList.push({
+                            company_name: $(this).find('.wh-company').val(),
+                            period: $(this).find('.wh-period').val(),
+                            role: $(this).find('.wh-role').val(),
+                            description: $(this).find('.wh-description').val()
+                        });
+                    });
+                    profileData.work_history_structured = workHistoryList;
+                    profileData.job_change_count = workHistoryList.length;
                 }
 
                 const requestBody = {
