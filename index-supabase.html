@@ -1950,6 +1950,33 @@
                                     placeholder="職務経歴の詳細テキスト"></textarea>
                             </div>
 
+                            <!-- 外部連携URL -->
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <h5 class="text-sm font-bold text-gray-700 mb-3">外部連携URL</h5>
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Google Drive
+                                            URL</label>
+                                        <input type="url" id="admin-user-drive-url"
+                                            class="w-full px-4 py-2 border rounded-lg"
+                                            placeholder="https://drive.google.com/...">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">NotebookLM
+                                            URL</label>
+                                        <input type="url" id="admin-user-notebooklm-url"
+                                            class="w-full px-4 py-2 border rounded-lg"
+                                            placeholder="https://notebooklm.google.com/...">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">LINE URL</label>
+                                        <input type="url" id="admin-user-line-url"
+                                            class="w-full px-4 py-2 border rounded-lg"
+                                            placeholder="https://line.me/...">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">履歴書 (詳細テキスト)</label>
                                 <textarea id="admin-user-resume-detail" rows="6"
@@ -6082,22 +6109,59 @@
                 return;
             }
 
-            if (!confirm('この内容でスカウトを送信しますか？\n（デモ版のため実際のメールは送信されませんが、ステータスは「連絡済み」に更新されます）')) {
+            if (!confirm('この内容でスカウトを送信しますか？')) {
                 return;
             }
 
             try {
-                // ステータスを更新
+                showLoading('スカウト送信中...');
+
+                // 1. ステータスを更新
                 await updateMatchStatus(currentScoutMatchId, 'contacted');
 
-                // TODO: ここで実際のメール送信APIを呼ぶか、scout_messagesテーブルに保存する
+                // 2. 候補者のメールアドレスを取得
+                const { data: candidate, error: userError } = await supabase
+                    .from('users')
+                    .select('email, name')
+                    .eq('id', currentScoutCandidateId)
+                    .single();
 
-                alert('スカウトを送信しました！');
+                if (userError || !candidate) {
+                    console.warn('候補者情報の取得失敗:', userError);
+                    alert('ステータスは更新されましたが、候補者のメールアドレスが取得できなかったためメールは送信されませんでした。');
+                } else if (!candidate.email) {
+                    alert('ステータスは更新されましたが、候補者のメールアドレスが未登録のためメールは送信されませんでした。');
+                } else {
+                    // 3. メール送信Function呼び出し (Resend)
+                    const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
+                        body: {
+                            type: 'scout',
+                            to: candidate.email,
+                            data: {
+                                userName: candidate.name || '求職者',
+                                subject: subject,
+                                body: body,
+                                scoutUrl: window.location.origin // ログインページなどのURL
+                            }
+                        }
+                    });
+
+                    if (emailError) {
+                        console.error('Email sending failed:', emailError);
+                        alert('ステータスは更新されましたが、メール送信APIの呼び出しに失敗しました。\n(Resend API Keyの設定等をご確認ください)');
+                    } else {
+                        console.log('Email sent successfully:', emailData);
+                        alert('スカウトを送信しました！\n(候補者へメール通知を行いました)');
+                    }
+                }
+
                 closeScoutModal();
 
             } catch (error) {
                 console.error('Send scout error:', error);
-                alert('送信処理に失敗しました');
+                alert('送信処理に失敗しました: ' + error.message);
+            } finally {
+                hideLoading();
             }
         }
 
@@ -7864,7 +7928,9 @@
                     query = query.or(conditions);
                 }
                 if (filters.salaryMin) {
-                    query = query.gte('salary_max', parseInt(filters.salaryMin) * 10000)
+                    const minVal = parseInt(filters.salaryMin) * 10000;
+                    // 年収条件を満たすか、年収情報がない(null)求人を表示
+                    query = query.or(`salary_max.gte.${minVal},salary_max.is.null`);
                 }
                 if (filters.jobExperienceOk) {
                     query = query.eq('job_experience_ok', '可')
@@ -10536,6 +10602,9 @@
                 $('#admin-user-work-history-detail').val(user.work_history || '');
                 $('#admin-user-resume-detail').val(user.resume || '');
                 $('#admin-user-notes').val(user.notes || '');
+                $('#admin-user-drive-url').val(user.drive_folder_url || '');
+                $('#admin-user-notebooklm-url').val(user.notebooklm_url || '');
+                $('#admin-user-line-url').val(user.line_url || '');
             } else {
                 $('#admin-candidate-fields').addClass('hidden');
             }
@@ -10728,6 +10797,9 @@
                 updates.phone = $('#admin-user-phone').val().trim() || null;
                 updates.resume = $('#admin-user-resume-detail').val().trim() || null;
                 updates.notes = $('#admin-user-notes').val().trim() || null;
+                updates.drive_folder_url = $('#admin-user-drive-url').val().trim() || null;
+                updates.notebooklm_url = $('#admin-user-notebooklm-url').val().trim() || null;
+                updates.line_url = $('#admin-user-line-url').val().trim() || null;
                 updates.desired_job_experience_ok = $('#admin-user-job-exp-ok').is(':checked');
                 updates.desired_industry_experience_ok = $('#admin-user-industry-exp-ok').is(':checked');
             }
@@ -10741,6 +10813,9 @@
                 if ('email' in updates) usersUpdates.email = updates.email;
                 if ('role' in updates) usersUpdates.role = updates.role;
                 if ('coach_id' in updates) usersUpdates.coach_id = updates.coach_id;
+                if ('drive_folder_url' in updates) usersUpdates.drive_folder_url = updates.drive_folder_url;
+                if ('notebooklm_url' in updates) usersUpdates.notebooklm_url = updates.notebooklm_url;
+                if ('line_url' in updates) usersUpdates.line_url = updates.line_url;
 
                 // usersテーブル更新
                 if (Object.keys(usersUpdates).length > 0) {
@@ -10763,6 +10838,9 @@
                     delete profileUpdates.role;
                     delete profileUpdates.coach_id;
                     delete profileUpdates.organization_id;
+                    delete profileUpdates.drive_folder_url;
+                    delete profileUpdates.notebooklm_url;
+                    delete profileUpdates.line_url;
 
                     if (Object.keys(profileUpdates).length > 0) {
                         // 行が存在するか確認して、なければINSERT、あればUPDATE (Upsert)
