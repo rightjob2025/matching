@@ -8070,13 +8070,21 @@
                 }
                 if (filters.jobCategory && filters.jobCategory.length > 0) {
                     const cats = Array.isArray(filters.jobCategory) ? filters.jobCategory : [filters.jobCategory];
-                    // 完全一致(in)から部分一致(ilike)に変更
-                    const conditions = cats.map(c => `job_category.ilike.%${c}%`).join(',');
+                    // 完全一致(in)から部分一致(ilike)に変更 + 表記揺れ対策（括弧除去）
+                    const conditions = cats.map(c => {
+                        let cleanC = c.replace(/[\(（].*?[\)）]/g, '').trim();
+                        if (!cleanC) cleanC = c;
+                        return `job_category.ilike.%${cleanC}%`;
+                    }).join(',');
                     query = query.or(conditions);
                 }
                 if (filters.industryCategory && filters.industryCategory.length > 0) {
                     const inds = Array.isArray(filters.industryCategory) ? filters.industryCategory : [filters.industryCategory];
-                    const conditions = inds.map(i => `industry_category.ilike.%${i}%`).join(',');
+                    const conditions = inds.map(i => {
+                        let cleanI = i.replace(/[\(（].*?[\)）]/g, '').trim();
+                        if (!cleanI) cleanI = i;
+                        return `industry_category.ilike.%${cleanI}%`;
+                    }).join(',');
                     query = query.or(conditions);
                 }
                 if (filters.salaryMin) {
