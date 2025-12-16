@@ -4587,11 +4587,10 @@
             // ユーザーの希望条件を検索フォームにセット
             if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
             if (user.desired_location) {
-                // 簡易的な振り分け: 配列なら都道府県プルダウン、文字列なら検索窓へ
+                // 配列なら都道府県プルダウンへセット。文字列（詳細）の場合はセットしない
+                // ユーザー要望: 勤務地(詳細)の項目はセットしない
                 if (Array.isArray(user.desired_location)) {
                     $('#search-prefecture').val(user.desired_location).trigger('change');
-                } else {
-                    $('#search-location').val(user.desired_location);
                 }
             }
             if (user.desired_employment_type) $('#search-employment-type').val(user.desired_employment_type).trigger('change');
