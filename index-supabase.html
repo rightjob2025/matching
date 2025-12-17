@@ -16630,6 +16630,107 @@
                 alert('保存に失敗しました');
             }
         }
+
+        /* ---------------------------------------------------- */
+        /*  Analytics Logic                                     */
+        /* ---------------------------------------------------- */
+
+        window.loadScoutAnalytics = async function () {
+            if (!currentUser) return;
+            const userStatsContainer = $('#analytics-user-stats');
+            const orgStatsContainer = $('#analytics-org-stats');
+            const detailsContainer = $('#analytics-details-container');
+
+            try {
+                // Fetch ALL messages for the organization
+                // We need status and created_by
+                const { data: messages, error } = await supabase
+                    .from('scout_messages')
+                    .select('id, status, created_by, created_at')
+                    .eq('organization_id', currentUser.organization_id);
+
+                if (error) throw error;
+
+                if (!messages || messages.length === 0) {
+                    userStatsContainer.html('<div class="col-span-2 text-center text-gray-500">データなし</div>');
+                    orgStatsContainer.html('<div class="col-span-2 text-center text-gray-500">データなし</div>');
+                    return;
+                }
+
+                // --- Calculate Stats ---
+                const calculateStats = (msgs) => {
+                    const totalSent = msgs.filter(m => ['sent', 'replied', 'interview', 'rejected', 'hired'].includes(m.status)).length;
+                    const replied = msgs.filter(m => ['replied', 'interview', 'rejected', 'hired'].includes(m.status)).length;
+                    const interview = msgs.filter(m => ['interview', 'hired'].includes(m.status)).length;
+
+                    const replyRate = totalSent > 0 ? ((replied / totalSent) * 100).toFixed(1) : '0.0';
+                    const interviewRate = totalSent > 0 ? ((interview / totalSent) * 100).toFixed(1) : '0.0';
+
+                    return { totalSent, replied, interview, replyRate, interviewRate };
+                };
+
+                const orgStats = calculateStats(messages);
+                const userData = messages.filter(m => m.created_by === currentUser.id);
+                const userStats = calculateStats(userData);
+
+                // --- Render Stats ---
+                const renderStatItem = (label, value, unit = '', subText = '') => `
+                    <div class="bg-indigo-50 rounded p-3 text-center">
+                        <div class="text-xs text-gray-500 font-bold mb-1">${label}</div>
+                        <div class="text-2xl font-bold text-indigo-700">${value}<span class="text-sm font-normal text-gray-600 ml-1">${unit}</span></div>
+                        ${subText ? `<div class="text-xs text-gray-400 mt-1">${subText}</div>` : ''}
+                    </div>
+                `;
+
+                orgStatsContainer.html(`
+                    ${renderStatItem('総送信数', orgStats.totalSent, '件')}
+                    ${renderStatItem('返信数', orgStats.replied, '件', `返信率: ${orgStats.replyRate}%`)}
+                    ${renderStatItem('面談設定数', orgStats.interview, '件', `面談率: ${orgStats.interviewRate}%`)}
+                `);
+
+                userStatsContainer.html(`
+                    ${renderStatItem('総送信数', userStats.totalSent, '件')}
+                    ${renderStatItem('返信数', userStats.replied, '件', `返信率: ${userStats.replyRate}%`)}
+                    ${renderStatItem('面談設定数', userStats.interview, '件', `面談率: ${userStats.interviewRate}%`)}
+                `);
+
+                // --- Render Details Table (Org Wide) ---
+                // Shows breakdown by status
+                const statuses = ['sent', 'replied', 'interview', 'rejected', 'hired'];
+                const statusLabels = { sent: '送信済(未読/未返信)', replied: '返信あり', interview: '面談設定', rejected: '辞退/不採用', hired: '採用決定' };
+
+                const rows = statuses.map(s => {
+                    const count = messages.filter(m => m.status === s).length;
+                    const rate = orgStats.totalSent > 0 ? ((count / orgStats.totalSent) * 100).toFixed(1) : '0.0';
+                    return `
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900">${statusLabels[s]}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 text-right">${count} 件</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 text-right">${rate} %</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                detailsContainer.html(`
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ステータス</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">件数</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">構成比</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${rows}
+                        </tbody>
+                    </table>
+                `);
+
+            } catch (e) {
+                console.error("Analytics Error:", e);
+                userStatsContainer.html('<p class="text-red-500">読み込みエラー</p>');
+            }
+        }
     </script>
 </body>
 
