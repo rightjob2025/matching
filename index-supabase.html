@@ -4605,6 +4605,8 @@
                 // ユーザー要望: 勤務地(詳細)の項目はセットしない
                 if (Array.isArray(user.desired_location)) {
                     $('#search-prefecture').val(user.desired_location).trigger('change');
+                    // 副作用対策: トリガーによってセットされてしまった場合は即座にクリア
+                    $('#search-location').val('');
                 }
             }
             if (user.desired_employment_type) $('#search-employment-type').val(user.desired_employment_type).trigger('change');
