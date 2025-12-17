@@ -16940,11 +16940,9 @@
                 const visibility = $('input[name="setting-history-visibility"]:checked').val();
                 newSettings.analysis_history_visibility = visibility;
 
-                // 3. 保存
+                // 3. 保存 (RPCを使用)
                 const { error: updateError } = await supabase
-                    .from('organizations')
-                    .update({ settings: newSettings })
-                    .eq('id', currentUser.organization_id);
+                    .rpc('update_organization_settings', { new_settings: newSettings });
 
                 if (updateError) throw updateError;
 
@@ -16952,7 +16950,7 @@
 
             } catch (error) {
                 console.error('Save admin settings error:', error);
-                alert('設定の保存に失敗しました: ' + error.message);
+                alert('設定の保存に失敗しました: ' + (error.message || error.details || JSON.stringify(error)));
             }
         };
     </script>
