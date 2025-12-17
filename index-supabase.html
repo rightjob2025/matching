@@ -15109,6 +15109,16 @@
             if (dashboardChartInstances.funnel) dashboardChartInstances.funnel.destroy();
             if (dashboardChartInstances.trend) dashboardChartInstances.trend.destroy();
 
+            // Safety Check
+            if (typeof Chart === 'undefined') {
+                console.error('Dashboard: Chart.js library is not loaded');
+                return;
+            }
+            if (!document.getElementById('funnelChart') || !document.getElementById('trendChart')) {
+                console.error('Dashboard: Chart canvas elements not found');
+                return;
+            }
+
             // 1. マスタデータ取得 (進捗ステータス)
             let { data: statusMasters } = await supabase
                 .from('master_data')
@@ -15156,7 +15166,23 @@
             query = query.gte('created_at', startDate.toISOString());
 
             const { data: applications, error } = await query;
-            if (error || !applications) return;
+
+            if (error) {
+                console.error('Dashboard: Applications fetch error:', error);
+                $('#dashboard-charts').prepend('<div class="col-span-2 text-red-500 bg-red-50 p-4 rounded">データ取得エラー: ' + error.message + '</div>');
+                return;
+            }
+
+            if (!applications || applications.length === 0) {
+                console.log('Dashboard: No applications data found for this period');
+                // データがない場合でも空のチャートを表示するか、メッセージを表示する
+                // ここでは処理を続行して空のチャートを表示させる（0件の確認のため）
+            } else {
+                console.log('Dashboard: Applications loaded:', applications.length);
+            }
+
+            // 安全策: nullの場合は空配列にする
+            const validApplications = applications || [];
 
             // --- 集計ロジック ---
 
@@ -15166,7 +15192,7 @@
 
             // ステータスごとの件数
             const statusCounts = {};
-            applications.forEach(app => {
+            validApplications.forEach(app => {
                 // 部分一致などで柔軟にマッチング
                 const match = statusMasters.find(m => app.status === m.value || app.status?.includes(m.value));
                 const key = match ? match.label : 'その他';
@@ -15190,7 +15216,7 @@
 
                 // 要件は「工程ごとの歩留まり」なので、「通過数」ベースが望ましい。
                 // 簡易ロジック: sort_orderが自分以上のレコード数を合計する
-                const passedCount = applications.filter(a => {
+                const passedCount = validApplications.filter(a => {
                     const m = statusMasters.find(mst => mst.value === a.status);
                     return m && m.sort_order >= phase.sort_order;
                 }).length;
@@ -15240,7 +15266,7 @@
 
             // 単位ごとの集計
             const dateMap = {};
-            applications.forEach(app => {
+            validApplications.forEach(app => {
                 const d = new Date(app.created_at);
                 let key = '';
                 if (currentDashboardPeriod === 'day') key = `${d.getMonth() + 1}/${d.getDate()}`;
