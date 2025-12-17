@@ -6770,26 +6770,75 @@
             `);
 
             try {
-                const { data, error } = await window.supabase
+                // 1. 組織設定の取得
+                const { data: orgData, error: orgError } = await window.supabase
+                    .from('organizations')
+                    .select('settings')
+                    .eq('id', currentUser.organization_id)
+                    .single();
+
+                if (orgError) console.error('Org settings fetch error:', orgError); // Non-blocking
+
+                const visibility = orgData?.settings?.analysis_history_visibility || 'all'; // Default to 'all'
+
+                // 2. 統計データの取得 (個人 & 全体)
+                // Note: RLSがOpenな状態前提。StrictなRLSの場合は別途RPCが必要になるが、現在はOpenModeと想定。
+                const { count: myCount, error: myCountError } = await window.supabase
+                    .from('profile_analysis_history')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('organization_id', currentUser.organization_id)
+                    .eq('analyzed_by', currentUser.id);
+
+                const { count: orgCount, error: orgCountError } = await window.supabase
+                    .from('profile_analysis_history')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('organization_id', currentUser.organization_id);
+
+                // 3. リストデータの取得
+                let query = window.supabase
                     .from('profile_analysis_history')
                     .select('*')
                     .eq('organization_id', currentUser.organization_id)
                     .order('created_at', { ascending: false })
                     .limit(50);
 
+                // Visibility制御: 'personal'なら自分のデータのみに絞る
+                if (visibility === 'personal') {
+                    query = query.eq('analyzed_by', currentUser.id);
+                }
+
+                const { data, error } = await query;
+
                 if (error) throw error;
 
+                // --- UI Rendering ---
+
+                // 統計表示コンポーネント
+                const statsHtml = `
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-indigo-50 rounded-lg p-4 text-center border border-indigo-100">
+                            <p class="text-xs text-gray-500 font-bold mb-1">自分の解析数</p>
+                            <p class="text-2xl font-bold text-indigo-700">${myCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                            <p class="text-xs text-gray-500 font-bold mb-1">組織全体の解析数</p>
+                            <p class="text-2xl font-bold text-gray-700">${orgCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
+                        </div>
+                    </div>
+                `;
+
                 if (!data || data.length === 0) {
-                    $('#history-list').html(`
-                        <div class="text-center py-12 text-gray-500">
+                    $('#history-list').html(statsHtml + `
+                        <div class="text-center py-12 text-gray-500 border-t border-gray-100 mt-4">
                             <i class="fas fa-inbox text-4xl mb-3"></i>
-                            <p>解析履歴がありません</p>
+                            <p>表示できる解析履歴がありません</p>
                         </div>
                     `);
                     return;
                 }
 
-                renderHistoryList(data);
+                // リスト表示
+                $('#history-list').html(statsHtml + '<div class="space-y-4">' + renderHistoryListHtml(data) + '</div>');
 
             } catch (error) {
                 console.error('Load history error:', error);
@@ -6802,38 +6851,24 @@
             }
         }
 
-        function renderHistoryList(historyData) {
-            const html = historyData.map(item => {
+        // ヘルパー関数: HTML生成部分を分離
+        function renderHistoryListHtml(historyData) {
+            return historyData.map(item => {
                 const date = new Date(item.created_at).toLocaleString('ja-JP');
-
-                // 件数計算（以下の3パターンに対応）
-                // 1. 新形式 (matchesカラムに { skill: [], ... } )
-                // 2. 旧形式 (matchesカラムに配列)
-                // 3. analysis_resultsカラム (予備)
-
                 let matches = item.matches;
                 if (typeof matches === 'string') {
                     try { matches = JSON.parse(matches); } catch (e) { }
                 }
 
                 let matchCount = 0;
-
                 if (matches && !Array.isArray(matches) && typeof matches === 'object') {
-                    // 新形式: オブジェクト { skill: [], industry: [], mindset: [] }
-                    matchCount = (matches.skill?.length || 0) +
-                        (matches.industry?.length || 0) +
-                        (matches.mindset?.length || 0);
+                    matchCount = (matches.skill?.length || 0) + (matches.industry?.length || 0) + (matches.mindset?.length || 0);
                 } else if (Array.isArray(matches)) {
-                    // 旧形式: フラットな配列
                     matchCount = matches.length;
                 } else if (item.analysis_results) {
-                    // 予備: analysis_resultsカラム
                     let ar = item.analysis_results;
                     if (typeof ar === 'string') { try { ar = JSON.parse(ar); } catch (e) { } }
-                    matchCount = (ar.matches_skill?.length || 0) +
-                        (ar.matches_industry?.length || 0) +
-                        (ar.matches_mindset?.length || 0) +
-                        (ar.matches?.length || 0);
+                    matchCount = (ar.matches_skill?.length || 0) + (ar.matches_industry?.length || 0) + (ar.matches_mindset?.length || 0) + (ar.matches?.length || 0);
                 }
 
                 return `
@@ -6852,9 +6887,10 @@
                 </div>
                 `;
             }).join('');
-
-            $('#history-list').html(html);
         }
+
+
+
 
         window.viewHistoryDetail = async function (historyId) {
             try {
