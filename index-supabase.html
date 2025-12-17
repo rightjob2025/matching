@@ -2410,6 +2410,10 @@
                         class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
                         スカウト管理
                     </button>
+                    <button onclick="switchProfileAnalysisTab('analytics')" id="profile-tab-analytics"
+                        class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        効果測定
+                    </button>
                 </nav>
             </div>
 
@@ -6703,6 +6707,7 @@
             $('#profile-new-tab-content').addClass('hidden');
             $('#profile-history-tab-content').addClass('hidden');
             $('#profile-scout_management-tab-content').addClass('hidden');
+            $('#profile-analytics-tab-content').addClass('hidden');
 
             if (tab === 'new') {
                 $('#profile-new-tab-content').removeClass('hidden');
@@ -6712,6 +6717,9 @@
             } else if (tab === 'scout_management') {
                 $('#profile-scout_management-tab-content').removeClass('hidden');
                 loadScoutManagement();
+            } else if (tab === 'analytics') {
+                $('#profile-analytics-tab-content').removeClass('hidden');
+                loadScoutAnalytics();
             }
         }
 
@@ -16595,28 +16603,23 @@
                 return;
             }
 
-            if (!window.currentExternalCandidateId) {
-                alert('候補者情報が見つかりません。再解析してください。');
-                return;
-            }
-
             try {
-                await supabase.from('scout_messages').insert({
+                // Insert into scout_messages
+                const { error } = await supabase.from('scout_messages').insert({
                     organization_id: currentUser.organization_id,
                     external_candidate_id: window.currentExternalCandidateId,
                     job_id: jobId,
                     subject: subject,
                     message_body: body,
                     status: 'sent',
-                    sent_at: new Date()
+                    sent_at: new Date(),
+                    created_by: currentUser.id
                 });
 
-                await supabase.from('external_candidates')
-                    .update({ status: 'scouted' })
-                    .eq('id', window.currentExternalCandidateId);
+                if (error) throw error;
 
                 alert('スカウトを登録しました');
-                $(btn).removeClass('text-gray-400').addClass('text-green-600');
+                $(btn).removeClass('text-gray-400').addClass('text-green-600').text('送信済').prop('disabled', true);
 
                 if (!$('#profile-scout_management-tab-content').hasClass('hidden')) {
                     loadScoutManagement();
