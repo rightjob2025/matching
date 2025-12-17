@@ -16228,12 +16228,50 @@
                                     </div>
                                 ` : '<p class="text-sm text-gray-400">スカウト履歴なし</p>'}
                             </div>
+                            
+                            <div class="flex flex-col gap-2 items-end">
+                                ${lastMsg ? `
+                                    <select onchange="updateScoutStatus('${lastMsg.id}', this.value)" class="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700">
+                                        <option value="sent" ${lastMsg.status === 'sent' ? 'selected' : ''}>送信済</option>
+                                        <option value="replied" ${lastMsg.status === 'replied' ? 'selected' : ''}>返信あり</option>
+                                        <option value="interview" ${lastMsg.status === 'interview' ? 'selected' : ''}>面談設定</option>
+                                        <option value="rejected" ${lastMsg.status === 'rejected' ? 'selected' : ''}>辞退/不採用</option>
+                                    </select>
+                                    <!-- Potentially add "View Details" button later -->
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
 
             container.html(html);
+        }
+
+        window.updateScoutStatus = async function (scoutId, newStatus) {
+            if (!confirm(`ステータスを「${newStatus}」に変更しますか？`)) {
+                loadScoutManagement(); // Revert selection UI by reloading
+                return;
+            }
+
+            try {
+                // Update scout_messages
+                const { error: msgError } = await supabase
+                    .from('scout_messages')
+                    .update({ status: newStatus, updated_at: new Date() })
+                    .eq('id', scoutId);
+
+                if (msgError) throw msgError;
+
+                // Also update external_candidates status for consistency if needed
+                // For now, mainly tracking scout message status.
+
+                alert('ステータスを更新しました');
+                loadScoutManagement(); // Reload list
+            } catch (e) {
+                console.error('Status update failed:', e);
+                alert('更新に失敗しました');
+            }
         }
 
         window.fetchActiveJobs = async function () {
