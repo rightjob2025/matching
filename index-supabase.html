@@ -11850,6 +11850,7 @@
                     .from('users')
                     .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
                     .eq('organization_id', currentUser.organization_id)
+                    .neq('role', 'candidate')
                     .is('deleted_at', null)
                     .order('created_at', { ascending: false })
 
