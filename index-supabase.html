@@ -767,6 +767,12 @@
                         <i class="fas fa-history w-5"></i>
                         <span class="ml-3">操作ログ</span>
                     </a>
+                    <a href="#"
+                        class="nav-link flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition"
+                        data-page="admin-settings">
+                        <i class="fas fa-cog w-5"></i>
+                        <span class="ml-3">組織設定</span>
+                    </a>
 
                 </div>
 
@@ -1604,6 +1610,54 @@
                     </div>
                 </div>
                 <div id="audit-logs-container"></div>
+            </div>
+
+            <!-- Admin: Organization Settings Page -->
+            <div id="admin-settings-content" class="app-content p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">組織設定</h3>
+                    <p class="text-gray-600 mb-6">組織全体の動作に関する設定を管理します。</p>
+
+                    <div class="space-y-6">
+                        <!-- 解析履歴の公開範囲設定 -->
+                        <div class="border-b border-gray-200 pb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">外部プロフィール解析履歴の公開範囲</h4>
+                            <p class="text-sm text-gray-500 mb-4">
+                                「外部プロフィール解析」で作成された履歴を、組織内の他のユーザーが閲覧できるかどうかを制御します。
+                            </p>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <label class="flex items-start mb-3 cursor-pointer">
+                                    <input type="radio" name="setting-history-visibility" value="all"
+                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                                    <div>
+                                        <div class="font-bold text-gray-900">全員に公開 (標準)</div>
+                                        <div class="text-sm text-gray-600">
+                                            組織内のすべてのユーザーが、他のユーザーが作成した解析履歴・求人提案内容を閲覧できます。共有知としての活用に適しています。</div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start cursor-pointer">
+                                    <input type="radio" name="setting-history-visibility" value="personal"
+                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                                    <div>
+                                        <div class="font-bold text-gray-900">作成者のみ閲覧 (プライベート)</div>
+                                        <div class="text-sm text-gray-600">
+                                            ユーザーは自分が実行した解析履歴のみ閲覧できます。ただし、組織全体の集計数値などは表示される場合があります。</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 保存ボタン -->
+                        <div class="flex justify-end pt-4">
+                            <button onclick="saveAdminSettings()"
+                                class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                                <i class="fas fa-save mr-2"></i>設定を保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Super Admin: Prompt Settings Page -->
@@ -15749,6 +15803,8 @@
                     loadCSVHistory()
                 } else if (page === 'admin-logs') {
                     loadAuditLogs()
+                } else if (page === 'admin-settings') {
+                    loadAdminSettings()
                 } else if (page === 'admin-prompts') {
                     loadPrompts()
                 } else if (page === 'admin-master') {
@@ -16835,6 +16891,70 @@
                 userStatsContainer.html('<p class="text-red-500">読み込みエラー</p>');
             }
         }
+        // ========================
+        // Admin Settings
+        // ========================
+        window.loadAdminSettings = async function () {
+            if (!currentUser) return;
+
+            try {
+                // 組織情報を取得
+                const { data: org, error } = await supabase
+                    .from('organizations')
+                    .select('settings')
+                    .eq('id', currentUser.organization_id)
+                    .single();
+
+                if (error) throw error;
+
+                // 設定値をフォームに反映
+                const settings = org.settings || {};
+                const visibility = settings.analysis_history_visibility || 'all';
+
+                $('input[name="setting-history-visibility"][value="' + visibility + '"]').prop('checked', true);
+
+            } catch (error) {
+                console.error('Load admin settings error:', error);
+                alert('設定の読み込みに失敗しました');
+            }
+        };
+
+        window.saveAdminSettings = async function () {
+            if (!currentUser) return;
+
+            if (!confirm('設定を保存してもよろしいですか？')) return;
+
+            try {
+                // 1. 現在の設定を取得（マージするため）
+                const { data: currentOrg, error: fetchError } = await supabase
+                    .from('organizations')
+                    .select('settings')
+                    .eq('id', currentUser.organization_id)
+                    .single();
+
+                if (fetchError) throw fetchError;
+
+                let newSettings = currentOrg.settings || {};
+
+                // 2. フォームから値を取得して更新
+                const visibility = $('input[name="setting-history-visibility"]:checked').val();
+                newSettings.analysis_history_visibility = visibility;
+
+                // 3. 保存
+                const { error: updateError } = await supabase
+                    .from('organizations')
+                    .update({ settings: newSettings })
+                    .eq('id', currentUser.organization_id);
+
+                if (updateError) throw updateError;
+
+                alert('設定を保存しました');
+
+            } catch (error) {
+                console.error('Save admin settings error:', error);
+                alert('設定の保存に失敗しました: ' + error.message);
+            }
+        };
     </script>
 </body>
 
