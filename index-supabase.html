@@ -2417,6 +2417,17 @@
             <div id="profile-new-tab-content" class="flex-1 overflow-y-auto flex gap-6">
                 <!-- 左側: 入力エリア -->
                 <div class="w-1/3 flex flex-col gap-4">
+
+                    <!-- Title Input -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">
+                            候補者名 / 管理ID <span class="text-xs font-normal text-gray-500">(任意: 媒体名 + IDなど)</span>
+                        </label>
+                        <input type="text" id="candidate-title-input"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="例: BizReach 123456">
+                    </div>
+
                     <!-- File Upload Area -->
                     <div class="mb-4 text-right" style="position: relative; z-index: 10;">
                         <a href="javascript:void(0)"
@@ -16201,7 +16212,6 @@
             const rows = candidates.map(c => {
                 const cMessages = messages.filter(m => m.external_candidate_id === c.id);
                 const lastMsg = cMessages.length > 0 ? cMessages[0] : null;
-                // status logic: prefer message status if exists, otherwise candidate status
                 const currentStatus = lastMsg ? lastMsg.status : (c.status || 'new');
 
                 const lastJobTitle = lastMsg?.jobs?.title || '-';
@@ -16218,17 +16228,6 @@
                     { val: 'hired', label: '採用決定' }
                 ];
 
-                // If there's a message, we update the message. If not, we update the candidate? 
-                // Currently updateScoutStatus updates scout_messages. 
-                // If no message exists (status 'new'), we might need to handle it, but usually 'new' implies no message yet.
-                // For simplicity, if no message, we disable or show just label, but user might want to manually set status?
-                // Let's assume we update the last message if exists, or if none, we can't really set "sent" without a message object.
-                // But for "managing", maybe they sent it outside and want to record it. 
-                // For now, only enable dropdown if message exists OR allow changing candidate status directly if we supported it.
-                // Given previous code updated scout_messages, I will stick to that, but maybe enable generic status update later.
-                // I'll show dropdown if lastMsg exists. If not, standard badge.
-
-                const statusSelectId = lastMsg ? `status-${lastMsg.id}` : `status-c-${c.id}`;
                 const statusChangeHandler = lastMsg
                     ? `onchange="updateScoutStatus('${lastMsg.id}', this.value)"`
                     : `disabled title="スカウトを作成するとステータスを変更できます"`;
@@ -16239,14 +16238,21 @@
                     </select>
                 `;
 
+                // Title display: Use custom_title if available, otherwise "名称未設定"
+                // And remove the summary snippet if custom_title is present to keep it clean, or show summary as subtext
+                const displayTitle = c.custom_title || '名称未設定';
+                const subText = c.custom_title
+                    ? (c.parsed_data?.candidate_summary ? c.parsed_data.candidate_summary.substring(0, 30) + '...' : (c.profile_text || '').substring(0, 30) + '...')
+                    : (c.profile_text || '').substring(0, 30) + '...';
+
                 return `
                     <tr>
                         <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900 truncate" style="max-width: 250px;" title="${c.profile_text}">
-                                ${c.profile_text || '名称未設定'}
+                            <div class="text-sm font-bold text-gray-900 truncate" style="max-width: 250px;" title="${c.profile_text}">
+                                ${displayTitle}
                             </div>
                             <div class="text-xs text-gray-500">
-                                ${c.parsed_data?.candidate_summary ? c.parsed_data.candidate_summary.substring(0, 30) + '...' : ''}
+                                ${subText}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -16273,7 +16279,7 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">候補者情報</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">候補者 / 管理ID</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">登録日</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">直近スカウト</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
@@ -16292,8 +16298,6 @@
 
         window.viewExternalCandidateDetail = async function (candidateId) {
             try {
-                // Fetch candidate data locally or from passed data? 
-                // We'll fetch fresh to be sure
                 const { data: candidate, error } = await supabase
                     .from('external_candidates')
                     .select('*')
@@ -16307,21 +16311,23 @@
                     return;
                 }
 
-                // Set global ID so we know which candidate we are working on
                 window.currentExternalCandidateId = candidate.id;
 
-                // Switch to New Analysis tab (reuse existing UI)
                 switchProfileAnalysisTab('new');
 
-                // Populate inputs if text exists (optional, maybe clearer to keep them empty or show summary)
                 if (candidate.profile_text) {
                     $('#profile-text-input').val(candidate.profile_text);
                 }
 
-                // Render results
+                // Set custom title
+                if (candidate.custom_title) {
+                    $('#candidate-title-input').val(candidate.custom_title);
+                } else {
+                    $('#candidate-title-input').val('');
+                }
+
                 renderAnalysisResults(candidate.parsed_data);
 
-                // Optionally scroll to results
                 document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
 
             } catch (e) {
@@ -16482,14 +16488,35 @@
             $('#scout-instruction-text').val(instruction);
             analyzeProfile(instruction, job.id);
         }
+        window.resetProfileAnalysis = function () {
+            uploadedFiles = [];
+            $('#profile-file-input').val('');
+            $('#file-list').empty();
+            $('#profile-text-input').val('');
+            $('#candidate-title-input').val(''); // Clear title
+            $('#scout-instruction-text').val('');
+            $('#scout-instruction-container').addClass('hidden');
+            $('#analysis-placeholder').removeClass('hidden');
+            $('#analysis-loading').addClass('hidden');
+            $('#analysis-results').addClass('hidden');
+            $('#suggested-jobs-container').empty();
+            window.currentAnalysisHistoryId = null;
+            if ($('#current-analysis-history-id').length) $('#current-analysis-history-id').val('');
+        }
+
+        /* ... existing analyzeProfile ... */
+
         window.saveExternalCandidateProfile = async function (analysisData) {
             try {
+                const customTitle = $('#candidate-title-input').val().trim();
+
                 // 重複チェックなどは一旦省略
                 const { data, error } = await supabase.from('external_candidates').insert({
                     organization_id: currentUser.organization_id,
                     profile_text: analysisData.candidate_summary,
                     parsed_data: analysisData,
-                    status: 'new'
+                    status: 'new',
+                    custom_title: customTitle || null
                 }).select();
 
                 if (data && data[0]) {
