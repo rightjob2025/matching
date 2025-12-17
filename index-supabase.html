@@ -7212,9 +7212,10 @@
                     renderAnalysisResults(data);
 
                     // Save result here (only on analysis, not on view)
-                    if (window.saveExternalCandidateProfile) {
-                        saveExternalCandidateProfile(data);
-                    }
+                    // Removed to prevent auto-save: User must explicitly save via Scout or Register button
+                    // if (window.saveExternalCandidateProfile) {
+                    //     saveExternalCandidateProfile(data);
+                    // }
                 } else {
                     throw new Error(data.error || '解析に失敗しました');
                 }
@@ -16865,18 +16866,13 @@
             if (!confirm('このスカウト文面を「送信済み」として登録しますか？')) return;
 
             if (!window.currentExternalCandidateId) {
-                // Try to fetch latest
-                try {
-                    const { data: latest } = await supabase
-                        .from('external_candidates')
-                        .select('id')
-                        .eq('organization_id', currentUser.organization_id)
-                        .order('created_at', { ascending: false })
-                        .limit(1)
-                        .maybeSingle(); // Use maybeSingle to avoid 406 error if empty
-                    if (latest) window.currentExternalCandidateId = latest.id;
-                } catch (e) {
-                    console.error('Failed to fetch latest candidate:', e);
+                // Not yet saved to DB. Save profile first.
+                if (window.analysisResultsData && window.saveExternalCandidateProfile) {
+                    try {
+                        await window.saveExternalCandidateProfile(window.analysisResultsData);
+                    } catch (e) {
+                        console.error('Failed to save profile before scout:', e);
+                    }
                 }
             }
 
