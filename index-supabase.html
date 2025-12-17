@@ -2356,6 +2356,10 @@
                         class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
                         解析履歴
                     </button>
+                    <button onclick="switchProfileAnalysisTab('scout_management')" id="profile-tab-scout_management"
+                        class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        スカウト管理
+                    </button>
                 </nav>
             </div>
 
@@ -2464,6 +2468,22 @@
                     <div class="text-center py-12 text-gray-500">
                         <i class="fas fa-history text-4xl mb-3"></i>
                         <p>履歴を読み込んでいます...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- スカウト管理タブ -->
+            <div id="profile-scout_management-tab-content" class="hidden flex-1 overflow-y-auto">
+                <div class="mb-4 flex justify-between items-center">
+                    <h4 class="text-lg font-semibold text-gray-900">スカウト送信・返信状況</h4>
+                    <button onclick="loadScoutManagement()" class="text-sm text-indigo-600 hover:text-indigo-800">
+                        <i class="fas fa-sync-alt mr-1"></i>更新
+                    </button>
+                </div>
+                <div id="scout-management-list" class="space-y-4">
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-3"></i>
+                        <p>データを読み込んでいます...</p>
                     </div>
                 </div>
             </div>
@@ -6561,6 +6581,7 @@
             // 新規解析タブを表示
             $('#profile-new-tab-content').removeClass('hidden');
             $('#profile-history-tab-content').addClass('hidden');
+            $('#profile-scout_management-tab-content').addClass('hidden');
             $('.profile-analysis-tab').removeClass('border-indigo-600 text-indigo-600').addClass('border-transparent text-gray-500');
             $('#profile-tab-new').removeClass('border-transparent text-gray-500').addClass('border-indigo-600 text-indigo-600');
 
@@ -6618,13 +6639,18 @@
             $(`#profile-tab-${tab}`).removeClass('border-transparent text-gray-500').addClass('border-indigo-600 text-indigo-600');
 
             // コンテンツの表示切り替え
+            $('#profile-new-tab-content').addClass('hidden');
+            $('#profile-history-tab-content').addClass('hidden');
+            $('#profile-scout_management-tab-content').addClass('hidden');
+
             if (tab === 'new') {
                 $('#profile-new-tab-content').removeClass('hidden');
-                $('#profile-history-tab-content').addClass('hidden');
             } else if (tab === 'history') {
-                $('#profile-new-tab-content').addClass('hidden');
                 $('#profile-history-tab-content').removeClass('hidden');
                 loadProfileAnalysisHistory();
+            } else if (tab === 'scout_management') {
+                $('#profile-scout_management-tab-content').removeClass('hidden');
+                loadScoutManagement();
             }
         }
 
@@ -7000,6 +7026,11 @@
             $('#scout-instruction-container').removeClass('hidden');
 
             window.currentAnalysisHistoryId = data.history_id || null;
+
+            // Auto Save to External Candidates (New Feature)
+            if (window.saveExternalCandidateProfile) {
+                saveExternalCandidateProfile(data);
+            }
             currentAnalysisHistoryId = window.currentAnalysisHistoryId;
 
             if (!window.currentAnalysisHistoryId && data.save_error) {
@@ -7023,6 +7054,21 @@
 
             const container = $('#suggested-jobs-container');
             container.empty();
+
+            // 任意の求人選択ボタンを追加
+            container.append(`
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+                    <div>
+                        <h5 class="font-bold text-indigo-900">
+                            <i class="fas fa-search-plus mr-2"></i>その他の求人でスカウトを作成
+                        </h5>
+                        <p class="text-sm text-indigo-700">AI提案以外の求人を指定してスカウト文面を作成できます。</p>
+                    </div>
+                    <button onclick="openJobSelectorForScout()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow transition">
+                        求人を選択
+                    </button>
+                </div>
+            `);
 
             // Debug log removed: console.log('Analysis results:', data);
 
@@ -7177,6 +7223,9 @@
                         </div>
                         <button onclick="copyToClipboard(this)" class="text-gray-400 hover:text-indigo-600 ml-4" title="スカウト文面をコピー">
                             <i class="far fa-copy text-xl"></i>
+                        </button>
+                        <button onclick="saveScoutMessage(this, '${match.job_id}')" class="text-gray-400 hover:text-green-600 ml-2" title="スカウトを登録（送信済みとして保存）">
+                            <i class="fas fa-save text-xl"></i>
                         </button>
                     </div>
                     
@@ -16038,6 +16087,223 @@
                 alert('検索条件の適用に失敗しました: ' + (e.message || e));
             } finally {
                 if (window.hideLoading) window.hideLoading();
+            }
+        }
+
+        /* ============================================================ */
+        /*  Scout Management & Specific Job Scout Generation Logic      */
+        /* ============================================================ */
+
+        window.loadScoutManagement = async function () {
+            if (!currentUser) return;
+            const container = $('#scout-management-list');
+            container.html('<div class="text-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div></div>');
+
+            try {
+                const { data: candidates, error: cError } = await supabase
+                    .from('external_candidates')
+                    .select('*')
+                    .eq('organization_id', currentUser.organization_id)
+                    .order('created_at', { ascending: false });
+
+                if (cError) {
+                    if (cError.code === '42P01') {
+                        container.html('<div class="text-center py-8 text-gray-500">機能準備中（テーブル未作成）</div>');
+                        return;
+                    }
+                    throw cError;
+                }
+
+                if (!candidates || candidates.length === 0) {
+                    container.html('<div class="text-center py-8 text-gray-500">登録された候補者はいません</div>');
+                    return;
+                }
+
+                const candidateIds = candidates.map(c => c.id);
+                // Check if scout_messages table exists by trying to select
+                let messages = [];
+                try {
+                    const { data: msgs, error: mError } = await supabase
+                        .from('scout_messages')
+                        .select('*, jobs(title)')
+                        .in('external_candidate_id', candidateIds)
+                        .order('created_at', { ascending: false });
+                    if (!mError) messages = msgs;
+                } catch (e) { console.warn('scout_messages fetch failed', e); }
+
+                renderScoutManagementList(candidates, messages || []);
+
+            } catch (e) {
+                console.error('Load Scout Management Error:', e);
+                container.html('<div class="text-center py-8 text-red-500">読み込みに失敗しました</div>');
+            }
+        };
+
+        window.renderScoutManagementList = function (candidates, messages) {
+            const container = $('#scout-management-list');
+
+            const html = candidates.map(c => {
+                const cMessages = messages.filter(m => m.external_candidate_id === c.id);
+                const lastMsg = cMessages.length > 0 ? cMessages[0] : null;
+                const status = lastMsg ? lastMsg.status : (c.status || 'new');
+
+                let statusBadge = '';
+                switch (status) {
+                    case 'new': statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">新規</span>'; break;
+                    case 'generated': statusBadge = '<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">文面作成済</span>'; break;
+                    case 'sent': statusBadge = '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">送信済</span>'; break;
+                    case 'replied': statusBadge = '<span class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">返信あり</span>'; break;
+                    default: statusBadge = `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">${status}</span>`;
+                }
+
+                const lastJobTitle = lastMsg?.jobs?.title || (lastMsg ? '不明な求人' : '-');
+
+                return `
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-bold text-gray-900">${(c.profile_text || '名称未設定').substring(0, 30)}...</h4>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">
+                                     <i class="far fa-clock mr-1"></i>登録: ${new Date(c.created_at).toLocaleString()}
+                                </p>
+                                ${lastMsg ? `
+                                    <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded inline-block">
+                                        <span class="text-xs text-gray-400">直近のスカウト:</span>
+                                        <span class="font-semibold mx-1">${lastJobTitle}</span>
+                                        <span class="text-xs text-gray-400">(${new Date(lastMsg.created_at).toLocaleDateString()})</span>
+                                    </div>
+                                ` : '<p class="text-sm text-gray-400">スカウト履歴なし</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.html(html);
+        }
+
+        window.fetchActiveJobs = async function () {
+            const { data } = await supabase
+                .from('jobs')
+                .select('id, title')
+                .eq('organization_id', currentUser.organization_id)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false })
+                .limit(20);
+            return data;
+        }
+
+        window.openJobSelectorForScout = async function () {
+            const jobs = await fetchActiveJobs();
+            if (!jobs || jobs.length === 0) {
+                alert("有効な求人がありません");
+                return;
+            }
+
+            const options = jobs.map(j => `${j.id}: ${j.title}`).join('\n');
+            const input = prompt("スカウトを作成したい求人のIDを入力してください:\n(※一覧から選択するUIは別途実装予定)\n\n" + options);
+
+            if (!input) return;
+            const jobId = input.trim();
+            if (!jobId) {
+                alert("IDを入力してください");
+                return;
+            }
+
+            const selectedJob = jobs.find(j => j.id == jobId);
+            if (!selectedJob) {
+                alert("求人が見つかりませんでした");
+                return;
+            }
+
+            generateScoutForSelectedJob(selectedJob);
+        };
+
+        window.generateScoutForSelectedJob = async function (job) {
+            const instruction = `以下の特定の求人に対するスカウト文面を作成してください。\n(他の求人は無視して、この求人に絞って提案してください)\n\n【ターゲット求人情報】\n求人名: ${job.title}\n求人ID: ${job.id}`;
+            $('#scout-instruction-text').val(instruction);
+            analyzeProfile(instruction);
+        }
+
+        window.saveExternalCandidateProfile = async function (analysisData) {
+            try {
+                // 重複チェックなどは一旦省略
+                const { data, error } = await supabase.from('external_candidates').insert({
+                    organization_id: currentUser.organization_id,
+                    profile_text: analysisData.candidate_summary,
+                    parsed_data: analysisData,
+                    status: 'new'
+                }).select();
+
+                if (data && data[0]) {
+                    window.currentExternalCandidateId = data[0].id;
+                }
+                // タブがアクティブならリロード
+                if (!$('#profile-scout_management-tab-content').hasClass('hidden')) {
+                    loadScoutManagement();
+                }
+            } catch (e) {
+                console.error('Failed to save to external_candidates', e);
+            }
+        }
+
+        window.saveScoutMessage = async function (btn, jobId) {
+            const container = $(btn).closest('.bg-white'); // Card container
+            const subject = container.find('p:contains("件名:")').text().replace('件名: ', '').trim();
+            const body = container.find('.scout-body-text').text().trim();
+
+            if (!subject || !body) {
+                alert('スカウト文面が取得できませんでした');
+                return;
+            }
+
+            if (!confirm('このスカウト文面を「送信済み」として登録しますか？')) return;
+
+            if (!window.currentExternalCandidateId) {
+                // Try to fetch latest
+                const { data: latest } = await supabase
+                    .from('external_candidates')
+                    .select('id')
+                    .eq('organization_id', currentUser.organization_id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                if (latest) window.currentExternalCandidateId = latest.id;
+            }
+
+            if (!window.currentExternalCandidateId) {
+                alert('候補者情報が見つかりません。再解析してください。');
+                return;
+            }
+
+            try {
+                await supabase.from('scout_messages').insert({
+                    organization_id: currentUser.organization_id,
+                    external_candidate_id: window.currentExternalCandidateId,
+                    job_id: jobId,
+                    subject: subject,
+                    message_body: body,
+                    status: 'sent',
+                    sent_at: new Date()
+                });
+
+                await supabase.from('external_candidates')
+                    .update({ status: 'scouted' })
+                    .eq('id', window.currentExternalCandidateId);
+
+                alert('スカウトを登録しました');
+                $(btn).removeClass('text-gray-400').addClass('text-green-600');
+
+                if (!$('#profile-scout_management-tab-content').hasClass('hidden')) {
+                    loadScoutManagement();
+                }
+
+            } catch (e) {
+                console.error('Save scout error:', e);
+                alert('保存に失敗しました');
             }
         }
     </script>
