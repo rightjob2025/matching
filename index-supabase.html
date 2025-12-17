@@ -16193,59 +16193,141 @@
         window.renderScoutManagementList = function (candidates, messages) {
             const container = $('#scout-management-list');
 
-            const html = candidates.map(c => {
+            if (!candidates || candidates.length === 0) {
+                container.html('<div class="text-center py-8 text-gray-500">登録された候補者はいません</div>');
+                return;
+            }
+
+            const rows = candidates.map(c => {
                 const cMessages = messages.filter(m => m.external_candidate_id === c.id);
                 const lastMsg = cMessages.length > 0 ? cMessages[0] : null;
-                const status = lastMsg ? lastMsg.status : (c.status || 'new');
+                // status logic: prefer message status if exists, otherwise candidate status
+                const currentStatus = lastMsg ? lastMsg.status : (c.status || 'new');
 
-                let statusBadge = '';
-                switch (status) {
-                    case 'new': statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">新規</span>'; break;
-                    case 'generated': statusBadge = '<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">文面作成済</span>'; break;
-                    case 'sent': statusBadge = '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">送信済</span>'; break;
-                    case 'replied': statusBadge = '<span class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">返信あり</span>'; break;
-                    default: statusBadge = `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">${status}</span>`;
-                }
+                const lastJobTitle = lastMsg?.jobs?.title || '-';
+                const lastScoutDate = lastMsg ? new Date(lastMsg.created_at).toLocaleDateString() : '-';
 
-                const lastJobTitle = lastMsg?.jobs?.title || (lastMsg ? '不明な求人' : '-');
+                // Status Dropdown
+                const statusOptions = [
+                    { val: 'new', label: '新規' },
+                    { val: 'generated', label: '文面作成済' },
+                    { val: 'sent', label: '送信済' },
+                    { val: 'replied', label: '返信あり' },
+                    { val: 'interview', label: '面談設定' },
+                    { val: 'rejected', label: '辞退/不採用' },
+                    { val: 'hired', label: '採用決定' }
+                ];
+
+                // If there's a message, we update the message. If not, we update the candidate? 
+                // Currently updateScoutStatus updates scout_messages. 
+                // If no message exists (status 'new'), we might need to handle it, but usually 'new' implies no message yet.
+                // For simplicity, if no message, we disable or show just label, but user might want to manually set status?
+                // Let's assume we update the last message if exists, or if none, we can't really set "sent" without a message object.
+                // But for "managing", maybe they sent it outside and want to record it. 
+                // For now, only enable dropdown if message exists OR allow changing candidate status directly if we supported it.
+                // Given previous code updated scout_messages, I will stick to that, but maybe enable generic status update later.
+                // I'll show dropdown if lastMsg exists. If not, standard badge.
+
+                const statusSelectId = lastMsg ? `status-${lastMsg.id}` : `status-c-${c.id}`;
+                const statusChangeHandler = lastMsg
+                    ? `onchange="updateScoutStatus('${lastMsg.id}', this.value)"`
+                    : `disabled title="スカウトを作成するとステータスを変更できます"`;
+
+                const statusSelect = `
+                    <select ${statusChangeHandler} class="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 w-28">
+                        ${statusOptions.map(opt => `<option value="${opt.val}" ${currentStatus === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                    </select>
+                `;
 
                 return `
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h4 class="font-bold text-gray-900">${(c.profile_text || '名称未設定').substring(0, 30)}...</h4>
-                                    ${statusBadge}
-                                </div>
-                                <p class="text-xs text-gray-500 mb-2">
-                                     <i class="far fa-clock mr-1"></i>登録: ${new Date(c.created_at).toLocaleString()}
-                                </p>
-                                ${lastMsg ? `
-                                    <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded inline-block">
-                                        <span class="text-xs text-gray-400">直近のスカウト:</span>
-                                        <span class="font-semibold mx-1">${lastJobTitle}</span>
-                                        <span class="text-xs text-gray-400">(${new Date(lastMsg.created_at).toLocaleDateString()})</span>
-                                    </div>
-                                ` : '<p class="text-sm text-gray-400">スカウト履歴なし</p>'}
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900 truncate" style="max-width: 250px;" title="${c.profile_text}">
+                                ${c.profile_text || '名称未設定'}
                             </div>
-                            
-                            <div class="flex flex-col gap-2 items-end">
-                                ${lastMsg ? `
-                                    <select onchange="updateScoutStatus('${lastMsg.id}', this.value)" class="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700">
-                                        <option value="sent" ${lastMsg.status === 'sent' ? 'selected' : ''}>送信済</option>
-                                        <option value="replied" ${lastMsg.status === 'replied' ? 'selected' : ''}>返信あり</option>
-                                        <option value="interview" ${lastMsg.status === 'interview' ? 'selected' : ''}>面談設定</option>
-                                        <option value="rejected" ${lastMsg.status === 'rejected' ? 'selected' : ''}>辞退/不採用</option>
-                                    </select>
-                                    <!-- Potentially add "View Details" button later -->
-                                ` : ''}
+                            <div class="text-xs text-gray-500">
+                                ${c.parsed_data?.candidate_summary ? c.parsed_data.candidate_summary.substring(0, 30) + '...' : ''}
                             </div>
-                        </div>
-                    </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${new Date(c.created_at).toLocaleDateString()}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900 truncate" style="max-width: 200px;" title="${lastJobTitle}">${lastJobTitle}</div>
+                            <div class="text-xs text-gray-500">${lastScoutDate}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${statusSelect}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="viewExternalCandidateDetail('${c.id}')" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded transition">
+                                <i class="fas fa-file-alt mr-1"></i>詳細・履歴
+                            </button>
+                        </td>
+                    </tr>
                 `;
             }).join('');
 
-            container.html(html);
+            const tableHtml = `
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">候補者情報</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">登録日</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">直近スカウト</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ステータス</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${rows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.html(tableHtml);
+        }
+
+        window.viewExternalCandidateDetail = async function (candidateId) {
+            try {
+                // Fetch candidate data locally or from passed data? 
+                // We'll fetch fresh to be sure
+                const { data: candidate, error } = await supabase
+                    .from('external_candidates')
+                    .select('*')
+                    .eq('id', candidateId)
+                    .single();
+
+                if (error) throw error;
+
+                if (!candidate.parsed_data) {
+                    alert("解析データがありません");
+                    return;
+                }
+
+                // Set global ID so we know which candidate we are working on
+                window.currentExternalCandidateId = candidate.id;
+
+                // Switch to New Analysis tab (reuse existing UI)
+                switchProfileAnalysisTab('new');
+
+                // Populate inputs if text exists (optional, maybe clearer to keep them empty or show summary)
+                if (candidate.profile_text) {
+                    $('#profile-text-input').val(candidate.profile_text);
+                }
+
+                // Render results
+                renderAnalysisResults(candidate.parsed_data);
+
+                // Optionally scroll to results
+                document.getElementById('analysis-results').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (e) {
+                console.error('View detail error:', e);
+                alert("詳細の読み込みに失敗しました");
+            }
         }
 
         window.updateScoutStatus = async function (scoutId, newStatus) {
