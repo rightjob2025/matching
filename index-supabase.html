@@ -15281,8 +15281,8 @@
                 if (user.desired_location) {
                     const locs = normalizeToArray(user.desired_location);
 
-                    // 詳細テキストボックスには結合してセット
-                    $('#search-location').val(locs.join(', '));
+                    // 詳細テキストボックスへのセットは除外 (ユーザー要望)
+                    // $('#search-location').val(locs.join(', '));
 
                     // 都道府県をセット
                     const foundPrefs = [];
@@ -15293,6 +15293,8 @@
 
                     if (foundPrefs.length > 0) {
                         $('#search-prefecture').val(foundPrefs).trigger('change');
+                        // 副作用対策: トリガーによってセットされてしまった場合は即座にクリア
+                        $('#search-location').val('');
                     }
                 }
 
