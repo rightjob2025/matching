@@ -1649,6 +1649,35 @@
                             </div>
                         </div>
 
+                        <!-- スカウト履歴の公開範囲設定 -->
+                        <div class="border-b border-gray-200 pb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">スカウト履歴の公開範囲</h4>
+                            <p class="text-sm text-gray-500 mb-4">
+                                「スカウト管理」で表示される候補者および送信履歴を、組織内の他のユーザーが閲覧できるかどうかを制御します。
+                            </p>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <label class="flex items-start mb-3 cursor-pointer">
+                                    <input type="radio" name="setting-scout-visibility" value="all"
+                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                                    <div>
+                                        <div class="font-bold text-gray-900">全員に公開 (標準)</div>
+                                        <div class="text-sm text-gray-600">
+                                            組織内のすべてのユーザーが、他のユーザーが送信したスカウト履歴・候補者ステータスを閲覧できます。重複スカウトの防止に適しています。</div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start cursor-pointer">
+                                    <input type="radio" name="setting-scout-visibility" value="personal"
+                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                                    <div>
+                                        <div class="font-bold text-gray-900">作成者のみ閲覧 (プライベート)</div>
+                                        <div class="text-sm text-gray-600">ユーザーは自分がスカウトを送った候補者およびその履歴のみ閲覧できます。</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- 保存ボタン -->
                         <div class="flex justify-end pt-4">
                             <button onclick="saveAdminSettings()"
@@ -16336,6 +16365,36 @@
             container.html('<div class="text-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div></div>');
 
             try {
+                // 1. 組織設定の取得
+                const { data: orgData } = await supabase
+                    .from('organizations')
+                    .select('settings')
+                    .eq('id', currentUser.organization_id)
+                    .single();
+                const visibility = orgData?.settings?.scout_history_visibility || 'all';
+
+                // 2. 統計データの取得 (スカウト送信数: sent/replied/interview/hired/rejected)
+                // Note: ステータスが 'generated' (下書き) は除外するのが一般的だが、履歴として含めても良い。ここでは 'generated' 以外をカウントとするか、全部含むか。
+                // 一般的に「履歴」は送信済みを指すことが多い。
+                const validStatuses = ['sent', 'replied', 'interview', 'rejected', 'hired'];
+
+                // 個人
+                const { count: myCount } = await supabase
+                    .from('scout_messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('organization_id', currentUser.organization_id)
+                    .eq('created_by', currentUser.id)
+                    .in('status', validStatuses);
+
+                // 全体
+                const { count: orgCount } = await supabase
+                    .from('scout_messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('organization_id', currentUser.organization_id)
+                    .in('status', validStatuses);
+
+
+                // 3. 候補者データの取得
                 const { data: candidates, error: cError } = await supabase
                     .from('external_candidates')
                     .select('*')
@@ -16350,25 +16409,64 @@
                     throw cError;
                 }
 
+                // 4. メッセージデータの取得
+                let messages = [];
+                // Check if candidates exist
+                if (candidates && candidates.length > 0) {
+                    const candidateIds = candidates.map(c => c.id);
+                    try {
+                        let msgQuery = supabase
+                            .from('scout_messages')
+                            .select('*, jobs(title, companies(name))')
+                            .in('external_candidate_id', candidateIds)
+                            .order('created_at', { ascending: false });
+
+                        // Visibility制御
+                        if (visibility === 'personal') {
+                            msgQuery = msgQuery.eq('created_by', currentUser.id);
+                        }
+
+                        const { data: msgs, error: mError } = await msgQuery;
+                        if (!mError) messages = msgs;
+                    } catch (e) { console.warn('scout_messages fetch failed', e); }
+                }
+
+                // 5. 統計UIの表示とリストのレンダリング
+                const statsHtml = `
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-indigo-50 rounded-lg p-4 text-center border border-indigo-100">
+                            <p class="text-xs text-gray-500 font-bold mb-1">自分のスカウト送信数</p>
+                            <p class="text-2xl font-bold text-indigo-700">${myCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                            <p class="text-xs text-gray-500 font-bold mb-1">組織全体のスカウト送信数</p>
+                            <p class="text-2xl font-bold text-gray-700">${orgCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
+                        </div>
+                    </div>
+                `;
+
                 if (!candidates || candidates.length === 0) {
-                    container.html('<div class="text-center py-8 text-gray-500">登録された候補者はいません</div>');
+                    container.html(statsHtml + '<div class="text-center py-8 text-gray-500">登録された候補者はいません</div>');
                     return;
                 }
 
-                const candidateIds = candidates.map(c => c.id);
-                // Check if scout_messages table exists by trying to select
-                let messages = [];
-                try {
-                    const { data: msgs, error: mError } = await supabase
-                        .from('scout_messages')
-                        // Fetch job title AND company name
-                        .select('*, jobs(title, companies(name))')
-                        .in('external_candidate_id', candidateIds)
-                        .order('created_at', { ascending: false });
-                    if (!mError) messages = msgs;
-                } catch (e) { console.warn('scout_messages fetch failed', e); }
+                container.html(statsHtml + '<div class="space-y-4" id="scout-list-content"></div>');
 
-                renderScoutManagementList(candidates, messages || []);
+                // リストの中身を別の関数で描画するなど、あるいはここで直接呼び出し
+                // 既存の renderScoutManagementList は container.html() を上書きしてしまうので、
+                // container の中の div をターゲットにするように調整が必要。
+                // しかし renderScoutManagementList は window関数として定義されている。
+                // ここで呼び出す際に、targetを変えるか、renderScoutManagementList を修正する。
+                // 修正するのが早い。
+
+                // 既存関数を呼び出すが、ターゲット Element ID が固定されている ('scout-management-list')。
+                // これだと STATS が消えてしまう。
+                // 解決策: renderScoutManagementList にターゲットコンテナを渡せるようにする、もしくは
+                // renderScoutManagementList の中身をここにインライン化/リファクタする。
+                // ここでは安直に、renderScoutManagementList を呼び出した後で、STATS を prepend するのはちらつく。
+                // renderScoutManagementList を修正しよう。
+
+                renderScoutManagementList(candidates, messages || [], '#scout-list-content');
 
             } catch (e) {
                 console.error('Load Scout Management Error:', e);
@@ -16910,8 +17008,10 @@
                 // 設定値をフォームに反映
                 const settings = org.settings || {};
                 const visibility = settings.analysis_history_visibility || 'all';
+                const scoutVisibility = settings.scout_history_visibility || 'all';
 
                 $('input[name="setting-history-visibility"][value="' + visibility + '"]').prop('checked', true);
+                $('input[name="setting-scout-visibility"][value="' + scoutVisibility + '"]').prop('checked', true);
 
             } catch (error) {
                 console.error('Load admin settings error:', error);
@@ -16938,7 +17038,10 @@
 
                 // 2. フォームから値を取得して更新
                 const visibility = $('input[name="setting-history-visibility"]:checked').val();
+                const scoutVisibility = $('input[name="setting-scout-visibility"]:checked').val();
+
                 newSettings.analysis_history_visibility = visibility;
+                newSettings.scout_history_visibility = scoutVisibility;
 
                 // 3. 保存 (RPCを使用)
                 const { error: updateError } = await supabase
