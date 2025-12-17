@@ -15143,7 +15143,8 @@
 
 
             // 2. 応募データ取得 (全量取得してJS集計 - データ量が多い場合はRPC推奨)
-            let query = supabase.from('applications').select('created_at, status, updated_at');
+            // 'created_at' does not exist in applications table, using 'applied_at' instead.
+            let query = supabase.from('applications').select('applied_at, status, updated_at');
 
             if (currentUser.role === 'coach' || currentUser.role === 'ca') {
                 // コーチの場合は担当ユーザーのみ
@@ -15163,13 +15164,17 @@
             else if (currentDashboardPeriod === 'month') startDate.setMonth(now.getMonth() - 6); // 直近6ヶ月
             else if (currentDashboardPeriod === 'year') startDate.setFullYear(now.getFullYear() - 1); // 直近1年
 
-            query = query.gte('created_at', startDate.toISOString());
+            query = query.gte('applied_at', startDate.toISOString());
 
             const { data: applications, error } = await query;
 
             if (error) {
                 console.error('Dashboard: Applications fetch error:', error);
                 $('#dashboard-charts').prepend('<div class="col-span-2 text-red-500 bg-red-50 p-4 rounded">データ取得エラー: ' + error.message + '</div>');
+                // エラー詳細メッセージのヒントを追加
+                if (error.code === '42703') { // Undefined column
+                    $('#dashboard-charts').prepend('<div class="col-span-2 text-yellow-600 bg-yellow-50 p-2 rounded text-sm mt-2">ヒント: カラムが存在しない可能性があります。DBスキーマを確認してください。</div>');
+                }
                 return;
             }
 
@@ -15267,7 +15272,8 @@
             // 単位ごとの集計
             const dateMap = {};
             validApplications.forEach(app => {
-                const d = new Date(app.created_at);
+                // Use applied_at for date calculation
+                const d = new Date(app.applied_at || app.updated_at); // Fallback to updated_at if applied_at is null
                 let key = '';
                 if (currentDashboardPeriod === 'day') key = `${d.getMonth() + 1}/${d.getDate()}`;
                 else if (currentDashboardPeriod === 'week') {
