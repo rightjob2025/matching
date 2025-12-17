@@ -7071,7 +7071,7 @@
         let analysisResultsData = null; // 全データを保持
         const ANALYSIS_BATCH_SIZE = 3;
 
-        function renderAnalysisResults(data) {
+        window.renderAnalysisResults = function (data) {
             $('#analysis-loading').addClass('hidden');
             $('#analysis-results').removeClass('hidden');
             $('#scout-instruction-container').removeClass('hidden');
