@@ -16398,14 +16398,23 @@
 
             if (!window.currentExternalCandidateId) {
                 // Try to fetch latest
-                const { data: latest } = await supabase
-                    .from('external_candidates')
-                    .select('id')
-                    .eq('organization_id', currentUser.organization_id)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
-                if (latest) window.currentExternalCandidateId = latest.id;
+                try {
+                    const { data: latest } = await supabase
+                        .from('external_candidates')
+                        .select('id')
+                        .eq('organization_id', currentUser.organization_id)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle(); // Use maybeSingle to avoid 406 error if empty
+                    if (latest) window.currentExternalCandidateId = latest.id;
+                } catch (e) {
+                    console.error('Failed to fetch latest candidate:', e);
+                }
+            }
+
+            if (!window.currentExternalCandidateId) {
+                alert("候補者情報の保存が完了していません。\nDBへの保存が失敗している可能性があります。\n(migration_scout_features.sqlが正しく実行されているか確認してください)");
+                return;
             }
 
             if (!window.currentExternalCandidateId) {
