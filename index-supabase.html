@@ -6953,7 +6953,7 @@
             $('#suggested-jobs-container').empty();
         }
 
-        window.analyzeProfile = async function (instruction = null) {
+        window.analyzeProfile = async function (instruction = null, targetJobId = null) {
             if (!currentUser) return;
 
             const textInput = $('#profile-text-input').val().trim();
@@ -6988,7 +6988,7 @@
                     if (file.type.startsWith('image/')) {
                         base64Image = await new Promise((resolve) => {
                             const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result);
+                            reader.onload = (e) => resolve(e.target.result);
                             reader.readAsDataURL(file);
                         });
                         mimeType = file.type;
@@ -7027,7 +7027,8 @@
                         text_input: textInput || null,
                         organization_id: currentUser.organization_id,
                         user_id: currentUser.id,
-                        instruction: instruction // 追加: 修正指示
+                        instruction: instruction, // 追加: 修正指示
+                        target_job_id: targetJobId
                     }
                 });
 
@@ -16358,7 +16359,8 @@
 
         window.generateScoutForSelectedJob = async function (job) {
             const instruction = `以下の特定の求人に対するスカウト文面を作成してください。\n(他の求人は無視して、この求人に絞って提案してください)\n\n【ターゲット求人情報】\n求人名: ${job.title}\n求人ID: ${job.id}`;
-            analyzeProfile(instruction);
+            $('#scout-instruction-text').val(instruction);
+            analyzeProfile(instruction, job.id);
         }
         window.saveExternalCandidateProfile = async function (analysisData) {
             try {
