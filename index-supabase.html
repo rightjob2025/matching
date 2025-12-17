@@ -16193,7 +16193,8 @@
                 try {
                     const { data: msgs, error: mError } = await supabase
                         .from('scout_messages')
-                        .select('*, jobs(title)')
+                        // Fetch job title AND company name
+                        .select('*, jobs(title, companies(name))')
                         .in('external_candidate_id', candidateIds)
                         .order('created_at', { ascending: false });
                     if (!mError) messages = msgs;
@@ -16220,7 +16221,9 @@
                 const lastMsg = cMessages.length > 0 ? cMessages[0] : null;
                 const currentStatus = lastMsg ? lastMsg.status : (c.status || 'new');
 
-                const lastJobTitle = lastMsg?.jobs?.title || '-';
+                const jobTitle = lastMsg?.jobs?.title || '-';
+                const companyName = lastMsg?.jobs?.companies?.name || '';
+                const lastJobTitle = lastMsg ? (companyName ? `${companyName} ${jobTitle}` : jobTitle) : '-';
                 const lastScoutDate = lastMsg ? new Date(lastMsg.created_at).toLocaleDateString() : '-';
 
                 // Status Dropdown
