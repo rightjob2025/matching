@@ -7046,8 +7046,13 @@
                 if (error) throw error;
                 console.log('Analysis response data:', data); // Debug log
 
-                if (data.success) {
+                if (data && data.success) {
                     renderAnalysisResults(data);
+
+                    // Save result here (only on analysis, not on view)
+                    if (window.saveExternalCandidateProfile) {
+                        saveExternalCandidateProfile(data);
+                    }
                 } else {
                     throw new Error(data.error || '解析に失敗しました');
                 }
@@ -7090,9 +7095,10 @@
             window.currentAnalysisHistoryId = data.history_id || null;
 
             // Auto Save to External Candidates (New Feature)
-            if (window.saveExternalCandidateProfile) {
-                saveExternalCandidateProfile(data);
-            }
+            // Auto Save Removed from here to prevent duplicate on view
+            // if (window.saveExternalCandidateProfile) {
+            //     saveExternalCandidateProfile(data);
+            // }
             currentAnalysisHistoryId = window.currentAnalysisHistoryId;
 
             if (!window.currentAnalysisHistoryId && data.save_error) {
@@ -16501,6 +16507,7 @@
             $('#analysis-results').addClass('hidden');
             $('#suggested-jobs-container').empty();
             window.currentAnalysisHistoryId = null;
+            window.currentExternalCandidateId = null; // Clear candidate ID
             if ($('#current-analysis-history-id').length) $('#current-analysis-history-id').val('');
         }
 
@@ -16509,19 +16516,40 @@
         window.saveExternalCandidateProfile = async function (analysisData) {
             try {
                 const customTitle = $('#candidate-title-input').val().trim();
-
-                // 重複チェックなどは一旦省略
-                const { data, error } = await supabase.from('external_candidates').insert({
+                const payload = {
                     organization_id: currentUser.organization_id,
                     profile_text: analysisData.candidate_summary,
                     parsed_data: analysisData,
                     status: 'new',
-                    custom_title: customTitle || null
-                }).select();
+                    custom_title: customTitle || null,
+                    updated_at: new Date()
+                };
 
-                if (data && data[0]) {
-                    window.currentExternalCandidateId = data[0].id;
+                let resultData, resultError;
+
+                if (window.currentExternalCandidateId) {
+                    // Update existing
+                    const { data, error } = await supabase
+                        .from('external_candidates')
+                        .update(payload)
+                        .eq('id', window.currentExternalCandidateId)
+                        .select();
+                    resultData = data;
+                    resultError = error;
+                } else {
+                    // Insert new
+                    const { data, error } = await supabase
+                        .from('external_candidates')
+                        .insert(payload)
+                        .select();
+                    resultData = data;
+                    resultError = error;
                 }
+
+                if (resultData && resultData[0]) {
+                    window.currentExternalCandidateId = resultData[0].id; // Ensure ID is set
+                }
+
                 // タブがアクティブならリロード
                 if (!$('#profile-scout_management-tab-content').hasClass('hidden')) {
                     loadScoutManagement();
