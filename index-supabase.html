@@ -10143,8 +10143,7 @@
                         user_id: userId,
                         job_id: res.job_id,
                         score: res.match_score,
-                        reason: res.recommendation_reason,
-                        match_reason: res.reason,
+                        reason: res.recommendation_reason || res.reason,
                         details: res.details,
                         updated_at: new Date()
                     }));
