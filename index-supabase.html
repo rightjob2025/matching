@@ -10206,10 +10206,22 @@
                         // allCandidatesListにいない場合（ありえる？）
                         console.warn('User not in list:', userId);
                         // 推薦データから復元を試みる
+                        // 推薦データから復元を試みる
                         const sampleRec = allRecommendations.find(r => r.user_id === userId);
-                        if (sampleRec && sampleRec.users) {
+                        // DBから最新のプロフィールを取得する (sampleRec.usersは不完全な可能性があるため)
+                        const { data: dbUser } = await supabase.from('users')
+                            .select('*, candidate_profiles(*)')
+                            .eq('id', userId)
+                            .single();
+
+                        if (dbUser) {
+                            const p = Array.isArray(dbUser.candidate_profiles) ? dbUser.candidate_profiles[0] : dbUser.candidate_profiles;
+                            userDataForAI = { ...dbUser, ...p, id: userId };
+                            console.log('Restored user from DB:', userDataForAI);
+                        } else if (sampleRec && sampleRec.users) {
+                            // DB取得失敗時のフォールバック
                             userDataForAI = { ...sampleRec.users, id: userId };
-                            console.log('Restored user from rec:', userDataForAI);
+                            console.log('Restored user from rec (Fallback):', userDataForAI);
                         } else {
                             console.error('User data missing for AI reruun');
                             totalErrors += jobIds.length;
