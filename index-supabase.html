@@ -9497,11 +9497,12 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <h3 class="text-xl font-bold text-gray-900">${app.jobs.title}</h3>
+                                    <h3 class="text-xl font-bold text-gray-900">${app.jobs ? app.jobs.title : '不明な求人'}</h3>
                                     <span class="px-3 py-1 rounded-full text-sm font-medium ${status.color}">
                                         ${status.label}
+                                    </span>
                                 </div>
-                                <p class="text-gray-600">${app.jobs.company}</p>
+                                <p class="text-gray-600">${app.jobs ? app.jobs.company : '-'}</p>
                                 ${app.users ? `<p class="text-sm text-indigo-600 mt-1"><i class="fas fa-user mr-1"></i>応募者: ${app.users.name}</p>` : ''}
                             </div>
                             <div class="flex flex-col items-end gap-2">
@@ -10218,6 +10219,7 @@
                             const p = Array.isArray(dbUser.candidate_profiles) ? dbUser.candidate_profiles[0] : dbUser.candidate_profiles;
                             userDataForAI = { ...dbUser, ...p, id: userId };
                             console.log('Restored user from DB:', userDataForAI);
+                            alert(`Restored Check:\nName:${userDataForAI.name}\nWork:${userDataForAI.work_history ? 'YES' : 'NO'}\nBio:${userDataForAI.bio ? 'YES' : 'NO'}\nSkills:${userDataForAI.skills ? 'YES' : 'NO'}`);
                         } else if (sampleRec && sampleRec.users) {
                             // DB取得失敗時のフォールバック
                             userDataForAI = { ...sampleRec.users, id: userId };
