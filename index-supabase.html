@@ -10142,9 +10142,11 @@
 
                     // 結果の保存
                     const upsertData = results.map(res => {
-                        const original = items.find(i => i.jobId === res.job_id);
+                        // 型変換の不一致を防ぐため == を使用
+                        const original = items.find(i => i.jobId == res.job_id);
                         return {
                             id: original ? original.recId : undefined,
+                            organization_id: userDataForAI.organization_id, // 必須
                             user_id: userId,
                             job_id: res.job_id,
                             score: res.match_score,
