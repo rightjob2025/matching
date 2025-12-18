@@ -769,6 +769,12 @@
                     </a>
                     <a href="#"
                         class="nav-link flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition"
+                        data-page="kpi-dashboard">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span class="ml-3">KPI管理</span>
+                    </a>
+                    <a href="#"
+                        class="nav-link flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition"
                         data-page="admin-settings">
                         <i class="fas fa-cog w-5"></i>
                         <span class="ml-3">AIスカウト設定</span>
@@ -1610,6 +1616,123 @@
                     </div>
                 </div>
                 <div id="audit-logs-container"></div>
+            </div>
+
+            <!-- KPI Dashboard Content -->
+            <div id="kpi-dashboard-content" class="app-content p-6 hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
+                    <h1 class="text-2xl font-semibold text-gray-900">KPIダッシュボード</h1>
+                    <p class="text-gray-500 text-sm mb-6">組織全体の進捗状況、歩留まり、売上予測を可視化します。</p>
+
+                    <!-- Filter Bar -->
+                    <div
+                        class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">期間</label>
+                            <select id="kpi-filter-period" class="border border-gray-300 rounded px-3 py-1.5 text-sm">
+                                <option value="this_month">今月</option>
+                                <option value="last_month">先月</option>
+                                <option value="this_quarter" selected>今四半期</option>
+                                <option value="this_year">今年度</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">担当者</label>
+                            <select id="kpi-filter-user"
+                                class="border border-gray-300 rounded px-3 py-1.5 text-sm w-40">
+                                <option value="">全員</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button onclick="loadKPIDashboard()"
+                                class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-indigo-700">
+                                <i class="fas fa-sync-alt mr-1"></i>更新
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards (Feature B & D) -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                            <p class="text-xs font-bold text-gray-400 uppercase">売上予測 (ヨミ)</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-revenue">¥0</h3>
+                            <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>前月比 --%</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                            <p class="text-xs font-bold text-gray-400 uppercase">有効求人数</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-jobs">0</h3>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                            <p class="text-xs font-bold text-gray-400 uppercase">選考中候補者</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-candidates">0</h3>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                            <p class="text-xs font-bold text-gray-400 uppercase">成約数</p>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-success">0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <!-- Feature A: Funnel Analysis -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h4 class="font-bold text-gray-800 mb-4">選考歩留まり (ファネル)</h4>
+                            <div class="relative h-64">
+                                <canvas id="kpi-funnel-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Feature D: Activity Analysis -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h4 class="font-bold text-gray-800 mb-4">担当者別アクティビティ</h4>
+                            <div class="relative h-64">
+                                <canvas id="kpi-activity-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature C: Stagnant Cases -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                            <h4 class="font-bold text-gray-800"><i
+                                    class="fas fa-exclamation-circle text-amber-500 mr-2"></i>停滞案件アラート (5日以上変動なし)</h4>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full"
+                                id="stagnant-cases-count">0件</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            候補者</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            求人</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            現在のフェーズ</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            最終更新日</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            担当者</th>
+                                        <th
+                                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            アクション</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="kpi-stagnant-table-body">
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">データ読み込み中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Admin: Organization Settings Page -->
@@ -15889,6 +16012,8 @@
                     loadCoachStudents()
                 } else if (page === 'candidate-search') {
                     loadCandidateSearch()
+                } else if (page === 'kpi-dashboard') {
+                    loadKPIDashboard()
                 }
 
                 const titles = {
@@ -15908,7 +16033,8 @@
                     'admin-master': 'マスタデータ管理',
                     'super-admin-organizations': '組織管理',
                     'coach-students': '担当求職者管理',
-                    'candidate-search': '求職者検索'
+                    'candidate-search': '求職者検索',
+                    'kpi-dashboard': 'KPIダッシュボード'
                 }
                 $('#page-title').text(titles[page] || page)
             })
@@ -17120,6 +17246,193 @@
                 alert('設定の保存に失敗しました: ' + (error.message || error.details || JSON.stringify(error)));
             }
         };
+
+        // ============================================
+        // KPI Dashboard Logic
+        // ============================================
+        let kpiChartFunnel = null;
+        let kpiChartActivity = null;
+
+        async function loadKPIDashboard() {
+            if (!currentUser || !currentUser.organization_id) return;
+
+            showLoading('KPIデータを集計中...');
+
+            try {
+                // 1. Get Filters
+                const period = $('#kpi-filter-period').val();
+                const userIdFilter = $('#kpi-filter-user').val();
+
+                // 2. Fetch Data
+                // Fetch Applications (with Job and User info)
+                let query = supabase
+                    .from('applications')
+                    .select('*, jobs!inner(title, salary_min, salary_max, company), users!inner(name, coach_id)')
+                    .eq('jobs.organization_id', currentUser.organization_id);
+
+                // Period Filter
+                const now = new Date();
+                let startDate;
+                if (period === 'this_month') startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                else if (period === 'last_month') startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                else if (period === 'this_quarter') startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                else if (period === 'this_year') startDate = new Date(now.getFullYear(), 0, 1);
+
+                if (startDate) {
+                    query = query.gte('updated_at', startDate.toISOString());
+                }
+
+                if (userIdFilter) {
+                    query = query.eq('users.coach_id', userIdFilter);
+                }
+
+                const { data: applications, error } = await query;
+                if (error) throw error;
+
+                // Load Coaches for Filter
+                if ($('#kpi-filter-user option').length <= 1) {
+                    const { data: coaches } = await supabase
+                        .from('users')
+                        .select('id, name')
+                        .eq('organization_id', currentUser.organization_id)
+                        .in('role', ['coach', 'admin', 'org_admin']);
+
+                    if (coaches) {
+                        coaches.forEach(c => {
+                            $('#kpi-filter-user').append(`<option value="${c.id}">${c.name}</option>`);
+                        });
+                    }
+                }
+
+                const summary = calculateKPISummary(applications || []);
+                const funnelData = calculateKPIFunnel(applications || []);
+                const activityData = calculateKPIActivity(applications || []);
+                const stagnantCases = identifyStagnantCases(applications || []);
+
+                renderKPICards(summary);
+                renderKPIFunnelChart(funnelData);
+                renderKPIActivityChart(activityData);
+                renderKPIStagnantTable(stagnantCases);
+
+            } catch (e) {
+                console.error('KPI Load Error:', e);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function calculateKPISummary(apps) {
+            let revenue = 0;
+            let candidates = 0;
+            let success = 0;
+            const PROB = { 'pending': 0, 'applied': 0.1, 'interviewing': 0.3, 'offered': 0.8, 'rejected': 0, 'withdrawn': 0 };
+            const FEE_RATE = 0.35;
+
+            apps.forEach(app => {
+                if (!['rejected', 'withdrawn', 'pending'].includes(app.status)) candidates++;
+                if (app.status === 'offered') success++;
+                const salary = app.jobs.salary_min || 4000000;
+                const prob = PROB[app.status] || 0;
+                revenue += (salary * FEE_RATE * prob);
+            });
+            return { revenue, candidates, success };
+        }
+
+        function calculateKPIFunnel(apps) {
+            const counts = { 'applied': 0, 'interviewing': 0, 'offered': 0 };
+            apps.forEach(app => {
+                const s = app.status;
+                if (['applied', 'interviewing', 'offered'].includes(s)) counts['applied']++;
+                if (['interviewing', 'offered'].includes(s)) counts['interviewing']++;
+                if (['offered'].includes(s)) counts['offered']++;
+            });
+            return counts;
+        }
+
+        function calculateKPIActivity(apps) {
+            const activity = {};
+            apps.forEach(app => {
+                const cid = app.users.coach_id || 'unassigned';
+                if (!activity[cid]) activity[cid] = 0;
+                activity[cid]++;
+            });
+            // Map IDs to Names logic omitted for brevity, logic handles ID display
+            return activity;
+        }
+
+        function identifyStagnantCases(apps) {
+            const now = new Date();
+            const thresholdDays = 5;
+            const stagnant = [];
+            apps.forEach(app => {
+                if (['rejected', 'withdrawn', 'offered'].includes(app.status)) return;
+                const lastUpdate = new Date(app.updated_at);
+                const diffDays = Math.ceil(Math.abs(now - lastUpdate) / (1000 * 60 * 60 * 24));
+                if (diffDays >= thresholdDays) stagnant.push({ ...app, days_stagnant: diffDays });
+            });
+            return stagnant;
+        }
+
+        function renderKPICards(summary) {
+            $('#kpi-metric-revenue').text(`¥${Math.floor(summary.revenue / 10000).toLocaleString()}万`);
+            $('#kpi-metric-candidates').text(summary.candidates);
+            $('#kpi-metric-success').text(summary.success);
+            fetchActiveJobs().then(jobs => { if (jobs) $('#kpi-metric-jobs').text(jobs.length); });
+        }
+
+        function renderKPIFunnelChart(data) {
+            const ctx = document.getElementById('kpi-funnel-chart');
+            if (!ctx) return;
+            if (kpiChartFunnel) kpiChartFunnel.destroy();
+            kpiChartFunnel = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['書類選考/推薦', '面接中', '内定/成約'],
+                    datasets: [{
+                        label: '候補者数',
+                        data: [data.applied, data.interviewing, data.offered],
+                        backgroundColor: ['rgba(99, 102, 241, 0.5)', 'rgba(167, 139, 250, 0.5)', 'rgba(16, 185, 129, 0.5)'],
+                        borderColor: ['rgb(99, 102, 241)', 'rgb(167, 139, 250)', 'rgb(16, 185, 129)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderKPIActivityChart(activityData) {
+            const ctx = document.getElementById('kpi-activity-chart');
+            if (!ctx) return;
+            if (kpiChartActivity) kpiChartActivity.destroy();
+            kpiChartActivity = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(activityData),
+                    datasets: [{ label: 'アクション数', data: Object.values(activityData), backgroundColor: 'rgba(59, 130, 246, 0.5)' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderKPIStagnantTable(cases) {
+            const tbody = $('#kpi-stagnant-table-body');
+            tbody.empty();
+            $('#stagnant-cases-count').text(`${cases.length}件`);
+            if (cases.length === 0) {
+                tbody.html('<tr><td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">停滞している案件はありません</td></tr>');
+                return;
+            }
+            cases.forEach(c => {
+                const tr = `<tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${c.users.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${c.jobs.title}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${c.status}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(c.updated_at).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ID: ${c.users.coach_id || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button class="text-indigo-600 hover:text-indigo-900">詳細</button></td></tr>`;
+                tbody.append(tr);
+            });
+        }
     </script>
 </body>
 
