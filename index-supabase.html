@@ -8765,6 +8765,27 @@
             if (typeof loadJobs === 'function') loadJobs();
         }
 
+        /**
+         * 上位30件を選択する
+         */
+        window.selectTop30Jobs = function () {
+            const checkboxes = $('.job-checkbox:not(:disabled)');
+            if (checkboxes.length === 0) {
+                alert('選択可能な求人がありません');
+                return;
+            }
+
+            let count = 0;
+            checkboxes.each(function (index) {
+                if (index < 30) {
+                    if (!$(this).prop('checked')) {
+                        $(this).trigger('click');
+                        count++;
+                    }
+                }
+            });
+        }
+
         // ========================
         // Favorites & Saved Searches
         // ========================
