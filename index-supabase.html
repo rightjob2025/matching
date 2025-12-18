@@ -1413,6 +1413,453 @@
                 </div>
             </div>
 
+            <!-- AIスカウトページ -->
+            <!-- AIスカウトページ -->
+            <div id="ai-scout-content" class="app-content p-6 hidden">
+                <div class="bg-white rounded-lg w-full p-6 shadow min-h-[600px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-robot text-indigo-600 mr-2"></i>AIスカウト
+                        </h3>
+                    </div>
+
+                    <!-- タブナビゲーション -->
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-8">
+                            <button onclick="switchProfileAnalysisTab('new')" id="profile-tab-new"
+                                class="profile-analysis-tab py-3 px-1 border-b-2 border-indigo-600 font-medium text-sm text-indigo-600">
+                                新規解析
+                            </button>
+                            <button onclick="switchProfileAnalysisTab('history')" id="profile-tab-history"
+                                class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                解析履歴
+                            </button>
+                            <button onclick="switchProfileAnalysisTab('scout_management')"
+                                id="profile-tab-scout_management"
+                                class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                スカウト管理
+                            </button>
+                            <button onclick="switchProfileAnalysisTab('analytics')" id="profile-tab-analytics"
+                                class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                効果測定
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- 新規解析タブ -->
+                    <div id="profile-new-tab-content" class="flex-1 overflow-y-auto flex gap-6">
+                        <!-- 左側: 入力エリア -->
+                        <!-- 左側: 入力エリア -->
+                        <div class="w-1/3 flex flex-col gap-6">
+
+                            <!-- STEP 1: Basic Information -->
+                            <div
+                                class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h5
+                                        class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center">
+                                        <span
+                                            class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center mr-2 text-[10px]">1</span>
+                                        候補者情報の入力
+                                    </h5>
+                                    <!-- Settings Link (moved here) -->
+                                    <a href="javascript:void(0)" onclick="openScoutSettingsModal(); return false;"
+                                        class="text-xs text-indigo-500 hover:text-indigo-700 font-medium inline-flex items-center bg-indigo-50 px-2 py-1 rounded-full transition">
+                                        <i class="fas fa-cog mr-1"></i>設定
+                                    </a>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5">
+                                        候補者名 / 管理ID <span class="font-normal text-gray-400 ml-1">(任意)</span>
+                                    </label>
+                                    <input type="text" id="candidate-title-input"
+                                        class="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all"
+                                        placeholder="例: BizReach 123456">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5">
+                                        テキスト情報入力 <span class="font-normal text-gray-400 ml-1">(補足情報など)</span>
+                                    </label>
+                                    <textarea id="profile-text-input" rows="4"
+                                        class="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all resize-none"
+                                        placeholder="候補者の経歴、スキル、希望条件などを入力..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: File Upload -->
+                            <div
+                                class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md relative overflow-hidden">
+                                <div class="mb-3">
+                                    <h5
+                                        class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center">
+                                        <span
+                                            class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center mr-2 text-[10px]">2</span>
+                                        資料アップロード
+                                    </h5>
+                                </div>
+
+                                <div id="file-drop-area"
+                                    class="border-2 border-dashed border-indigo-300 bg-indigo-50 rounded-xl p-8 text-center hover:bg-indigo-100 transition-colors cursor-pointer relative">
+
+                                    <div class="mb-3 transform group-hover:scale-110 transition-transform duration-300">
+                                        <div
+                                            class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto text-indigo-500">
+                                            <i class="fas fa-cloud-upload-alt text-xl"></i>
+                                        </div>
+                                    </div>
+
+                                    <p class="text-sm font-bold text-gray-700 mb-1">クリックまたはドラッグ</p>
+                                    <p class="text-xs text-gray-500">PDF, 画像 (履歴書/職務経歴書)</p>
+                                    <input type="file" id="profile-file-input" class="hidden"
+                                        accept="image/*,application/pdf" multiple>
+                                </div>
+                                <div id="file-list" class="mt-3 space-y-1"></div>
+                            </div>
+
+                            <!-- Action -->
+                            <button id="analyze-profile-btn" onclick="analyzeProfile()"
+                                class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:from-indigo-700 hover:to-violet-700 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                <i class="fas fa-magic mr-2"></i>AI解析を実行
+                            </button>
+
+                            <div class="text-center">
+                                <button onclick="resetProfileAnalysis()"
+                                    class="text-xs text-gray-400 hover:text-gray-600 underline">
+                                    入力内容をリセット
+                                </button>
+                            </div>
+
+                            <!-- スカウト修正指示エリア (Hidden) -->
+                            <div id="scout-instruction-container"
+                                class="hidden mt-2 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                                <label class="block text-xs font-bold text-yellow-800 mb-2">
+                                    <i class="fas fa-pen-fancy mr-1"></i>修正指示・再生成
+                                </label>
+                                <textarea id="scout-instruction-text" rows="3"
+                                    class="w-full border border-yellow-200 bg-white rounded-lg px-3 py-2 text-sm focus:ring-yellow-500 mb-2"
+                                    placeholder="例: 文面をもっとカジュアルに..."></textarea>
+                                <button id="regenerate-scout-btn" onclick="regenerateScoutsWithInstruction()"
+                                    class="w-full bg-white text-yellow-700 border border-yellow-300 py-2 rounded-lg font-bold text-sm hover:bg-yellow-50 transition">
+                                    <i class="fas fa-sync-alt mr-2"></i>指示を反映して再生成
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 右側: 解析結果エリア -->
+                        <div
+                            class="w-2/3 bg-gray-50/50 rounded-xl p-6 overflow-y-auto border border-gray-200/60 shadow-inner min-h-[500px] flex flex-col relative">
+                            <div id="analysis-placeholder" class="text-center m-auto max-w-sm">
+                                <div
+                                    class="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center mx-auto mb-6">
+                                    <i class="fas fa-magic text-3xl text-indigo-500 animate-pulse-slow"></i>
+                                </div>
+                                <h4 class="text-lg font-bold text-gray-800 mb-2">AIスカウトを開始</h4>
+                                <p class="text-sm text-gray-500 leading-relaxed mb-6">
+                                    左側のフォームから履歴書・職務経歴書をアップロードしてください。<br>
+                                    AIが経験・スキルを解析し、最適な求人提案とスカウト文面を自動生成します。
+                                </p>
+                                <div class="flex justify-center gap-4 text-xs text-gray-400">
+                                    <span class="flex items-center"><i class="fas fa-check mr-1"></i>PDF対応</span>
+                                    <span class="flex items-center"><i class="fas fa-check mr-1"></i>画像対応</span>
+                                </div>
+                            </div>
+
+                            <div id="analysis-loading" class="hidden text-center py-20">
+                                <div
+                                    class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4">
+                                </div>
+                                <p class="text-indigo-600 font-bold">AIが画像を解析中...</p>
+                                <p class="text-sm text-gray-500 mt-2">経歴の抽出と求人マッチングを行っています</p>
+                            </div>
+
+                            <div id="analysis-results" class="hidden space-y-6">
+                                <!-- 候補者サマリー -->
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-900 mb-2"><i
+                                            class="fas fa-user-circle mr-2"></i>候補者プロフィール要約</h4>
+                                    <p id="candidate-summary-text" class="text-gray-700 text-sm leading-relaxed"></p>
+                                </div>
+
+                                <h4 class="font-bold text-gray-900 border-b pb-2">提案求人 & スカウト文面</h4>
+                                <div id="suggested-jobs-container" class="space-y-6">
+                                    <!-- ここに結果が挿入される -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 解析履歴タブ -->
+                    <div id="profile-history-tab-content" class="hidden flex-1 overflow-y-auto">
+                        <div class="mb-4 flex justify-between items-center">
+                            <h4 class="text-lg font-semibold text-gray-900">過去の解析履歴</h4>
+                            <button onclick="loadProfileAnalysisHistory()"
+                                class="text-sm text-indigo-600 hover:text-indigo-800">
+                                <i class="fas fa-sync-alt mr-1"></i>更新
+                            </button>
+                        </div>
+                        <div id="history-list" class="space-y-4">
+                            <div class="text-center py-12 text-gray-500">
+                                <i class="fas fa-history text-4xl mb-3"></i>
+                                <p>履歴を読み込んでいます...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- スカウト管理タブ -->
+                    <div id="profile-scout_management-tab-content" class="hidden flex-1 overflow-y-auto">
+                        <div class="mb-4 flex justify-between items-center">
+                            <h4 class="text-lg font-semibold text-gray-900">スカウト送信・返信状況</h4>
+                            <button onclick="loadScoutManagement()"
+                                class="text-sm text-indigo-600 hover:text-indigo-800">
+                                <i class="fas fa-sync-alt mr-1"></i>更新
+                            </button>
+                        </div>
+                        <div id="scout-management-list" class="space-y-4">
+                            <div class="text-center py-12 text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-3"></i>
+                                <p>データを読み込んでいます...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Analytics -->
+                    <div id="profile-analytics-tab-content" class="flex-1 overflow-y-auto hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-4">
+                            <!-- User Stats -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                                <h4 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
+                                    <i class="fas fa-user mr-2 text-indigo-600"></i>個人の成績
+                                </h4>
+                                <div id="analytics-user-stats" class="grid grid-cols-2 gap-4">
+                                    <!-- Stats injected here -->
+                                    <div class="text-center p-4 bg-gray-50 rounded">読み込み中...</div>
+                                </div>
+                            </div>
+
+                            <!-- Organization Stats -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                                <h4 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
+                                    <i class="fas fa-building mr-2 text-indigo-600"></i>組織全体の成績
+                                </h4>
+                                <div id="analytics-org-stats" class="grid grid-cols-2 gap-4">
+                                    <!-- Stats injected here -->
+                                    <div class="text-center p-4 bg-gray-50 rounded">読み込み中...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-4">
+                            <h4 class="font-bold text-lg text-gray-900 mb-4">ステータス詳細推移</h4>
+                            <p class="text-sm text-gray-500 mb-4">※ 送信済みスカウトを母数とした各ステータスの内訳です。</p>
+                            <div id="analytics-details-container">
+                                <div class="text-center p-4 bg-gray-50 rounded">読み込み中...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 個別求人推薦モーダル -->
+            <div id="recommend-job-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                style="z-index: 10002;">
+                <div class="bg-white rounded-lg w-full max-w-2xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-star text-yellow-500 mr-2"></i>求人を推薦
+                        </h3>
+                        <button onclick="closeRecommendJobModal()"
+                            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- 求人情報 -->
+                        <div class="bg-gray-50 p-4 rounded border">
+                            <p class="text-sm text-gray-600 mb-1">推薦する求人:</p>
+                            <p id="recommend-job-title" class="font-bold text-gray-900"></p>
+                        </div>
+
+                        <!-- 推薦先 -->
+                        <div class="bg-gray-50 p-4 rounded border">
+                            <p class="text-sm text-gray-600 mb-1">推薦先:</p>
+                            <p id="recommend-target-user" class="font-bold text-gray-900"></p>
+                        </div>
+
+                        <!-- おすすめ理由 -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium text-gray-700">おすすめ理由</label>
+                                <div class="flex items-center gap-2">
+                                    <select id="generate-reason-type"
+                                        class="text-xs border border-gray-300 rounded px-2 py-1">
+                                        <option value="recommendation">推薦文</option>
+                                        <option value="scout">スカウト文</option>
+                                    </select>
+                                    <button onclick="generateRecommendReason()"
+                                        class="text-xs text-indigo-600 hover:text-indigo-800 flex items-center">
+                                        <i class="fas fa-magic mr-1"></i>AIで生成
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="recommend-reason" rows="6"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="この求人をおすすめする理由を入力してください..."></textarea>
+                        </div>
+
+                        <!-- アクション -->
+                        <div class="flex justify-end gap-3 pt-4 border-t">
+                            <button onclick="closeRecommendJobModal()"
+                                class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
+                            <button onclick="submitRecommendation()"
+                                class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                                <i class="fas fa-check mr-2"></i>推薦する
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI詳細分析モーダル -->
+            <div id="ai-detail-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                style="z-index: 10010;">
+                <div class="bg-white rounded-lg w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-chart-bar text-indigo-600 mr-2"></i>AI詳細分析
+                        </h3>
+                        <button onclick="closeAIDetailModal()"
+                            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                    <div id="ai-detail-modal-content">
+                        <!-- Content will be injected here -->
+                    </div>
+                    <div class="mt-6 text-right">
+                        <button onclick="closeAIDetailModal()"
+                            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                            閉じる
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 一括推薦モーダル -->
+            <div id="bulk-recommend-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                style="z-index: 10002;">
+                <div class="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="bulk-recommend-modal-title" class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-star text-yellow-500 mr-2"></i>複数求人を一括推薦
+                        </h3>
+                        <button onclick="closeBulkRecommendModal()"
+                            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- 推薦先 -->
+                        <div class="bg-gray-50 p-4 rounded border">
+                            <p class="text-sm text-gray-600 mb-1">推薦先:</p>
+                            <p id="bulk-recommend-target-user" class="font-bold text-gray-900"></p>
+                        </div>
+
+                        <!-- 選択した求人リスト -->
+                        <div>
+                            <p class="text-sm font-medium text-gray-700 mb-2">選択した求人 (<span
+                                    id="bulk-job-count">0</span>件)</p>
+                            <div id="bulk-jobs-list"
+                                class="space-y-2 max-h-60 overflow-y-auto border rounded p-3 bg-gray-50">
+                                <!-- 求人リストが表示される -->
+                            </div>
+                        </div>
+
+                        <!-- アクション -->
+                        <div class="flex justify-end gap-3 pt-4 border-t">
+                            <button onclick="closeBulkRecommendModal()"
+                                class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
+                            <button onclick="submitBulkRecommendation()"
+                                class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                                <i class="fas fa-check mr-2"></i>AIマッチングする
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Super Admin: Master Data Page -->
+            <div id="admin-master-content" class="app-content p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold mb-2">マスタデータ管理</h2>
+                            <p class="text-gray-600">システム全体の選択肢（雇用形態、職種など）を管理します</p>
+                        </div>
+                        <button onclick="showMasterForm()"
+                            class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
+                            <i class="fas fa-plus mr-2"></i>新規作成
+                        </button>
+                        <button onclick="updateJobCategoriesMaster()"
+                            class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 ml-2">
+                            <i class="fas fa-sync mr-2"></i>職種マスタ初期化
+                        </button>
+                        <button onclick="updateIndustryCategoriesMaster()"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 ml-2">
+                            <i class="fas fa-sync mr-2"></i>業種マスタ初期化
+                        </button>
+                        <button onclick="updateSelectionStatusMaster()"
+                            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 ml-2">
+                            <i class="fas fa-sync mr-2"></i>進捗ステータス初期化
+                        </button>
+                        <button onclick="updatePromptMaster()"
+                            class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 ml-2">
+                            <i class="fas fa-sync mr-2"></i>プロンプト初期化
+                        </button>
+                    </div>
+                    <div id="master-org-filter-container" class="mb-4 hidden">
+                        <select id="master-filter-org" onchange="loadMasterData()"
+                            class="w-full md:w-1/3 px-3 py-2 border rounded-lg text-sm bg-gray-50">
+                            <option value="">全ての組織を表示</option>
+                        </select>
+                    </div>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-8" id="master-tabs">
+                            <button onclick="switchMasterTab('')"
+                                class="master-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                全ての種別
+                            </button>
+                            <button onclick="switchMasterTab('employment_type')"
+                                class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                雇用形態
+                            </button>
+                            <button onclick="switchMasterTab('job_category')"
+                                class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                職種カテゴリ
+                            </button>
+                            <button onclick="switchMasterTab('industry_category')"
+                                class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                業種カテゴリ
+                            </button>
+                            <button onclick="switchMasterTab('selection_status')"
+                                class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                進捗ステータス
+                            </button>
+                        </nav>
+                        <input type="hidden" id="master-filter-type" value="">
+                    </div>
+                </div>
+                <div id="master-data-container"></div>
+            </div>
+
             <!-- Admin: Job Management Page -->
             <div id="admin-jobs-content" class="app-content p-6 hidden">
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -2588,440 +3035,6 @@
     </div>
 
     <!-- 外部プロフィール解析モーダル -->
-    <!-- AIスカウトページ -->
-    <!-- AIスカウトページ -->
-    <div id="ai-scout-content" class="app-content p-6" style="border: 4px solid red; min-height: 500px;">
-        <div class="bg-white rounded-lg w-full p-6 shadow min-h-[600px]">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">
-                    <i class="fas fa-robot text-indigo-600 mr-2"></i>AIスカウト
-                </h3>
-            </div>
-
-            <!-- タブナビゲーション -->
-            <div class="border-b border-gray-200 mb-4">
-                <nav class="flex space-x-8">
-                    <button onclick="switchProfileAnalysisTab('new')" id="profile-tab-new"
-                        class="profile-analysis-tab py-3 px-1 border-b-2 border-indigo-600 font-medium text-sm text-indigo-600">
-                        新規解析
-                    </button>
-                    <button onclick="switchProfileAnalysisTab('history')" id="profile-tab-history"
-                        class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        解析履歴
-                    </button>
-                    <button onclick="switchProfileAnalysisTab('scout_management')" id="profile-tab-scout_management"
-                        class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        スカウト管理
-                    </button>
-                    <button onclick="switchProfileAnalysisTab('analytics')" id="profile-tab-analytics"
-                        class="profile-analysis-tab py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        効果測定
-                    </button>
-                </nav>
-            </div>
-
-            <!-- 新規解析タブ -->
-            <div id="profile-new-tab-content" class="flex-1 overflow-y-auto flex gap-6">
-                <!-- 左側: 入力エリア -->
-                <!-- 左側: 入力エリア -->
-                <div class="w-1/3 flex flex-col gap-6">
-
-                    <!-- STEP 1: Basic Information -->
-                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md">
-                        <div class="flex justify-between items-center mb-4">
-                            <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center">
-                                <span
-                                    class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center mr-2 text-[10px]">1</span>
-                                候補者情報の入力
-                            </h5>
-                            <!-- Settings Link (moved here) -->
-                            <a href="javascript:void(0)" onclick="openScoutSettingsModal(); return false;"
-                                class="text-xs text-indigo-500 hover:text-indigo-700 font-medium inline-flex items-center bg-indigo-50 px-2 py-1 rounded-full transition">
-                                <i class="fas fa-cog mr-1"></i>設定
-                            </a>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-xs font-bold text-gray-700 mb-1.5">
-                                候補者名 / 管理ID <span class="font-normal text-gray-400 ml-1">(任意)</span>
-                            </label>
-                            <input type="text" id="candidate-title-input"
-                                class="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all"
-                                placeholder="例: BizReach 123456">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1.5">
-                                テキスト情報入力 <span class="font-normal text-gray-400 ml-1">(補足情報など)</span>
-                            </label>
-                            <textarea id="profile-text-input" rows="4"
-                                class="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all resize-none"
-                                placeholder="候補者の経歴、スキル、希望条件などを入力..."></textarea>
-                        </div>
-                    </div>
-
-                    <!-- STEP 2: File Upload -->
-                    <div
-                        class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md relative overflow-hidden">
-                        <div class="mb-3">
-                            <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center">
-                                <span
-                                    class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center mr-2 text-[10px]">2</span>
-                                資料アップロード
-                            </h5>
-                        </div>
-
-                        <div id="file-drop-area"
-                            class="border-2 border-dashed border-indigo-300 bg-indigo-50 rounded-xl p-8 text-center hover:bg-indigo-100 transition-colors cursor-pointer relative">
-
-                            <div class="mb-3 transform group-hover:scale-110 transition-transform duration-300">
-                                <div
-                                    class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto text-indigo-500">
-                                    <i class="fas fa-cloud-upload-alt text-xl"></i>
-                                </div>
-                            </div>
-
-                            <p class="text-sm font-bold text-gray-700 mb-1">クリックまたはドラッグ</p>
-                            <p class="text-xs text-gray-500">PDF, 画像 (履歴書/職務経歴書)</p>
-                            <input type="file" id="profile-file-input" class="hidden" accept="image/*,application/pdf"
-                                multiple>
-                        </div>
-                        <div id="file-list" class="mt-3 space-y-1"></div>
-                    </div>
-
-                    <!-- Action -->
-                    <button id="analyze-profile-btn" onclick="analyzeProfile()"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:from-indigo-700 hover:to-violet-700 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                        <i class="fas fa-magic mr-2"></i>AI解析を実行
-                    </button>
-
-                    <div class="text-center">
-                        <button onclick="resetProfileAnalysis()"
-                            class="text-xs text-gray-400 hover:text-gray-600 underline">
-                            入力内容をリセット
-                        </button>
-                    </div>
-
-                    <!-- スカウト修正指示エリア (Hidden) -->
-                    <div id="scout-instruction-container"
-                        class="hidden mt-2 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                        <label class="block text-xs font-bold text-yellow-800 mb-2">
-                            <i class="fas fa-pen-fancy mr-1"></i>修正指示・再生成
-                        </label>
-                        <textarea id="scout-instruction-text" rows="3"
-                            class="w-full border border-yellow-200 bg-white rounded-lg px-3 py-2 text-sm focus:ring-yellow-500 mb-2"
-                            placeholder="例: 文面をもっとカジュアルに..."></textarea>
-                        <button id="regenerate-scout-btn" onclick="regenerateScoutsWithInstruction()"
-                            class="w-full bg-white text-yellow-700 border border-yellow-300 py-2 rounded-lg font-bold text-sm hover:bg-yellow-50 transition">
-                            <i class="fas fa-sync-alt mr-2"></i>指示を反映して再生成
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 右側: 解析結果エリア -->
-                <div
-                    class="w-2/3 bg-gray-50/50 rounded-xl p-6 overflow-y-auto border border-gray-200/60 shadow-inner min-h-[500px] flex flex-col relative">
-                    <div id="analysis-placeholder" class="text-center m-auto max-w-sm">
-                        <div
-                            class="w-20 h-20 bg-white rounded-full shadow-md flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-magic text-3xl text-indigo-500 animate-pulse-slow"></i>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800 mb-2">AIスカウトを開始</h4>
-                        <p class="text-sm text-gray-500 leading-relaxed mb-6">
-                            左側のフォームから履歴書・職務経歴書をアップロードしてください。<br>
-                            AIが経験・スキルを解析し、最適な求人提案とスカウト文面を自動生成します。
-                        </p>
-                        <div class="flex justify-center gap-4 text-xs text-gray-400">
-                            <span class="flex items-center"><i class="fas fa-check mr-1"></i>PDF対応</span>
-                            <span class="flex items-center"><i class="fas fa-check mr-1"></i>画像対応</span>
-                        </div>
-                    </div>
-
-                    <div id="analysis-loading" class="hidden text-center py-20">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4">
-                        </div>
-                        <p class="text-indigo-600 font-bold">AIが画像を解析中...</p>
-                        <p class="text-sm text-gray-500 mt-2">経歴の抽出と求人マッチングを行っています</p>
-                    </div>
-
-                    <div id="analysis-results" class="hidden space-y-6">
-                        <!-- 候補者サマリー -->
-                        <div class="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
-                            <h4 class="font-bold text-indigo-900 mb-2"><i
-                                    class="fas fa-user-circle mr-2"></i>候補者プロフィール要約</h4>
-                            <p id="candidate-summary-text" class="text-gray-700 text-sm leading-relaxed"></p>
-                        </div>
-
-                        <h4 class="font-bold text-gray-900 border-b pb-2">提案求人 & スカウト文面</h4>
-                        <div id="suggested-jobs-container" class="space-y-6">
-                            <!-- ここに結果が挿入される -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 解析履歴タブ -->
-            <div id="profile-history-tab-content" class="hidden flex-1 overflow-y-auto">
-                <div class="mb-4 flex justify-between items-center">
-                    <h4 class="text-lg font-semibold text-gray-900">過去の解析履歴</h4>
-                    <button onclick="loadProfileAnalysisHistory()"
-                        class="text-sm text-indigo-600 hover:text-indigo-800">
-                        <i class="fas fa-sync-alt mr-1"></i>更新
-                    </button>
-                </div>
-                <div id="history-list" class="space-y-4">
-                    <div class="text-center py-12 text-gray-500">
-                        <i class="fas fa-history text-4xl mb-3"></i>
-                        <p>履歴を読み込んでいます...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- スカウト管理タブ -->
-            <div id="profile-scout_management-tab-content" class="hidden flex-1 overflow-y-auto">
-                <div class="mb-4 flex justify-between items-center">
-                    <h4 class="text-lg font-semibold text-gray-900">スカウト送信・返信状況</h4>
-                    <button onclick="loadScoutManagement()" class="text-sm text-indigo-600 hover:text-indigo-800">
-                        <i class="fas fa-sync-alt mr-1"></i>更新
-                    </button>
-                </div>
-                <div id="scout-management-list" class="space-y-4">
-                    <div class="text-center py-12 text-gray-500">
-                        <i class="fas fa-inbox text-4xl mb-3"></i>
-                        <p>データを読み込んでいます...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 4: Analytics -->
-            <div id="profile-analytics-tab-content" class="flex-1 overflow-y-auto hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-4">
-                    <!-- User Stats -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                        <h4 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
-                            <i class="fas fa-user mr-2 text-indigo-600"></i>個人の成績
-                        </h4>
-                        <div id="analytics-user-stats" class="grid grid-cols-2 gap-4">
-                            <!-- Stats injected here -->
-                            <div class="text-center p-4 bg-gray-50 rounded">読み込み中...</div>
-                        </div>
-                    </div>
-
-                    <!-- Organization Stats -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                        <h4 class="font-bold text-lg text-gray-900 mb-4 flex items-center">
-                            <i class="fas fa-building mr-2 text-indigo-600"></i>組織全体の成績
-                        </h4>
-                        <div id="analytics-org-stats" class="grid grid-cols-2 gap-4">
-                            <!-- Stats injected here -->
-                            <div class="text-center p-4 bg-gray-50 rounded">読み込み中...</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-4">
-                    <h4 class="font-bold text-lg text-gray-900 mb-4">ステータス詳細推移</h4>
-                    <p class="text-sm text-gray-500 mb-4">※ 送信済みスカウトを母数とした各ステータスの内訳です。</p>
-                    <div id="analytics-details-container">
-                        <div class="text-center p-4 bg-gray-50 rounded">読み込み中...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 個別求人推薦モーダル -->
-    <div id="recommend-job-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-        style="z-index: 10002;">
-        <div class="bg-white rounded-lg w-full max-w-2xl p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">
-                    <i class="fas fa-star text-yellow-500 mr-2"></i>求人を推薦
-                </h3>
-                <button onclick="closeRecommendJobModal()"
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <!-- 求人情報 -->
-                <div class="bg-gray-50 p-4 rounded border">
-                    <p class="text-sm text-gray-600 mb-1">推薦する求人:</p>
-                    <p id="recommend-job-title" class="font-bold text-gray-900"></p>
-                </div>
-
-                <!-- 推薦先 -->
-                <div class="bg-gray-50 p-4 rounded border">
-                    <p class="text-sm text-gray-600 mb-1">推薦先:</p>
-                    <p id="recommend-target-user" class="font-bold text-gray-900"></p>
-                </div>
-
-                <!-- おすすめ理由 -->
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-medium text-gray-700">おすすめ理由</label>
-                        <div class="flex items-center gap-2">
-                            <select id="generate-reason-type" class="text-xs border border-gray-300 rounded px-2 py-1">
-                                <option value="recommendation">推薦文</option>
-                                <option value="scout">スカウト文</option>
-                            </select>
-                            <button onclick="generateRecommendReason()"
-                                class="text-xs text-indigo-600 hover:text-indigo-800 flex items-center">
-                                <i class="fas fa-magic mr-1"></i>AIで生成
-                            </button>
-                        </div>
-                    </div>
-                    <textarea id="recommend-reason" rows="6"
-                        class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="この求人をおすすめする理由を入力してください..."></textarea>
-                </div>
-
-                <!-- アクション -->
-                <div class="flex justify-end gap-3 pt-4 border-t">
-                    <button onclick="closeRecommendJobModal()"
-                        class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
-                    <button onclick="submitRecommendation()"
-                        class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                        <i class="fas fa-check mr-2"></i>推薦する
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- AI詳細分析モーダル -->
-    <div id="ai-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-        style="z-index: 10010;">
-        <div class="bg-white rounded-lg w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">
-                    <i class="fas fa-chart-bar text-indigo-600 mr-2"></i>AI詳細分析
-                </h3>
-                <button onclick="closeAIDetailModal()"
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <div id="ai-detail-modal-content">
-                <!-- Content will be injected here -->
-            </div>
-            <div class="mt-6 text-right">
-                <button onclick="closeAIDetailModal()"
-                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                    閉じる
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 一括推薦モーダル -->
-    <div id="bulk-recommend-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-        style="z-index: 10002;">
-        <div class="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="bulk-recommend-modal-title" class="text-xl font-bold text-gray-900">
-                    <i class="fas fa-star text-yellow-500 mr-2"></i>複数求人を一括推薦
-                </h3>
-                <button onclick="closeBulkRecommendModal()"
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <!-- 推薦先 -->
-                <div class="bg-gray-50 p-4 rounded border">
-                    <p class="text-sm text-gray-600 mb-1">推薦先:</p>
-                    <p id="bulk-recommend-target-user" class="font-bold text-gray-900"></p>
-                </div>
-
-                <!-- 選択した求人リスト -->
-                <div>
-                    <p class="text-sm font-medium text-gray-700 mb-2">選択した求人 (<span id="bulk-job-count">0</span>件)</p>
-                    <div id="bulk-jobs-list" class="space-y-2 max-h-60 overflow-y-auto border rounded p-3 bg-gray-50">
-                        <!-- 求人リストが表示される -->
-                    </div>
-                </div>
-
-                <!-- アクション -->
-                <div class="flex justify-end gap-3 pt-4 border-t">
-                    <button onclick="closeBulkRecommendModal()"
-                        class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
-                    <button onclick="submitBulkRecommendation()"
-                        class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                        <i class="fas fa-check mr-2"></i>AIマッチングする
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- Super Admin: Master Data Page -->
-    <div id="admin-master-content" class="app-content p-6 hidden">
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h2 class="text-xl font-semibold mb-2">マスタデータ管理</h2>
-                    <p class="text-gray-600">システム全体の選択肢（雇用形態、職種など）を管理します</p>
-                </div>
-                <button onclick="showMasterForm()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
-                    <i class="fas fa-plus mr-2"></i>新規作成
-                </button>
-                <button onclick="updateJobCategoriesMaster()"
-                    class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 ml-2">
-                    <i class="fas fa-sync mr-2"></i>職種マスタ初期化
-                </button>
-                <button onclick="updateIndustryCategoriesMaster()"
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 ml-2">
-                    <i class="fas fa-sync mr-2"></i>業種マスタ初期化
-                </button>
-                <button onclick="updateSelectionStatusMaster()"
-                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 ml-2">
-                    <i class="fas fa-sync mr-2"></i>進捗ステータス初期化
-                </button>
-                <button onclick="updatePromptMaster()"
-                    class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 ml-2">
-                    <i class="fas fa-sync mr-2"></i>プロンプト初期化
-                </button>
-            </div>
-            <div id="master-org-filter-container" class="mb-4 hidden">
-                <select id="master-filter-org" onchange="loadMasterData()"
-                    class="w-full md:w-1/3 px-3 py-2 border rounded-lg text-sm bg-gray-50">
-                    <option value="">全ての組織を表示</option>
-                </select>
-            </div>
-            <div class="border-b border-gray-200 mb-4">
-                <nav class="-mb-px flex space-x-8" id="master-tabs">
-                    <button onclick="switchMasterTab('')"
-                        class="master-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        全ての種別
-                    </button>
-                    <button onclick="switchMasterTab('employment_type')"
-                        class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        雇用形態
-                    </button>
-                    <button onclick="switchMasterTab('job_category')"
-                        class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        職種カテゴリ
-                    </button>
-                    <button onclick="switchMasterTab('industry_category')"
-                        class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        業種カテゴリ
-                    </button>
-                    <button onclick="switchMasterTab('selection_status')"
-                        class="master-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        進捗ステータス
-                    </button>
-                </nav>
-                <input type="hidden" id="master-filter-type" value="">
-            </div>
-        </div>
-        <div id="master-data-container"></div>
-    </div>
-
     <!-- Admin: AI Prompts -->
     <div id="admin-prompts-content" class="app-content p-2 hidden">
         <div class="max-w-full mx-auto">
