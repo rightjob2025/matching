@@ -6993,6 +6993,9 @@
 
             if (tab === 'new') {
                 $('#profile-new-tab-content').removeClass('hidden');
+                setTimeout(() => {
+                    setupFileUploadHandlers();
+                }, 0);
             } else if (tab === 'history') {
                 $('#profile-history-tab-content').removeClass('hidden');
                 loadProfileAnalysisHistory();
