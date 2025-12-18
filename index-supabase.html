@@ -1455,18 +1455,34 @@
                             <!-- STEP 1: Basic Information -->
                             <div
                                 class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h5
-                                        class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center">
+                                <!-- 1. Candidate Info Header -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <h5 class="font-bold text-gray-700 flex items-center">
                                         <span
-                                            class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center mr-2 text-[10px]">1</span>
+                                            class="bg-indigo-100 text-indigo-600 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">1</span>
                                         候補者情報の入力
+                                        <div class="group relative inline-block ml-2 align-middle">
+                                            <i
+                                                class="fas fa-question-circle text-gray-400 hover:text-indigo-500 cursor-help transition-colors"></i>
+                                            <div
+                                                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 leading-relaxed text-left font-normal">
+                                                <div
+                                                    class="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45">
+                                                </div>
+                                                候補者の氏名やIDを入力します。これは履歴管理のために使用され、AIの解析結果には影響しません。
+                                            </div>
+                                        </div>
                                     </h5>
-                                    <!-- Settings Link (moved here) -->
-                                    <a href="javascript:void(0)" onclick="openScoutSettingsModal(); return false;"
-                                        class="text-xs text-indigo-500 hover:text-indigo-700 font-medium inline-flex items-center bg-indigo-50 px-2 py-1 rounded-full transition">
+                                    <button onclick="openScoutStyleModal()"
+                                        class="text-xs text-indigo-600 hover:text-indigo-800 flex items-center transition-colors">
                                         <i class="fas fa-cog mr-1"></i>設定
-                                    </a>
+                                        <div class="group relative inline-block ml-1 align-middle">
+                                            <div
+                                                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-center font-normal">
+                                                文体やスタイルをカスタマイズ
+                                            </div>
+                                        </div>
+                                    </button>
                                 </div>
 
                                 <div class="mb-4">
@@ -1479,8 +1495,19 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1.5">
+                                    <label class="block text-xs font-bold text-gray-700 mb-1.5 flex items-center">
                                         テキスト情報入力 <span class="font-normal text-gray-400 ml-1">(補足情報など)</span>
+                                        <div class="group relative inline-block ml-2 align-middle">
+                                            <i
+                                                class="fas fa-question-circle text-gray-400 hover:text-indigo-500 cursor-help transition-colors"></i>
+                                            <div
+                                                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 leading-relaxed font-normal">
+                                                <div
+                                                    class="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45">
+                                                </div>
+                                                職務経歴書のテキストを直接貼り付けるか、「年収〇〇万円以上希望」「フルリモート希望」などの補足条件を入力してください。AIがこれを考慮してマッチングします。
+                                            </div>
+                                        </div>
                                     </label>
                                     <textarea id="profile-text-input" rows="4"
                                         class="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all resize-none"
@@ -1492,11 +1519,21 @@
                             <div
                                 class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md relative overflow-hidden">
                                 <div class="mb-3">
-                                    <h5
-                                        class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center">
+                                    <h5 class="font-bold text-gray-700 flex items-center">
                                         <span
-                                            class="bg-indigo-100 text-indigo-700 w-5 h-5 rounded-full flex items-center justify-center mr-2 text-[10px]">2</span>
+                                            class="bg-indigo-100 text-indigo-600 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2">2</span>
                                         資料アップロード
+                                        <div class="group relative inline-block ml-2 align-middle">
+                                            <i
+                                                class="fas fa-question-circle text-gray-400 hover:text-indigo-500 cursor-help transition-colors"></i>
+                                            <div
+                                                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 leading-relaxed font-normal">
+                                                <div
+                                                    class="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45">
+                                                </div>
+                                                履歴書・職務経歴書のPDFや画像をアップロードしてください。匿名公開されているプロフィールのスクリーンショットも解析可能です。
+                                            </div>
+                                        </div>
                                     </h5>
                                 </div>
 
@@ -1519,10 +1556,16 @@
                             </div>
 
                             <!-- Action -->
-                            <button id="analyze-profile-btn" onclick="analyzeProfile()"
-                                class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:from-indigo-700 hover:to-violet-700 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                                <i class="fas fa-magic mr-2"></i>AI解析を実行
-                            </button>
+                            <div class="relative group">
+                                <button id="analyze-profile-btn" onclick="analyzeProfile()"
+                                    class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:from-indigo-700 hover:to-violet-700 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                                    <i class="fas fa-magic mr-2"></i>AI解析を実行
+                                </button>
+                                <div
+                                    class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max px-3 py-1 bg-gray-800 text-white text-xs rounded shadow opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none">
+                                    約30〜60秒で解析が完了します
+                                </div>
+                            </div>
 
                             <div class="text-center">
                                 <button onclick="resetProfileAnalysis()"
@@ -7515,12 +7558,33 @@
                     <div class="flex border-b border-gray-200 mb-4">
                         <button onclick="switchAnalysisTab('skill')" id="tab-skill" class="ai-result-tab flex-1 py-3 px-2 text-center text-sm font-bold border-b-2 transition-colors duration-200 text-indigo-600 border-indigo-600">
                             <i class="fas fa-tools mr-1"></i>スキル・経験
+                            <span class="group relative inline-block ml-1 text-left font-normal" onclick="event.stopPropagation()">
+                                <i class="fas fa-question-circle text-gray-400 hover:text-indigo-500 cursor-help transition-colors"></i>
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 leading-relaxed font-normal">
+                                    <div class="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45"></div>
+                                    具体的なスキルセットや実務経験など、「即戦力」としての適合度が高い求人です。
+                                </div>
+                            </span>
                         </button>
                         <button onclick="switchAnalysisTab('industry')" id="tab-industry" class="ai-result-tab flex-1 py-3 px-2 text-center text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700">
                             <i class="fas fa-building mr-1"></i>業界・ドメイン
+                            <span class="group relative inline-block ml-1 text-left font-normal" onclick="event.stopPropagation()">
+                                <i class="fas fa-question-circle text-gray-400 hover:text-indigo-500 cursor-help transition-colors"></i>
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 leading-relaxed font-normal">
+                                    <div class="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45"></div>
+                                    業界知識や商流の理解など、バックグラウンドの経験が活かせる求人です。
+                                </div>
+                            </span>
                         </button>
                         <button onclick="switchAnalysisTab('mindset')" id="tab-mindset" class="ai-result-tab flex-1 py-3 px-2 text-center text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700">
                             <i class="fas fa-heart mr-1"></i>志向性
+                            <span class="group relative inline-block ml-1 text-left font-normal" onclick="event.stopPropagation()">
+                                <i class="fas fa-question-circle text-gray-400 hover:text-indigo-500 cursor-help transition-colors"></i>
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 leading-relaxed font-normal">
+                                    <div class="absolute bottom-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45"></div>
+                                    候補者のキャリア志向や人柄、企業文化（カルチャー）との相性が良い求人です。
+                                </div>
+                            </span>
                         </button>
                     </div>
                     <div id="analysis-tab-content"></div>
