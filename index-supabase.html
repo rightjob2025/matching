@@ -4431,10 +4431,12 @@
             $('#loading-message').text(message);
             $('#loading-overlay').removeClass('hidden')
         }
+        window.showLoading = showLoading;
 
         function hideLoading() {
             $('#loading-overlay').addClass('hidden')
         }
+        window.hideLoading = hideLoading;
 
         function showError(elementId, message) {
             $(`#${elementId}`).text(message).removeClass('hidden')
@@ -17254,9 +17256,11 @@
         let kpiChartActivity = null;
 
         async function loadKPIDashboard() {
+            const currentUser = window.currentUser;
+            const supabase = window.supabase;
             if (!currentUser || !currentUser.organization_id) return;
 
-            showLoading('KPIデータを集計中...');
+            window.showLoading('KPIデータを集計中...');
 
             try {
                 // 1. Get Filters
@@ -17317,14 +17321,13 @@
             } catch (e) {
                 console.error('KPI Load Error:', e);
             } finally {
-                hideLoading();
+                window.hideLoading();
             }
         }
 
         function calculateKPISummary(apps) {
             let revenue = 0;
             let candidates = 0;
-            let success = 0;
             const PROB = { 'pending': 0, 'applied': 0.1, 'interviewing': 0.3, 'offered': 0.8, 'rejected': 0, 'withdrawn': 0 };
             const FEE_RATE = 0.35;
 
