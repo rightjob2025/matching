@@ -15759,11 +15759,29 @@
                 // $('#search-is-remote').prop('checked', false); // リモート可は保持してもいいかもしれないがリセット推奨
 
                 // ヘルパー: 配列かカンマ区切り文字列を配列に正規化
+                // ヘルパー: 配列かカンマ区切り文字列を配列に正規化
                 const normalizeToArray = (val) => {
                     if (!val) return [];
                     if (Array.isArray(val)) return val;
-                    return val.split(',').map(s => s.trim());
+                    // JSON文字列っぽい場合はパースを試みる
+                    if (typeof val === 'string') {
+                        const trimmed = val.trim();
+                        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                            try {
+                                return JSON.parse(trimmed);
+                            } catch (e) {
+                                console.warn('JSON Parse failed for profile data:', val);
+                            }
+                        }
+                        // カンマ区切りなど
+                        return filteredSplit(val); // filteredSplitがあれば使うが、なければsplit
+                    }
+                    return val.toString().split(',').map(s => s.trim());
                 };
+
+                const filteredSplit = (val) => {
+                    return val.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
+                }
 
                 // 職種
                 if (user.desired_job_type) {
