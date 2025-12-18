@@ -12038,48 +12038,47 @@
 
                 // 0. system_prompts 保存 (Super Admin Only but guard is at top)
                 // 0. Payload Preparation
-                // Helper to encode (UTF-8 safe to Base64) for WAF bypass
-                function encodeBase64(str) {
-                    if (!str) return null;
-                    try {
-                        return btoa(unescape(encodeURIComponent(str)));
-                    } catch (e) {
-                        console.error('Encoding error', e);
-                        return str;
-                    }
+                // 0. Payload Preparation (No Base64 needed for DB)
+
+                // 1. System Prompts Upsert (Super Admin Only)
+                if (jobDescriptionContent) {
+                    const { error } = await supabase.from('system_prompts').upsert({ key: 'job_description', content: jobDescriptionContent }, { onConflict: 'key' });
+                    if (error) console.error('SysPrompt error:', error);
+                }
+                if (csvMappingContent) {
+                    const { error } = await supabase.from('system_prompts').upsert({ key: 'csv_field_mapping', content: csvMappingContent }, { onConflict: 'key' });
+                    if (error) console.error('SysPrompt error:', error);
+                }
+                if (externalProfileAnalysisContent) {
+                    const { error } = await supabase.from('system_prompts').upsert({ key: 'external_profile_analysis_prompt', content: externalProfileAnalysisContent }, { onConflict: 'key' });
+                    if (error) console.error('SysPrompt error:', error);
                 }
 
-                const systemPrompts = [];
-                if (jobDescriptionContent) systemPrompts.push({ key: 'job_description', content: encodeBase64(jobDescriptionContent) });
-                if (csvMappingContent) systemPrompts.push({ key: 'csv_field_mapping', content: encodeBase64(csvMappingContent) });
-                if (externalProfileAnalysisContent) systemPrompts.push({ key: 'external_profile_analysis_prompt', content: encodeBase64(externalProfileAnalysisContent) });
+                // 2. Master Data Update
+                // Delete existing
+                const { error: deleteError } = await supabase
+                    .from('master_data')
+                    .delete()
+                    .eq('type', 'prompt')
+                    .eq('organization_id', currentUser.organization_id);
 
-                const masterDataPrompts = updates.map(u => ({
+                if (deleteError) throw deleteError;
+
+                // Insert new
+                const insertData = updates.map(u => ({
                     type: 'prompt',
-                    label: encodeBase64(u.content),
+                    label: u.content,
                     value: u.key,
                     sort_order: u.sort_order,
                     is_active: true,
                     organization_id: currentUser.organization_id
                 }));
 
-                // 1. Invoke Edge Function (Bypass RLS)
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) throw new Error('ログインセッションが見つかりません');
+                const { error: insertError } = await supabase
+                    .from('master_data')
+                    .insert(insertData);
 
-                console.log('Invoking save-prompts function...');
-                console.log('Token exists:', !!session.access_token);
-
-                const { data, error } = await supabase.functions.invoke('save-prompts', {
-                    body: {
-                        systemPrompts,
-                        masterDataPrompts,
-                        organizationId: currentUser.organization_id
-                    }
-                });
-
-                if (error) throw error;
-                if (data && data.error) throw new Error(data.error);
+                if (insertError) throw insertError;
 
                 alert('プロンプト設定を保存しました');
             } catch (error) {
