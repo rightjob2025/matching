@@ -14187,13 +14187,14 @@
             showLoading();
             try {
                 if (orgId) {
-                    // 更新（既存のまま）
-                    const { error: updateError } = await supabase
-                        .from('organizations')
-                        .update(orgData)
-                        .eq('id', orgId);
+                    // 更新（Edge Function経由: RLS回避のため）
+                    const { data: updateResult, error: funcError } = await supabase.functions.invoke('update-organization', {
+                        body: { orgId, orgData }
+                    });
 
-                    if (updateError) throw updateError;
+                    if (funcError) throw funcError;
+                    if (updateResult.error) throw new Error(updateResult.error);
+
                     alert('保存しました');
 
                 } else {
