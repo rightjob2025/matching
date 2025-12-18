@@ -12053,8 +12053,16 @@
                 }));
 
                 // 1. Invoke Edge Function (Bypass RLS)
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) throw new Error('ログインセッションが見つかりません');
+
                 console.log('Invoking save-prompts function...');
+                console.log('Token exists:', !!session.access_token);
+
                 const { data, error } = await supabase.functions.invoke('save-prompts', {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`
+                    },
                     body: {
                         systemPrompts,
                         masterDataPrompts,
