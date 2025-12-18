@@ -12037,27 +12037,13 @@
                 ];
 
                 // 0. system_prompts 保存 (Super Admin Only but guard is at top)
-                if (jobDescriptionContent) {
-                    await supabase.from('system_prompts').upsert({ key: 'job_description', content: jobDescriptionContent }, { onConflict: 'key' });
-                }
-                if (csvMappingContent) {
-                    await supabase.from('system_prompts').upsert({ key: 'csv_field_mapping', content: csvMappingContent }, { onConflict: 'key' });
-                }
-                if (externalProfileAnalysisContent) {
-                    await supabase.from('system_prompts').upsert({ key: 'external_profile_analysis_prompt', content: externalProfileAnalysisContent }, { onConflict: 'key' });
-                }
+                // 0. Payload Preparation
+                const systemPrompts = [];
+                if (jobDescriptionContent) systemPrompts.push({ key: 'job_description', content: jobDescriptionContent });
+                if (csvMappingContent) systemPrompts.push({ key: 'csv_field_mapping', content: csvMappingContent });
+                if (externalProfileAnalysisContent) systemPrompts.push({ key: 'external_profile_analysis_prompt', content: externalProfileAnalysisContent });
 
-                // 1. 既存のプロンプトを削除
-                const { error: deleteError } = await supabase
-                    .from('master_data')
-                    .delete()
-                    .eq('type', 'prompt')
-                    .eq('organization_id', currentUser.organization_id);
-
-                if (deleteError) throw deleteError;
-
-                // 2. 新しいプロンプトを挿入
-                const insertData = updates.map(u => ({
+                const masterDataPrompts = updates.map(u => ({
                     type: 'prompt',
                     label: u.content,
                     value: u.key,
@@ -12066,11 +12052,18 @@
                     organization_id: currentUser.organization_id
                 }));
 
-                const { error: insertError } = await supabase
-                    .from('master_data')
-                    .insert(insertData);
+                // 1. Invoke Edge Function (Bypass RLS)
+                console.log('Invoking save-prompts function...');
+                const { data, error } = await supabase.functions.invoke('save-prompts', {
+                    body: {
+                        systemPrompts,
+                        masterDataPrompts,
+                        organizationId: currentUser.organization_id
+                    }
+                });
 
-                if (insertError) throw insertError;
+                if (error) throw error;
+                if (data && data.error) throw new Error(data.error);
 
                 alert('プロンプト設定を保存しました');
             } catch (error) {
