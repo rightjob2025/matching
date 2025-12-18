@@ -1039,7 +1039,7 @@
                         <label class="flex items-center gap-2 cursor-pointer" id="exclude-matched-container"
                             style="display: none;">
                             <input type="checkbox" id="search-exclude-matched" class="w-4 h-4 text-purple-600 rounded">
-                            <span class="text-sm text-purple-700 font-medium">AI紹介済みを除外</span>
+                            <span class="text-sm text-purple-700 font-medium">AIマッチ済みを除く</span>
                         </label>
                         <!-- お気に入り絞り込み -->
                         <label class="flex items-center gap-2 cursor-pointer">
@@ -1103,7 +1103,7 @@
                         </button>
                         <button onclick="openBulkRecommendModal()"
                             class="bar-button bg-indigo-600 text-white px-8 py-3 rounded-full hover:bg-indigo-700 font-bold shadow-lg hover:shadow-xl transition flex items-center transform hover:-translate-y-0.5">
-                            <i class="fas fa-paper-plane mr-2"></i>一括紹介を実行
+                            <i class="fas fa-paper-plane mr-2"></i>AIマッチを実行
                         </button>
                     </div>
                 </div>
@@ -5540,8 +5540,8 @@
                 if (isAgent && targetUserId) {
                     // エージェントの場合: 推薦バーを表示
                     $('#bulk-recommend-bar').removeClass('hidden');
-                    $('#bulk-recommend-bar .bar-title').text('一括紹介');
-                    $('#bulk-recommend-bar .bar-button').text('一括紹介を実行');
+                    $('#bulk-recommend-bar .bar-title').text('AIマッチ');
+                    $('#bulk-recommend-bar .bar-button').text('AIマッチを実行');
                 } else if (isCandidate) {
                     // 求職者の場合: AIマッチング診断バーを表示
                     $('#bulk-recommend-bar').removeClass('hidden');
@@ -5772,7 +5772,7 @@
                     $('#bulk-recommend-modal-title').text('AIマッチング診断');
                     $('#bulk-recommend-target-user').text(`あなた (${user.name})`);
                 } else {
-                    $('#bulk-recommend-modal-title').text('一括紹介');
+                    $('#bulk-recommend-modal-title').text('AIマッチ');
                     $('#bulk-recommend-target-user').text(`${user.name} (${user.email})`);
                 }
 
