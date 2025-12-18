@@ -10146,7 +10146,7 @@
                         const original = items.find(i => i.jobId == res.job_id);
                         return {
                             id: original ? original.recId : undefined,
-                            organization_id: userDataForAI.organization_id, // 必須
+                            organization_id: userDataForAI.organization_id || currentUser.organization_id, // フォールバックを追加
                             user_id: userId,
                             job_id: res.job_id,
                             score: res.match_score,
