@@ -8407,6 +8407,20 @@
                 // 並列処理でEdge Functionを呼び出す
                 const aiPromises = candidatesForAI.map(async (item) => {
                     try {
+                        // DEBUG: Check Candidate Data
+                        const debugKeys = Object.keys(item.candidate).join(', ');
+                        console.log('Candidate Keys:', debugKeys);
+                        // Make sure we have skills or bio
+                        const hasSkills = item.candidate.skills ? 'Yes' : 'No';
+                        const hasBio = item.candidate.bio ? 'Yes' : 'No';
+                        const hasWork = item.candidate.work_history ? 'Yes' : 'No';
+
+                        // For the first candidate, show an alert to the user to verify data presence
+                        if (item === candidatesForAI[0]) {
+                            console.log(`Debug Check: Skills=${hasSkills}, Bio=${hasBio}, Work=${hasWork}`);
+                            alert(`Debug Data Check:\nSkills: ${hasSkills}\nBio: ${hasBio}\nWork: ${hasWork}\nKeys: ${debugKeys}`);
+                        }
+
                         const { data, error } = await supabase.functions.invoke('ai-matching', {
                             body: {
                                 user: item.candidate,
