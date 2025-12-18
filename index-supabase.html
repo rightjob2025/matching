@@ -8061,9 +8061,15 @@
         };
 
         async function loadAllJobsforSearch() {
-            const { data } = await supabase.from('jobs')
+            let query = supabase.from('jobs')
                 .select('id, title, companies(name), requirements, salary_min, salary_max, job_category, industry_category, location, employment_type')
                 .eq('status', 'active');
+
+            if (currentUser && currentUser.organization_id) {
+                query = query.eq('organization_id', currentUser.organization_id);
+            }
+
+            const { data } = await query;
             allCandidateSearchJobs = data || [];
         }
 
