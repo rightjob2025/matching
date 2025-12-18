@@ -17293,24 +17293,27 @@
                 const { data: applications, error } = await query;
                 if (error) throw error;
 
-                // Load Coaches for Filter
-                if ($('#kpi-filter-user option').length <= 1) {
-                    const { data: coaches } = await supabase
-                        .from('users')
-                        .select('id, name')
-                        .eq('organization_id', currentUser.organization_id)
-                        .in('role', ['coach', 'admin', 'org_admin']);
+                // Load Coaches for Mapping and Filter
+                const { data: allCoaches } = await window.supabase
+                    .from('users')
+                    .select('id, name')
+                    .eq('organization_id', currentUser.organization_id)
+                    .in('role', ['coach', 'admin', 'org_admin', 'super_admin']);
 
-                    if (coaches) {
-                        coaches.forEach(c => {
+                const coachNameMap = {};
+                if (allCoaches) {
+                    allCoaches.forEach(c => {
+                        coachNameMap[c.id] = c.name;
+                        // Populate filter if empty (or missing)
+                        if ($('#kpi-filter-user option[value="' + c.id + '"]').length === 0) {
                             $('#kpi-filter-user').append(`<option value="${c.id}">${c.name}</option>`);
-                        });
-                    }
+                        }
+                    });
                 }
 
                 const summary = calculateKPISummary(applications || []);
                 const funnelData = calculateKPIFunnel(applications || []);
-                const activityData = calculateKPIActivity(applications || []);
+                const activityData = calculateKPIActivity(applications || [], coachNameMap);
                 const stagnantCases = identifyStagnantCases(applications || []);
 
                 renderKPICards(summary);
@@ -17353,14 +17356,15 @@
             return counts;
         }
 
-        function calculateKPIActivity(apps) {
+        function calculateKPIActivity(apps, nameMap) {
             const activity = {};
             apps.forEach(app => {
-                const cid = app.users.coach_id || 'unassigned';
-                if (!activity[cid]) activity[cid] = 0;
-                activity[cid]++;
+                const cid = app.users.coach_id;
+                const name = cid ? (nameMap && nameMap[cid] ? nameMap[cid] : 'Unknown') : '未アサイン';
+
+                if (!activity[name]) activity[name] = 0;
+                activity[name]++;
             });
-            // Map IDs to Names logic omitted for brevity, logic handles ID display
             return activity;
         }
 
