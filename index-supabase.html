@@ -10078,14 +10078,15 @@
             showLoading();
             try {
                 // ユーザーごとにグループ化
-                const userJobMap = {}; // { userId: [jobId1, jobId2...] }
+                const userJobMap = {}; // { userId: [{jobId, recId}...] }
 
                 checkboxes.each(function () {
                     const userId = $(this).data('user-id');
                     const jobId = $(this).data('job-id');
+                    const recId = $(this).val();
                     if (!userId || !jobId) return; // ガード
                     if (!userJobMap[userId]) userJobMap[userId] = [];
-                    userJobMap[userId].push(jobId);
+                    userJobMap[userId].push({ jobId, recId });
                 });
 
                 let totalSuccess = 0;
@@ -10093,7 +10094,8 @@
 
                 // ユーザーごとに処理
                 for (const userId of Object.keys(userJobMap)) {
-                    const jobIds = userJobMap[userId];
+                    const items = userJobMap[userId];
+                    const jobIds = items.map(i => i.jobId);
                     const user = allCandidatesList.find(u => u.id === userId);
 
                     // ユーザーが見つからない場合、候補リストから取れなければ推薦データ内のユーザー情報を使う（後方互換）
@@ -10139,17 +10141,21 @@
                     if (error) throw error;
 
                     // 結果の保存
-                    const upsertData = results.map(res => ({
-                        user_id: userId,
-                        job_id: res.job_id,
-                        score: res.match_score,
-                        reason: res.recommendation_reason || res.reason,
-                        details: res.details
-                    }));
+                    const upsertData = results.map(res => {
+                        const original = items.find(i => i.jobId === res.job_id);
+                        return {
+                            id: original ? original.recId : undefined,
+                            user_id: userId,
+                            job_id: res.job_id,
+                            score: res.match_score,
+                            reason: res.recommendation_reason || res.reason,
+                            details: res.details
+                        };
+                    });
 
                     const { error: upsertError } = await supabase
                         .from('recommendations')
-                        .upsert(upsertData, { onConflict: 'user_id, job_id' });
+                        .upsert(upsertData);
 
                     if (upsertError) {
                         console.error('Upsert error:', upsertError);
