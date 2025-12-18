@@ -9878,6 +9878,10 @@
             // 右側: ソート（再実行ボタンは削除）
             controlsHtml += `
                 <div class="flex items-center gap-4 ml-auto">
+                    <button onclick="reRunSelectedRecommendations()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-sync-alt"></i> 選択した求人を再判定
+                    </button>
+
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-medium text-gray-700 whitespace-nowrap"><i class="fas fa-sort mr-1"></i>並び替え:</label>
                         <select onchange="sortRecommendations(this.value)" class="px-3 py-2 border rounded-lg text-sm cursor-pointer hover:bg-gray-50">
@@ -9939,7 +9943,13 @@
                 const cardStyle = isDismissed ? 'bg-gray-100 opacity-60' : 'bg-white border-gray-200 hover:shadow-md';
 
                 return `
-                <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden" data-user-id="${rec.user_id}">
+                <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden group" data-user-id="${rec.user_id}">
+                    <div class="absolute top-0 left-0 p-3 z-20">
+                        <div class="bg-white rounded-md shadow-sm border border-gray-200 p-1 flex items-center justify-center">
+                            <input type="checkbox" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 rec-checkbox cursor-pointer" 
+                                   value="${rec.id}" data-job-id="${rec.job_id}" data-user-id="${rec.user_id}">
+                        </div>
+                    </div>
                     <div class="absolute top-0 right-0 ${matchColor} text-white px-3 py-1 rounded-bl-lg text-sm font-bold">
                         マッチ度 ${rec.score}%
                     </div>
@@ -10051,6 +10061,119 @@
             `}).join('') + '</div>';
 
             container.html(html)
+        }
+
+        // 選択した求人のAI再判定
+        window.reRunSelectedRecommendations = async function () {
+            const checkboxes = $('.rec-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('再判定する求人を選択してください');
+                return;
+            }
+
+            if (!confirm(`${checkboxes.length}件の求人についてAIマッチングを再実行しますか？\n（現在の判定結果は上書きされます）`)) {
+                return;
+            }
+
+            showLoading();
+            try {
+                // ユーザーごとにグループ化
+                const userJobMap = {}; // { userId: [jobId1, jobId2...] }
+
+                checkboxes.each(function () {
+                    const userId = $(this).data('user-id');
+                    const jobId = $(this).data('job-id');
+                    if (!userId || !jobId) return; // ガード
+                    if (!userJobMap[userId]) userJobMap[userId] = [];
+                    userJobMap[userId].push(jobId);
+                });
+
+                let totalSuccess = 0;
+                let totalErrors = 0;
+
+                // ユーザーごとに処理
+                for (const userId of Object.keys(userJobMap)) {
+                    const jobIds = userJobMap[userId];
+                    const user = allCandidatesList.find(u => u.id === userId);
+
+                    // ユーザーが見つからない場合、候補リストから取れなければ推薦データ内のユーザー情報を使う（後方互換）
+                    let userDataForAI = null;
+
+                    if (user) {
+                        const profile = Array.isArray(user.candidate_profiles) ? user.candidate_profiles[0] : user.candidate_profiles;
+                        userDataForAI = { ...user, ...profile };
+                        userDataForAI.id = user.id;
+                    } else {
+                        // allCandidatesListにいない場合（ありえる？）
+                        console.warn('User not in list:', userId);
+                        // 推薦データから復元を試みる
+                        const sampleRec = allRecommendations.find(r => r.user_id === userId);
+                        if (sampleRec && sampleRec.users) {
+                            userDataForAI = { ...sampleRec.users, id: userId };
+                            console.log('Restored user from rec:', userDataForAI);
+                        } else {
+                            console.error('User data missing for AI reruun');
+                            totalErrors += jobIds.length;
+                            continue;
+                        }
+                    }
+
+                    // 求人情報の取得 (allRecommendationsから探す)
+                    // rec.jobs が必要
+                    const jobs = jobIds.map(jobId => {
+                        const rec = allRecommendations.find(r => r.job_id === jobId && r.user_id === userId);
+                        return rec ? rec.jobs : null;
+                    }).filter(j => j);
+
+                    if (jobs.length === 0) continue;
+
+                    console.log(`Re-analyzing for user ${userDataForAI.name || userId}:`, jobs.length, 'jobs');
+
+                    const { data: results, error } = await supabase.functions.invoke('ai-matching', {
+                        body: {
+                            user: userDataForAI,
+                            jobs: jobs
+                        }
+                    });
+
+                    if (error) throw error;
+
+                    // 結果の保存
+                    const upsertData = results.map(res => ({
+                        user_id: userId,
+                        job_id: res.job_id,
+                        score: res.match_score,
+                        reason: res.recommendation_reason,
+                        match_reason: res.reason,
+                        details: res.details,
+                        updated_at: new Date()
+                    }));
+
+                    const { error: upsertError } = await supabase
+                        .from('recommendations')
+                        .upsert(upsertData, { onConflict: 'user_id, job_id' });
+
+                    if (upsertError) {
+                        console.error('Upsert error:', upsertError);
+                        totalErrors += jobIds.length;
+                    } else {
+                        totalSuccess += jobIds.length;
+                    }
+                }
+
+                alert(`再判定が完了しました。\n成功: ${totalSuccess}件\n失敗: ${totalErrors}件`);
+
+                // データ再読み込み
+                if (typeof loadRecommendations === 'function') {
+                    loadRecommendations();
+                }
+
+            } catch (error) {
+                console.error('Re-run error:', error);
+                alert('再判定中にエラーが発生しました: ' + error.message);
+            } finally {
+                hideLoading();
+            }
         }
 
         // 推薦結果のフィルタリング
