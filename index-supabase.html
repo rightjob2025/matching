@@ -17300,6 +17300,20 @@
                     return;
                 }
 
+                // DEBUG: Check RLS Function result
+                try {
+                    const { data: dbOrgId, error: rpcError } = await supabase.rpc('get_my_org_id');
+                    console.log('RPC get_my_org_id result:', dbOrgId, rpcError);
+
+                    if (dbOrgId !== currentUser.organization_id) {
+                        alert(`【重要】ID不一致検出\nDB上の組織ID: ${dbOrgId}\nアプリ上の組織ID: ${currentUser.organization_id}\n\nこれが原因で保存が拒否されています。`);
+                    } else {
+                        console.log('Org IDs match confirmed.');
+                    }
+                } catch (e) {
+                    console.error('RPC Error:', e);
+                }
+
                 let resultData, resultError;
 
                 if (window.currentExternalCandidateId) {
