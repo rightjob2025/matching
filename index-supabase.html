@@ -9520,19 +9520,19 @@
                         </div>
 
                         <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                            <span><i class="fas fa-map-marker-alt mr-1"></i> ${app.jobs.location}</span>
-                            <span><i class="fas fa-briefcase mr-1"></i> ${app.jobs.employment_type}</span>
+                            <span><i class="fas fa-map-marker-alt mr-1"></i> ${app.jobs?.location || '勤務地不明'}</span>
+                            <span><i class="fas fa-briefcase mr-1"></i> ${app.jobs?.employment_type || '-'}</span>
                             <span><i class="fas fa-calendar mr-1"></i> 応募日: ${appliedDate}</span>
                         </div>
 
-                        ${app.jobs.salary_max ? `
+                        ${app.jobs?.salary_max ? `
                         <div class="text-sm text-gray-700 mb-3">
                             <i class="fas fa-yen-sign mr-1"></i>
                             想定年収: ${(app.jobs.salary_min / 10000).toLocaleString()}万 - ${(app.jobs.salary_max / 10000).toLocaleString()}万円
                         </div>
                         ` : ''}
 
-                        <p class="text-gray-600 text-sm line-clamp-2">${app.jobs.description || ''}</p>
+                        <p class="text-gray-600 text-sm line-clamp-2">${app.jobs?.description || '求人情報が見つかりません'}</p>
                     </div>
                 `
             }).join('')
