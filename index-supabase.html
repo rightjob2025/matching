@@ -17292,6 +17292,14 @@
                     updated_at: new Date()
                 };
 
+                // DEBUG: Check payload
+                console.log('Saving External Candidate. Payload:', payload);
+                console.log('Current User Org ID:', currentUser?.organization_id);
+                if (!currentUser?.organization_id) {
+                    alert('エラー: 組織IDが取得できませんでした。再ログインしてください。');
+                    return;
+                }
+
                 let resultData, resultError;
 
                 if (window.currentExternalCandidateId) {
