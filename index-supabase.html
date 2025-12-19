@@ -1473,7 +1473,7 @@
                                             </div>
                                         </div>
                                     </h5>
-                                    <button onclick="openScoutStyleModal()"
+                                    <button onclick="openScoutSettingsModal()"
                                         class="text-xs text-indigo-600 hover:text-indigo-800 flex items-center transition-colors">
                                         <i class="fas fa-cog mr-1"></i>設定
                                         <div class="group relative inline-block ml-1 align-middle">
@@ -10188,41 +10188,37 @@
                 for (const userId of Object.keys(userJobMap)) {
                     const items = userJobMap[userId];
                     const jobIds = items.map(i => i.jobId);
-                    const user = allCandidatesList.find(u => u.id === userId);
+                    // Always fetch fresh & complete data from DB to ensure AI has full context
+                    // allCandidatesList only provides basic info (id, name)
+                    const { data: dbUser } = await supabase.from('users')
+                        .select('*, candidate_profiles(*)')
+                        .eq('id', userId)
+                        .single();
 
-                    // ユーザーが見つからない場合、候補リストから取れなければ推薦データ内のユーザー情報を使う（後方互換）
                     let userDataForAI = null;
 
-                    if (user) {
-                        const profile = Array.isArray(user.candidate_profiles) ? user.candidate_profiles[0] : user.candidate_profiles;
-                        userDataForAI = { ...user, ...profile };
-                        userDataForAI.id = user.id;
+                    if (dbUser) {
+                        const profile = Array.isArray(dbUser.candidate_profiles) ? dbUser.candidate_profiles[0] : dbUser.candidate_profiles;
+                        userDataForAI = { ...dbUser, ...profile, id: userId };
+                        console.log('Fetched full user data for Re-Analysis:', userDataForAI.name);
                     } else {
-                        // allCandidatesListにいない場合（ありえる？）
-                        console.warn('User not in list:', userId);
-                        // 推薦データから復元を試みる
-                        // 推薦データから復元を試みる
-                        const sampleRec = allRecommendations.find(r => r.user_id === userId);
-                        // DBから最新のプロフィールを取得する (sampleRec.usersは不完全な可能性があるため)
-                        const { data: dbUser } = await supabase.from('users')
-                            .select('*, candidate_profiles(*)')
-                            .eq('id', userId)
-                            .single();
-
-                        if (dbUser) {
-                            const p = Array.isArray(dbUser.candidate_profiles) ? dbUser.candidate_profiles[0] : dbUser.candidate_profiles;
-                            userDataForAI = { ...dbUser, ...p, id: userId };
-                            console.log('Restored user from DB:', userDataForAI);
-                            alert(`Restored Check:\nName:${userDataForAI.name}\nWork:${userDataForAI.work_history ? 'YES' : 'NO'}\nBio:${userDataForAI.bio ? 'YES' : 'NO'}\nSkills:${userDataForAI.skills ? 'YES' : 'NO'}`);
-                        } else if (sampleRec && sampleRec.users) {
-                            // DB取得失敗時のフォールバック
-                            userDataForAI = { ...sampleRec.users, id: userId };
-                            console.log('Restored user from rec (Fallback):', userDataForAI);
+                        // Fallback logic
+                        const user = allCandidatesList.find(u => u.id === userId);
+                        if (user) {
+                            const profile = Array.isArray(user.candidate_profiles) ? user.candidate_profiles[0] : user.candidate_profiles;
+                            userDataForAI = { ...user, ...profile, id: userId };
                         } else {
-                            console.error('User data missing for AI reruun');
-                            totalErrors += jobIds.length;
-                            continue;
+                            const sampleRec = allRecommendations.find(r => r.user_id === userId);
+                            if (sampleRec && sampleRec.users) {
+                                userDataForAI = { ...sampleRec.users, id: userId };
+                            }
                         }
+                    }
+
+                    if (!userDataForAI) {
+                        console.error('User data missing for AI reruun');
+                        totalErrors += jobIds.length;
+                        continue;
                     }
 
                     // 求人情報の取得 (allRecommendationsから探す)
