@@ -13957,6 +13957,28 @@
                                             else if (aiResult.is_remote) importData.is_remote = aiResult.is_remote;
                                         }
                                         if (!importData.industry) importData.industry = aiResult.industry || aiResult.industry_category;
+
+                                        // 必須要件と歓迎要件の精緻化
+                                        // CSV側にデータがあっても、AIが綺麗に分割してくれた内容で補完・上書きを試みる
+                                        if (aiResult.requirements) {
+                                            // 10文字以下の短いデータ、またはAIがより詳細な場合はAIを優先
+                                            if (!importData.requirements || importData.requirements.length < 10 || aiResult.requirements.length > importData.requirements.length) {
+                                                importData.requirements = aiResult.requirements;
+                                            }
+                                        }
+                                        if (aiResult.welcome_requirements) {
+                                            if (!importData.welcome_requirements || importData.welcome_requirements.length < 5 || aiResult.welcome_requirements.length > importData.welcome_requirements.length) {
+                                                importData.welcome_requirements = aiResult.welcome_requirements;
+                                            }
+                                        }
+
+                                        // その他情報の補完
+                                        if (!importData.description && aiResult.description) importData.description = aiResult.description;
+                                        if (!importData.work_hours && aiResult.work_hours) importData.work_hours = aiResult.work_hours;
+                                        if (!importData.holidays && aiResult.holidays) importData.holidays = aiResult.holidays;
+                                        if (!importData.benefits && aiResult.benefits) importData.benefits = aiResult.benefits;
+                                        if (!importData.interview_process && aiResult.interview_process) importData.interview_process = aiResult.interview_process;
+                                        if (!importData.employment_type && aiResult.employment_type) importData.employment_type = aiResult.employment_type;
                                     }
                                 } catch (e) { console.error('AI error:', e); }
                             }
