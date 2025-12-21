@@ -8576,13 +8576,48 @@
                 container.html('<div class="text-center p-8 text-gray-500">条件に一致する求職者は見つかりませんでした</div>');
                 return;
             }
-            // Reuse renderCandidateCard but wrap data structure
-            // renderCandidateCard expects { match_score, candidate or users, ... }
+
             const html = candidates.map(c => {
-                // Mock score 0 for simple search
+                // 表示用にデータを整形したコピーを作成
+                const displayCandidate = { ...c };
+
+                // 1. 配列フィールドの整形 (JSON文字列ならパースして結合)
+                ['desired_job_type', 'desired_location', 'skills'].forEach(field => {
+                    let val = displayCandidate[field];
+                    if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('"'))) {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) {
+                                displayCandidate[field] = parsed.join(', ');
+                            }
+                        } catch (e) {
+                            // パースエラーならそのまま、またはカンマ区切りなどを試みる
+                            displayCandidate[field] = val.replace(/[\[\]"]/g, '').replace(/,/g, ', ');
+                        }
+                    } else if (Array.isArray(val)) {
+                        displayCandidate[field] = val.join(', ');
+                    }
+                });
+
+                // 2. 年収の整形 (万円単位に変換)
+                if (displayCandidate.desired_salary) {
+                    let sal = parseInt(displayCandidate.desired_salary);
+                    if (!isNaN(sal)) {
+                        // 5300000 -> 530
+                        if (sal > 10000) sal = Math.floor(sal / 10000);
+                        displayCandidate.desired_salary = sal.toLocaleString();
+                    }
+                }
+
                 return renderCandidateCard({
-                    candidate: c,
-                    match_score: 0, skill_match_score: 0, experience_match_score: 0, location_match_score: 0, salary_match_score: 0
+                    candidate: displayCandidate,
+                    // マッチ度などは一旦0または検索結果から (検索ロジックによってはスコアが入る)
+                    match_score: c.match_score || 0,
+                    skill_match_score: c.skill_match_score || 0,
+                    experience_match_score: c.experience_match_score || 0,
+                    location_match_score: c.location_match_score || 0,
+                    salary_match_score: c.salary_match_score || 0,
+                    culture_match_score: c.culture_match_score || 0
                 });
             }).join('');
             container.html(html);
