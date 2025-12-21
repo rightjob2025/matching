@@ -3815,7 +3815,7 @@
             </div>
 
             <!-- Upsert Mode Settings -->
-            <div class="bg-indigo-50 p-4 rounded-lg mb-6 border border-indigo-200">
+            <div class="bg-indigo-50 p-4 rounded-lg mb-4 border border-indigo-200">
                 <h4 class="text-sm font-bold text-indigo-900 mb-2">更新設定</h4>
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <label class="flex items-center cursor-pointer">
@@ -3835,6 +3835,31 @@
                     ※ 更新キーが一致する既存レコードがある場合、その情報を更新（上書き）します。一致しない場合は新規登録します。
                     <br>
                     ※ システム項目にマッピングした項目からのみキーを選択できます。
+                </p>
+            </div>
+
+            <!-- Salary Unit Settings -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
+                <h4 class="text-sm font-bold text-blue-900 mb-2">年収データの単位設定</h4>
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="csv-salary-unit" value="auto" checked
+                            class="text-blue-600 focus:ring-blue-500 mr-2">
+                        <span class="text-sm text-gray-700">自動判定 (1万未満なら万円単位とみなす)</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="csv-salary-unit" value="man"
+                            class="text-blue-600 focus:ring-blue-500 mr-2">
+                        <span class="text-sm text-gray-700">常に万円単位 (例: 500)</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="csv-salary-unit" value="yen"
+                            class="text-blue-600 focus:ring-blue-500 mr-2">
+                        <span class="text-sm text-gray-700">常に円単位 (例: 5000000)</span>
+                    </label>
+                </div>
+                <p class="text-[10px] text-blue-500 mt-2">
+                    ※ インポート後のデータはシステム内で「●●万円」として統一して扱われます。
                 </p>
             </div>
 
@@ -13925,6 +13950,8 @@
                 let failedCount = 0;
                 const errors = [];
 
+                const salaryUnit = $('input[name="csv-salary-unit"]:checked').val() || 'auto';
+
                 for (let i = 0; i < currentCSVData.length; i++) {
                     const row = currentCSVData[i];
                     try {
@@ -13936,11 +13963,18 @@
                             // 数値変換が必要なフィールドの処理
                             if (['salary_min', 'salary_max', 'desired_salary'].includes(key)) {
                                 if (value) {
-                                    value = value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                                    value = String(value).replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                                     const numStr = value.replace(/[^0-9]/g, '');
                                     const num = parseInt(numStr);
                                     if (!isNaN(num)) {
-                                        value = num < 10000 ? num * 10000 : num;
+                                        if (salaryUnit === 'man') {
+                                            value = num * 10000;
+                                        } else if (salaryUnit === 'yen') {
+                                            value = num;
+                                        } else {
+                                            // auto
+                                            value = num < 10000 ? num * 10000 : num;
+                                        }
                                     } else {
                                         value = null;
                                     }
