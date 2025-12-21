@@ -14195,6 +14195,7 @@
                                     name: importData.name,
                                     role: 'candidate',
                                     organizationId: currentUser.organization_id,
+                                    upsert: isUpsert, // アップサートフラグを渡す
                                     profileData: {
                                         age: importData.age || null,
                                         desired_job_type: importData.desired_job_type ?
