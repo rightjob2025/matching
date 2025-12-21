@@ -6591,15 +6591,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 text-sm text-gray-600">
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-briefcase text-gray-400"></i>
-                                    <span>${Array.isArray(candidate.desired_job_type) ? candidate.desired_job_type.join(' / ') : (candidate.desired_job_type || '希望職種未設定')}</span>
+                                    <span>${window.formatArrayValue(candidate.desired_job_type)}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-map-marker-alt text-gray-400"></i>
-                                    <span>${Array.isArray(candidate.desired_location) ? candidate.desired_location.join(' / ') : (candidate.desired_location || '希望勤務地未設定')}</span>
+                                    <span>${window.formatArrayValue(candidate.desired_location)}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-yen-sign text-gray-400"></i>
-                                    <span>${candidate.desired_salary ? Math.round(candidate.desired_salary / 10000).toLocaleString() + '万円' : '希望年収未設定'}</span>
+                                    <span>${window.formatSalaryValue(candidate.desired_salary)}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-envelope text-gray-400"></i>
@@ -6636,7 +6636,7 @@
                             ${candidate.skills ? `
                             <div class="text-sm">
                                 <span class="text-gray-600">スキル:</span>
-                                <span class="text-gray-800">${candidate.skills}</span>
+                                <span class="text-gray-800">${window.formatArrayValue(candidate.skills)}</span>
                             </div>
                             ` : ''}
                         </div>
@@ -6854,6 +6854,23 @@
             return parsed || '-';
         }
 
+        // ヘルパー関数: 年収を表示用にフォーマット (万円単位)
+        window.formatSalaryValue = function (val) {
+            if (!val) return '-';
+            // 数値以外を除去
+            const strVal = String(val).replace(/[^0-9]/g, '');
+            if (!strVal) return val; // 数値が含まれない場合はそのまま返す
+
+            let num = parseInt(strVal);
+            if (isNaN(num)) return val;
+
+            // 10万円以上の場合は円単位とみなして10000で割る
+            if (num >= 100000) {
+                num = Math.round(num / 10000);
+            }
+            return num.toLocaleString() + '万円';
+        }
+
         // 候補者プロフィール表示（プレビュー専用）
         window.viewCandidateProfile = async function (candidateId) {
             if (!candidateId) {
@@ -6904,16 +6921,16 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">希望職種</p>
-                                <p class="font-medium text-gray-900">${Array.isArray(candidate.desired_job_type) ? candidate.desired_job_type.join(' / ') : (candidate.desired_job_type || '未設定')}</p>
+                                <p class="font-medium text-gray-900">${window.formatArrayValue(candidate.desired_job_type)}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">希望勤務地</p>
-                                <p class="font-medium text-gray-900">${Array.isArray(candidate.desired_location) ? candidate.desired_location.join(' / ') : (candidate.desired_location || '未設定')}</p>
+                                <p class="font-medium text-gray-900">${window.formatArrayValue(candidate.desired_location)}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">希望年収</p>
                                 <p class="font-medium text-gray-900 text-lg text-indigo-600">
-                                    ${candidate.desired_salary ? '¥' + Math.round(candidate.desired_salary / 10000).toLocaleString() + '万円' : '未設定'}
+                                    ${window.formatSalaryValue(candidate.desired_salary)}
                                 </p>
                             </div>
                             <div>
@@ -8578,39 +8595,8 @@
             }
 
             const html = candidates.map(c => {
-                // 表示用にデータを整形したコピーを作成
-                const displayCandidate = { ...c };
-
-                // 1. 配列フィールドの整形 (JSON文字列ならパースして結合)
-                ['desired_job_type', 'desired_location', 'skills'].forEach(field => {
-                    let val = displayCandidate[field];
-                    if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('"'))) {
-                        try {
-                            const parsed = JSON.parse(val);
-                            if (Array.isArray(parsed)) {
-                                displayCandidate[field] = parsed.join(', ');
-                            }
-                        } catch (e) {
-                            // パースエラーならそのまま、またはカンマ区切りなどを試みる
-                            displayCandidate[field] = val.replace(/[\[\]"]/g, '').replace(/,/g, ', ');
-                        }
-                    } else if (Array.isArray(val)) {
-                        displayCandidate[field] = val.join(', ');
-                    }
-                });
-
-                // 2. 年収の整形 (万円単位に変換)
-                if (displayCandidate.desired_salary) {
-                    let sal = parseInt(displayCandidate.desired_salary);
-                    if (!isNaN(sal)) {
-                        // 5300000 -> 530
-                        if (sal > 10000) sal = Math.floor(sal / 10000);
-                        displayCandidate.desired_salary = sal.toLocaleString();
-                    }
-                }
-
                 return renderCandidateCard({
-                    candidate: displayCandidate,
+                    candidate: c,
                     // マッチ度などは一旦0または検索結果から (検索ロジックによってはスコアが入る)
                     match_score: c.match_score || 0,
                     skill_match_score: c.skill_match_score || 0,
@@ -11994,8 +11980,9 @@
                         <div class="text-sm text-gray-500">${u.email}</div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900">${Array.isArray(u.desired_job_type) ? u.desired_job_type.join(' / ') : (u.desired_job_type || '-')}</div>
-                        <div class="text-xs text-gray-500">${Array.isArray(u.desired_location) ? u.desired_location.join(' / ') : (u.desired_location || '-')}</div>
+                        <div class="text-sm text-gray-900 font-medium">${window.formatArrayValue(u.desired_job_type)}</div>
+                        <div class="text-xs text-gray-500">${window.formatArrayValue(u.desired_location)}</div>
+                        <div class="text-xs text-indigo-600 mt-1 font-bold">${window.formatSalaryValue(u.desired_salary)}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.status === 'suspended' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
@@ -12034,10 +12021,10 @@
                 const info = `
 名前: ${user.name}
 メール: ${user.email}
-希望職種: ${Array.isArray(user.desired_job_type) ? user.desired_job_type.join(' / ') : (user.desired_job_type || '-')}
-希望勤務勤務地: ${Array.isArray(user.desired_location) ? user.desired_location.join(' / ') : (user.desired_location || '-')}
-希望年収: ${user.desired_salary ? Math.round(user.desired_salary / 10000).toLocaleString() + '万円' : '-'}
-スキル: ${user.skills || '-'}
+希望職種: ${window.formatArrayValue(user.desired_job_type)}
+希望勤務地: ${window.formatArrayValue(user.desired_location)}
+希望年収: ${window.formatSalaryValue(user.desired_salary)}
+スキル: ${window.formatArrayValue(user.skills)}
 職歴: ${user.work_history || '-'}
                 `;
                 alert(info);
