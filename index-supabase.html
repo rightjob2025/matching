@@ -1162,16 +1162,8 @@
 
                 <!-- 検索フォーム -->
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="mb-6">
                         <h2 class="text-xl font-semibold">求職者検索</h2>
-                        <button onclick="searchCandidatesImmediate()"
-                            class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
-                            <i class="fas fa-search mr-2"></i>検索
-                        </button>
-                        <button onclick="clearCandidateSearch()"
-                            class="ml-2 px-6 py-2 border rounded-lg hover:bg-gray-50">
-                            クリア
-                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -1201,6 +1193,17 @@
                             <option value="salary-desc">希望年収が高い順</option>
                             <option value="salary-asc">希望年収が低い順</option>
                         </select>
+                    </div>
+
+                    <div class="flex justify-center gap-4 pt-4 border-t mt-4">
+                        <button onclick="searchCandidatesImmediate()"
+                            class="bg-indigo-600 text-white px-10 py-3 rounded-lg hover:bg-indigo-700 shadow-md transition-all flex items-center font-bold text-lg">
+                            <i class="fas fa-search mr-2"></i>検索を実行
+                        </button>
+                        <button onclick="clearCandidateSearch()"
+                            class="px-8 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                            条件をすべてクリア
+                        </button>
                     </div>
                 </div>
 
@@ -6523,7 +6526,7 @@
 
             if (!matches || matches.length === 0) {
                 container.html(`
-                    <div class="text-center py-12 text-gray-500">
+                    <div class="text-center py-12 text-gray-500 shadow-sm border rounded-lg bg-white">
                         <i class="fas fa-search text-4xl mb-3"></i>
                         <p>マッチする候補者が見つかりませんでした</p>
                     </div>
@@ -6534,20 +6537,74 @@
             const okMatches = matches.filter(m => m.match_score > 49);
             const ngMatches = matches.filter(m => m.match_score <= 49);
 
+            const containerId = containerSelector.replace('#', '');
+
             const headerHtml = `
-                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg mb-4 border border-gray-200">
-                     <div class="font-bold text-gray-800 text-sm">
-                        <span class="text-green-600 mr-3"><i class="fas fa-check-circle"></i> マッチ: ${okMatches.length}件</span>
-                        <span class="text-gray-500"><i class="fas fa-times-circle"></i> NG: ${ngMatches.length}件</span>
-                     </div>
-                     <button onclick="$('${containerSelector}').html('<div class=\\'text-center py-12 text-gray-500\\'><i class=\\'fas fa-search text-4xl mb-3\\'></i><p>条件を指定して検索してください</p></div>')" class="text-xs text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times mr-1"></i>クリア
-                     </button>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+                    <div class="flex border-b border-gray-100 items-center">
+                        <button onclick="switchMatchTab('${containerSelector}', 'ok')" 
+                                id="${containerId}-tab-ok"
+                                class="flex-1 py-4 px-6 text-sm font-bold border-b-2 border-green-500 text-green-600 transition-all hover:bg-green-50">
+                            <i class="fas fa-check-circle mr-2"></i>マッチ: ${okMatches.length}件
+                        </button>
+                        <button onclick="switchMatchTab('${containerSelector}', 'ng')" 
+                                id="${containerId}-tab-ng"
+                                class="flex-1 py-4 px-6 text-sm font-bold border-b-2 border-transparent text-gray-400 transition-all hover:bg-gray-50">
+                            <i class="fas fa-times-circle mr-2"></i>NG: ${ngMatches.length}件
+                        </button>
+                        <div class="px-4 border-l border-gray-100">
+                             <button onclick="$('${containerSelector}').html('<div class=\\'text-center py-12 text-gray-500 rounded-lg border bg-white shadow-sm\\'><i class=\\'fas fa-search text-4xl mb-3\\'></i><p>条件を指定して検索してください</p></div>')" 
+                                     class="text-xs text-gray-400 hover:text-red-500 flex flex-col items-center gap-1 transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>クリア</span>
+                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="${containerId}-pane-ok" class="space-y-4">
+                    ${okMatches.length > 0 ? okMatches.map(m => renderCandidateCard(m)).join('') : `
+                        <div class="text-center py-16 bg-white border border-dashed border-gray-300 rounded-lg text-gray-400">
+                            <i class="fas fa-info-circle mb-2 text-2xl"></i>
+                            <p>マッチする候補者は見つかりませんでした</p>
+                        </div>
+                    `}
+                </div>
+                <div id="${containerId}-pane-ng" class="space-y-4 hidden">
+                    ${ngMatches.length > 0 ? ngMatches.map(m => renderCandidateCard(m)).join('') : `
+                        <div class="text-center py-16 bg-white border border-dashed border-gray-300 rounded-lg text-gray-400">
+                            <i class="fas fa-info-circle mb-2 text-2xl"></i>
+                            <p>NG候補者はいません</p>
+                        </div>
+                    `}
                 </div>
             `;
 
-            const listHtml = matches.map(m => renderCandidateCard(m)).join('');
-            container.html(headerHtml + listHtml);
+            container.html(headerHtml);
+        }
+
+        window.switchMatchTab = function (containerSelector, tab) {
+            const containerId = containerSelector.replace('#', '');
+            const tabOk = $(`#${containerId}-tab-ok`);
+            const tabNg = $(`#${containerId}-tab-ng`);
+            const paneOk = $(`#${containerId}-pane-ok`);
+            const paneNg = $(`#${containerId}-pane-ng`);
+
+            if (tab === 'ok') {
+                tabOk.addClass('border-green-500 text-green-600').removeClass('border-transparent text-gray-400');
+                tabNg.addClass('border-transparent text-gray-400').removeClass('border-red-500 text-red-600'); // red-500 if we want NG to be red, but image shows gray
+                // Applying gray style for non-active as default in HTML, so here just toggle
+                tabNg.addClass('border-transparent text-gray-400').removeClass('border-gray-600 text-gray-800');
+
+                paneOk.removeClass('hidden');
+                paneNg.addClass('hidden');
+            } else {
+                tabNg.addClass('border-gray-600 text-gray-800').removeClass('border-transparent text-gray-400');
+                tabOk.addClass('border-transparent text-gray-400').removeClass('border-green-500 text-green-600');
+
+                paneNg.removeClass('hidden');
+                paneOk.addClass('hidden');
+            }
         }
 
         // 候補者リストを表示 (Deprecated: use renderMatchingResults)
