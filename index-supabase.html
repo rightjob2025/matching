@@ -6920,7 +6920,7 @@
         // マッチングステータス更新
         window.updateMatchStatus = async function (matchId, status, candidateId) {
             let targetMatchId = (matchId && matchId !== 'undefined' && matchId !== '') ? matchId : null;
-            let jobId = window.selectedTargetJobId || window.currentJobId;
+            let jobId = (typeof selectedTargetJobId !== 'undefined' ? selectedTargetJobId : null) || window.selectedTargetJobId || window.currentJobId;
 
             try {
                 if (!targetMatchId) {
@@ -8116,7 +8116,7 @@
            ========================================= */
 
         let isCandidateSearchInitialized = false;
-        let selectedTargetJobId = null;
+        window.selectedTargetJobId = null;
         let allCandidateSearchJobs = [];
 
         async function loadCandidateSearch() {
