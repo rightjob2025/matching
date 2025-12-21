@@ -5565,12 +5565,12 @@
                         </h4>
                         <div class="flex gap-4">
                             <div class="flex items-center">
-                                <i class="fas ${job.job_experience_ok ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
-                                <span class="text-gray-800">職種未経験: ${job.job_experience_ok ? '可' : '不可'}</span>
+                                <i class="fas ${job.job_experience_ok === '可' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
+                                <span class="text-gray-800">職種未経験: ${job.job_experience_ok === '可' ? '可' : '不可'}</span>
                             </div>
                             <div class="flex items-center">
-                                <i class="fas ${job.industry_experience_ok ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
-                                <span class="text-gray-800">業界未経験: ${job.industry_experience_ok ? '可' : '不可'}</span>
+                                <i class="fas ${job.industry_experience_ok === '可' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
+                                <span class="text-gray-800">業界未経験: ${job.industry_experience_ok === '可' ? '可' : '不可'}</span>
                             </div>
                         </div>
                     </div>
@@ -13450,7 +13450,12 @@
             { key: 'is_remote', label: 'リモート可否', aliases: ['リモート', '在宅'] },
             { key: 'experience_level', label: '経験レベル', aliases: ['経験年数', 'レベル'] },
             { key: 'industry', label: '業界', aliases: ['業種', '産業'] },
-            { key: 'url', label: '求人URL', aliases: ['URL', 'リンク', 'サイト', 'ページ'] }
+            { key: 'url', label: '求人URL', aliases: ['URL', 'リンク', 'サイト', 'ページ'] },
+            { key: 'job_experience_ok', label: '職種未経験OK', aliases: ['職種未経験', '未経験可', '職種未経験歓迎'] },
+            { key: 'industry_experience_ok', label: '業種未経験OK', aliases: ['業界未経験', '業種未経験', '業界未経験歓迎'] },
+            { key: 'work_hours', label: '勤務時間', aliases: ['就業時間', '拘束時間'] },
+            { key: 'holidays', label: '休日休暇', aliases: ['休日', '休暇'] },
+            { key: 'interview_process', label: '選考プロセス', aliases: ['選考の流れ', '採用フロー'] }
         ];
 
         const companyFields = [
@@ -14108,7 +14113,12 @@
                             }
 
                             if (key === 'is_remote') {
-                                value = ['true', 'yes', '1', '可', 'あり', '有', 'ok'].includes(String(value).toLowerCase());
+                                value = ['true', 'yes', '1', '可', 'あり', '有', 'ok', '〇', '◯'].includes(String(value).toLowerCase());
+                            }
+
+                            if (key === 'job_experience_ok' || key === 'industry_experience_ok') {
+                                const isPos = ['true', 'yes', '1', '可', 'あり', '有', 'ok', '〇', '◯'].includes(String(value).toLowerCase());
+                                value = isPos ? '可' : '不可';
                             }
 
                             importData[key] = value;
