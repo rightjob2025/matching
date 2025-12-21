@@ -6728,10 +6728,10 @@
                             <button onclick="viewCandidateProfile('${candidate.id}')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm whitespace-nowrap">
                                 <i class="fas fa-user mr-1"></i>詳細
                             </button>
-                            <button onclick="openScoutModal('${match.id}', '${candidate.id}')" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm whitespace-nowrap shadow-sm">
+                            <button onclick="openScoutModal('${match.id || ''}', '${candidate.id}')" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm whitespace-nowrap shadow-sm">
                                 <i class="fas fa-magic mr-1"></i>スカウト作成
                             </button>
-                            <button onclick="updateMatchStatus('${match.id}', 'not_interested')" 
+                            <button onclick="updateMatchStatus('${match.id || ''}', 'not_interested', '${candidate.id}')" 
                                 class="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm whitespace-nowrap">
                                 <i class="fas fa-times mr-1"></i>対象外
                             </button>
@@ -6747,16 +6747,56 @@
 
         // スカウトモーダルを開く（AI生成実行）
         window.openScoutModal = async function (matchId, candidateId) {
-            if (!window.currentJobId) {
-                alert('求人情報が取得できません');
+            let actualJobId = window.selectedTargetJobId || window.currentJobId;
+            if (!actualJobId) {
+                alert('対象の求人が選択されていません');
                 return;
             }
 
-            currentScoutMatchId = matchId;
+            let targetMatchId = (matchId && matchId !== 'undefined') ? matchId : null;
+
+            // マッチレコードがない場合は作成を試みる
+            if (!targetMatchId) {
+                showLoading('準備中...');
+                try {
+                    const { data, error } = await window.supabase
+                        .from('job_candidate_matches')
+                        .upsert({
+                            job_id: actualJobId,
+                            candidate_id: candidateId,
+                            status: 'draft',
+                            organization_id: currentUser.organization_id
+                        }, { onConflict: 'job_id, candidate_id' })
+                        .select('id')
+                        .single();
+
+                    if (error) throw error;
+                    targetMatchId = data.id;
+                } catch (e) {
+                    console.error('Failed to create match for scout:', e);
+                    alert('準備に失敗しました');
+                    hideLoading();
+                    return;
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            currentScoutMatchId = targetMatchId;
             currentScoutCandidateId = candidateId;
 
-            // 候補者名を取得して表示
-            const candidateName = jobMatchesCache.find(m => m.id === matchId)?.users?.name || '候補者';
+            // 候補者名を表示
+            let candidateName = '候補者';
+            // キャッシュから探す
+            if (typeof jobMatchesCache !== 'undefined') {
+                const m = jobMatchesCache.find(m => m.id === targetMatchId || (m.candidate && m.candidate.id === candidateId) || (m.users && m.id === targetMatchId));
+                if (m) candidateName = (m.users ? m.users.name : (m.candidate ? m.candidate.name : '候補者'));
+            }
+            if (candidateName === '候補者') {
+                // さらに詳細ボタン等から取得を試みる
+                candidateName = $(`button[onclick*="'${candidateId}'"]`).closest('.border').find('h3, .text-lg.font-bold').first().text().trim() || '候補者';
+            }
+
             $('#scout-candidate-name').text(candidateName);
 
             // モーダルを表示（ローディング状態）
@@ -6878,20 +6918,47 @@
         }
 
         // マッチングステータス更新
-        window.updateMatchStatus = async function (matchId, status) {
-            if (!matchId) return;
-            try {
-                const { error } = await window.supabase
-                    .from('job_candidate_matches')
-                    .update({ status: status })
-                    .eq('id', matchId);
+        window.updateMatchStatus = async function (matchId, status, candidateId) {
+            let targetMatchId = (matchId && matchId !== 'undefined' && matchId !== '') ? matchId : null;
+            let jobId = window.selectedTargetJobId || window.currentJobId;
 
-                if (error) throw error;
+            try {
+                if (!targetMatchId) {
+                    if (!jobId || !candidateId) {
+                        alert('対象の求人または候補者を特定できません');
+                        return;
+                    }
+
+                    const { data, error } = await window.supabase
+                        .from('job_candidate_matches')
+                        .upsert({
+                            job_id: jobId,
+                            candidate_id: candidateId,
+                            status: status,
+                            organization_id: currentUser.organization_id
+                        }, { onConflict: 'job_id, candidate_id' })
+                        .select('id')
+                        .single();
+
+                    if (error) throw error;
+                    targetMatchId = data.id;
+                } else {
+                    const { error } = await window.supabase
+                        .from('job_candidate_matches')
+                        .update({ status: status })
+                        .eq('id', targetMatchId);
+
+                    if (error) throw error;
+                }
 
                 // 画面上の表示を更新
                 if (status === 'not_interested') {
                     // 対象外の場合はカードをグレーアウトしてボタンを無効化
-                    const card = $(`button[onclick="updateMatchStatus('${matchId}', 'not_interested')"]`).closest('.border');
+                    // セレクタを柔軟に（IDがある場合とない場合両方対応）
+                    let selector = `button[onclick*="'${targetMatchId}', 'not_interested'"]`;
+                    if (candidateId) selector += `, button[onclick*="'${candidateId}')"]`;
+
+                    const card = $(selector).closest('.border');
                     card.addClass('opacity-50 bg-gray-100');
                     card.find('button').prop('disabled', true);
                     card.find('.status-badge').remove();
