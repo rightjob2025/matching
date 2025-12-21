@@ -14202,7 +14202,7 @@
                                             (typeof importData.desired_job_type === 'string' ? importData.desired_job_type.split(/[,、\uff0c\uff0f\s　]+/).map(s => s.trim()).filter(Boolean) : importData.desired_job_type) : null,
                                         desired_location: importData.desired_location ?
                                             (typeof importData.desired_location === 'string' ? importData.desired_location.split(/[,、\uff0c\uff0f\s　]+/).map(s => s.trim()).filter(Boolean) : importData.desired_location) : null,
-                                        desired_salary: importData.desired_salary ? parseInt(String(importData.desired_salary).replace(/[^0-9]/g, '')) * 10000 : null,
+                                        desired_salary: importData.desired_salary || null,
                                         skills: importData.skills || null,
                                         work_history: importData.work_history || null,
                                         academic_background: importData.academic_background || null,
