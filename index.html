@@ -718,7 +718,7 @@
             const PREFECTURES = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'];
             const EMPLOYMENT_TYPES = ['正社員', '契約社員', 'アルバイト・パート', '派遣社員', '業務委託', 'インターン', '嘱託社員', '臨時職員', 'フリーランス'];
 
-            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxIPgW-9EhbmqxhuBhygw_S4wDUGxKcvjn8ab4KciljVVwbOIKLFjlev4lc0ELzqJtQ/exec";
+            const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwp8gIIiPEDieM8b1CLt_bRaoR31FdTkvrJQhP5v-I6IVVByFnaJTue1R9xs60mE8wM/exec";
 
             const skillDetails = {
                 '課題解決力': { iconClass: 'problem', description: '見つけた課題に対して、適切な解決策を提示できる力' },
@@ -2166,10 +2166,6 @@
                 navHtml += `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="contact"><i class="fas fa-envelope w-6 mr-3"></i><span>お問い合わせ</span></a>`;
                 // ▲▲▲ お問い合わせリンクの追加 ▲▲▲
 
-                // 診断結果対象ユーザーの場合、診断結果ページへのリンクを追加します。
-                if (CURRENT_USER.diagnosis_flg) {
-                    navHtml += `<a href="#" class="sidebar-link flex items-center px-4 py-3 rounded-lg" data-page="diagnosis"><i class="fas fa-chart-pie w-6 mr-3"></i><span>天職診断結果</span></a>`;
-                }
 
                 // --- 権限に基づく管理メニューの表示制御 ---
                 // 'admin' または 'coach' 権限の場合のみ管理メニューを表示します。
@@ -3810,6 +3806,7 @@
                                         <div class="mt-4"><label class="block text-sm font-medium text-slate-700">自己PR・スキル等</label><textarea name="notes" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="5">${user.notes || ''}</textarea></div>
                                         <div class="mt-4"><label class="block text-sm font-medium text-slate-700">履歴書 (テキスト)</label><textarea name="resume" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="8">${user.resume || ''}</textarea></div>
                                         <div class="mt-4"><label class="block text-sm font-medium text-slate-700">職務経歴書 (テキスト)</label><textarea name="work_history" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" rows="12">${user.work_history || ''}</textarea></div>
+                                        ${['admin', 'coach'].includes(CURRENT_USER.role) ? `<div class="mt-4"><label class="block text-sm font-medium text-slate-700">コーチング情報 (テキスト) <span class="text-xs text-slate-400">※本人には表示されません</span></label><textarea name="coaching_info" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm bg-slate-50" rows="8">${user.coaching_info || ''}</textarea></div>` : ''}
                                         <div class="mt-6 text-right"><button type="submit" class="font-bold py-2 px-4 rounded-lg bg-indigo-600 text-white">${isEdit ? '更新' : '登録'}</button></div>
                                     </form>`;
                         ui.showModal(isEdit ? 'ユーザー編集' : '新規ユーザー登録', content, {
