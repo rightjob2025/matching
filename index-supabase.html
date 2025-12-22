@@ -6817,25 +6817,30 @@
             $('#scout-body').val('AIがスカウト文面を生成しています...\n少々お待ちください。');
             $('#scout-modal').removeClass('hidden');
 
-            await generateScoutMessage();
+            await generateScoutMessage(actualJobId, currentScoutCandidateId, currentScoutMatchId);
         }
 
         // スカウト文面生成（再生成）
         window.regenerateScoutMessage = async function () {
             if (!currentScoutMatchId) return;
+            const actualJobId = window.selectedTargetJobId || window.currentJobId;
 
             $('#scout-body').val('AIがスカウト文面を再生成しています...');
-            await generateScoutMessage();
+            await generateScoutMessage(actualJobId, currentScoutCandidateId, currentScoutMatchId);
         }
 
         // Edge Functionを呼び出して文面生成
-        async function generateScoutMessage() {
+        async function generateScoutMessage(jobId, candidateId, matchId) {
+            if (!jobId || !candidateId) {
+                console.error('generateScoutMessage: Missing jobId or candidateId', { jobId, candidateId });
+                throw new Error('job_id and candidate_id are required');
+            }
             try {
                 const { data, error } = await window.supabase.functions.invoke('generate-scout-message', {
                     body: {
-                        job_id: window.currentJobId,
-                        candidate_id: currentScoutCandidateId,
-                        match_id: currentScoutMatchId
+                        job_id: jobId,
+                        candidate_id: candidateId,
+                        match_id: matchId
                     }
                 });
 
