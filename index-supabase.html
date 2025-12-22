@@ -17469,6 +17469,24 @@
             if (window.showLoading) window.showLoading();
 
             try {
+                // 最新のプロフィール情報を取得 (currentUserが古い可能性があるため)
+                const { data: profileData, error: profileError } = await window.supabase
+                    .from('candidate_profiles')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (profileError) throw profileError;
+
+                // プロフィールがない場合は警告
+                if (!profileData) {
+                    alert('プロフィール情報が登録されていないため、条件を自動セットできません。先にプロフィールを入力してください。');
+                    return;
+                }
+
+                // ユーザー情報とプロフィール情報をマージ
+                const fullUser = { ...user, ...profileData };
+
                 // マスタデータ取得 (IDとLabelの対応が必要なため)
                 const { data: masters } = await window.supabase
                     .from('master_data')
@@ -17483,7 +17501,20 @@
 
                 const mapToLabel = (inputStr, type) => {
                     if (inputStr === null || inputStr === undefined || inputStr === '') return [];
-                    const inputs = Array.isArray(inputStr) ? inputStr : String(inputStr).split(',').map(s => s.trim()).filter(s => s);
+
+                    // JSON配列、カンマ区切り文字列、あるいは単一の値を処理
+                    let inputs = [];
+                    if (Array.isArray(inputStr)) {
+                        inputs = inputStr;
+                    } else if (typeof inputStr === 'string') {
+                        if (inputStr.startsWith('[') && inputStr.endsWith(']')) {
+                            try { inputs = JSON.parse(inputStr); } catch (e) { inputs = [inputStr]; }
+                        } else {
+                            inputs = inputStr.split(',').map(s => s.trim()).filter(Boolean);
+                        }
+                    } else {
+                        inputs = [inputStr];
+                    }
 
                     const typeMasters = validMasters.filter(m => m.type === type);
 
@@ -17503,23 +17534,33 @@
 
                 // 最低年収の整形
                 let salaryMin = '';
-                if (user.desired_salary) {
-                    // "500万円" -> 500, "5000000" -> 500
-                    let val = parseInt(user.desired_salary.replace(/[^0-9]/g, ''));
-                    if (val > 10000) val = Math.floor(val / 10000);
-                    salaryMin = val;
+                if (fullUser.desired_salary) {
+                    let salaryVal = fullUser.desired_salary;
+                    // 文字列なら数値のみ抽出
+                    if (typeof salaryVal === 'string') {
+                        salaryVal = parseInt(salaryVal.replace(/[^0-9]/g, '')) || 0;
+                    }
+                    // 1万倍（例: 500万）以上なら1万で割る
+                    if (salaryVal >= 10000) {
+                        salaryMin = Math.floor(salaryVal / 10000);
+                    } else {
+                        salaryMin = salaryVal;
+                    }
                 }
 
                 const filters = {
-                    jobCategory: mapToLabel(user.desired_job_type, 'job_category'),
-                    industryCategory: mapToLabel(user.desired_industry, 'industry_category'),
-                    prefecture: user.desired_location ?
-                        (Array.isArray(user.desired_location) ? user.desired_location : user.desired_location.split(',').map(s => s.trim()))
+                    jobCategory: mapToLabel(fullUser.desired_job_type, 'job_category'),
+                    industryCategory: mapToLabel(fullUser.desired_industry, 'industry_category'),
+                    prefecture: fullUser.desired_location ?
+                        (Array.isArray(fullUser.desired_location) ? fullUser.desired_location :
+                            String(fullUser.desired_location).startsWith('[') ? JSON.parse(fullUser.desired_location) :
+                                String(fullUser.desired_location).split(/[,、]/).map(s => s.trim()))
                         : [],
-                    employmentType: mapToLabel(user.desired_employment_type, 'employment_type'),
+                    employmentType: mapToLabel(fullUser.desired_employment_type, 'employment_type'),
                     salaryMin: salaryMin,
-                    jobExperienceOk: true,
-                    industryExperienceOk: true
+                    jobExperienceOk: !!fullUser.desired_job_experience_ok,
+                    industryExperienceOk: !!fullUser.desired_industry_experience_ok,
+                    isRemote: false // プロフィールに項目がない場合はデフォルト
                 };
 
                 console.log('Searching by profile (mapped):', filters);
@@ -17532,7 +17573,9 @@
                 }
 
                 // 検索実行
-                if (typeof loadJobs === 'function') {
+                if (typeof searchJobsImmediate === 'function') {
+                    searchJobsImmediate();
+                } else if (typeof loadJobs === 'function') {
                     loadJobs(filters);
                 }
 
