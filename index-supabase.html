@@ -368,7 +368,7 @@
         }
 
         .job-card-highlighted::before {
-            content: "AI推薦対象";
+            content: "AI紹介対象";
             position: absolute;
             top: -12px;
             right: 16px;
@@ -884,7 +884,7 @@
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-600 text-sm">AI推薦</p>
+                                <p class="text-gray-600 text-sm">AI紹介</p>
                                 <p id="stat-recommendations" class="text-3xl font-bold text-purple-600 mt-2">0</p>
                             </div>
                             <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -1714,7 +1714,7 @@
                 <div class="bg-white rounded-lg w-full max-w-2xl p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-bold text-gray-900">
-                            <i class="fas fa-star text-yellow-500 mr-2"></i>求人を推薦
+                            <i class="fas fa-star text-yellow-500 mr-2"></i>求人を紹介
                         </h3>
                         <button onclick="closeRecommendJobModal()"
                             class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
@@ -1725,13 +1725,13 @@
                     <div class="space-y-4">
                         <!-- 求人情報 -->
                         <div class="bg-gray-50 p-4 rounded border">
-                            <p class="text-sm text-gray-600 mb-1">推薦する求人:</p>
+                            <p class="text-sm text-gray-600 mb-1">紹介する求人:</p>
                             <p id="recommend-job-title" class="font-bold text-gray-900"></p>
                         </div>
 
-                        <!-- 推薦先 -->
+                        <!-- 紹介先 -->
                         <div class="bg-gray-50 p-4 rounded border">
-                            <p class="text-sm text-gray-600 mb-1">推薦先:</p>
+                            <p class="text-sm text-gray-600 mb-1">紹介先:</p>
                             <p id="recommend-target-user" class="font-bold text-gray-900"></p>
                         </div>
 
@@ -1742,7 +1742,7 @@
                                 <div class="flex items-center gap-2">
                                     <select id="generate-reason-type"
                                         class="text-xs border border-gray-300 rounded px-2 py-1">
-                                        <option value="recommendation">推薦文</option>
+                                        <option value="recommendation">紹介文</option>
                                         <option value="scout">スカウト文</option>
                                     </select>
                                     <button onclick="generateRecommendReason()"
@@ -1762,7 +1762,7 @@
                                 class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
                             <button onclick="submitRecommendation()"
                                 class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                                <i class="fas fa-check mr-2"></i>推薦する
+                                <i class="fas fa-check mr-2"></i>紹介する
                             </button>
                         </div>
                     </div>
@@ -1802,7 +1802,7 @@
                 <div class="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
                     <div class="flex justify-between items-center mb-4">
                         <h3 id="bulk-recommend-modal-title" class="text-xl font-bold text-gray-900">
-                            <i class="fas fa-star text-yellow-500 mr-2"></i>複数求人を一括推薦
+                            <i class="fas fa-star text-yellow-500 mr-2"></i>複数求人を一括紹介
                         </h3>
                         <button onclick="closeBulkRecommendModal()"
                             class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
@@ -1811,9 +1811,9 @@
                     </div>
 
                     <div class="space-y-4">
-                        <!-- 推薦先 -->
+                        <!-- 紹介先 -->
                         <div class="bg-gray-50 p-4 rounded border">
-                            <p class="text-sm text-gray-600 mb-1">推薦先:</p>
+                            <p class="text-sm text-gray-600 mb-1">紹介先:</p>
                             <p id="bulk-recommend-target-user" class="font-bold text-gray-900"></p>
                         </div>
 
@@ -1836,6 +1836,35 @@
                                 <i class="fas fa-check mr-2"></i>AIマッチングする
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 求職者選択モーダル（個別紹介用） -->
+            <div id="candidate-selection-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                style="z-index: 10005;">
+                <div class="bg-white rounded-lg w-full max-w-xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">紹介先ユーザーを選択</h3>
+                        <button onclick="closeCandidateSelectionModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input type="text" id="modal-candidate-search" placeholder="ユーザー名で絞り込み..."
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                    <div id="modal-candidate-list"
+                        class="space-y-2 max-h-80 overflow-y-auto border rounded p-2 bg-gray-50">
+                        <!-- ここに求職者リストが表示される -->
+                    </div>
+                    <div class="mt-6 text-right">
+                        <button onclick="closeCandidateSelectionModal()"
+                            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">閉じる</button>
                     </div>
                 </div>
             </div>
@@ -5169,10 +5198,10 @@
 
             if (count > 0 && userId) {
                 btn.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
-                btn.html(`<i class="fas fa-magic mr-2"></i>選択した求人(${count}件)でAI推薦を実行`);
+                btn.html(`<i class="fas fa-magic mr-2"></i>選択した求人(${count}件)でAI紹介を実行`);
             } else {
                 btn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
-                btn.html(`<i class="fas fa-magic mr-2"></i>選択した求人でAI推薦を実行`);
+                btn.html(`<i class="fas fa-magic mr-2"></i>選択した求人でAI紹介を実行`);
             }
         }
 
@@ -5307,7 +5336,7 @@
                     });
                 }
 
-                alert(`${recommendations.length}件のマッチング分析が完了しました！\n「AI推薦」メニューから結果を確認できます。`);
+                alert(`${recommendations.length}件のマッチング分析が完了しました！\n「AI紹介」メニューから結果を確認できます。`);
                 selectedJobIds.clear();
                 updateBatchAiButton();
                 // チェックボックスの表示を更新
@@ -5723,15 +5752,16 @@
             }
         }
 
-        // 個別推薦モーダルを開く
         window.openRecommendJobModal = async function (jobId) {
-            const targetUserId = $('#target-user-select').val();
-            if (!targetUserId) {
-                alert('推薦先のユーザーを選択してください');
+            currentRecommendJobId = jobId;
+
+            if (!selectedTargetUserId) {
+                // ユーザーが選択されていない場合は選択モーダルを開く
+                openCandidateSelectionModal();
                 return;
             }
 
-            currentRecommendJobId = jobId;
+            const targetUserId = selectedTargetUserId;
             currentRecommendTargetUserId = targetUserId;
 
             // 求人情報を取得
@@ -5882,7 +5912,7 @@
                 }
 
                 console.log('Recommendation created:', data);
-                alert('求人を推薦しました');
+                alert('求人を紹介しました');
                 closeRecommendJobModal();
                 searchJobs(); // 求人リストを更新
 
@@ -6013,7 +6043,7 @@
                     <div id="ai-result-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" style="z-index: 10003;">
                         <div class="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-xl font-bold text-gray-900">AI推薦結果</h3>
+                                <h3 class="text-xl font-bold text-gray-900">AI紹介結果</h3>
                                 <button onclick="$('#ai-result-modal').addClass('hidden')" class="text-gray-500 hover:text-gray-700">
                                     <i class="fas fa-times text-xl"></i>
                                 </button>
@@ -6160,7 +6190,7 @@
             } else {
                 // 管理者・コーチの場合
                 if (!selectedTargetUserId) {
-                    alert('AI推薦対象ユーザーを選択してください');
+                    alert('AI紹介対象ユーザーを選択してください');
                     $(btn).html(originalHtml).prop('disabled', false);
                     return;
                 }
@@ -9576,16 +9606,16 @@
                     </div>
 
                     <div class="pt-4 mt-auto border-t border-gray-100 flex flex-col gap-2">
-                        ${isAdminOrCoach && targetUserId ? `
+                        ${isAdminOrCoach ? `
                         <div class="flex gap-2 mb-1">
                              ${!isRecommended ? `
                             <button onclick="event.stopPropagation(); openRecommendJobModal('${job.id}')" 
                                 class="flex-1 bg-amber-500 text-white py-1.5 rounded text-xs font-bold hover:bg-amber-600 transition">
-                                <i class="fas fa-star mr-1"></i>推薦
+                                <i class="fas fa-star mr-1"></i>紹介
                             </button>
                             ` : ''}
                             ${!isApplied ? `
-                            <button onclick="event.stopPropagation(); applyForJob('${job.id}', '${targetUserId}')" 
+                            <button onclick="event.stopPropagation(); applyForJob('${job.id}', '${targetUserId || ''}')" 
                                 class="flex-1 bg-indigo-600 text-white py-1.5 rounded text-xs font-bold hover:bg-indigo-700 transition">
                                 <i class="fas fa-paper-plane mr-1"></i>代理応募
                             </button>
@@ -16288,6 +16318,71 @@
         // ========================
         // 対象ユーザー選択機能
         // ========================
+        // 求職者選択モーダル関連
+        // ========================
+
+        window.openCandidateSelectionModal = async function () {
+            if (allCandidateUsers.length === 0) {
+                await loadCandidateUsers();
+            }
+            renderModalCandidateList();
+            $('#candidate-selection-modal').removeClass('hidden');
+        };
+
+        window.closeCandidateSelectionModal = function () {
+            $('#candidate-selection-modal').addClass('hidden');
+        };
+
+        function renderModalCandidateList(filter = '') {
+            const container = $('#modal-candidate-list');
+            const users = allCandidateUsers.filter(u =>
+                u.name.toLowerCase().includes(filter.toLowerCase()) ||
+                (u.email && u.email.toLowerCase().includes(filter.toLowerCase()))
+            );
+
+            if (users.length === 0) {
+                container.html('<p class="text-center py-4 text-gray-500 text-sm">該当するユーザーはいません</p>');
+                return;
+            }
+
+            const html = users.map(u => `
+                <div onclick="selectCandidateFromModal('${u.id}', '${escapeHtml(u.name)}', '${escapeHtml(u.email)}')"
+                    class="p-3 bg-white border rounded hover:border-indigo-500 hover:bg-indigo-50 cursor-pointer transition-colors flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-900">${u.name}</div>
+                        <div class="text-xs text-gray-500">${u.email || ''}</div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-300"></i>
+                </div>
+            `).join('');
+            container.html(html);
+        }
+
+        $('#modal-candidate-search').on('input', function () {
+            renderModalCandidateList($(this).val());
+        });
+
+        window.selectCandidateFromModal = function (userId, userName, userEmail) {
+            selectTargetUser(userId, userName, userEmail);
+            closeCandidateSelectionModal();
+
+            // 少し待ってから本来の紹介モーダルを開く
+            if (currentRecommendJobId) {
+                setTimeout(() => {
+                    openRecommendJobModal(currentRecommendJobId);
+                }, 100);
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         // 候補ユーザーリストを読み込む
         async function loadCandidateUsers() {
