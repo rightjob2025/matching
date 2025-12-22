@@ -4095,6 +4095,8 @@
 
         // currentUserをグローバル変数として定義
         let currentUser = null;
+        let isAImatchingResultView = false;
+        let aiResultCache = {}; // userId_jobId -> details
         window.prefectures = [
             "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
             "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
@@ -8284,8 +8286,8 @@
                         <button onclick="clearAllSelectedCandidates()" class="ml-4 text-xs bg-gray-200 hover:bg-gray-300 text-gray-600 font-medium py-1 px-3 rounded transition">全解除</button>
                     </div>
                     <div class="pr-4">
-                        <button onclick="runJobToCandidateMatching()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center">
-                            <i class="fas fa-robot mr-2"></i>選択した候補者でAIマッチング
+                        <button id="btn-save-recommendations" onclick="saveCandidatesToRecommendations()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center">
+                            <i class="fas fa-star mr-2"></i>おすすめ求人に保存
                         </button>
                     </div>
                 </div>
@@ -8302,13 +8304,15 @@
                 $('#c-selected-count').text(count);
 
                 const bar = $('#candidate-float-bar');
-                if (count > 0) {
+
+                // AI結果表示中のみバーを表示する (求職者検索リストでのAIマッチングバーは不要との要望)
+                if (count > 0 && isAImatchingResultView) {
                     bar.removeClass('hidden').removeClass('translate-y-full').addClass('translate-y-0');
                     $('#candidate-results-container').css('padding-bottom', '100px');
                 } else {
                     bar.addClass('translate-y-full');
                     setTimeout(() => {
-                        if ($('.candidate-select-checkbox:checked').length === 0) bar.addClass('hidden');
+                        if ($('.candidate-select-checkbox:checked').length === 0 || !isAImatchingResultView) bar.addClass('hidden');
                     }, 300);
                     $('#candidate-results-container').css('padding-bottom', '0');
                 }
@@ -8724,10 +8728,18 @@
                 aiResults.sort((a, b) => b.match_score - a.match_score);
 
                 // 表示 (AI評価されたものだけを表示)
+                isAImatchingResultView = true;
+
+                // キャッシュに保存
+                aiResults.forEach(r => {
+                    const key = `${r.candidate.id}_${selectedTargetJobId}`;
+                    aiResultCache[key] = r.ai_details;
+                });
+
                 renderMatchingResults(aiResults, '#candidate-results-container');
 
-                // フローティングバー非表示
-                $('#candidate-float-bar').addClass('translate-y-full').addClass('hidden');
+                // バーの状態をリセット（次は「保存」ボタンが出るようにするため）
+                clearAllSelectedCandidates();
 
                 alert(`AI詳細評価が完了しました。\n${aiResults.length}名の候補者を表示します。`);
 
@@ -8738,6 +8750,52 @@
                 hideLoading();
             }
         }
+
+        window.saveCandidatesToRecommendations = async function () {
+            const checkedIds = $('.candidate-select-checkbox:checked').map((_, el) => $(el).val()).get();
+            if (checkedIds.length === 0) return;
+            if (!selectedTargetJobId) {
+                alert('対象の求人が選択されていません');
+                return;
+            }
+
+            showLoading('おすすめに保存中...');
+            try {
+                const recs = checkedIds.map(userId => {
+                    const key = `${userId}_${selectedTargetJobId}`;
+                    const details = aiResultCache[key];
+
+                    const card = $(`.candidate-select-checkbox[value="${userId}"]`).closest('.border');
+                    const scoreText = card.find('span:contains("マッチ度:")').text();
+                    const score = parseFloat(scoreText.replace('マッチ度:', '').replace('%', '')) || 0;
+
+                    return {
+                        organization_id: currentUser.organization_id,
+                        user_id: userId,
+                        job_id: selectedTargetJobId,
+                        score: score,
+                        reason: card.find('.bg-blue-50 p, .bg-gray-50 p').first().text().trim() || 'AIマッチング評価済み',
+                        recommended_by: currentUser.id,
+                        details: details
+                    };
+                });
+
+                // 一括保存 (Upsert)
+                const { error } = await supabase
+                    .from('recommendations')
+                    .upsert(recs, { onConflict: 'user_id, job_id' });
+
+                if (error) throw error;
+
+                alert(`${recs.length}名を「おすすめ求人」に保存しました。`);
+                clearAllSelectedCandidates();
+            } catch (e) {
+                console.error('Failed to save recommendations:', e);
+                alert('保存に失敗しました: ' + e.message);
+            } finally {
+                hideLoading();
+            }
+        };
 
         window.clearMatchResults = function () {
             $('#candidate-results-container').empty();
@@ -8755,6 +8813,10 @@
         }
 
         function renderCandidateResults(candidates) {
+            isAImatchingResultView = false;
+            // バーを隠す
+            $('#candidate-float-bar').addClass('translate-y-full').addClass('hidden');
+
             const container = $('#candidate-results-container');
             if (candidates.length === 0) {
                 container.html('<div class="text-center p-8 text-gray-500">条件に一致する求職者は見つかりませんでした</div>');
