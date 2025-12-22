@@ -15894,24 +15894,81 @@
                     combinedText += `--- File ${i + 1} ---\n${text}\n`
                 }
 
-                let result = await analyzeDocumentWithAI(combinedText, 'resume')
+                let result = await analyzeDocumentWithAI(combinedText, 'resume');
 
                 // 配列で返ってきた場合は最初の要素を使う
                 if (Array.isArray(result)) {
                     result = result[0] || {};
                 }
 
-                // フォームに反映
-                if (result.skills) $('#profile-skills').val(result.skills)
-                if (result.work_history) $('#profile-history').val(result.work_history)
-                if (result.academic_background) $('#profile-academic').val(result.academic_background)
-                if (result.languages) $('#profile-languages').val(result.languages)
-                if (result.certifications) $('#profile-certifications').val(result.certifications)
+                console.log('Resume Analysis Result:', result);
 
-                // 推定値があれば反映（数値などは注意が必要）
-                if (result.current_salary) $('#profile-current-salary').val(result.current_salary / 10000)
+                // --- フォームへの反映 ---
 
-                alert('解析が完了し、フォームに入力しました。\n内容を確認して保存してください。')
+                // 名前はreadonlyだが、ふりがななどは反映
+                if (result.furigana || result.kana) $('#profile-furigana').val(result.furigana || result.kana);
+                if (result.email) $('#profile-email').val(result.email);
+                if (result.phone) $('#profile-phone').val(result.phone);
+                if (result.age) $('#profile-age').val(result.age);
+
+                // 学歴
+                if (result.education || result.academic_background) {
+                    $('#profile-academic').val(result.education || result.academic_background);
+                }
+
+                // スキル
+                if (result.skills) {
+                    $('#profile-skills').val(result.skills);
+                }
+
+                // 職歴概要
+                if (result.work_history) {
+                    $('#profile-history').val(result.work_history);
+                }
+
+                // 職務経歴 (詳細テキスト)
+                if (result.work_history_detail) {
+                    $('#profile-work-history-detail').val(result.work_history_detail);
+                }
+
+                // 推定年収 (万円単位)
+                if (result.current_salary) {
+                    $('#profile-current-salary').val(result.current_salary / 10000);
+                }
+
+                // 構造化された職歴 (詳細職歴)
+                if (result.work_history_structured && Array.isArray(result.work_history_structured)) {
+                    $('#profile-work-history-list').empty();
+                    result.work_history_structured.forEach(item => addWorkHistoryItemToContainer('#profile-work-history-list', item));
+                    updateJobChangeCountInContainer('#profile-work-history-list', '#profile-job-change-count');
+                }
+
+                // マスタデータとのマッチング (職種・業界)
+                if (result.desired_job_type) {
+                    const extractedJobs = [result.desired_job_type].flat().filter(Boolean);
+                    const matchedJobs = [];
+                    extractedJobs.forEach(val => {
+                        const match = findClosestMasterValue(val, masterJobCategories);
+                        if (match && !matchedJobs.includes(match)) matchedJobs.push(match);
+                    });
+                    if (matchedJobs.length > 0) {
+                        $('#profile-job-type').val(matchedJobs).trigger('change');
+                    }
+                }
+
+                if (result.desired_industry) {
+                    const extractedIndustries = [result.desired_industry].flat().filter(Boolean);
+                    const matchedIndustries = [];
+                    extractedIndustries.forEach(val => {
+                        const match = findClosestMasterValue(val, masterIndustries);
+                        if (match && !matchedIndustries.includes(match)) matchedIndustries.push(match);
+                    });
+                    if (matchedIndustries.length > 0) {
+                        $('#profile-industry').val(matchedIndustries).trigger('change');
+                    }
+                }
+
+                alert('PDFの解析が完了しました。\n内容を確認・修正した上で保存してください。');
             } catch (error) {
                 console.error('Resume analysis error:', error)
                 alert('解析に失敗しました: ' + error.message)
