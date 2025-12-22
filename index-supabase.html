@@ -14318,9 +14318,21 @@
                             }
 
                         } else if (currentImportType === 'candidates') {
-                            // 求職者(Edge Function) - アップサートは現在非対応
+                            // 求職者(Edge Function)
                             importData.role = 'candidate';
-                            const orgSettings = currentUser.organizations?.settings || {};
+
+                            // 最新の組織設定を同期（ステール状態を防ぐ）
+                            if (!currentUser.organizations || !currentUser.organizations.settings || currentUser.role === 'super_admin') {
+                                try {
+                                    const { data: freshOrg } = await supabase.from('organizations').select('settings').eq('id', currentUser.organization_id).single();
+                                    if (freshOrg) {
+                                        if (!currentUser.organizations) currentUser.organizations = {};
+                                        currentUser.organizations.settings = freshOrg.settings;
+                                    }
+                                } catch (e) { console.warn('Failed to refresh org settings before import', e); }
+                            }
+
+                            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
                             const emailRequired = orgSettings.candidate_email_required !== false;
                             const passwordRequired = orgSettings.candidate_password_required !== false;
 
@@ -14739,6 +14751,19 @@
                     if (updateResult.error) throw new Error(updateResult.error);
 
                     alert('保存しました');
+
+                    // キャッシュを更新
+                    if (typeof superAdminOrgsCache !== 'undefined') {
+                        const idx = superAdminOrgsCache.findIndex(o => o.id === orgId);
+                        if (idx !== -1) {
+                            superAdminOrgsCache[idx] = { ...superAdminOrgsCache[idx], ...orgData };
+                        }
+                    }
+
+                    // 現在の組織情報を更新
+                    if (currentUser && currentUser.organization_id === orgId) {
+                        currentUser.organizations = { ...currentUser.organizations, ...orgData };
+                    }
 
                 } else {
                     // 新規作成（Edge Function経由）
