@@ -6199,17 +6199,20 @@
 
                     recommendations = aiResults.map(result => {
                         const job = jobs.find(j => j.id === result.job_id);
+                        // ルールベースのスコアを計算（AIスコアが取得できなかった場合のフォールバック用）
+                        const ruleBased = calculateClientSideMatchScores(job, user);
+
                         return {
                             organization_id: currentUser.organization_id,
                             user_id: targetUserId,
                             job_id: result.job_id,
                             reason: result.recommendation_reason || result.reason || 'AIマッチング',
-                            score: result.match_score || 0,
+                            score: result.match_score || ruleBased.match_score || 0,
                             recommended_by: currentUser.id,
                             job_title: job ? job.title : '',
                             company: job ? (job.companies?.name || job.company) : '',
                             details: result.details, // 詳細分析結果
-                            culture_score: result.culture_match_score
+                            culture_score: result.culture_match_score || ruleBased.culture_match_score || 0
                         };
                     });
                 } catch (e) {
