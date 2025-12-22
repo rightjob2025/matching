@@ -8652,7 +8652,7 @@
                 scored.sort((a, b) => b.match_score - a.match_score);
 
                 // 2. 絞り込み (上位5名かつスコア40点以上)
-                const AI_EVAL_LIMIT = 5;
+                const AI_EVAL_LIMIT = 30;
                 const AI_EVAL_THRESHOLD = 40;
 
                 const candidatesForAI = scored.filter(s => s.match_score >= AI_EVAL_THRESHOLD).slice(0, AI_EVAL_LIMIT);
@@ -8666,7 +8666,7 @@
                 }
 
                 // 確認
-                const confirmMsg = `ルールベース評価により、上位${candidatesForAI.length}名の候補者を抽出しました。\n（閾値: 40点以上 / 最大5名）\n\nこれらの候補者に対して、生成AIによる詳細評価を実行しますか？\n（プロンプトを用いた詳細分析を行います。時間がかかる場合があります。）`;
+                const confirmMsg = `ルールベース評価により、上位${candidatesForAI.length}名の候補者を抽出しました。\n（閾値: 40点以上 / 最大30名）\n\nこれらの候補者に対して、生成AIによる詳細評価を実行しますか？\n（プロンプトを用いた詳細分析を行います。量が多い場合は少し時間がかかる場合があります。）`;
 
                 if (!confirm(confirmMsg)) {
                     // キャンセルした場合はルールベースの結果を表示
