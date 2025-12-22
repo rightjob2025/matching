@@ -1293,9 +1293,30 @@
                                 class="w-full px-4 py-2 border rounded-lg bg-gray-50">
                             <p class="text-xs text-gray-500 mt-1">※お名前は管理者にお問い合わせください</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
-                            <input type="email" id="profile-email" class="w-full px-4 py-2 border rounded-lg" required>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+                                <input type="email" id="profile-email" class="w-full px-4 py-2 border rounded-lg"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+                                <input type="tel" id="profile-phone" class="w-full px-4 py-2 border rounded-lg"
+                                    placeholder="例: 090-0000-0000">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
+                                <input type="date" id="profile-birth-date" class="w-full px-4 py-2 border rounded-lg"
+                                    onchange="calculateAge(this.value, '#profile-age')">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">年齢</label>
+                                <input type="number" id="profile-age" class="w-full px-4 py-2 border rounded-lg"
+                                    min="0">
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1401,9 +1422,61 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">職歴・自己PR</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">職歴・自己PR（概要）</label>
                             <textarea id="profile-history" rows="6" placeholder="これまでの経験や得意なことを詳しく教えてください"
                                 class="w-full px-4 py-2 border rounded-lg"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">職務経歴 (詳細テキスト)</label>
+                            <textarea id="profile-work-history-detail" rows="10"
+                                class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
+                                placeholder="職務経歴の詳細テキストをこちらに貼り付けてください"></textarea>
+                        </div>
+
+                        <!-- 社内用情報 (管理者・コーチのみ表示) -->
+                        <div id="internal-profile-info"
+                            class="hidden border-t-2 border-dashed border-indigo-200 pt-6 mt-8 space-y-6">
+                            <h3 class="text-lg font-bold text-indigo-900 flex items-center">
+                                <i class="fas fa-lock mr-2"></i>社内用情報（求職者には非表示）
+                            </h3>
+
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Google Drive URL</label>
+                                    <input type="url" id="profile-drive-url" class="w-full px-4 py-2 border rounded-lg"
+                                        placeholder="https://drive.google.com/...">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">NotebookLM
+                                            URL</label>
+                                        <input type="url" id="profile-notebooklm-url"
+                                            class="w-full px-4 py-2 border rounded-lg"
+                                            placeholder="https://notebooklm.google.com/...">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">LINE URL</label>
+                                        <input type="url" id="profile-line-url"
+                                            class="w-full px-4 py-2 border rounded-lg"
+                                            placeholder="https://line.me/...">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">履歴書 (詳細テキスト)</label>
+                                <textarea id="profile-resume-detail" rows="10"
+                                    class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
+                                    placeholder="履歴書の詳細テキスト"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">自己PR・備考</label>
+                                <textarea id="profile-notes" rows="6"
+                                    class="w-full px-4 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white transition"
+                                    placeholder="自己PR、面談メモ、その他備考"></textarea>
+                            </div>
                         </div>
 
                         <div class="flex justify-end pt-4">
@@ -10931,13 +11004,19 @@
 
             showLoading()
             try {
-                const { data: user, error } = await supabase
+                // usersテーブルとcandidate_profilesを結合して取得
+                const { data: userData, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
                     .eq('id', currentUser.id)
                     .single()
 
                 if (error) throw error
+
+                // フラット化（プロフィールが存在する場合）
+                const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
+                const user = { ...userData, ...profile };
+                user.id = userData.id;
 
                 // Update local currentUser cache
                 currentUser = user
@@ -10949,6 +11028,10 @@
                 $('#profile-name').val(user.name)
                 $('#profile-furigana').val(user.furigana || '')
                 $('#profile-email').val(user.email)
+                $('#profile-phone').val(user.phone || '')
+                $('#profile-birth-date').val(user.birth_date || '')
+                $('#profile-age').val(user.age || '')
+
                 // 職種、業界、雇用形態、勤務地は loadMasterDataForProfile でセット済み
 
                 $('#profile-salary').val(user.desired_salary ? Math.floor(user.desired_salary / 10000) : '')
@@ -10958,12 +11041,26 @@
 
                 $('#profile-skills').val(user.skills || '')
                 $('#profile-history').val(user.work_history || '')
+                $('#profile-work-history-detail').val(user.work_history_detail || '')
 
                 $('#profile-current-salary').val(user.current_salary ? user.current_salary / 10000 : '')
-                $('#profile-academic').val(user.academic_background || '')
+                $('#profile-academic').val(user.education || user.academic_background || '')
                 $('#profile-languages').val(user.languages || '')
                 $('#profile-certifications').val(user.certifications || '')
                 $('#profile-start-date').val(user.available_start_date || '')
+
+                // 社内用情報のセット & 表示制御
+                $('#profile-drive-url').val(user.drive_folder_url || '')
+                $('#profile-notebooklm-url').val(user.notebooklm_url || '')
+                $('#profile-line-url').val(user.line_url || '')
+                $('#profile-resume-detail').val(user.resume || '')
+                $('#profile-notes').val(user.notes || '')
+
+                if (['admin', 'org_admin', 'super_admin', 'coach', 'ca', 'ra'].includes(currentUser.role)) {
+                    $('#internal-profile-info').removeClass('hidden')
+                } else {
+                    $('#internal-profile-info').addClass('hidden')
+                }
 
             } catch (error) {
                 console.error('Load profile error:', error)
@@ -10977,11 +11074,17 @@
             e.preventDefault()
             showLoading()
 
-            const salary = $('#profile-salary').val()
+            const salaryNum = $('#profile-salary').val() ? parseInt($('#profile-salary').val()) * 10000 : null;
 
-            const updates = {
+            // usersテーブル更新用
+            const userUpdates = {
                 email: $('#profile-email').val().trim(),
                 furigana: $('#profile-furigana').val().trim(),
+                updated_at: new Date().toISOString()
+            }
+
+            // candidate_profilesテーブル更新用
+            const profileUpdates = {
                 desired_job_type: $('#profile-job-type').val() ? $('#profile-job-type').val().join(',') : null,
                 desired_industry: $('#profile-industry').val() ? $('#profile-industry').val().join(',') : null,
                 desired_location: (() => {
@@ -11003,30 +11106,54 @@
                     return city || null;
                 })(),
                 desired_employment_type: $('#profile-employment-type').val() ? $('#profile-employment-type').val().join(',') : null,
-                desired_salary: salary ? parseInt(salary) * 10000 : null,
+                desired_salary: salaryNum,
                 desired_freewords: $('#profile-freewords').val().trim(),
                 desired_job_experience_ok: $('#profile-job-experience-ok').is(':checked'),
                 desired_industry_experience_ok: $('#profile-industry-experience-ok').is(':checked'),
                 skills: $('#profile-skills').val().trim(),
                 work_history: $('#profile-history').val().trim(),
+                work_history_detail: $('#profile-work-history-detail').val().trim(),
                 current_salary: $('#profile-current-salary').val() ? parseInt($('#profile-current-salary').val()) * 10000 : null,
-                academic_background: $('#profile-academic').val().trim(),
+                education: $('#profile-academic').val().trim(),
                 languages: $('#profile-languages').val().trim(),
                 certifications: $('#profile-certifications').val().trim(),
                 available_start_date: $('#profile-start-date').val() || null,
+                birth_date: $('#profile-birth-date').val() || null,
+                age: $('#profile-age').val() ? parseInt($('#profile-age').val()) : null,
+                phone: $('#profile-phone').val().trim() || null,
                 updated_at: new Date().toISOString()
             }
 
+            // 社内用情報の追加 (権限がある場合のみ、且つusers/profilesに分散して保存)
+            if (['admin', 'org_admin', 'super_admin', 'coach', 'ca', 'ra'].includes(currentUser.role)) {
+                // usersテーブル側
+                userUpdates.drive_folder_url = $('#profile-drive-url').val().trim() || null;
+                userUpdates.notebooklm_url = $('#profile-notebooklm-url').val().trim() || null;
+                userUpdates.line_url = $('#profile-line-url').val().trim() || null;
+
+                // profilesテーブル側
+                profileUpdates.resume = $('#profile-resume-detail').val().trim() || null;
+                profileUpdates.notes = $('#profile-notes').val().trim() || null;
+            }
+
             try {
-                const { error } = await supabase
+                // 1. usersテーブル更新
+                const { error: userError } = await supabase
                     .from('users')
-                    .update(updates)
+                    .update(userUpdates)
                     .eq('id', currentUser.id)
 
-                if (error) throw error
+                if (userError) throw userError
+
+                // 2. candidate_profilesテーブル更新 (upsert)
+                const { error: profileError } = await supabase
+                    .from('candidate_profiles')
+                    .upsert({ user_id: currentUser.id, ...profileUpdates }, { onConflict: 'user_id' });
+
+                if (profileError) throw profileError
 
                 // Update local cache
-                Object.assign(currentUser, updates)
+                Object.assign(currentUser, userUpdates, profileUpdates)
 
                 alert('プロフィールを保存しました！')
             } catch (error) {
