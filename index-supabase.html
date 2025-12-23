@@ -11104,31 +11104,40 @@
             const selectedRecIds = checkboxes.map((_, el) => $(el).val()).get();
             const selectedRecs = allRecommendations.filter(r => selectedRecIds.includes(r.id));
 
-            // 求人情報の詳細をテキスト化
+            // 変数の組み立て
             let jobDetailsText = '';
-            let primaryReason = '';
+            let jobListText = '';
+            let reasonsText = '';
+
             selectedRecs.forEach((rec, idx) => {
                 const job = rec.jobs;
                 const driveUrl = job.url || 'URLなし';
+                const reason = rec.reason || rec.recommendation_reason || rec.match_reason || '';
+                const cleanReason = reason.replace(/^(理由|推薦理由|マッチ理由)[:：\s]*/, '').trim();
 
+                // 1. jobDetails (全部入り)
                 jobDetailsText += `【案件 ${idx + 1}】\n`;
                 jobDetailsText += `企業名: ${job.company} \n`;
                 jobDetailsText += `職種: ${job.title} \n`;
                 jobDetailsText += `マッチ度: ${rec.score}%\n`;
-
-                const reason = rec.reason || rec.recommendation_reason || rec.match_reason;
-                if (reason) {
-                    // 行頭の「理由：」などを取り除くが、評価ランクなどは残す
-                    const cleanReason = reason.replace(/^(理由|推薦理由|マッチ理由)[:：\s]*/, '').trim();
-                    jobDetailsText += `おすすめ理由: ${cleanReason} \n`;
-                    if (idx === 0) primaryReason = cleanReason;
-                }
-
+                if (cleanReason) jobDetailsText += `おすすめ理由: ${cleanReason} \n`;
                 jobDetailsText += `詳細URL: ${driveUrl} \n\n`;
+
+                // 2. jobList (理由なし)
+                jobListText += `【案件 ${idx + 1}】 ${job.company} / ${job.title}\n`;
+                jobListText += `詳細URL: ${driveUrl}\n\n`;
+
+                // 3. recommendationReason (理由のみリスト)
+                if (cleanReason) {
+                    if (selectedRecs.length > 1) {
+                        reasonsText += `■ ${job.company} (${job.title})\n${cleanReason}\n\n`;
+                    } else {
+                        reasonsText = cleanReason;
+                    }
+                }
             });
 
             // 変数置換
-            // 「田中様 様」となるのを防ぐため、名前の末尾の「様」を一度除去
             const rawUserName = targetUser ? targetUser.name || '求職者' : '求職者';
             const cleanUserName = rawUserName.replace(/様$/, '');
 
@@ -11136,7 +11145,9 @@
                 .replace(/{{userName}}/g, cleanUserName)
                 .replace(/{{agentName}}/g, currentUser.name || '')
                 .replace(/{{jobDetails}}/g, jobDetailsText.trim())
-                .replace(/{{recommendationReason}}/g, primaryReason);
+                .replace(/{{jobList}}/g, jobListText.trim())
+                .replace(/{{jobDetailsCount}}/g, selectedRecs.length)
+                .replace(/{{recommendationReason}}/g, reasonsText.trim());
 
             $('#recommendation-message-body').val(body);
         };
