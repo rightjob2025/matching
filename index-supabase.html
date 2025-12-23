@@ -1265,6 +1265,71 @@
                 <div id="recommendations-container">
                     <!-- Recommendations will be rendered here -->
                 </div>
+
+                <!-- 推薦メッセージ作成モーダル -->
+                <div id="recommendation-message-modal"
+                    class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
+                    <div
+                        class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        <div class="p-6 border-b flex justify-between items-center bg-indigo-50">
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-900"><i class="fas fa-magic mr-2"></i>推薦メッセージ生成
+                                </h3>
+                                <p class="text-xs text-indigo-600 mt-1">選択した求人の内容を元に、メッセージを自動構成します</p>
+                            </div>
+                            <button onclick="closeRecommendationMessageModal()"
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                            <!-- テンプレート選択 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">テンプレート選択</label>
+                                    <select id="message-template-select" onchange="applyMessageTemplate(this.value)"
+                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                        <!-- Loaded dynamically -->
+                                    </select>
+                                </div>
+                                <div class="flex items-end">
+                                    <button onclick="generateRecommendationMessage()"
+                                        class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-bold transition flex items-center justify-center gap-2">
+                                        <i class="fas fa-sync-alt"></i> メッセージを生成/更新
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- メッセージ本文 -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">
+                                    メッセージ本文
+                                    <span class="text-xs font-normal text-gray-500 ml-2">(必要に応じて手動で調整してください)</span>
+                                </label>
+                                <textarea id="recommendation-message-body" rows="15"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500 bg-gray-50"></textarea>
+                            </div>
+                        </div>
+                        <div class="p-6 border-t bg-gray-50 flex justify-between items-center">
+                            <div class="flex gap-2">
+                                <button onclick="copyRecommendationMessage()"
+                                    class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition flex items-center gap-2">
+                                    <i class="fas fa-copy"></i> クリップボードにコピー
+                                </button>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="closeRecommendationMessageModal()"
+                                    class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition">
+                                    キャンセル
+                                </button>
+                                <button id="send-recommendation-email-btn" onclick="sendRecommendationEmail()"
+                                    class="px-8 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-lg transition flex items-center gap-2">
+                                    <i class="fas fa-paper-plane"></i> 候補者へメール送信
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Profile Page -->
@@ -2422,6 +2487,79 @@
                             <button onclick="saveAdminSettings()"
                                 class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
                                 <i class="fas fa-save mr-2"></i>設定を保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 推薦メールテンプレート管理 -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold">推薦メール・メッセージテンプレート</h3>
+                            <p class="text-gray-600 mt-1">候補者へ送る推薦メッセージの定型文を管理します。</p>
+                        </div>
+                        <button onclick="openEmailTemplateModal()"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> 新規作成
+                        </button>
+                    </div>
+
+                    <div id="email-templates-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Templates will be rendered here -->
+                        <div class="animate-pulse bg-gray-100 h-32 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- メールテンプレート編集モーダル -->
+                <div id="email-template-modal"
+                    class="fixed inset-0 bg-black bg-opacity-50 z-[110] hidden flex items-center justify-center p-4">
+                    <div
+                        class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        <div class="p-6 border-b bg-indigo-50 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-indigo-900" id="template-modal-title">テンプレート編集</h3>
+                            <button onclick="closeEmailTemplateModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                            <input type="hidden" id="template-id">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">テンプレート名</label>
+                                <input type="text" id="template-name"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="例: 標準推薦メール, LinkedIn用など">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">メール件名 (任意)</label>
+                                <input type="text" id="template-subject"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="候補者へ送信する際の標準件名">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">本文テンプレート</label>
+                                <div class="bg-blue-50 p-3 rounded text-xs text-blue-700 mb-2 leading-relaxed">
+                                    <i class="fas fa-info-circle mr-1"></i>以下の変数を使用できます：<br>
+                                    <code class="bg-white px-1 border rounded">\{\{userName\}\}</code>：候補者名、
+                                    <code class="bg-white px-1 border rounded">\{\{agentName\}\}</code>：担当エージェント名、
+                                    <code class="bg-white px-1 border rounded">\{\{jobDetails\}\}</code>：選択した求人の詳細リスト
+                                </div>
+                                <textarea id="template-body" rows="12"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="template-is-default" class="w-4 h-4 text-indigo-600 rounded">
+                                <label for="template-is-default" class="ml-2 text-sm text-gray-700">デフォルトに設定する</label>
+                            </div>
+                        </div>
+                        <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                            <button onclick="closeEmailTemplateModal()"
+                                class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition font-medium">
+                                キャンセル
+                            </button>
+                            <button onclick="saveEmailTemplate()"
+                                class="px-8 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-lg transition">
+                                保存する
                             </button>
                         </div>
                     </div>
@@ -4758,8 +4896,9 @@
                 'admin-candidates-content',
                 'admin-users-content',
                 'admin-csv-content',
-                'admin-logs-content',
+                'admin-log-content',
                 'admin-master-content',
+                'admin-settings-content',
                 'super-admin-organizations-content'
             ];
 
@@ -4799,6 +4938,13 @@
                 // そのため、loadJobsがまだ呼ばれていない（リストが空など）場合に呼ぶのが安全だが、
                 // 簡易的には、UIにセットするだけで、ユーザーが「検索」ボタンを押せばよい状態にするだけでも「条件保存」の要件は満たせる。
                 // もし自動検索まで望むなら、呼び出し元を整理する必要がある。
+            }
+
+            // 管理者設定ページが表示された場合、メールテンプレートをロード
+            if (contentId === 'admin-settings-content') {
+                if (typeof loadEmailTemplates === 'function') {
+                    loadEmailTemplates();
+                }
             }
         }
 
@@ -10418,10 +10564,12 @@
                 controlsHtml += `
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-medium text-gray-700 whitespace-nowrap">求職者:</label>
-                        <select id="rec-user-filter" onchange="filterRecommendations(this.value)" class="px-3 py-2 border rounded-lg text-sm max-w-xs">
-                            <option value="">全員</option>
-                            ${userList.map(u => `<option value="${u.id}" ${u.id === currentSelectedUserId ? 'selected' : ''}>${u.name} (${u.email})</option>`).join('')}
-                        </select>
+                        <div class="w-64">
+                            <select id="rec-user-filter" onchange="filterRecommendations(this.value)" class="select2 w-full">
+                                <option value="">全員</option>
+                                ${userList.map(u => `<option value="${u.id}" ${u.id === currentSelectedUserId ? 'selected' : ''}>${u.name} (${u.email || 'メールなし'})</option>`).join('')}
+                            </select>
+                        </div>
                     </div>
                 `;
             } else {
@@ -10430,18 +10578,21 @@
 
             // 右側: ソート（再実行ボタンは削除）
             controlsHtml += `
-                <div class="flex items-center gap-4 ml-auto">
-                    <button onclick="reRunSelectedRecommendations()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap">
-                        <i class="fas fa-sync-alt"></i> 選択した求人を再判定
+                <div class="flex items-center gap-2 ml-auto">
+                    <button onclick="reRunSelectedRecommendations()" class="bg-white text-indigo-600 border border-indigo-200 px-3 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-50 transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-sync-alt"></i> 再判定
+                    </button>
+                    
+                    <button onclick="openRecommendationMessageModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-envelope"></i> メッセージ作成
                     </button>
 
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap"><i class="fas fa-sort mr-1"></i>並び替え:</label>
-                        <select onchange="sortRecommendations(this.value)" class="px-3 py-2 border rounded-lg text-sm cursor-pointer hover:bg-gray-50">
-                            <option value="score-desc" ${currentSortOption === 'score-desc' ? 'selected' : ''}>マッチ度 (高い順)</option>
-                            <option value="score-asc" ${currentSortOption === 'score-asc' ? 'selected' : ''}>マッチ度 (低い順)</option>
-                            <option value="date-desc" ${currentSortOption === 'date-desc' ? 'selected' : ''}>追加日 (新しい順)</option>
-                            <option value="date-asc" ${currentSortOption === 'date-asc' ? 'selected' : ''}>追加日 (古い順)</option>
+                    <div class="flex items-center gap-2 ml-2 pl-4 border-l">
+                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap"><i class="fas fa-sort mr-1"></i></label>
+                        <select onchange="sortRecommendations(this.value)" class="px-3 py-2 border rounded-lg text-sm cursor-pointer hover:bg-gray-50 border-gray-200">
+                            <option value="score-desc" ${currentSortOption === 'score-desc' ? 'selected' : ''}>マッチ度順</option>
+                            <option value="date-desc" ${currentSortOption === 'date-desc' ? 'selected' : ''}>新着順</option>
+                            <option value="date-asc" ${currentSortOption === 'date-asc' ? 'selected' : ''}>古い順</option>
                         </select>
                     </div>
                 </div>
@@ -10611,9 +10762,17 @@
                         `}
                     </div>
                 </div>
-            `}).join('') + '</div>';
+            container.html(html);
 
-            container.html(html)
+            // Select2を初期化
+            if (isAdminOrCoach) {
+                $('#rec-user-filter').select2({
+                    placeholder: "求職者を選択",
+                    allowClear: true,
+                    language: "ja",
+                    width: '100%'
+                });
+            }
         }
 
         // 選択した求人のAI再判定
@@ -10624,7 +10783,7 @@
                 return;
             }
 
-            if (!confirm(`${checkboxes.length}件の求人についてAIマッチングを再実行しますか？\n（現在の判定結果は上書きされます）`)) {
+            if (!confirm(`${ checkboxes.length } 件の求人についてAIマッチングを再実行しますか？\n（現在の判定結果は上書きされます）`)) {
                 return;
             }
 
@@ -10691,7 +10850,7 @@
 
                     if (jobs.length === 0) continue;
 
-                    console.log(`Re-analyzing for user ${userDataForAI.name || userId}:`, jobs.length, 'jobs');
+                    console.log(`Re - analyzing for user ${ userDataForAI.name || userId }: `, jobs.length, 'jobs');
 
                     const { data: results, error } = await supabase.functions.invoke('ai-matching', {
                         body: {
@@ -10729,7 +10888,7 @@
                     }
                 }
 
-                alert(`再判定が完了しました。\n成功: ${totalSuccess}件\n失敗: ${totalErrors}件`);
+                alert(`再判定が完了しました。\n成功: ${ totalSuccess } 件\n失敗: ${ totalErrors } 件`);
 
                 // データ再読み込み
                 if (typeof loadRecommendations === 'function') {
@@ -10767,10 +10926,10 @@
 
                 // 2. ユーザープロフィール（DBから取得）
                 const userProfile = `
-                    希望職種: ${currentUser.desired_job_type || '未設定'}
-                    希望勤務勤務地: ${currentUser.desired_location || '未設定'}
-                    スキル: ${currentUser.skills || '未設定'}
-                    職歴・自己PR: ${currentUser.work_history || '未設定'}
+                希望職種: ${ currentUser.desired_job_type || '未設定' }
+                希望勤務勤務地: ${ currentUser.desired_location || '未設定' }
+                スキル: ${ currentUser.skills || '未設定' }
+                職歴・自己PR: ${ currentUser.work_history || '未設定' }
                 `
 
                 // 3. Edge Function 呼び出し
@@ -10833,6 +10992,315 @@
                 hideLoading()
             }
         }
+
+        // ========================
+        // 推薦メッセージ・テンプレート関連
+        // ========================
+        let currentTemplates = [];
+
+        window.openRecommendationMessageModal = async function () {
+            const checkboxes = $('.rec-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('メッセージに含める求人を選択してください');
+                return;
+            }
+
+            const targetUserIds = [...new Set(checkboxes.map((_, el) => $(el).data('user-id')).get())];
+            if (targetUserIds.length > 1) {
+                alert('異なる求職者の求人が混在しています。メッセージ作成は1人の求職者ごとに行ってください。');
+                return;
+            }
+
+            const targetUserId = targetUserIds[0];
+            const targetUser = allCandidatesList.find(u => u.id === targetUserId);
+
+            // モーダルを表示
+            $('#recommendation-message-modal').removeClass('hidden');
+            
+            // テンプレートをロード
+            await loadEmailTemplates();
+            
+            // メッセージ生成
+            generateRecommendationMessage();
+        };
+
+        window.closeRecommendationMessageModal = function () {
+            $('#recommendation-message-modal').addClass('hidden');
+        };
+
+        window.loadEmailTemplates = async function () {
+            try {
+                const { data, error } = await supabase
+                    .from('email_templates')
+                    .select('*')
+                    .eq('organization_id', currentUser.organization_id)
+                    .order('is_default', { ascending: false })
+                    .order('name');
+
+                if (error) throw error;
+                currentTemplates = data || [];
+
+                // 推薦モーダル内のテンプレート選択プルダウン
+                const select = $('#message-template-select');
+                if (select.length) {
+                    select.empty();
+                    currentTemplates.forEach(t => {
+                        select.append(`< option value = "${t.id}" ${ t.is_default ? 'selected' : '' }> ${ t.name }</option > `);
+                    });
+                }
+
+                // 管理画面のリスト表示
+                renderEmailTemplatesList();
+            } catch (error) {
+                console.error('Failed to load email templates:', error);
+            }
+        };
+
+        window.applyMessageTemplate = function (templateId) {
+            generateRecommendationMessage();
+        };
+
+        window.generateRecommendationMessage = function () {
+            const checkboxes = $('.rec-checkbox:checked');
+            const templateId = $('#message-template-select').val();
+            const template = currentTemplates.find(t => t.id === templateId);
+
+            if (!template) {
+                $('#recommendation-message-body').val('テンプレートを選択してください');
+                return;
+            }
+
+            const targetUserId = checkboxes.first().data('user-id');
+            const targetUser = allCandidatesList.find(u => u.id === targetUserId);
+            
+            // 選択された求人推薦データを取得
+            const selectedRecIds = checkboxes.map((_, el) => $(el).val()).get();
+            const selectedRecs = allRecommendations.filter(r => selectedRecIds.includes(r.id));
+
+            // 求人情報の詳細をテキスト化
+            let jobDetailsText = '';
+            selectedRecs.forEach((rec, idx) => {
+                const job = rec.jobs;
+                const driveUrl = job.url || 'URLなし';
+                
+                jobDetailsText += `【案件 ${ idx + 1 }】\n`;
+                jobDetailsText += `企業名: ${ job.company } \n`;
+                jobDetailsText += `職種: ${ job.title } \n`;
+                jobDetailsText += `マッチ度: ${ rec.score }%\n`;
+                
+                if (rec.recommendation_reason) {
+                    // 「理由：」などのプレフィックスを取り除く
+                    const cleanReason = rec.recommendation_reason.replace(/^(理由|推薦理由|マッチ理由)[:：\s]*/, '').trim();
+                    jobDetailsText += `推薦理由: ${ cleanReason } \n`;
+                }
+                
+                jobDetailsText += `詳細URL: ${ driveUrl } \n\n`;
+            });
+
+            // 変数置換
+            const body = template.body_template
+                .replace(/{{userName}}/g, targetUser ? targetUser.name || '求職者' : '求職者')
+                .replace(/{{agentName}}/g, currentUser.name || '')
+                .replace(/{{jobDetails}}/g, jobDetailsText.trim());
+
+            $('#recommendation-message-body').val(body);
+        };
+
+        window.copyRecommendationMessage = function () {
+            const body = $('#recommendation-message-body').val();
+            if (!body) return;
+            navigator.clipboard.writeText(body).then(() => {
+                alert('メッセージをクリップボードにコピーしました');
+            });
+        };
+
+        window.sendRecommendationEmail = async function () {
+            const checkboxes = $('.rec-checkbox:checked');
+            const targetUserId = checkboxes.first().data('user-id');
+            const body = $('#recommendation-message-body').val();
+            const templateId = $('#message-template-select').val();
+            const template = currentTemplates.find(t => t.id === templateId);
+
+            if (!body) {
+                alert('メッセージ内容が空です');
+                return;
+            }
+
+            // 求職者情報を取得
+            const { data: user, error } = await supabase
+                .from('users')
+                .select('name, email')
+                .eq('id', targetUserId)
+                .single();
+
+            if (error || !user || !user.email) {
+                alert('候補者のメールアドレスを確認できません。');
+                return;
+            }
+
+            if (!confirm(`${ user.name } さん（${ user.email }）にこのメッセージをメールで送信しますか？`)) {
+                return;
+            }
+
+            $('#send-recommendation-email-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>送信中...');
+
+            try {
+                // sendEmail(type, to, data)
+                const success = await sendEmail('recommendation', user.email, {
+                    userName: user.name,
+                    subject: template.subject || '【求人のご紹介】',
+                    body: body,
+                    scoutUrl: `${ window.location.origin }/#recommendations`
+            });
+
+            if (success) {
+                alert('メールを送信しました。');
+                closeRecommendationMessageModal();
+            } else {
+                alert('メールの送信に失敗しました。');
+            }
+        } catch (error) {
+            console.error('Email send error:', error);
+            alert('送信中にエラーが発生しました');
+        } finally {
+            $('#send-recommendation-email-btn').prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>候補者へメール送信');
+        }
+        };
+
+        // テンプレートリスト表示（管理画面用）
+        window.renderEmailTemplatesList = function () {
+            const container = $('#email-templates-list');
+            if (!container.length) return;
+            container.empty();
+
+            if (currentTemplates.length === 0) {
+                container.html('<div class="col-span-full py-12 text-center text-gray-500 bg-gray-50 border-2 border-dashed rounded-xl">テンプレートが登録されていません</div>');
+                return;
+            }
+
+            currentTemplates.forEach(t => {
+                const card = `
+                    <div class="bg-white border ${t.is_default ? 'border-indigo-600 ring-1 ring-indigo-600' : 'border-gray-200'} p-5 rounded-xl shadow-sm hover:shadow-md transition group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-gray-900">${t.name}</h4>
+                                ${t.is_default ? '<span class="inline-block mt-1 text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded uppercase">デフォルト</span>' : ''}
+                            </div>
+                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="editEmailTemplate('${t.id}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="編集">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteEmailTemplate('${t.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="削除">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 line-clamp-3 mb-4 leading-relaxed">${t.body_template.substring(0, 100)}...</p>
+                        <div class="text-[10px] text-gray-400 border-t pt-3">
+                            <i class="far fa-clock mr-1"></i>最終更新: ${new Date(t.updated_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                `;
+                container.append(card);
+            });
+        };
+
+        window.openEmailTemplateModal = function (template = null) {
+            $('#email-template-modal').removeClass('hidden');
+            if (template) {
+                $('#template-modal-title').text('テンプレートを編集');
+                $('#template-id').val(template.id);
+                $('#template-name').val(template.name);
+                $('#template-subject').val(template.subject);
+                $('#template-body').val(template.body_template);
+                $('#template-is-default').prop('checked', template.is_default);
+            } else {
+                $('#template-modal-title').text('新規テンプレート作成');
+                $('#template-id').val('');
+                $('#template-name').val('');
+                $('#template-subject').val('');
+                $('#template-body').val('');
+                $('#template-is-default').prop('checked', currentTemplates.length === 0);
+            }
+        };
+
+        window.closeEmailTemplateModal = function () {
+            $('#email-template-modal').addClass('hidden');
+        };
+
+        window.editEmailTemplate = function (id) {
+            const template = currentTemplates.find(t => t.id === id);
+            if (template) openEmailTemplateModal(template);
+        };
+
+        window.saveEmailTemplate = async function () {
+            const id = $('#template-id').val();
+            const name = $('#template-name').val();
+            const subject = $('#template-subject').val();
+            const body = $('#template-body').val();
+            const isDefault = $('#template-is-default').prop('checked');
+
+            if (!name || !body) {
+                alert('テンプレート名と本文を入力してください');
+                return;
+            }
+
+            showLoading();
+            try {
+                // デフォルトの解除（その組織内で一つだけに制限）
+                if (isDefault) {
+                    await supabase
+                        .from('email_templates')
+                        .update({ is_default: false })
+                        .eq('organization_id', currentUser.organization_id);
+                }
+
+                const data = {
+                    organization_id: currentUser.organization_id,
+                    name: name,
+                    subject: subject,
+                    body_template: body,
+                    is_default: isDefault,
+                    updated_at: new Date().toISOString()
+                };
+
+                let error;
+                if (id) {
+                    const { error: err } = await supabase.from('email_templates').update(data).eq('id', id);
+                    error = err;
+                } else {
+                    const { error: err } = await supabase.from('email_templates').insert(data);
+                    error = err;
+                }
+
+                if (error) throw error;
+
+                alert('保存しました');
+                closeEmailTemplateModal();
+                loadEmailTemplates();
+            } catch (error) {
+                console.error('Error saving template:', error);
+                alert('保存に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        window.deleteEmailTemplate = async function (id) {
+            if (!confirm('このテンプレートを削除してもよろしいですか？')) return;
+
+            showLoading();
+            try {
+                const { error } = await supabase.from('email_templates').delete().eq('id', id);
+                if (error) throw error;
+                loadEmailTemplates();
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                alert('削除に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
 
         // ========================
         // Profile
