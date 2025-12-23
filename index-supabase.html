@@ -4315,6 +4315,7 @@
 
         // currentUserをグローバル変数として定義
         let currentUser = null;
+        let isModalLoading = false;
         let isAImatchingResultView = false;
         let aiResultCache = {}; // userId_jobId -> details
         window.prefectures = [
@@ -5637,8 +5638,8 @@
         // Job Detail Modal
         // ========================
         window.showJobDetailModal = async function (jobId) {
-            console.log('--- showJobDetailModal Triggered ---');
-            console.log('Job ID:', jobId);
+            if (isModalLoading) return;
+            console.log('--- showJobDetailModal Triggered ---', jobId);
 
             if (!jobId) {
                 console.error('Error: jobId is undefined or null');
@@ -5649,8 +5650,8 @@
             const user = window.currentUser;
 
             showLoading();
+            isModalLoading = true;
             try {
-                console.log('Fetching job details from Supabase...');
                 let { data: job, error } = await client
                     .from('jobs')
                     .select(`
@@ -5665,46 +5666,29 @@
                     .single();
 
                 if (error) {
-                    console.warn('Failed to fetch with company relation, trying without:', error);
-                    const fallback = await client
-                        .from('jobs')
-                        .select('*')
-                        .eq('id', jobId)
-                        .single();
-
+                    const fallback = await client.from('jobs').select('*').eq('id', jobId).single();
                     job = fallback.data;
                     error = fallback.error;
                 }
 
-                if (error) {
-                    console.error('Supabase error fetching job:', error);
-                    throw error;
-                }
-                if (!job) {
-                    console.warn('Job not found for ID:', jobId);
-                    alert('求人情報が見つかりませんでした');
+                if (error || !job) {
+                    alert('求人情報の取得に失敗したか、見つかりませんでした');
                     return;
                 }
 
-                console.log('Job found:', job.title);
-
-                // モーダルタイトルを設定
                 $('#job-detail-title').text(job.title);
 
-                // タブの表示制御
                 if (user && (user.role === 'candidate' || user.role === 'user')) {
                     $('#job-tab-candidates').addClass('hidden');
                 } else {
                     $('#job-tab-candidates').removeClass('hidden');
                 }
 
-                // 詳細コンテンツを生成
                 const companyName = job.companies ? job.companies.name : (job.company || '不明');
                 const companyIndustry = job.companies?.industry || job.industry_category || '未設定';
                 const companyWebsite = job.companies?.website || '';
 
                 const content = `
-                    <!-- 企業情報 -->
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h4 class="font-bold text-lg mb-3 text-gray-900">
                             <i class="fas fa-building mr-2 text-indigo-600"></i>企業情報
@@ -5716,117 +5700,52 @@
                         </div>
                     </div>
 
-                    <!-- 求人基本情報 -->
                     <div>
                         <h4 class="font-bold text-lg mb-3 text-gray-900">
                             <i class="fas fa-info-circle mr-2 text-indigo-600"></i>求人情報
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-600">職種カテゴリ</p>
-                                <p class="font-medium text-gray-900">${job.job_category || '未設定'}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">業界カテゴリ</p>
-                                <p class="font-medium text-gray-900">${job.industry_category || '未設定'}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">勤務地</p>
-                                <p class="font-medium text-gray-900"><i class="fas fa-map-marker-alt mr-1 text-gray-500"></i>${job.location || '未設定'}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">雇用形態</p>
-                                <p class="font-medium text-gray-900">${job.employment_type || '未設定'}</p>
-                            </div>
-                            ${job.salary_min && job.salary_max ? `
-                            <div>
-                                <p class="text-sm text-gray-600">想定年収</p>
-                                <p class="font-medium text-gray-900 text-lg">¥${(job.salary_min / 10000).toLocaleString()}万 - ${(job.salary_max / 10000).toLocaleString()}万</p>
-                            </div>
-                            ` : ''}
-                            ${job.url ? `
-                            <div class="md:col-span-2">
-                                <p class="text-sm text-gray-600">求人URL</p>
-                                <p class="font-medium text-gray-900 truncate">
-                                    <a href="${job.url}" target="_blank" class="text-indigo-600 hover:underline">
-                                        <i class="fas fa-external-link-alt mr-1 text-xs"></i> ${job.url}
-                                    </a>
-                                </p>
-                            </div>
-                            ` : ''}
+                            <div><p class="text-sm text-gray-600">職種カテゴリ</p><p class="font-medium text-gray-900">${job.job_category || '未設定'}</p></div>
+                            <div><p class="text-sm text-gray-600">業界カテゴリ</p><p class="font-medium text-gray-900">${job.industry_category || '未設定'}</p></div>
+                            <div><p class="text-sm text-gray-600">勤務地</p><p class="font-medium text-gray-900"><i class="fas fa-map-marker-alt mr-1 text-gray-500"></i>${job.location || '未設定'}</p></div>
+                            <div><p class="text-sm text-gray-600">雇用形態</p><p class="font-medium text-gray-900">${job.employment_type || '未設定'}</p></div>
+                            ${job.salary_min && job.salary_max ? `<div><p class="text-sm text-gray-600">想定年収</p><p class="font-medium text-gray-900 text-lg">¥${(job.salary_min / 10000).toLocaleString()}万 - ${(job.salary_max / 10000).toLocaleString()}万</p></div>` : ''}
+                            ${job.url ? `<div class="md:col-span-2"><p class="text-sm text-gray-600">求人URL</p><p class="font-medium text-gray-900 truncate"><a href="${job.url}" target="_blank" class="text-indigo-600 hover:underline"><i class="fas fa-external-link-alt mr-1 text-xs"></i> ${job.url}</a></p></div>` : ''}
                         </div>
                     </div>
 
-                    <!-- 職務内容 -->
                     <div class="mt-6">
-                        <h4 class="font-bold text-lg mb-3 text-gray-900">
-                            <i class="fas fa-clipboard-list mr-2 text-indigo-600"></i>職務内容
-                        </h4>
-                        <div class="bg-white border border-gray-200 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap">${job.description || '詳細は企業にお問い合わせください'}</p>
-                        </div>
+                        <h4 class="font-bold text-lg mb-3 text-gray-900"><i class="fas fa-clipboard-list mr-2 text-indigo-600"></i>職務内容</h4>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4"><p class="text-gray-800 whitespace-pre-wrap">${job.description || '詳細は企業にお問い合わせください'}</p></div>
                     </div>
 
-                    <!-- 必須要件 -->
-                    ${job.requirements ? `
-                    <div class="mt-6">
-                        <h4 class="font-bold text-lg mb-3 text-gray-900">
-                            <i class="fas fa-check-circle mr-2 text-indigo-600"></i>必須要件
-                        </h4>
-                        <div class="bg-white border border-gray-200 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap">${job.requirements}</p>
-                        </div>
-                    </div>
-                    ` : ''}
+                    ${job.requirements ? `<div class="mt-6"><h4 class="font-bold text-lg mb-3 text-gray-900"><i class="fas fa-check-circle mr-2 text-indigo-600"></i>必須要件</h4><div class="bg-white border border-gray-200 rounded-lg p-4"><p class="text-gray-800 whitespace-pre-wrap">${job.requirements}</p></div></div>` : ''}
 
-                    <!-- 経験条件 -->
                     <div class="mt-6 bg-blue-50 rounded-lg p-4">
-                        <h4 class="font-bold text-lg mb-3 text-gray-900">
-                            <i class="fas fa-user-check mr-2 text-indigo-600"></i>経験条件
-                        </h4>
+                        <h4 class="font-bold text-lg mb-3 text-gray-900"><i class="fas fa-user-check mr-2 text-indigo-600"></i>経験条件</h4>
                         <div class="flex gap-4">
-                            <div class="flex items-center">
-                                <i class="fas ${job.job_experience_ok === '可' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
-                                <span class="text-gray-800">職種未経験: ${job.job_experience_ok === '可' ? '可' : '不可'}</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas ${job.industry_experience_ok === '可' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i>
-                                <span class="text-gray-800">業界未経験: ${job.industry_experience_ok === '可' ? '可' : '不可'}</span>
-                            </div>
+                            <div class="flex items-center"><i class="fas ${job.job_experience_ok === '可' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i><span class="text-gray-800">職種未経験: ${job.job_experience_ok === '可' ? '可' : '不可'}</span></div>
+                            <div class="flex items-center"><i class="fas ${job.industry_experience_ok === '可' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600'} mr-2"></i><span class="text-gray-800">業界未経験: ${job.industry_experience_ok === '可' ? '可' : '不可'}</span></div>
                         </div>
                     </div>
 
-                    <!-- アクションボタン -->
                     <div class="flex gap-3 pt-6 mt-6 border-t">
-                        <button id="modal-fav-btn-${job.id}" onclick="toggleFavorite('${job.id}')" 
-                            class="flex-1 px-6 py-3 border-2 ${typeof favoriteJobIds !== 'undefined' && favoriteJobIds.has(job.id) ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700'} rounded-lg hover:bg-gray-50 font-medium transition">
-                            <i class="fas fa-heart mr-2"></i>${typeof favoriteJobIds !== 'undefined' && favoriteJobIds.has(job.id) ? 'お気に入り登録済み' : 'お気に入りに追加'}
-                        </button>
-                        ${user && (user.role === 'candidate' || user.role === 'user') ? `
-                        <button onclick="applyForJob('${job.id}')" 
-                            class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition">
-                            <i class="fas fa-paper-plane mr-2"></i>応募する
-                        </button>
-                        ` : ''}
+                        <button id="modal-fav-btn-${job.id}" onclick="toggleFavorite('${job.id}')" class="flex-1 px-6 py-3 border-2 ${typeof favoriteJobIds !== 'undefined' && favoriteJobIds.has(job.id) ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700'} rounded-lg hover:bg-gray-50 font-medium transition"><i class="fas fa-heart mr-2"></i>${typeof favoriteJobIds !== 'undefined' && favoriteJobIds.has(job.id) ? 'お気に入り登録済み' : 'お気に入りに追加'}</button>
+                        ${user && (user.role === 'candidate' || user.role === 'user') ? `<button onclick="applyForJob('${job.id}')" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition"><i class="fas fa-paper-plane mr-2"></i>応募する</button>` : ''}
                     </div>
                 `;
 
                 $('#job-detail-tab-content').html(content);
-
-                // 現在の求人IDを保存
                 window.currentJobId = jobId;
 
-                // 表示
-                console.log('Showing modal...');
-                $('#job-detail-modal').removeClass('hidden').css('display', 'flex');
-
-                // デフォルトで詳細タブを表示
+                $('#job-detail-modal').removeClass('hidden').attr('style', 'display: flex !important; z-index: 30000;');
                 switchJobDetailTab('details');
 
             } catch (error) {
                 console.error('Load job detail error:', error);
                 alert('求人詳細の取得に失敗しました');
             } finally {
+                isModalLoading = false;
                 hideLoading();
             }
         }
@@ -5844,15 +5763,15 @@
 
         // チェックボックス選択時の処理を更新
         window.toggleJobSelection = function (jobId) {
-            const checkbox = $(`input[type="checkbox"][onchange="toggleJobSelection('${jobId}')"]`);
+            const checkbox = $(`input[type="checkbox"][onclick*="toggleJobSelection('${jobId}')"]`);
             const card = checkbox.closest('.job-card');
 
             if (selectedJobIds.has(jobId)) {
                 selectedJobIds.delete(jobId);
-                card.removeClass('job-card-highlighted');
+                if (card.length) card.removeClass('job-card-highlighted');
             } else {
                 selectedJobIds.add(jobId);
-                card.addClass('job-card-highlighted');
+                if (card.length) card.addClass('job-card-highlighted');
             }
             updateBulkRecommendBar();
         }
@@ -9796,7 +9715,7 @@
                         </div>
                         ` : ''}
                     
-                        <button onclick="showJobDetailModal('${job.id}')" class="w-full bg-slate-700 text-white text-sm font-bold py-2.5 rounded-lg hover:bg-slate-800 transition shadow-sm hover:shadow">
+                        <button onclick="event.stopPropagation(); showJobDetailModal('${job.id}')" class="w-full bg-slate-700 text-white text-sm font-bold py-2.5 rounded-lg hover:bg-slate-800 transition shadow-sm hover:shadow">
                             詳細を見る
                         </button>
                     </div>
@@ -18952,7 +18871,7 @@
     </script>
     <!-- Job Detail Modal -->
     <div id="job-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-        style="z-index: 10001;">
+        style="z-index: 30000;">
         <div class="bg-white rounded-lg w-full max-w-6xl p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-2xl font-bold text-gray-900" id="job-detail-title">求人詳細</h3>
