@@ -5646,12 +5646,16 @@
                 return;
             }
 
+            console.log('Step 1: check client');
             const client = window.supabase;
+            console.log('Step 2: check user');
             const user = window.currentUser;
-
+            console.log('Step 3: show loading');
             showLoading();
             isModalLoading = true;
+            console.log('Step 4: entering try');
             try {
+                console.log('Fetching job details for:', jobId);
                 let { data: job, error } = await client
                     .from('jobs')
                     .select(`
@@ -5666,16 +5670,19 @@
                     .single();
 
                 if (error) {
+                    console.log('Fetch error, trying fallback:', error);
                     const fallback = await client.from('jobs').select('*').eq('id', jobId).single();
                     job = fallback.data;
                     error = fallback.error;
                 }
 
                 if (error || !job) {
+                    console.log('Final fetch error or no job:', error, job);
                     alert('求人情報の取得に失敗したか、見つかりませんでした');
                     return;
                 }
 
+                console.log('Job details fetched:', job.title);
                 $('#job-detail-title').text(job.title);
 
                 if (user && (user.role === 'candidate' || user.role === 'user')) {
@@ -5735,15 +5742,18 @@
                     </div>
                 `;
 
+                console.log('Rendering content to modal...');
                 $('#job-detail-tab-content').html(content);
                 window.currentJobId = jobId;
 
+                console.log('Updating modal visibility...');
                 $('#job-detail-modal').removeClass('hidden').attr('style', 'display: flex !important; z-index: 30000;');
                 switchJobDetailTab('details');
+                console.log('Modal show process complete');
 
             } catch (error) {
                 console.error('Load job detail error:', error);
-                alert('求人詳細の取得に失敗しました');
+                alert('求人詳細の取得に失敗しました: ' + error.message);
             } finally {
                 isModalLoading = false;
                 hideLoading();
