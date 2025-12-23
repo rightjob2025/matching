@@ -5717,7 +5717,17 @@
                             <div><p class="text-sm text-gray-600">勤務地</p><p class="font-medium text-gray-900"><i class="fas fa-map-marker-alt mr-1 text-gray-500"></i>${job.location || '未設定'}</p></div>
                             <div><p class="text-sm text-gray-600">雇用形態</p><p class="font-medium text-gray-900">${job.employment_type || '未設定'}</p></div>
                             ${job.salary_min && job.salary_max ? `<div><p class="text-sm text-gray-600">想定年収</p><p class="font-medium text-gray-900 text-lg">¥${(job.salary_min / 10000).toLocaleString()}万 - ${(job.salary_max / 10000).toLocaleString()}万</p></div>` : ''}
-                            ${job.url ? `<div class="md:col-span-2"><p class="text-sm text-gray-600">求人URL</p><p class="font-medium text-gray-900 truncate"><a href="${job.url}" target="_blank" class="text-indigo-600 hover:underline"><i class="fas fa-external-link-alt mr-1 text-xs"></i> ${job.url}</a></p></div>` : ''}
+                            <div class="md:col-span-2">
+                                <p class="text-sm text-gray-600">求人URL</p>
+                                <p class="font-medium text-gray-900 truncate">
+                                    ${job.url ? `
+                                    <a href="${job.url}" target="_blank" class="text-indigo-600 hover:underline flex items-center gap-1">
+                                        <i class="fas fa-external-link-alt text-xs"></i>
+                                        <span class="truncate">${job.url}</span>
+                                    </a>
+                                    ` : '<span class="text-gray-400">未設定</span>'}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -10565,6 +10575,13 @@
                                 <div class="mb-4 pr-24">
                         <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition">${rec.jobs.title}</h3>
                         <p class="text-gray-600">${rec.jobs.company}</p>
+                        ${rec.jobs.url ? `
+                        <p class="text-xs text-indigo-600 mt-1 truncate">
+                            <a href="${rec.jobs.url}" target="_blank" onclick="event.stopPropagation();" class="hover:underline">
+                                <i class="fas fa-external-link-alt mr-1"></i>求人詳細はこちら
+                            </a>
+                        </p>
+                        ` : ''}
                     </div>
 
                     <div class="${rec.score >= 50 ? 'bg-indigo-50' : 'bg-red-50'} rounded-lg p-4 mb-4">
