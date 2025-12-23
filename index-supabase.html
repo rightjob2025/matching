@@ -5742,14 +5742,25 @@
                     </div>
                 `;
 
-                console.log('Rendering content to modal...');
+                console.log('Final step: Rendering to modal and forcing visibility.');
                 $('#job-detail-tab-content').html(content);
                 window.currentJobId = jobId;
 
+                const modal = $('#job-detail-modal');
+                if (modal.length === 0) {
+                    console.error('CRITICAL: #job-detail-modal not found in DOM!');
+                    alert('エラー: モーダル要素が見つかりませんでした');
+                    return;
+                }
+
+                // Move to body root to avoid parent clipping/z-index issues
+                $('body').append(modal);
+
                 console.log('Updating modal visibility...');
-                $('#job-detail-modal').removeClass('hidden').attr('style', 'display: flex !important; z-index: 30000;');
+                modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 99999 !important; visibility: visible !important; opacity: 1 !important;');
+
                 switchJobDetailTab('details');
-                console.log('Modal show process complete');
+                console.log('Modal show process complete - z-index 99999 applied');
 
             } catch (error) {
                 console.error('Load job detail error:', error);
@@ -5761,7 +5772,8 @@
         }
 
         window.closeJobDetailModal = function () {
-            $('#job-detail-modal').addClass('hidden');
+            console.log('--- closeJobDetailModal Triggered ---');
+            $('#job-detail-modal').addClass('hidden').attr('style', 'display: none !important;');
         }
 
         // ============================================
