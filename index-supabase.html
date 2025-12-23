@@ -12436,7 +12436,8 @@
         }
 
         window.closeAdminUserModal = function () {
-            $('#admin-user-modal').addClass('hidden');
+            console.log('--- closeAdminUserModal Triggered ---');
+            $('#admin-user-modal').addClass('hidden').attr('style', 'display: none !important;');
         }
 
         // 職歴リスト操作関数 (汎用化)
