@@ -10762,6 +10762,9 @@
                         `}
                     </div>
                 </div>
+                `;
+            }).join('') + '</div>';
+
             container.html(html);
 
             // Select2を初期化
@@ -10783,7 +10786,7 @@
                 return;
             }
 
-            if (!confirm(`${ checkboxes.length } 件の求人についてAIマッチングを再実行しますか？\n（現在の判定結果は上書きされます）`)) {
+            if (!confirm(`${checkboxes.length}件の求人についてAIマッチングを再実行しますか？\n（現在の判定結果は上書きされます）`)) {
                 return;
             }
 
@@ -10850,7 +10853,7 @@
 
                     if (jobs.length === 0) continue;
 
-                    console.log(`Re - analyzing for user ${ userDataForAI.name || userId }: `, jobs.length, 'jobs');
+                    console.log(`Re - analyzing for user ${userDataForAI.name || userId}: `, jobs.length, 'jobs');
 
                     const { data: results, error } = await supabase.functions.invoke('ai-matching', {
                         body: {
@@ -10888,7 +10891,7 @@
                     }
                 }
 
-                alert(`再判定が完了しました。\n成功: ${ totalSuccess } 件\n失敗: ${ totalErrors } 件`);
+                alert(`再判定が完了しました。\n成功: ${totalSuccess} 件\n失敗: ${totalErrors} 件`);
 
                 // データ再読み込み
                 if (typeof loadRecommendations === 'function') {
@@ -10926,10 +10929,10 @@
 
                 // 2. ユーザープロフィール（DBから取得）
                 const userProfile = `
-                希望職種: ${ currentUser.desired_job_type || '未設定' }
-                希望勤務勤務地: ${ currentUser.desired_location || '未設定' }
-                スキル: ${ currentUser.skills || '未設定' }
-                職歴・自己PR: ${ currentUser.work_history || '未設定' }
+                希望職種: ${currentUser.desired_job_type || '未設定'}
+                希望勤務勤務地: ${currentUser.desired_location || '未設定'}
+                スキル: ${currentUser.skills || '未設定'}
+                職歴・自己PR: ${currentUser.work_history || '未設定'}
                 `
 
                 // 3. Edge Function 呼び出し
@@ -11016,10 +11019,10 @@
 
             // モーダルを表示
             $('#recommendation-message-modal').removeClass('hidden');
-            
+
             // テンプレートをロード
             await loadEmailTemplates();
-            
+
             // メッセージ生成
             generateRecommendationMessage();
         };
@@ -11045,7 +11048,7 @@
                 if (select.length) {
                     select.empty();
                     currentTemplates.forEach(t => {
-                        select.append(`< option value = "${t.id}" ${ t.is_default ? 'selected' : '' }> ${ t.name }</option > `);
+                        select.append(`< option value = "${t.id}" ${t.is_default ? 'selected' : ''}> ${t.name}</option > `);
                     });
                 }
 
@@ -11072,7 +11075,7 @@
 
             const targetUserId = checkboxes.first().data('user-id');
             const targetUser = allCandidatesList.find(u => u.id === targetUserId);
-            
+
             // 選択された求人推薦データを取得
             const selectedRecIds = checkboxes.map((_, el) => $(el).val()).get();
             const selectedRecs = allRecommendations.filter(r => selectedRecIds.includes(r.id));
@@ -11082,19 +11085,19 @@
             selectedRecs.forEach((rec, idx) => {
                 const job = rec.jobs;
                 const driveUrl = job.url || 'URLなし';
-                
-                jobDetailsText += `【案件 ${ idx + 1 }】\n`;
-                jobDetailsText += `企業名: ${ job.company } \n`;
-                jobDetailsText += `職種: ${ job.title } \n`;
-                jobDetailsText += `マッチ度: ${ rec.score }%\n`;
-                
+
+                jobDetailsText += `【案件 ${idx + 1}】\n`;
+                jobDetailsText += `企業名: ${job.company} \n`;
+                jobDetailsText += `職種: ${job.title} \n`;
+                jobDetailsText += `マッチ度: ${rec.score}%\n`;
+
                 if (rec.recommendation_reason) {
                     // 「理由：」などのプレフィックスを取り除く
                     const cleanReason = rec.recommendation_reason.replace(/^(理由|推薦理由|マッチ理由)[:：\s]*/, '').trim();
-                    jobDetailsText += `推薦理由: ${ cleanReason } \n`;
+                    jobDetailsText += `推薦理由: ${cleanReason} \n`;
                 }
-                
-                jobDetailsText += `詳細URL: ${ driveUrl } \n\n`;
+
+                jobDetailsText += `詳細URL: ${driveUrl} \n\n`;
             });
 
             // 変数置換
@@ -11138,7 +11141,7 @@
                 return;
             }
 
-            if (!confirm(`${ user.name } さん（${ user.email }）にこのメッセージをメールで送信しますか？`)) {
+            if (!confirm(`${user.name} さん（${user.email}）にこのメッセージをメールで送信しますか？`)) {
                 return;
             }
 
@@ -11150,21 +11153,21 @@
                     userName: user.name,
                     subject: template.subject || '【求人のご紹介】',
                     body: body,
-                    scoutUrl: `${ window.location.origin }/#recommendations`
-            });
+                    scoutUrl: `${window.location.origin}/#recommendations`
+                });
 
-            if (success) {
-                alert('メールを送信しました。');
-                closeRecommendationMessageModal();
-            } else {
-                alert('メールの送信に失敗しました。');
+                if (success) {
+                    alert('メールを送信しました。');
+                    closeRecommendationMessageModal();
+                } else {
+                    alert('メールの送信に失敗しました。');
+                }
+            } catch (error) {
+                console.error('Email send error:', error);
+                alert('送信中にエラーが発生しました');
+            } finally {
+                $('#send-recommendation-email-btn').prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>候補者へメール送信');
             }
-        } catch (error) {
-            console.error('Email send error:', error);
-            alert('送信中にエラーが発生しました');
-        } finally {
-            $('#send-recommendation-email-btn').prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>候補者へメール送信');
-        }
         };
 
         // テンプレートリスト表示（管理画面用）
