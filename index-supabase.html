@@ -3237,7 +3237,7 @@
                 <!-- 候補者プレビューモーダル -->
                 <div id="candidate-preview-modal"
                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 10002;">
+                    style="z-index: 30000;">
                     <div class="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-2xl font-bold text-gray-900">候補者プロフィール</h3>
@@ -7372,8 +7372,20 @@
             </div>
         `;
 
+                console.log('Final step: Rendering to candidate preview and forcing visibility.');
                 $('#candidate-preview-content').html(content);
-                $('#candidate-preview-modal').removeClass('hidden');
+
+                const modal = $('#candidate-preview-modal');
+                if (modal.length === 0) {
+                    console.error('CRITICAL: #candidate-preview-modal not found!');
+                    return;
+                }
+                // Move to body to avoid parent clipping/z-index issues
+                $('body').append(modal);
+
+                console.log('Updating candidate preview visibility (z-index 99999)...');
+                modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 99999 !important; visibility: visible !important; opacity: 1 !important;');
+                console.log('viewCandidateProfile process complete');
 
             } catch (error) {
                 console.error('Load candidate error:', error);
@@ -7385,7 +7397,8 @@
 
         // 候補者プレビューを閉じる
         window.closeCandidatePreview = function () {
-            $('#candidate-preview-modal').addClass('hidden');
+            console.log('--- closeCandidatePreview Triggered ---');
+            $('#candidate-preview-modal').addClass('hidden').attr('style', 'display: none !important;');
         }
 
         // ============================================
