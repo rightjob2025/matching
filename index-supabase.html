@@ -11399,6 +11399,7 @@
 
                         // 残りをテキストボックスにセット
                         console.log('Finalizing location sets...');
+                        const restStr = unmatched.join(' / ');
                         $('#profile-city').val(restStr);
                         $('#admin-user-city').val(restStr);
                     }
@@ -12422,8 +12423,15 @@
                 console.log('User is not a candidate, skipping candidate fields');
                 $('#admin-candidate-fields').addClass('hidden');
             }
-            console.log('Forcing modal visibility (z-index 30000)...');
-            $('#admin-user-modal').removeClass('hidden').attr('style', 'display: flex !important; z-index: 30000;');
+            console.log('Forcing modal visibility (z-index 99999)...');
+            const modal = $('#admin-user-modal');
+            if (modal.length === 0) {
+                console.error('CRITICAL: #admin-user-modal not found!');
+                return;
+            }
+            // Move to body to avoid parent clipping
+            $('body').append(modal);
+            modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 99999 !important; visibility: visible !important; opacity: 1 !important;');
             console.log('showAdminUserModal process finished');
         }
 
