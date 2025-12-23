@@ -4017,15 +4017,6 @@
         </div>
     </div>
 
-    <!-- Job Detail Modal -->
-    <div id="job-detail-modal"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-        <div class="relative top-10 mx-auto p-8 border w-11/12 max-w-4xl shadow-lg rounded-xl bg-white">
-            <div id="job-detail-content">
-                <!-- Content will be loaded here -->
-            </div>
-        </div>
-    </div>
 
     <!-- CSV Mapping Modal -->
     <div id="csv-mapping-modal"
@@ -10671,8 +10662,10 @@
                 const cardStyle = isDismissed ? 'bg-gray-100 opacity-60' : 'bg-white border-gray-200 hover:shadow-md';
 
                 return `
-                <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden group" data-user-id="${rec.user_id}">
-                    <div class="absolute top-0 left-0 p-3 z-20">
+                <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden group cursor-pointer" 
+                     data-user-id="${rec.user_id}" 
+                     onclick="showJobDetailModal('${rec.job_id}')">
+                    <div class="absolute top-0 left-0 p-3 z-20" onclick="event.stopPropagation()">
                         <div class="bg-white rounded-md shadow-sm border border-gray-200 p-1 flex items-center justify-center">
                             <input type="checkbox" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 rec-checkbox cursor-pointer" 
                                    value="${rec.id}" data-job-id="${rec.job_id}" data-user-id="${rec.user_id}">
@@ -10709,8 +10702,8 @@
                     </div>
                     ` : ''}
 
-                                <div class="mb-4 pr-24 cursor-pointer" onclick="showJobDetailModal('${rec.job_id}')">
-                        <h3 class="text-xl font-bold text-gray-900 mb-1 hover:text-indigo-600 transition">${rec.jobs.title}</h3>
+                                <div class="mb-4 pr-24">
+                        <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition">${rec.jobs.title}</h3>
                         <p class="text-gray-600">${rec.jobs.company}</p>
                     </div>
 
