@@ -10450,6 +10450,7 @@
             // 右側: ソート（再実行ボタンは削除）
             controlsHtml += `
                 <div class="flex items-center gap-2 ml-auto">
+                    ${isAdminOrCoach ? `
                     <button onclick="reRunSelectedRecommendations()" class="bg-white text-indigo-600 border border-indigo-200 px-3 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-50 transition flex items-center gap-2 whitespace-nowrap">
                         <i class="fas fa-sync-alt"></i> 再判定
                     </button>
@@ -10457,6 +10458,7 @@
                     <button onclick="openRecommendationMessageModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap">
                         <i class="fas fa-envelope"></i> メッセージ作成
                     </button>
+                    ` : ''}
 
                     <div class="flex items-center gap-2 ml-2 pl-4 border-l">
                         <label class="text-sm font-medium text-gray-700 whitespace-nowrap"><i class="fas fa-sort mr-1"></i></label>
@@ -10521,12 +10523,14 @@
                 <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden group cursor-pointer" 
                      data-user-id="${rec.user_id}" 
                      onclick="showJobDetailModal('${rec.job_id}')">
+                    ${isAdminOrCoach ? `
                     <div class="absolute top-0 left-0 p-3 z-20" onclick="event.stopPropagation()">
                         <div class="bg-white rounded-md shadow-sm border border-gray-200 p-1 flex items-center justify-center">
                             <input type="checkbox" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 rec-checkbox cursor-pointer" 
                                    value="${rec.id}" data-job-id="${rec.job_id}" data-user-id="${rec.user_id}">
                         </div>
                     </div>
+                    ` : ''}
                     <div class="absolute top-0 right-0 ${matchColor} text-white px-3 py-1 rounded-bl-lg text-sm font-bold">
                         マッチ度 ${rec.score}%
                     </div>
