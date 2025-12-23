@@ -2777,7 +2777,8 @@
 
                 <!-- Admin: User Edit Modal -->
                 <div id="admin-user-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                    style="z-index: 30000;">
                     <div class="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold" id="admin-user-modal-title">ユーザー編集</h3>
@@ -11397,14 +11398,16 @@
                         $('#admin-user-prefecture').val(matchedPrefs).trigger('change');
 
                         // 残りをテキストボックスにセット
-                        const restStr = unmatched.join(' / ');
+                        console.log('Finalizing location sets...');
                         $('#profile-city').val(restStr);
                         $('#admin-user-city').val(restStr);
                     }
+                    console.log('loadMasterDataForProfile: Done');
                 }
 
             } catch (error) {
-                console.error('Load profile master error:', error)
+                console.error('Load profile master error:', error);
+                throw error;
             }
         }
         async function loadProfile() {
@@ -12407,16 +12410,21 @@
                 $('#admin-user-line-url').val(user.line_url || '');
 
                 // 詳細職歴
+                console.log('Rendering work history list...');
                 $('#work-history-list').empty();
                 if (user.work_history_structured && Array.isArray(user.work_history_structured)) {
                     user.work_history_structured.forEach(item => addWorkHistoryItem(item));
                 }
                 updateJobChangeCount();
+                console.log('Work history rendering complete');
 
             } else {
+                console.log('User is not a candidate, skipping candidate fields');
                 $('#admin-candidate-fields').addClass('hidden');
             }
-            $('#admin-user-modal').removeClass('hidden');
+            console.log('Forcing modal visibility (z-index 30000)...');
+            $('#admin-user-modal').removeClass('hidden').attr('style', 'display: flex !important; z-index: 30000;');
+            console.log('showAdminUserModal process finished');
         }
 
         window.closeAdminUserModal = function () {
