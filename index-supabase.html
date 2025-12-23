@@ -5844,7 +5844,7 @@
 
         // チェックボックス選択時の処理を更新
         window.toggleJobSelection = function (jobId) {
-            const checkbox = $(`input[type = "checkbox"][onchange = "toggleJobSelection('${jobId}')"]`);
+            const checkbox = $(`input[type="checkbox"][onchange="toggleJobSelection('${jobId}')"]`);
             const card = checkbox.closest('.job-card');
 
             if (selectedJobIds.has(jobId)) {
@@ -6158,11 +6158,11 @@
                 if (jobsError) throw jobsError;
 
                 const jobsHtml = jobs.map(job => `
-            < div class="flex items-center justify-between p-2 bg-white rounded border" >
+                    <div class="flex items-center justify-between p-2 bg-white rounded border">
                         <span class="text-sm text-gray-900">${job.title}</span>
                         <span class="text-xs text-gray-500">${job.companies?.name || ''}</span>
-                    </div >
-            `).join('');
+                    </div>
+                `).join('');
 
                 $('#bulk-jobs-list').html(jobsHtml);
                 $('#bulk-recommend-modal').removeClass('hidden');
@@ -6180,14 +6180,14 @@
         // AI推薦結果モーダルを表示
         function showAIResultModal(recommended, excluded, targetUserName) {
             const modalHtml = `
-            < div class="ai-result-tabs" >
+                <div class="ai-result-tabs">
                     <div class="ai-result-tab active" data-tab="recommended">
                         紹介 (${recommended.length}件)
                     </div>
                     <div class="ai-result-tab" data-tab="excluded">
                         対象外 (${excluded.length}件)
                     </div>
-                </div >
+                </div>
 
                 <div class="ai-result-content active" data-content="recommended">
                     ${recommended.length === 0 ? '<p class="text-gray-500 text-center py-8">紹介する求人がありません</p>' : ''}
@@ -6213,54 +6213,53 @@
             // 新しいモーダルHTMLをbodyに追加（まだ存在しない場合）
             if ($('#ai-result-modal').length === 0) {
                 $('body').append(`
-            < div id = "ai-result-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" style = "z-index: 10003;" >
-                <div class="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-900">AI紹介結果</h3>
-                        <button onclick="$('#ai-result-modal').addClass('hidden')" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
+                    <div id="ai-result-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" style="z-index: 10003;">
+                        <div class="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">AI紹介結果</h3>
+                                <button onclick="$('#ai-result-modal').addClass('hidden')" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                            <div id="ai-result-modal-content"></div>
+                            <div class="flex justify-end mt-4 pt-4 border-t">
+                                <button onclick="$('#ai-result-modal').addClass('hidden')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">閉じる</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="ai-result-modal-content"></div>
-                    <div class="flex justify-end mt-4 pt-4 border-t">
-                        <button onclick="$('#ai-result-modal').addClass('hidden')" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">閉じる</button>
-                    </div>
-                </div>
-                    </div >
-            `);
+                `);
             }
 
             // AI詳細分析モーダルを追加（まだ存在しない場合）
             if ($('#ai-detail-modal').length === 0) {
                 $('body').append(`
-            < div id = "ai-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" style = "z-index: 10010;" >
-                <div class="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-900">📊 AI詳細分析</h3>
-                        <button onclick="closeAIDetailModal()" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
+                    <div id="ai-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" style="z-index: 10010;">
+                        <div class="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">📊 AI詳細分析</h3>
+                                <button onclick="closeAIDetailModal()" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                            <div id="ai-detail-modal-content"></div>
+                            <div class="flex justify-end mt-4 pt-4 border-t">
+                                <button onclick="closeAIDetailModal()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">閉じる</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="ai-detail-modal-content"></div>
-                    <div class="flex justify-end mt-4 pt-4 border-t">
-                        <button onclick="closeAIDetailModal()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">閉じる</button>
-                    </div>
-                </div>
-                    </div >
-            `);
+                `);
             }
 
             $('#ai-result-modal h3').text(`${targetUserName} さんへのAI推薦結果`);
             $('#ai-result-modal-content').html(modalHtml);
             $('#ai-result-modal').removeClass('hidden');
 
-            // タブ切り替えイベント
             $('.ai-result-tab').off('click').on('click', function () {
                 const tab = $(this).data('tab');
                 $('.ai-result-tab').removeClass('active');
                 $(this).addClass('active');
                 $('.ai-result-content').removeClass('active');
-                $(`.ai - result - content[data - content="${tab}"]`).addClass('active');
+                $(`.ai-result-content[data-content="${tab}"]`).addClass('active');
             });
         }
 
@@ -6269,7 +6268,7 @@
             const hasDetails = result.details && result.details.trim().length > 0;
 
             // 一意のIDを生成
-            const itemId = `ai - result - ${result.job_id} -${Date.now()} -${Math.random().toString(36).substr(2, 9)} `;
+            const itemId = `ai-result-${result.job_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
             // detailsをグローバルに保存（後でアクセスできるように）
             if (hasDetails) {
@@ -6284,7 +6283,7 @@
             }
 
             return `
-            < div class="${itemClass}" >
+            <div class="${itemClass}">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-bold text-gray-900">${result.job_title}</h4>
                         <span class="text-sm font-bold ${isExcluded ? 'text-gray-600' : 'text-indigo-600'}">
@@ -6298,12 +6297,12 @@
                             class="ai-detail-btn text-xs text-indigo-600 hover:text-indigo-800 underline"
                             data-item-id="${itemId}"
                             onclick="event.stopPropagation(); window.openAIDetail('${itemId}')"
-                        >
+                       >
                             📊 詳細分析を見る
                         </button>
                     ` : ''
                 }
-                </div >
+                </div>
             `;
         }
 
@@ -6325,13 +6324,13 @@
         // AI詳細分析モーダルを表示
         window.showAIDetailModal = function (jobId, jobTitle, company, score, details) {
             const modalHtml = `
-            < div class="mb-4" >
+            <div class="mb-4">
                     <h4 class="text-lg font-bold text-gray-900 mb-1">${jobTitle}</h4>
                     <p class="text-sm text-gray-600 mb-2">${company}</p>
                     <div class="inline-block bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-bold">
                         マッチ度: ${score}%
                     </div>
-                </div >
+                </div>
             <div class="bg-gray-50 p-4 rounded-lg">
                 <pre class="whitespace-pre-wrap text-sm text-gray-800 font-sans">${details}</pre>
             </div>
@@ -6745,10 +6744,10 @@
 
             if (!matches || matches.length === 0) {
                 container.html(`
-            < div class="text-center py-12 text-gray-500 shadow-sm border rounded-lg bg-white" >
+            <div class="text-center py-12 text-gray-500 shadow-sm border rounded-lg bg-white">
                         <i class="fas fa-search text-4xl mb-3"></i>
                         <p>マッチする候補者が見つかりませんでした</p>
-                    </div >
+                    </div>
             `);
                 return;
             }
@@ -6759,7 +6758,7 @@
             const containerId = containerSelector.replace('#', '');
 
             const headerHtml = `
-            < div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6" >
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
                 <div class="flex border-b border-gray-100 items-center">
                     <button onclick="switchMatchTab('${containerSelector}', 'ok')"
                         id="${containerId}-tab-ok"
@@ -6779,7 +6778,7 @@
                         </button>
                     </div>
                 </div>
-                </div >
+                </div>
 
                 <div id="${containerId}-pane-ok" class="space-y-4">
                     ${okMatches.length > 0 ? okMatches.map(m => renderCandidateCard(m)).join('') : `
@@ -6804,10 +6803,10 @@
 
         window.switchMatchTab = function (containerSelector, tab) {
             const containerId = containerSelector.replace('#', '');
-            const tabOk = $(`#${containerId} -tab - ok`);
-            const tabNg = $(`#${containerId} -tab - ng`);
-            const paneOk = $(`#${containerId} -pane - ok`);
-            const paneNg = $(`#${containerId} -pane - ng`);
+            const tabOk = $(`#${containerId}-tab-ok`);
+            const tabNg = $(`#${containerId}-tab-ng`);
+            const paneOk = $(`#${containerId}-pane-ok`);
+            const paneNg = $(`#${containerId}-pane-ng`);
 
             if (tab === 'ok') {
                 tabOk.addClass('border-green-500 text-green-600').removeClass('border-transparent text-gray-400');
@@ -6859,18 +6858,18 @@
 
             const renderScoreBar = (label, score, colorClass) => {
                 return `
-            < div class="text-center" >
+            <div class="text-center">
                         <div class="text-xs text-gray-500 mb-1">${label}</div>
                         <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
                             <div class="${colorClass} h-2 rounded-full transition-all" style="width: ${score}%"></div>
                         </div>
                         <div class="text-xs font-semibold text-gray-700">${score.toFixed(0)}%</div>
-                    </div >
+                    </div>
             `;
             };
 
             return `
-            < div class="border rounded-lg p-6 hover:shadow-lg transition bg-white" >
+            <div class="border rounded-lg p-6 hover:shadow-lg transition bg-white">
                 <div class="flex justify-between items-start gap-4">
                     <div class="mr-2 pt-1 flex flex-col items-center">
                         <input type="checkbox"
@@ -6956,7 +6955,7 @@
                         </button>
                     </div>
                 </div>
-                </div >
+                </div>
             `;
         }
 
@@ -7273,7 +7272,7 @@
 
                 // プレビューコンテンツを生成
                 const content = `
-            < !--基本情報 -->
+            <!--基本情報 -->
                     <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6 mb-6">
                         <div class="flex items-center gap-4 mb-4">
                             <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
@@ -7334,7 +7333,7 @@
                     ` : ''
                     }
 
-                    < !--職務経歴 -->
+                    <!--職務経歴 -->
             ${candidate.work_history ? `
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -7347,7 +7346,7 @@
                     ` : ''
                     }
 
-                    < !--履歴書(詳細) -->
+                    <!--履歴書(詳細) -->
             ${candidate.resume ? `
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -7360,7 +7359,7 @@
                     ` : ''
                     }
 
-                    < !--学歴 -->
+                    <!--学歴 -->
             ${candidate.education ? `
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -7373,7 +7372,7 @@
                     ` : ''
                     }
 
-                    < !--資格 -->
+                    <!--資格 -->
             ${candidate.certifications ? `
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -7386,7 +7385,7 @@
                     ` : ''
                     }
 
-                    < !--自分PR / 備考-- >
+                    <!--自分PR / 備考-->
             ${candidate.notes || candidate.self_pr ? `
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -7399,7 +7398,7 @@
                     ` : ''
                     }
 
-                    < !--その他情報 -->
+                    <!--その他情報 -->
             <div class="bg-white border border-gray-200 rounded-lg p-6">
                 <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
                     <i class="fas fa-info-circle mr-2 text-gray-500"></i>その他情報
@@ -7500,7 +7499,7 @@
         window.switchProfileAnalysisTab = function (tab) {
             // タブボタンのスタイル更新
             $('.profile-analysis-tab').removeClass('border-indigo-600 text-indigo-600').addClass('border-transparent text-gray-500');
-            $(`#profile - tab - ${tab} `).removeClass('border-transparent text-gray-500').addClass('border-indigo-600 text-indigo-600');
+            $(`#profile-tab-${tab}`).removeClass('border-transparent text-gray-500').addClass('border-indigo-600 text-indigo-600');
 
             // コンテンツの表示切り替え
             $('#profile-new-tab-content').addClass('hidden');
@@ -7530,10 +7529,10 @@
             if (!currentUser) return;
 
             $('#history-list').html(`
-            < div class="text-center py-12 text-gray-500" >
+            <div class="text-center py-12 text-gray-500">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
                     <p>履歴を読み込んでいます...</p>
-                </div >
+                </div>
             `);
 
             try {
@@ -7582,7 +7581,7 @@
 
                 // 統計表示コンポーネント
                 const statsHtml = `
-            < div class="grid grid-cols-2 gap-4 mb-6" >
+            <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-indigo-50 rounded-lg p-4 text-center border border-indigo-100">
                             <p class="text-xs text-gray-500 font-bold mb-1">自分の解析数</p>
                             <p class="text-2xl font-bold text-indigo-700">${myCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
@@ -7591,15 +7590,15 @@
                             <p class="text-xs text-gray-500 font-bold mb-1">組織全体の解析数</p>
                             <p class="text-2xl font-bold text-gray-700">${orgCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
                         </div>
-                    </div >
+                    </div>
             `;
 
                 if (!data || data.length === 0) {
                     $('#history-list').html(statsHtml + `
-            < div class="text-center py-12 text-gray-500 border-t border-gray-100 mt-4" >
+            <div class="text-center py-12 text-gray-500 border-t border-gray-100 mt-4">
                             <i class="fas fa-inbox text-4xl mb-3"></i>
                             <p>表示できる解析履歴がありません</p>
-                        </div >
+                        </div>
             `);
                     return;
                 }
@@ -7610,10 +7609,10 @@
             } catch (error) {
                 console.error('Load history error:', error);
                 $('#history-list').html(`
-            < div class="text-center py-12 text-red-500" >
+            <div class="text-center py-12 text-red-500">
                         <i class="fas fa-exclamation-triangle text-4xl mb-3"></i>
                         <p>履歴の読み込みに失敗しました</p>
-                    </div >
+                    </div>
             `);
             }
         }
@@ -7639,7 +7638,7 @@
                 }
 
                 return `
-            < div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer" onclick = "viewHistoryDetail('${item.id}')" >
+            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer" onclick="viewHistoryDetail('${item.id}')">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex-1">
                         <p class="font-bold text-gray-900">${(item.candidate_summary || '候補者情報').substring(0, 60)}...</p>
@@ -7651,7 +7650,7 @@
                         ${matchCount}件の求人提案
                     </span>
                 </div>
-                </div >
+                </div>
             `;
             }).join('');
         }
@@ -7766,7 +7765,7 @@
                                 const ext = items[i].type.split('/')[1];
                                 const timestamp = new Date().getTime();
                                 // Create a new File object with a custom name
-                                const newFile = new File([file], `pasted_image_${timestamp}.${ext} `, { type: file.type });
+                                const newFile = new File([file], `pasted_image_${timestamp}.${ext}`, { type: file.type });
                                 files.push(newFile);
                             } else {
                                 files.push(file);
@@ -7786,13 +7785,13 @@
         function handleFileUpload(files) {
             uploadedFiles = files;
             const fileListHtml = files.map((file, index) => `
-            < div class="flex items-center justify-between bg-gray-100 px-2 py-1 rounded" >
+            <div class="flex items-center justify-between bg-gray-100 px-2 py-1 rounded">
                     <span class="text-gray-700 truncate flex-1">
                         <i class="fas ${file.type.includes('pdf') ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500'} mr-1"></i>
                         ${file.name}
                     </span>
                     <span class="text-gray-500 text-xs ml-2">${(file.size / 1024).toFixed(1)}KB</span>
-                </div >
+                </div>
             `).join('');
             $('#file-list').html(fileListHtml);
         }
@@ -7978,7 +7977,7 @@
 
             // 任意の求人選択ボタンを追加
             container.append(`
-            < div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 flex items-center justify-between" >
+            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 flex items-center justify-between">
                     <div>
                         <h5 class="font-bold text-indigo-900">
                             <i class="fas fa-search-plus mr-2"></i>その他の求人でスカウトを作成
@@ -7988,7 +7987,7 @@
                     <button onclick="openJobSelectorForScout()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow transition">
                         求人を選択
                     </button>
-                </div >
+                </div>
             `);
 
             // Debug log removed: console.log('Analysis results:', data);
@@ -8029,7 +8028,7 @@
             if (hasCategories) {
                 // タブUIのレンダリング
                 const tabsHtml = `
-            < div class="flex border-b border-gray-200 mb-4" >
+            <div class="flex border-b border-gray-200 mb-4">
                         <button onclick="switchAnalysisTab('skill')" id="tab-skill" class="ai-result-tab flex-1 py-3 px-2 text-center text-sm font-bold border-b-2 transition-colors duration-200 text-indigo-600 border-indigo-600">
                             <i class="fas fa-tools mr-1"></i>スキル・経験
                             <span class="group relative inline-block ml-1 text-left font-normal" onclick="event.stopPropagation()">
@@ -8060,7 +8059,7 @@
                                 </div>
                             </span>
                         </button>
-                    </div >
+                    </div>
             <div id="analysis-tab-content"></div>
         `;
                 container.append(tabsHtml);
@@ -8091,12 +8090,12 @@
             // Load Moreボタンのコンテナ (共通)
             if ($('#load-more-analysis-container').length === 0) {
                 container.after(`
-            < div id = "load-more-analysis-container" class="text-center mt-4 hidden" >
+            <div id="load-more-analysis-container" class="text-center mt-4 hidden">
                 <button id="load-more-analysis-btn" onclick="loadMoreAnalysisMatches()"
                     class="px-6 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition">
                     もっと見る
                 </button>
-                    </div >
+                    </div>
             `);
             }
         }
@@ -8146,7 +8145,7 @@
 
             nextMatches.forEach(match => {
                 const html = `
-            < div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition mb-4" >
+            <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition mb-4">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-2">
@@ -8216,7 +8215,7 @@
                             </button>
                         </div>
                     </div>
-                </div >
+                </div>
             `;
                 container.append(html);
             });
@@ -8370,7 +8369,7 @@
             }
             prefSelect.empty();
             window.prefectures.forEach(pref => {
-                prefSelect.append(`< option value = "${pref}" > ${pref}</option > `);
+                prefSelect.append(`<option value="${pref}">${pref}</option>`);
             });
             prefSelect.select2({ placeholder: "勤務地（都道府県）", allowClear: true, width: '100%' });
 
@@ -8395,7 +8394,7 @@
             empSelect.empty();
             const uniqueEmps = [...new Set(validMasters.filter(m => m.type === 'employment_type').map(m => m.label))];
             uniqueEmps.forEach(label => {
-                empSelect.append(`< option value = "${label}" > ${label}</option > `);
+                empSelect.append(`<option value="${label}">${label}</option>`);
             });
             empSelect.select2({ placeholder: "雇用形態", allowClear: true, width: '100%' });
 
@@ -8407,7 +8406,7 @@
             catSelect.empty();
             const uniqueCats = [...new Set(validMasters.filter(m => m.type === 'job_category').map(m => m.label))];
             uniqueCats.forEach(label => {
-                catSelect.append(`< option value = "${label}" > ${label}</option > `);
+                catSelect.append(`<option value="${label}">${label}</option>`);
             });
             catSelect.select2({ placeholder: "職種カテゴリ", allowClear: true, width: '100%' });
 
@@ -8419,7 +8418,7 @@
             indSelect.empty();
             const uniqueInds = [...new Set(validMasters.filter(m => m.type === 'industry_category').map(m => m.label))];
             uniqueInds.forEach(label => {
-                indSelect.append(`< option value = "${label}" > ${label}</option > `);
+                indSelect.append(`<option value="${label}">${label}</option>`);
             });
             indSelect.select2({ placeholder: "業界カテゴリ", allowClear: true, width: '100%' });
 
@@ -8435,7 +8434,7 @@
             tjCatSelect.empty();
             const uniqueTjCats = [...new Set(validMasters.filter(m => m.type === 'job_category').map(m => m.label))];
             uniqueTjCats.forEach(label => {
-                tjCatSelect.append(`< option value = "${label}" > ${label}</option > `);
+                tjCatSelect.append(`<option value="${label}">${label}</option>`);
             });
             tjCatSelect.select2({ placeholder: "職種で絞り込み", allowClear: true, width: '100%' });
 
@@ -8447,7 +8446,7 @@
             tjIndSelect.empty();
             const uniqueTjInds = [...new Set(validMasters.filter(m => m.type === 'industry_category').map(m => m.label))];
             uniqueTjInds.forEach(label => {
-                tjIndSelect.append(`< option value = "${label}" > ${label}</option > `);
+                tjIndSelect.append(`<option value="${label}">${label}</option>`);
             });
             tjIndSelect.select2({ placeholder: "業界で絞り込み", allowClear: true, width: '100%' });
 
@@ -8458,7 +8457,7 @@
             }
             tjLocSelect.empty();
             window.prefectures.forEach(pref => {
-                tjLocSelect.append(`< option value = "${pref}" > ${pref}</option > `);
+                tjLocSelect.append(`<option value="${pref}">${pref}</option>`);
             });
             tjLocSelect.select2({ placeholder: "勤務地で絞り込み", allowClear: true, width: '100%' });
 
@@ -8483,7 +8482,7 @@
 
             // Float Action Bar Setup
             const floatBar = $(`
-            < div id = "candidate-float-bar" class="fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 hidden z-50 transition-transform transform translate-y-full flex justify-between items-center" style = "left: 0; width: 100%;" >
+            <div id="candidate-float-bar" class="fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 hidden z-50 transition-transform transform translate-y-full flex justify-between items-center" style="left: 0; width: 100%;">
                     <div class="flex items-center pl-4 md:pl-72">
                         <span class="font-bold text-gray-800 text-lg mr-1" id="c-selected-count">0</span>
                         <span class="text-gray-600 text-sm">人の候補者を選択中</span>
@@ -8494,7 +8493,7 @@
                             <i class="fas fa-star mr-2"></i>おすすめ求人に保存
                         </button>
                     </div>
-                </div >
+                </div>
             `);
             // bodyにappendしてz-indexを効かせる (またはcontent内でもよいがfixedなのでbody推奨)
             // ただしSidebarとの兼ね合いで left を調整したいが、Tailwindの md:pl-64 (16rem=256px) を使う
@@ -8603,13 +8602,13 @@
             }
 
             const html = filtered.slice(0, 10).map(job => `
-            < div class="p-2 hover:bg-indigo-50 cursor-pointer flex justify-between items-center border-b"
-        onclick = "window.selectTargetJob('${job.id}')" >
+            <div class="p-2 hover:bg-indigo-50 cursor-pointer flex justify-between items-center border-b"
+        onclick="window.selectTargetJob('${job.id}')">
             <div>
                 <div class="font-medium text-gray-800">${job.title}</div>
                 <div class="text-xs text-gray-500">${job.companies?.name || ''}</div>
             </div>
-                </div >
+                </div>
             `).join('');
 
             dropdown.html(html).removeClass('hidden');
@@ -8936,7 +8935,7 @@
 
                 // キャッシュに保存
                 aiResults.forEach(r => {
-                    const key = `${r.candidate.id}_${selectedTargetJobId} `;
+                    const key = `${r.candidate.id}_${selectedTargetJobId}`;
                     aiResultCache[key] = r.ai_details;
                 });
 
@@ -8966,10 +8965,10 @@
             showLoading('おすすめに保存中...');
             try {
                 const recs = checkedIds.map(userId => {
-                    const key = `${userId}_${selectedTargetJobId} `;
+                    const key = `${userId}_${selectedTargetJobId}`;
                     const details = aiResultCache[key];
 
-                    const card = $(`.candidate - select - checkbox[value = "${userId}"]`).closest('.border');
+                    const card = $(`.candidate-select-checkbox[value="${userId}"]`).closest('.border');
                     const scoreText = card.find('span:contains("マッチ度:")').text();
                     const score = parseFloat(scoreText.replace('マッチ度:', '').replace('%', '')) || 0;
 
@@ -9004,10 +9003,10 @@
         window.clearMatchResults = function () {
             $('#candidate-results-container').empty();
             $('#candidate-results-container').html(`
-            < div class="text-center py-12 text-gray-500" >
+            <div class="text-center py-12 text-gray-500">
                         <i class="fas fa-search text-4xl mb-3"></i>
                         <p>条件を指定して検索してください</p>
-                    </div >
+                    </div>
             `);
             // Also restore checkboxes? They are gone.
             // Reset Floating Bar
@@ -9265,7 +9264,7 @@
             console.log('Applying search filters:', filters);
             $('#search-keyword').val(filters.keyword || '');
             if (filters.keywordMode) {
-                $(`input[name = "search-keyword-mode"][value = "${filters.keywordMode}"]`).prop('checked', true);
+                $(`input[name="search-keyword-mode"][value="${filters.keywordMode}"]`).prop('checked', true);
             }
             $('#search-location').val(filters.location || '');
             $('#search-prefecture').val(filters.prefecture || []).trigger('change');
@@ -9474,7 +9473,7 @@
             container.empty();
 
             const html = jobs.map(job => `
-            < div class="border-b border-gray-200 py-4 last:border-0" >
+            <div class="border-b border-gray-200 py-4 last:border-0">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <h4 class="text-lg font-bold text-gray-900 hover:text-indigo-600 cursor-pointer"
@@ -9495,7 +9494,7 @@
                         </button>
                     </div>
                 </div>
-                </div >
+                </div>
             `).join('');
 
             container.html(html);
@@ -9576,7 +9575,7 @@
                 if (searches.length > 0) {
                     select.removeClass('hidden')
                     searches.forEach(s => {
-                        select.append(`< option value = "${s.id}" > ${s.name}</option > `)
+                        select.append(`<option value="${s.id}">${s.name}</option>`)
                     })
                 } else {
                     select.addClass('hidden')
@@ -9632,7 +9631,7 @@
 
             const c = search.criteria
             $('#search-keyword').val(c.keyword || '')
-            if (c.keywordMode) $(`input[name = "search-keyword-mode"][value = "${c.keywordMode}"]`).prop('checked', true)
+            if (c.keywordMode) $(`input[name="search-keyword-mode"][value="${c.keywordMode}"]`).prop('checked', true)
             $('#search-location').val(c.location || '')
             $('#search-prefecture').val(c.prefecture || []).trigger('change')
             $('#search-employment-type').val(c.employmentType || []).trigger('change')
@@ -9722,7 +9721,7 @@
                 const formatSalary = (val) => val ? (val / 10000).toLocaleString() + '万' : '-';
 
                 return `
-            < div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition flex flex-col h-full relative ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''} ${isRecommended ? 'ring-2 ring-purple-400' : ''}" >
+                <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition flex flex-col h-full relative ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : ''} ${isRecommended ? 'ring-2 ring-purple-400' : ''}">
                     
                     <div class="flex justify-between items-start mb-3">
                          <div class="flex items-center z-10">
@@ -9801,7 +9800,7 @@
                             詳細を見る
                         </button>
                     </div>
-                </div >
+                </div>
             `}).join('')
 
             container.html(html)
@@ -10651,7 +10650,7 @@
                                         class="ai-detail-btn text-xs text-indigo-600 hover:text-indigo-800 underline font-medium"
                                         data-item-id="${itemId}"
                                         onclick="event.stopPropagation(); window.openAIDetail('${itemId}')"
-                                    >
+                                   >
                                         📊 詳細分析を見る
                                     </button>
                                 </div>
@@ -10786,7 +10785,7 @@
 
                     if (jobs.length === 0) continue;
 
-                    console.log(`Re - analyzing for user ${userDataForAI.name || userId}: `, jobs.length, 'jobs');
+                    console.log(`Re-analyzing for user ${userDataForAI.name || userId}: `, jobs.length, 'jobs');
 
                     const { data: results, error } = await supabase.functions.invoke('ai-matching', {
                         body: {
