@@ -9338,7 +9338,6 @@
 
                 let query = supabase
                     .from('jobs')
-                    .select('*, companies(name)') // Join with companies
                     .eq('organization_id', currentUser.organization_id)
                 // .eq('status', 'active') // 一時的にステータスフィルタを解除（インポートデータが表示されない問題対応）
 
