@@ -4931,12 +4931,51 @@
             $(`#${elementId}`).addClass('hidden')
         }
 
+        // ========================
+        // Lazy Loading Management
+        // ========================
+        const loadedPages = new Set();
+
+        // 画像のLazy Loading
+        function initImageLazyLoading() {
+            // Intersection Observer を使用した画像の遅延読み込み
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            const src = img.getAttribute('data-src');
+                            if (src) {
+                                img.src = src;
+                                img.removeAttribute('data-src');
+                                observer.unobserve(img);
+                            }
+                        }
+                    });
+                });
+
+                // data-src属性を持つすべての画像を監視
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            } else {
+                // Intersection Observer 非対応の場合は即座に読み込み
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    const src = img.getAttribute('data-src');
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                    }
+                });
+            }
+        }
+
         function showPage(pageId) {
             $('.page').removeClass('active')
             $(`#${pageId}`).addClass('active')
         }
 
-        function showAppContent(contentId) {
+        async function showAppContent(contentId) {
             $('.app-content').addClass('hidden')
             const $target = $(`#${contentId}`);
             $target.removeClass('hidden')
@@ -5000,6 +5039,44 @@
                 if (typeof loadEmailTemplates === 'function') {
                     loadEmailTemplates();
                 }
+            }
+
+            // 遅延ロード: 初回アクセス時のみデータを読み込む
+            if (!loadedPages.has(contentId)) {
+                console.log(`Lazy loading data for: ${contentId}`);
+
+                try {
+                    switch (contentId) {
+                        case 'recommendations-content':
+                            // 推薦一覧は初回のみロード
+                            if (typeof loadRecommendations === 'function') {
+                                await loadRecommendations();
+                            }
+                            break;
+
+                        case 'admin-users-content':
+                            // ユーザー管理は初回のみロード
+                            if (typeof loadUsers === 'function') {
+                                await loadUsers();
+                            }
+                            break;
+
+                        case 'admin-companies-content':
+                            // 企業管理は初回のみロード
+                            if (typeof loadCompanies === 'function') {
+                                await loadCompanies();
+                            }
+                            break;
+
+                        // 他のページも必要に応じて追加
+                    }
+
+                    loadedPages.add(contentId);
+                } catch (error) {
+                    console.error(`Error lazy loading ${contentId}:`, error);
+                }
+            } else {
+                console.log(`Using cached data for: ${contentId}`);
             }
         }
 
@@ -9119,7 +9196,16 @@
         }
 
 
-        async function loadJobs(filters = {}) {
+        // ========================
+        // Pagination Variables
+        // ========================
+        const ITEMS_PER_PAGE = 20;
+        let currentJobPage = 1;
+        let totalJobPages = 1;
+        let currentJobFilters = {};
+        let allJobsCache = []; // ページネーション用のキャッシュ
+
+        async function loadJobs(filters = {}, page = 1) {
             if (!currentUser) return
 
             showLoading()
@@ -9281,17 +9367,88 @@
                 const [sortCol, sortOrder] = sortParam.split('-');
                 query = query.order(sortCol, { ascending: sortOrder === 'asc' });
 
-                const { data: jobs, error } = await query
+                // ページネーション: 総件数を取得 + 指定ページのデータを取得
+                currentJobPage = page;
+                currentJobFilters = filters;
+
+                const from = (page - 1) * ITEMS_PER_PAGE;
+                const to = from + ITEMS_PER_PAGE - 1;
+
+                const { data: jobs, error, count } = await query
+                    .range(from, to)
+                    .select('*, companies(name)', { count: 'exact' });
 
                 if (error) throw error
 
-                await renderJobs(jobs)
+                // 総ページ数を計算
+                totalJobPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1;
+
+                console.log(`Loaded page ${page}/${totalJobPages}, showing ${jobs.length} jobs (total: ${count})`);
+
+                await renderJobs(jobs, count)
+                renderJobPagination();
             } catch (error) {
                 console.error('Load jobs error:', error)
                 $('#jobs-container').html('<p class="text-red-500">求人の読み込みに失敗しました</p>')
             } finally {
                 hideLoading()
             }
+        }
+
+        // ページネーションUIのレンダリング
+        function renderJobPagination() {
+            const container = $('#job-pagination-container');
+            if (!container.length) {
+                // ページネーションコンテナが存在しない場合は作成
+                $('#jobs-container').after('<div id="job-pagination-container" class="mt-6"></div>');
+            }
+
+            if (totalJobPages <= 1) {
+                $('#job-pagination-container').html('');
+                return;
+            }
+
+            const maxButtons = 5; // 表示するページボタンの最大数
+            let startPage = Math.max(1, currentJobPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalJobPages, startPage + maxButtons - 1);
+
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            let html = '<div class="flex justify-center items-center gap-2">';
+
+            // 前へボタン
+            if (currentJobPage > 1) {
+                html += `<button onclick="loadJobs(currentJobFilters, ${currentJobPage - 1})" 
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+                    <i class="fas fa-chevron-left"></i> 前へ
+                </button>`;
+            }
+
+            // ページ番号ボタン
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentJobPage;
+                html += `<button onclick="loadJobs(currentJobFilters, ${i})" 
+                    class="px-4 py-2 border rounded-lg transition ${isActive ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'}">
+                    ${i}
+                </button>`;
+            }
+
+            // 次へボタン
+            if (currentJobPage < totalJobPages) {
+                html += `<button onclick="loadJobs(currentJobFilters, ${currentJobPage + 1})" 
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+                    次へ <i class="fas fa-chevron-right"></i>
+                </button>`;
+            }
+
+            html += '</div>';
+            html += `<div class="text-center mt-2 text-sm text-gray-600">
+                ページ ${currentJobPage} / ${totalJobPages}
+            </div>`;
+
+            $('#job-pagination-container').html(html);
         }
 
 
@@ -9713,13 +9870,21 @@
         // AI推薦済み求人IDのキャッシュ
         let recommendedJobIds = new Set();
 
-        async function renderJobs(jobs) {
+        async function renderJobs(jobs, totalCount = null) {
             const container = $('#jobs-container')
             container.empty()
 
             if (jobs.length === 0) {
                 container.html('<p class="text-gray-500 text-center py-8">現在募集中の求人はありません</p>')
                 return
+            }
+
+            // 検索結果の件数表示
+            if (totalCount !== null) {
+                const resultInfo = `<div class="mb-4 text-sm text-gray-600">
+                    検索結果: ${totalCount}件 (${currentJobPage}ページ目を表示中)
+                </div>`;
+                container.append(resultInfo);
             }
 
             const isAdminOrCoach = currentUser && ['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role)
