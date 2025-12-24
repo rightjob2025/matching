@@ -13509,6 +13509,13 @@
             // マスタデータ初期化
             await loadMasterDataForProfile(null);
 
+            // Select2の既存インスタンスを破棄してから再初期化
+            $('#reg-job-type, #reg-industry, #reg-employment-type, #reg-prefecture').each(function () {
+                if ($(this).hasClass("select2-hidden-accessible")) {
+                    $(this).select2('destroy');
+                }
+            });
+
             // Select2初期化（複数選択の操作性向上）
             $('#reg-job-type, #reg-industry, #reg-employment-type, #reg-prefecture').select2({
                 width: '100%',
