@@ -8442,7 +8442,7 @@
                         user_id: currentUser.id,
                         style_prompt: prompt,
                         is_active: isActive,
-                        updated_at: new Date()
+                        updated_at: new Date().toISOString()
                     });
 
                 if (error) throw error;
@@ -9216,14 +9216,16 @@
                         score: score,
                         reason: card.find('.bg-blue-50 p, .bg-gray-50 p').first().text().trim() || 'AIマッチング評価済み',
                         recommended_by: currentUser.id,
-                        details: details
+                        details: details || null
                     };
                 });
 
-                // 一括保存 (Upsert)
-                const { error } = await supabase
+                console.log('Saving recommendations:', recs);
+
+                // 一括保存 (Upsert) - onConflictは配列で指定
+                const { data, error } = await supabase
                     .from('recommendations')
-                    .upsert(recs, { onConflict: 'user_id, job_id' });
+                    .upsert(recs, { onConflict: ['user_id', 'job_id'] });
 
                 if (error) throw error;
 
@@ -10615,7 +10617,7 @@
                     .from('applications')
                     .update({
                         status: newStatus,
-                        updated_at: new Date()
+                        updated_at: new Date().toISOString()
                     })
                     .eq('id', applicationId);
 
@@ -12837,7 +12839,7 @@
                 url: $('#job-url').val() || null,
                 pic_user_id_1: $('#job-pic-user-1').val() || null,
                 pic_user_id_2: $('#job-pic-user-2').val() || null,
-                updated_at: new Date()
+                updated_at: new Date().toISOString()
             }
 
             if (!jobData.company_id) {
@@ -16400,7 +16402,7 @@
                 is_active: $('#prompt-is-active').is(':checked'),
                 is_global: isGlobal,
                 organization_id: orgId,
-                updated_at: new Date()
+                updated_at: new Date().toISOString()
             }
 
             if (!promptId) {
@@ -16784,7 +16786,7 @@
                 sort_order: parseInt($('#master-sort').val()) || 0,
                 is_active: $('#master-is-active').is(':checked'),
                 organization_id: orgId,
-                updated_at: new Date()
+                updated_at: new Date().toISOString()
             }
 
             try {
@@ -18515,7 +18517,7 @@
                     .from('applications')
                     .update({
                         recommendation_text: text,
-                        updated_at: new Date()
+                        updated_at: new Date().toISOString()
                     })
                     .eq('id', currentRecommendationAppId);
 
@@ -18977,7 +18979,7 @@
                 // Update scout_messages
                 const { error: msgError } = await supabase
                     .from('scout_messages')
-                    .update({ status: newStatus, updated_at: new Date() })
+                    .update({ status: newStatus, updated_at: new Date().toISOString() })
                     .eq('id', scoutId);
 
                 if (msgError) throw msgError;
@@ -19147,7 +19149,7 @@
                     parsed_data: analysisData,
                     status: 'new',
                     custom_title: customTitle || null,
-                    updated_at: new Date()
+                    updated_at: new Date().toISOString()
                 };
 
                 // DEBUG: Check payload
@@ -19243,7 +19245,7 @@
                     subject: subject,
                     message_body: body,
                     status: 'sent',
-                    sent_at: new Date(),
+                    sent_at: new Date().toISOString(),
                     created_by: currentUser.id
                 });
 
