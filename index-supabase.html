@@ -9336,7 +9336,7 @@
                 }
 
 
-                let query = supabase
+                let query = window.supabase
                     .from('jobs')
                     .eq('organization_id', currentUser.organization_id)
                 // .eq('status', 'active') // 一時的にステータスフィルタを解除（インポートデータが表示されない問題対応）
