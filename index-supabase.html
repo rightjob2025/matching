@@ -11879,9 +11879,14 @@
                 });
 
                 // Select2の初期化（オプション設定後に実行）
-                $('.select2').each(function () {
+                // 既存のSelect2インスタンスを破棄（select要素のみ対象）
+                $('select.select2').each(function () {
                     if ($(this).hasClass("select2-hidden-accessible")) {
-                        $(this).select2('destroy');
+                        try {
+                            $(this).select2('destroy');
+                        } catch (e) {
+                            console.warn('Failed to destroy Select2:', e);
+                        }
                     }
                 });
 
@@ -11894,10 +11899,14 @@
                     placeholder: '選択してください'
                 });
 
-                // その他のSelect2は標準設定
-                $('.select2').not('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').select2({
-                    language: "ja",
-                    width: 'resolve'
+                // その他のSelect2は標準設定（select要素のみ）
+                $('select.select2').not('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').each(function () {
+                    if (!$(this).hasClass("select2-hidden-accessible")) {
+                        $(this).select2({
+                            language: "ja",
+                            width: 'resolve'
+                        });
+                    }
                 });
 
                 // ユーザーの選択値をセット (プロフィール編集時のみ)
@@ -11928,9 +11937,23 @@
                     setSelect2Val('#profile-industry', user.desired_industry);
 
                     // 管理者用ユーザー編集フォーム
+                    console.log('Setting admin user form values:', {
+                        employment_type: user.desired_employment_type,
+                        job_type: user.desired_job_type,
+                        industry: user.desired_industry
+                    });
                     setSelect2Val('#admin-user-employment-type', user.desired_employment_type);
                     setSelect2Val('#admin-user-job-type', user.desired_job_type);
                     setSelect2Val('#admin-user-industry', user.desired_industry);
+
+                    // 値が正しくセットされたか確認
+                    setTimeout(() => {
+                        console.log('Verification - Values after setting:', {
+                            employment_type: $('#admin-user-employment-type').val(),
+                            job_type: $('#admin-user-job-type').val(),
+                            industry: $('#admin-user-industry').val()
+                        });
+                    }, 50);
 
                     // 勤務地の分割セット
                     if (user.desired_location) {
