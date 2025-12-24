@@ -1056,7 +1056,7 @@
 
                     <div class="flex flex-wrap gap-4 justify-between items-center">
 
-                        <div class="flex gap-4">
+                        <div class="flex gap-4 items-center">
                             <button onclick="searchJobsImmediate()"
                                 class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
                                 <i class="fas fa-search mr-2"></i>検索
@@ -1073,6 +1073,17 @@
                                 class="px-4 py-2 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 hidden">
                                 <i class="fas fa-check-double mr-2"></i>上位30件を選択
                             </button>
+
+                            <!-- 求人件数カウンター -->
+                            <div id="job-count-display"
+                                class="hidden px-6 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-briefcase text-indigo-600"></i>
+                                    <span class="text-sm font-medium text-gray-600">該当求人:</span>
+                                    <span id="job-count-number" class="text-2xl font-bold text-indigo-600">0</span>
+                                    <span class="text-sm font-medium text-gray-600">件</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex gap-4 items-center">
                             <select id="saved-searches-select" onchange="loadSavedSearch(this.value)"
@@ -9285,6 +9296,46 @@
 
 
         // ========================
+        // Job Count Animation
+        // ========================
+        function animateJobCount(targetCount) {
+            const display = $('#job-count-display');
+            const numberElement = $('#job-count-number');
+
+            if (targetCount === null || targetCount === undefined) {
+                display.addClass('hidden');
+                return;
+            }
+
+            // カウンターを表示
+            display.removeClass('hidden');
+
+            // アニメーション設定
+            const duration = 800; // 800ms
+            const startTime = Date.now();
+            const startValue = 0;
+
+            function updateCount() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // イージング関数 (easeOutQuad)
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentValue = Math.floor(startValue + (targetCount - startValue) * easeProgress);
+
+                numberElement.text(currentValue.toLocaleString());
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCount);
+                } else {
+                    numberElement.text(targetCount.toLocaleString());
+                }
+            }
+
+            requestAnimationFrame(updateCount);
+        }
+
+        // ========================
         // Pagination Variables
         // ========================
         const ITEMS_PER_PAGE = 20;
@@ -9983,8 +10034,12 @@
 
             if (jobs.length === 0) {
                 container.html('<p class="text-gray-500 text-center py-8">現在募集中の求人はありません</p>')
+                animateJobCount(0); // カウンターを0にリセット
                 return
             }
+
+            // 求人件数をアニメーション表示
+            animateJobCount(totalCount);
 
             // 検索結果の件数表示
             if (totalCount !== null) {
