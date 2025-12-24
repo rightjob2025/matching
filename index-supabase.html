@@ -8866,7 +8866,16 @@
             searchCandidates();
         }
 
-        async function searchCandidates(filters = {}) {
+        // ========================
+        // Candidate Pagination Variables
+        // ========================
+        const CANDIDATES_PER_PAGE = 20;
+        let currentCandidatePage = 1;
+        let totalCandidatePages = 1;
+        let currentCandidateFilters = {};
+        let allCandidatesCache = []; // フィルタリング後の全候補者
+
+        async function searchCandidates(filters = {}, page = 1) {
             showLoading();
             $('#candidate-results-container').empty();
 
@@ -8930,13 +8939,84 @@
                 else if (sort === 'age-desc') results.sort((a, b) => (b.age || 0) - (a.age || 0));
                 else if (sort === 'salary-desc') results.sort((a, b) => (b.desired_salary || 0) - (a.desired_salary || 0));
 
-                renderCandidateResults(results);
+                // ページネーション処理
+                currentCandidatePage = page;
+                currentCandidateFilters = filters;
+                allCandidatesCache = results;
+
+                const totalCount = results.length;
+                totalCandidatePages = Math.ceil(totalCount / CANDIDATES_PER_PAGE);
+
+                const from = (page - 1) * CANDIDATES_PER_PAGE;
+                const to = from + CANDIDATES_PER_PAGE;
+                const paginatedResults = results.slice(from, to);
+
+                console.log(`Loaded candidate page ${page}/${totalCandidatePages}, showing ${paginatedResults.length} candidates (total: ${totalCount})`);
+
+                renderCandidateResults(paginatedResults, totalCount);
+                renderCandidatePagination();
 
             } catch (e) {
                 console.error(e);
             } finally {
                 hideLoading();
             }
+        }
+
+        // 候補者ページネーションUIのレンダリング
+        function renderCandidatePagination() {
+            const container = $('#candidate-pagination-container');
+            if (!container.length) {
+                // ページネーションコンテナが存在しない場合は作成
+                $('#candidate-results-container').after('<div id="candidate-pagination-container" class="mt-6"></div>');
+            }
+
+            if (totalCandidatePages <= 1) {
+                $('#candidate-pagination-container').html('');
+                return;
+            }
+
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentCandidatePage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalCandidatePages, startPage + maxButtons - 1);
+
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            let html = '<div class="flex justify-center items-center gap-2">';
+
+            // 前へボタン
+            if (currentCandidatePage > 1) {
+                html += `<button onclick="searchCandidates(currentCandidateFilters, ${currentCandidatePage - 1})" 
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+                    <i class="fas fa-chevron-left"></i> 前へ
+                </button>`;
+            }
+
+            // ページ番号ボタン
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentCandidatePage;
+                html += `<button onclick="searchCandidates(currentCandidateFilters, ${i})" 
+                    class="px-4 py-2 border rounded-lg transition ${isActive ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'}">
+                    ${i}
+                </button>`;
+            }
+
+            // 次へボタン
+            if (currentCandidatePage < totalCandidatePages) {
+                html += `<button onclick="searchCandidates(currentCandidateFilters, ${currentCandidatePage + 1})" 
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+                    次へ <i class="fas fa-chevron-right"></i>
+                </button>`;
+            }
+
+            html += '</div>';
+            html += `<div class="text-center mt-2 text-sm text-gray-600">
+                ページ ${currentCandidatePage} / ${totalCandidatePages}
+            </div>`;
+
+            $('#candidate-pagination-container').html(html);
         }
 
         // AIマッチング実行 (求人 -> 求職者)
@@ -9153,7 +9233,7 @@
             $('#candidate-results-container').css('padding-bottom', '0');
         }
 
-        function renderCandidateResults(candidates) {
+        function renderCandidateResults(candidates, totalCount = null) {
             isAImatchingResultView = false;
             // バーを隠す
             $('#candidate-float-bar').addClass('translate-y-full').addClass('hidden');
@@ -9162,6 +9242,14 @@
             if (candidates.length === 0) {
                 container.html('<div class="text-center p-8 text-gray-500">条件に一致する求職者は見つかりませんでした</div>');
                 return;
+            }
+
+            // 検索結果の件数表示
+            if (totalCount !== null) {
+                const resultInfo = `<div class="mb-4 text-sm text-gray-600">
+                    検索結果: ${totalCount}名 (${currentCandidatePage}ページ目を表示中)
+                </div>`;
+                container.append(resultInfo);
             }
 
             const html = candidates.map(c => {
@@ -10499,7 +10587,15 @@
         // ========================
         // AI Recommendations
         // ========================
-        async function loadRecommendations() {
+        // ========================
+        // Recommendation Pagination Variables
+        // ========================
+        const RECOMMENDATIONS_PER_PAGE = 20;
+        let currentRecommendationPage = 1;
+        let totalRecommendationPages = 1;
+        let allRecommendationsCache = []; // フィルタリング後の全推薦
+
+        async function loadRecommendations(page = 1) {
             // window.currentUserを使用（スコープ問題を回避）
             const currentUser = window.currentUser;
 
@@ -10709,6 +10805,17 @@
                 }
             });
 
+            // ページネーション処理
+            allRecommendationsCache = filteredRecs;
+            const totalCount = filteredRecs.length;
+            totalRecommendationPages = Math.ceil(totalCount / RECOMMENDATIONS_PER_PAGE);
+
+            const from = (currentRecommendationPage - 1) * RECOMMENDATIONS_PER_PAGE;
+            const to = from + RECOMMENDATIONS_PER_PAGE;
+            const paginatedRecs = filteredRecs.slice(from, to);
+
+            console.log(`Loaded recommendation page ${currentRecommendationPage}/${totalRecommendationPages}, showing ${paginatedRecs.length} recommendations (total: ${totalCount})`);
+
             // コントロールエリア（ユーザーフィルター ＆ ソート）の構築
             let controlsHtml = '<div class="flex flex-wrap items-center justify-between mb-6 gap-4">';
 
@@ -10757,9 +10864,16 @@
             `;
             controlsHtml += '</div>';
 
+            // 件数表示を追加
+            if (totalCount > 0) {
+                controlsHtml += `<div class="mb-4 text-sm text-gray-600">
+                    検索結果: ${totalCount}件 (${currentRecommendationPage}ページ目を表示中)
+                </div>`;
+            }
+
             container.empty();
 
-            if (filteredRecs.length === 0) {
+            if (paginatedRecs.length === 0 && totalCount === 0) {
                 const tabLabel = currentRecommendationTab === 'matches' ? '推薦' : 'アンマッチ';
                 // ユーザーが選択されているがデータがない場合と、本当にデータがない場合でメッセージを変える
                 let message = `${tabLabel}はまだありません`;
@@ -10793,7 +10907,7 @@
 
             const html = controlsHtml + `
                 <div id="recommendations-list">
-            ` + filteredRecs.map(rec => {
+            ` + paginatedRecs.map(rec => {
                 const matchColor = rec.score >= 50 ? 'bg-indigo-600' : 'bg-gray-500';
                 // ユーザー情報がない場合のガード
                 const userName = rec.users ? rec.users.name : '不明なユーザー';
@@ -10936,6 +11050,9 @@
 
             container.html(html);
 
+            // ページネーションUIを追加
+            renderRecommendationPagination();
+
             // Select2を初期化
             if (isAdminOrCoach) {
                 $('#rec-user-filter').select2({
@@ -10946,6 +11063,69 @@
                 });
             }
         }
+
+        // 推薦一覧ページネーションUIのレンダリング
+        function renderRecommendationPagination() {
+            const container = $('#recommendation-pagination-container');
+            if (!container.length) {
+                // ページネーションコンテナが存在しない場合は作成
+                $('#recommendations-container').after('<div id="recommendation-pagination-container" class="mt-6"></div>');
+            }
+
+            if (totalRecommendationPages <= 1) {
+                $('#recommendation-pagination-container').html('');
+                return;
+            }
+
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentRecommendationPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalRecommendationPages, startPage + maxButtons - 1);
+
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            let html = '<div class="flex justify-center items-center gap-2">';
+
+            // 前へボタン
+            if (currentRecommendationPage > 1) {
+                html += `<button onclick="goToRecommendationPage(${currentRecommendationPage - 1})" 
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+                    <i class="fas fa-chevron-left"></i> 前へ
+                </button>`;
+            }
+
+            // ページ番号ボタン
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentRecommendationPage;
+                html += `<button onclick="goToRecommendationPage(${i})" 
+                    class="px-4 py-2 border rounded-lg transition ${isActive ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'}">
+                    ${i}
+                </button>`;
+            }
+
+            // 次へボタン
+            if (currentRecommendationPage < totalRecommendationPages) {
+                html += `<button onclick="goToRecommendationPage(${currentRecommendationPage + 1})" 
+                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
+                    次へ <i class="fas fa-chevron-right"></i>
+                </button>`;
+            }
+
+            html += '</div>';
+            html += `<div class="text-center mt-2 text-sm text-gray-600">
+                ページ ${currentRecommendationPage} / ${totalRecommendationPages}
+            </div>`;
+
+            $('#recommendation-pagination-container').html(html);
+        }
+
+        // 推薦一覧のページ移動
+        window.goToRecommendationPage = function (page) {
+            currentRecommendationPage = page;
+            renderRecommendations();
+        }
+
 
         // 選択した求人のAI再判定
         window.reRunSelectedRecommendations = async function () {
