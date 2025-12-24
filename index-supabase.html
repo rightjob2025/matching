@@ -7134,6 +7134,12 @@
             // スクロールを最上部に移動
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
+            // モーダルをbodyの直下に移動（親要素のhiddenクラスの影響を受けないようにする）
+            const modal = document.getElementById('scout-modal');
+            if (modal && modal.parentElement.id !== 'body') {
+                document.body.appendChild(modal);
+            }
+
             // モーダルを表示
             $('#scout-modal').removeClass('hidden').css('display', 'flex');
 
