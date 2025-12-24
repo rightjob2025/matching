@@ -12879,6 +12879,9 @@
             console.log('showAdminUserModal called with userId:', userId);
             if (!currentUser) return;
 
+            // Reset modal ready flag to prevent premature submission
+            isModalReady = false;
+
             // コーチリストをロード（未ロードの場合）
             if (adminCoachesCache.length === 0) {
                 await loadAdminCoaches();
@@ -13008,6 +13011,12 @@
             $('body').append(modal);
             modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 99999 !important; visibility: visible !important; opacity: 1 !important;');
             console.log('showAdminUserModal process finished');
+
+            // Set modal ready flag after everything is loaded
+            setTimeout(() => {
+                isModalReady = true;
+                console.log('Modal is now ready for submission');
+            }, 100);
         }
 
         window.closeAdminUserModal = function () {
@@ -13198,13 +13207,29 @@
             }
         }
 
+        // Flag to prevent premature submission
+        let isModalReady = false;
+
         // ユーザー保存処理
         $('#admin-user-form').off('submit').on('submit', async function (e) {
             e.preventDefault();
+            e.stopPropagation();
+
             if (!currentUser) return;
+
+            // Prevent submission if modal is not fully loaded
+            if (!isModalReady) {
+                console.warn('Modal not ready for submission yet');
+                return false;
+            }
 
             const userId = $('#admin-user-id').val();
             const role = $('#admin-user-role').val();
+
+            if (!userId) {
+                console.error('No user ID found');
+                return false;
+            }
 
             // Usersテーブル用更新データ
             const updates = {
@@ -13246,6 +13271,13 @@
                     const industry = $('#admin-user-industry').val();
                     const prefs = $('#admin-user-prefecture').val();
                     const city = $('#admin-user-city').val() || '';
+
+                    console.log('=== Form Values Debug ===');
+                    console.log('Job Type:', jobType);
+                    console.log('Industry:', industry);
+                    console.log('Prefs:', prefs);
+                    console.log('City:', city);
+
                     let locationStr = '';
                     if (Array.isArray(prefs) && prefs.length > 0) {
                         locationStr = prefs.join(',');
@@ -13255,6 +13287,9 @@
                     else if (city) locationStr = city;
 
                     const empType = $('#admin-user-employment-type').val();
+
+                    console.log('Location String:', locationStr);
+                    console.log('Employment Type:', empType);
 
                     // 詳細職歴リスト
                     const workHistoryList = [];
@@ -17920,6 +17955,20 @@
             $('#notification-dropdown').on('click', function (e) {
                 e.stopPropagation()
             })
+
+            // Prevent admin user modal from closing when clicking inside
+            $('#admin-user-modal').on('click', function (e) {
+                // Only close if clicking on the backdrop (the modal itself, not its children)
+                if (e.target === this) {
+                    // Don't close automatically - user must click the X button or Cancel
+                    e.stopPropagation();
+                }
+            });
+
+            // Prevent clicks inside modal content from bubbling
+            $('#admin-user-modal > div').on('click', function (e) {
+                e.stopPropagation();
+            });
 
             // ナビゲーション
             $('#show-signup').on('click', function (e) {
