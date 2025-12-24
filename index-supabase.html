@@ -8875,7 +8875,7 @@
         let currentCandidateFilters = {};
         let allCandidatesCache = []; // フィルタリング後の全候補者
 
-        async function searchCandidates(filters = {}, page = 1) {
+        window.searchCandidates = async function searchCandidates(filters = {}, page = 1) {
             showLoading();
             $('#candidate-results-container').empty();
 
