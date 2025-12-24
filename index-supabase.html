@@ -11273,23 +11273,35 @@
 
                 if (error) throw error
 
-                // フィルタリング（グローバル または 自社用）
-                let validMasters = masters.filter(m =>
-                    m.organization_id === null || m.organization_id === currentUser.organization_id
-                )
+                // フィルタリング: 自社専用データを優先、なければグローバルデータを使用
+                // 1. まず自社専用のデータを取得
+                const orgSpecific = masters.filter(m => m.organization_id === currentUser.organization_id);
 
-                // 重複排除 (value ベース)
-                const seenValues = new Set();
-                validMasters = validMasters.filter(m => {
-                    if (seenValues.has(m.value)) return false;
-                    seenValues.add(m.value);
-                    return true;
-                });
+                // 2. グローバルデータを取得
+                const globalData = masters.filter(m => m.organization_id === null);
+
+                // 3. 自社専用データで既に存在するvalueを記録
+                const orgSpecificValues = new Set(orgSpecific.map(m => m.value));
+
+                // 4. グローバルデータから、自社専用データと重複しないものだけを取得
+                const nonDuplicateGlobal = globalData.filter(m => !orgSpecificValues.has(m.value));
+
+                // 5. 自社専用データとグローバルデータを結合
+                let validMasters = [...orgSpecific, ...nonDuplicateGlobal];
+
+                console.log('Employment types after filtering:', validMasters.map(m => `${m.label} (org: ${m.organization_id ? 'custom' : 'global'})`));
 
                 // 雇用形態のプルダウン生成
                 const empTargets = ['#profile-employment-type', '#reg-employment-type', '#admin-user-employment-type'];
                 empTargets.forEach(s => {
                     const select = $(s);
+
+                    // Select2が既に初期化されている場合は破棄
+                    if (select.hasClass("select2-hidden-accessible")) {
+                        select.select2('destroy');
+                    }
+
+                    // オプションをクリアして再生成
                     select.empty();
                     validMasters.forEach(m => {
                         select.append(`<option value="${m.value}">${m.label}</option>`);
@@ -11300,6 +11312,12 @@
                 const jobTargets = ['#profile-job-type', '#reg-job-type', '#admin-user-job-type'];
                 jobTargets.forEach(s => {
                     const select = $(s);
+
+                    // Select2が既に初期化されている場合は破棄
+                    if (select.hasClass("select2-hidden-accessible")) {
+                        select.select2('destroy');
+                    }
+
                     select.empty();
                     masterJobCategories.forEach(c => {
                         select.append(`<option value="${c}">${c}</option>`);
@@ -11310,6 +11328,12 @@
                 const indTargets = ['#profile-industry', '#reg-industry', '#admin-user-industry'];
                 indTargets.forEach(s => {
                     const select = $(s);
+
+                    // Select2が既に初期化されている場合は破棄
+                    if (select.hasClass("select2-hidden-accessible")) {
+                        select.select2('destroy');
+                    }
+
                     select.empty();
                     masterIndustries.forEach(i => {
                         select.append(`<option value="${i}">${i}</option>`);
