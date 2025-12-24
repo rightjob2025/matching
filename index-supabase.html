@@ -9462,12 +9462,19 @@
                 const from = (page - 1) * ITEMS_PER_PAGE;
                 const to = from + ITEMS_PER_PAGE - 1;
 
-                // Supabaseでは select() -> range() の順序で呼ぶ必要がある
+                // Supabaseでcountを取得する場合、selectの前にcountオプションを設定
+                console.log('Fetching jobs with pagination:', { from, to, page });
+                
                 const { data: jobs, error, count } = await query
-                    .select('*, companies(name)', { count: 'exact' })
+                    .select('*, companies(name)', { count: 'exact', head: false })
                     .range(from, to);
 
-                if (error) throw error
+                console.log('Query result:', { jobs: jobs?.length, error, count });
+
+                if (error) {
+                    console.error('Supabase query error:', error);
+                    throw error;
+                }
 
                 // 総ページ数を計算
                 totalJobPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1;
