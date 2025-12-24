@@ -3267,7 +3267,7 @@
                 <!-- スカウト作成モーダル -->
                 <div id="scout-modal"
                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 10002;">
+                    style="z-index: 99999 !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;">
                     <div class="bg-white rounded-lg w-full max-w-2xl p-6" onclick="event.stopPropagation()">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold text-gray-900">
@@ -7189,11 +7189,13 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             // モーダルを表示
-            $('#scout-modal').removeClass('hidden');
+            $('#scout-modal').removeClass('hidden').css('display', 'flex');
 
             // モーダルが表示されているか確認
             const isVisible = !$('#scout-modal').hasClass('hidden');
+            const displayStyle = $('#scout-modal').css('display');
             console.log('Modal visibility after opening:', isVisible);
+            console.log('Modal display style:', displayStyle);
             console.log('Modal element:', $('#scout-modal')[0]);
 
             // モーダルにフォーカスを当てる
@@ -7263,7 +7265,7 @@
         window.closeScoutModal = function () {
             console.log('closeScoutModal called');
             console.trace('Stack trace:');
-            $('#scout-modal').addClass('hidden');
+            $('#scout-modal').addClass('hidden').css('display', 'none');
             currentScoutMatchId = null;
             currentScoutCandidateId = null;
         }
