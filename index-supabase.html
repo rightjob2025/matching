@@ -13306,6 +13306,8 @@
 
             showLoading();
             try {
+                console.log('Updating users table with:', updates);
+
                 // 1. usersテーブル更新
                 const { error: usersError } = await supabase
                     .from('users')
