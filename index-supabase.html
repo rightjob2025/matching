@@ -7186,6 +7186,11 @@
             $('#scout-body').val('AIがスカウト文面を生成しています...\n少々お待ちください。');
             $('#scout-modal').removeClass('hidden');
 
+            // モーダルが表示されているか確認
+            const isVisible = !$('#scout-modal').hasClass('hidden');
+            console.log('Modal visibility after opening:', isVisible);
+            console.log('Modal element:', $('#scout-modal')[0]);
+
             console.log('Calling generateScoutMessage...');
             await generateScoutMessage(actualJobId, currentScoutCandidateId, currentScoutMatchId);
             console.log('generateScoutMessage completed');
