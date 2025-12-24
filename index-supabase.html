@@ -7184,12 +7184,20 @@
             console.log('Opening scout modal...');
             $('#scout-subject').val('生成中...');
             $('#scout-body').val('AIがスカウト文面を生成しています...\n少々お待ちください。');
+
+            // スクロールを最上部に移動
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // モーダルを表示
             $('#scout-modal').removeClass('hidden');
 
             // モーダルが表示されているか確認
             const isVisible = !$('#scout-modal').hasClass('hidden');
             console.log('Modal visibility after opening:', isVisible);
             console.log('Modal element:', $('#scout-modal')[0]);
+
+            // モーダルにフォーカスを当てる
+            $('#scout-modal').focus();
 
             console.log('Calling generateScoutMessage...');
             await generateScoutMessage(actualJobId, currentScoutCandidateId, currentScoutMatchId);
