@@ -9485,17 +9485,22 @@
 
         // ページネーションUIのレンダリング
         function renderJobPagination() {
+            console.log('renderJobPagination called:', { currentJobPage, totalJobPages });
+
             const container = $('#job-pagination-container');
             if (!container.length) {
+                console.log('Creating pagination container');
                 // ページネーションコンテナが存在しない場合は作成
                 $('#jobs-container').after('<div id="job-pagination-container" class="mt-6"></div>');
             }
 
             if (totalJobPages <= 1) {
+                console.log('Only 1 page, hiding pagination');
                 $('#job-pagination-container').html('');
                 return;
             }
 
+            console.log('Rendering pagination UI');
             const maxButtons = 5; // 表示するページボタンの最大数
             let startPage = Math.max(1, currentJobPage - Math.floor(maxButtons / 2));
             let endPage = Math.min(totalJobPages, startPage + maxButtons - 1);
@@ -9508,7 +9513,7 @@
 
             // 前へボタン
             if (currentJobPage > 1) {
-                html += `<button onclick="loadJobs(currentJobFilters, ${currentJobPage - 1})" 
+                html += `<button onclick="goToJobPage(${currentJobPage - 1})" 
                     class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
                     <i class="fas fa-chevron-left"></i> 前へ
                 </button>`;
@@ -9517,7 +9522,7 @@
             // ページ番号ボタン
             for (let i = startPage; i <= endPage; i++) {
                 const isActive = i === currentJobPage;
-                html += `<button onclick="loadJobs(currentJobFilters, ${i})" 
+                html += `<button onclick="goToJobPage(${i})" 
                     class="px-4 py-2 border rounded-lg transition ${isActive ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50'}">
                     ${i}
                 </button>`;
@@ -9525,7 +9530,7 @@
 
             // 次へボタン
             if (currentJobPage < totalJobPages) {
-                html += `<button onclick="loadJobs(currentJobFilters, ${currentJobPage + 1})" 
+                html += `<button onclick="goToJobPage(${currentJobPage + 1})" 
                     class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">
                     次へ <i class="fas fa-chevron-right"></i>
                 </button>`;
@@ -9536,7 +9541,13 @@
                 ページ ${currentJobPage} / ${totalJobPages}
             </div>`;
 
+            console.log('Setting pagination HTML');
             $('#job-pagination-container').html(html);
+        }
+
+        // 求人検索のページ移動
+        window.goToJobPage = function (page) {
+            loadJobs(currentJobFilters, page);
         }
 
 
