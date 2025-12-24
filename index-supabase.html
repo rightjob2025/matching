@@ -7109,6 +7109,8 @@
 
         // スカウトモーダルを開く（AI生成実行）
         window.openScoutModal = async function (matchId, candidateId) {
+            console.log('openScoutModal called:', { matchId, candidateId });
+
             let actualJobId = window.selectedTargetJobId || window.currentJobId;
             if (!actualJobId) {
                 alert('対象の求人が選択されていません');
@@ -7121,22 +7123,37 @@
             if (!targetMatchId) {
                 showLoading('準備中...');
                 try {
-                    const { data, error } = await window.supabase
+                    // 既存のマッチレコードを確認
+                    const { data: existing, error: checkError } = await window.supabase
                         .from('job_candidate_matches')
-                        .upsert({
-                            job_id: actualJobId,
-                            candidate_id: candidateId,
-                            status: 'draft',
-                            organization_id: currentUser.organization_id
-                        }, { onConflict: 'job_id, candidate_id' })
                         .select('id')
-                        .single();
+                        .eq('job_id', actualJobId)
+                        .eq('candidate_id', candidateId)
+                        .maybeSingle();
 
-                    if (error) throw error;
-                    targetMatchId = data.id;
+                    if (checkError) throw checkError;
+
+                    if (existing) {
+                        targetMatchId = existing.id;
+                    } else {
+                        // 新規作成
+                        const { data, error } = await window.supabase
+                            .from('job_candidate_matches')
+                            .insert({
+                                job_id: actualJobId,
+                                candidate_id: candidateId,
+                                status: 'draft',
+                                organization_id: currentUser.organization_id
+                            })
+                            .select('id')
+                            .single();
+
+                        if (error) throw error;
+                        targetMatchId = data.id;
+                    }
                 } catch (e) {
                     console.error('Failed to create match for scout:', e);
-                    alert('準備に失敗しました');
+                    alert('準備に失敗しました: ' + e.message);
                     hideLoading();
                     return;
                 } finally {
