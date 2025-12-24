@@ -13309,12 +13309,23 @@
                 console.log('Updating users table with:', updates);
 
                 // 1. usersテーブル更新
-                const { error: usersError } = await supabase
+                const { data: updatedUser, error: usersError } = await supabase
                     .from('users')
                     .update(updates)
-                    .eq('id', userId);
+                    .eq('id', userId)
+                    .select();
 
-                if (usersError) throw usersError;
+                console.log('Users table update result:', { data: updatedUser, error: usersError });
+
+                if (usersError) {
+                    console.error('Users table update failed:', usersError);
+                    throw usersError;
+                }
+
+                if (!updatedUser || updatedUser.length === 0) {
+                    console.warn('⚠️ No rows were updated in users table. This might be an RLS policy issue.');
+                    alert('警告: ユーザー情報の更新に失敗しました。RLSポリシーを確認してください。');
+                }
 
                 // 2. candidate_profilesテーブル更新 (role === 'candidate' の場合のみ)
                 const currentRole = $('#admin-user-role').val();
