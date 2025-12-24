@@ -7161,6 +7161,7 @@
                 }
             }
 
+            console.log('Match ID obtained:', targetMatchId);
             currentScoutMatchId = targetMatchId;
             currentScoutCandidateId = candidateId;
 
@@ -7176,14 +7177,18 @@
                 candidateName = $(`button[onclick *= "'${candidateId}'"]`).closest('.border').find('h3, .text-lg.font-bold').first().text().trim() || '候補者';
             }
 
+            console.log('Candidate name:', candidateName);
             $('#scout-candidate-name').text(candidateName);
 
             // モーダルを表示（ローディング状態）
+            console.log('Opening scout modal...');
             $('#scout-subject').val('生成中...');
             $('#scout-body').val('AIがスカウト文面を生成しています...\n少々お待ちください。');
             $('#scout-modal').removeClass('hidden');
 
+            console.log('Calling generateScoutMessage...');
             await generateScoutMessage(actualJobId, currentScoutCandidateId, currentScoutMatchId);
+            console.log('generateScoutMessage completed');
         }
 
         // スカウト文面生成（再生成）
@@ -7197,11 +7202,14 @@
 
         // Edge Functionを呼び出して文面生成
         async function generateScoutMessage(jobId, candidateId, matchId) {
+            console.log('generateScoutMessage called with:', { jobId, candidateId, matchId });
+
             if (!jobId || !candidateId) {
                 console.error('generateScoutMessage: Missing jobId or candidateId', { jobId, candidateId });
                 throw new Error('job_id and candidate_id are required');
             }
             try {
+                console.log('Calling Edge Function: generate-scout-message');
                 const { data, error } = await window.supabase.functions.invoke('generate-scout-message', {
                     body: {
                         job_id: jobId,
@@ -7210,9 +7218,12 @@
                     }
                 });
 
+                console.log('Edge Function response:', { data, error });
+
                 if (error) throw error;
 
                 if (data.success) {
+                    console.log('Scout message generated successfully');
                     $('#scout-subject').val(data.subject);
                     $('#scout-body').val(data.body);
                 } else {
