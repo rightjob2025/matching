@@ -11280,16 +11280,16 @@
                 // 2. グローバルデータを取得
                 const globalData = masters.filter(m => m.organization_id === null);
 
-                // 3. 自社専用データで既に存在するvalueを記録
-                const orgSpecificValues = new Set(orgSpecific.map(m => m.value));
+                // 3. 自社専用データで既に存在するlabelを記録 (valueではなくlabelで判定)
+                const orgSpecificLabels = new Set(orgSpecific.map(m => m.label));
 
                 // 4. グローバルデータから、自社専用データと重複しないものだけを取得
-                const nonDuplicateGlobal = globalData.filter(m => !orgSpecificValues.has(m.value));
+                const nonDuplicateGlobal = globalData.filter(m => !orgSpecificLabels.has(m.label));
 
                 // 5. 自社専用データとグローバルデータを結合
                 let validMasters = [...orgSpecific, ...nonDuplicateGlobal];
 
-                console.log('Employment types after filtering:', validMasters.map(m => `${m.label} (org: ${m.organization_id ? 'custom' : 'global'})`));
+                console.log('Employment types after filtering:', validMasters.map(m => `${m.label} (org: ${m.organization_id ? 'custom' : 'global'}, value: ${m.value})`));
 
                 // 雇用形態のプルダウン生成
                 const empTargets = ['#profile-employment-type', '#reg-employment-type', '#admin-user-employment-type'];
