@@ -9222,12 +9222,43 @@
 
                 console.log('Saving recommendations:', recs);
 
-                // 一括保存 (Upsert) - onConflictは配列で指定
-                const { data, error } = await supabase
-                    .from('recommendations')
-                    .upsert(recs, { onConflict: ['user_id', 'job_id'] });
+                // 既存レコードをチェックして、insert/updateを個別に実行
+                for (const rec of recs) {
+                    // 既存レコードを確認
+                    const { data: existing, error: checkError } = await supabase
+                        .from('recommendations')
+                        .select('id')
+                        .eq('user_id', rec.user_id)
+                        .eq('job_id', rec.job_id)
+                        .maybeSingle();
 
-                if (error) throw error;
+                    if (checkError) {
+                        console.error('Check error:', checkError);
+                        throw checkError;
+                    }
+
+                    if (existing) {
+                        // 既存レコードを更新
+                        const { error: updateError } = await supabase
+                            .from('recommendations')
+                            .update({
+                                score: rec.score,
+                                reason: rec.reason,
+                                recommended_by: rec.recommended_by,
+                                details: rec.details
+                            })
+                            .eq('id', existing.id);
+
+                        if (updateError) throw updateError;
+                    } else {
+                        // 新規レコードを挿入
+                        const { error: insertError } = await supabase
+                            .from('recommendations')
+                            .insert(rec);
+
+                        if (insertError) throw insertError;
+                    }
+                }
 
                 alert(`${recs.length} 名を「おすすめ求人」に保存しました。`);
                 clearAllSelectedCandidates();
