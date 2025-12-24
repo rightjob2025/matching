@@ -4338,11 +4338,48 @@
 
 
         // ========================
-        // Master Data Logic
+        // Master Data Logic with Caching
         // ========================
         let masterIndustries = [];
         let masterJobCategories = [];
         let masterSelectionStatuses = [];
+
+        // マスターデータキャッシュ
+        const masterDataCache = {
+            employmentTypes: null,
+            industries: null,
+            jobCategories: null,
+            selectionStatuses: null,
+            lastUpdated: null,
+            cacheDuration: 30 * 60 * 1000, // 30分
+
+            // キャッシュが有効かチェック
+            isValid() {
+                if (!this.lastUpdated) return false;
+                const now = Date.now();
+                return (now - this.lastUpdated) < this.cacheDuration;
+            },
+
+            // キャッシュをクリア
+            clear() {
+                this.employmentTypes = null;
+                this.industries = null;
+                this.jobCategories = null;
+                this.selectionStatuses = null;
+                this.lastUpdated = null;
+                console.log('Master data cache cleared');
+            },
+
+            // キャッシュを更新
+            update(data) {
+                this.employmentTypes = data.employmentTypes;
+                this.industries = data.industries;
+                this.jobCategories = data.jobCategories;
+                this.selectionStatuses = data.selectionStatuses;
+                this.lastUpdated = Date.now();
+                console.log('Master data cache updated');
+            }
+        };
 
         async function initMasterDataDropdowns() {
             if (!currentUser) {
@@ -4351,34 +4388,51 @@
             }
 
             try {
-                // master_data テーブルから業界と職種を取得
-                const { data: masters, error } = await supabase
-                    .from('master_data')
-                    .select('*')
-                    .in('type', ['industry_category', 'job_category', 'selection_status'])
-                    .eq('is_active', true)
-                    .order('sort_order');
+                // キャッシュが有効な場合は再利用
+                if (masterDataCache.isValid()) {
+                    console.log('Using cached master data');
+                    masterIndustries = masterDataCache.industries;
+                    masterJobCategories = masterDataCache.jobCategories;
+                    masterSelectionStatuses = masterDataCache.selectionStatuses;
+                } else {
+                    console.log('Fetching master data from database');
 
-                if (error) throw error;
+                    // master_data テーブルから業界と職種を取得
+                    const { data: masters, error } = await supabase
+                        .from('master_data')
+                        .select('type, label, value, organization_id, sort_order') // 必要なカラムのみ取得
+                        .in('type', ['industry_category', 'job_category', 'selection_status'])
+                        .eq('is_active', true)
+                        .order('sort_order');
 
-                // フィルタリング（グローバル または 自社用）
-                const validMasters = masters.filter(m =>
-                    m.organization_id === null || m.organization_id === currentUser.organization_id
-                );
+                    if (error) throw error;
 
-                // 業界マスタ
-                masterIndustries = [...new Set(validMasters
-                    .filter(m => m.type === 'industry_category')
-                    .map(m => m.label))];
+                    // フィルタリング（グローバル または 自社用）
+                    const validMasters = masters.filter(m =>
+                        m.organization_id === null || m.organization_id === currentUser.organization_id
+                    );
 
-                // 職種マスタ
-                masterJobCategories = [...new Set(validMasters
-                    .filter(m => m.type === 'job_category')
-                    .map(m => m.label))];
+                    // 業界マスタ
+                    masterIndustries = [...new Set(validMasters
+                        .filter(m => m.type === 'industry_category')
+                        .map(m => m.label))];
 
-                // 進捗ステータスマスタ
-                masterSelectionStatuses = validMasters
-                    .filter(m => m.type === 'selection_status');
+                    // 職種マスタ
+                    masterJobCategories = [...new Set(validMasters
+                        .filter(m => m.type === 'job_category')
+                        .map(m => m.label))];
+
+                    // 進捗ステータスマスタ
+                    masterSelectionStatuses = validMasters
+                        .filter(m => m.type === 'selection_status');
+
+                    // キャッシュを更新
+                    masterDataCache.update({
+                        industries: masterIndustries,
+                        jobCategories: masterJobCategories,
+                        selectionStatuses: masterSelectionStatuses
+                    });
+                }
 
                 // 各プルダウンの初期化（検索画面など、常に表示されているもの）
                 populateSelectOptions('search-industry-category', masterIndustries);
@@ -4816,6 +4870,48 @@
                 select.value = currentVal;
             }
         }
+
+        // Select2初期化管理
+        const select2InitializedElements = new Set();
+
+        function initializeSelect2(selector, options = {}) {
+            const $element = $(selector);
+            if ($element.length === 0) return;
+
+            const elementId = $element.attr('id') || selector;
+
+            // 既に初期化済みの場合はスキップ
+            if (select2InitializedElements.has(elementId)) {
+                return;
+            }
+
+            const defaultOptions = {
+                language: "ja",
+                width: 'resolve',
+                ...options
+            };
+
+            $element.select2(defaultOptions);
+            select2InitializedElements.add(elementId);
+        }
+
+        function destroySelect2(selector) {
+            const $element = $(selector);
+            if ($element.length === 0) return;
+
+            const elementId = $element.attr('id') || selector;
+
+            if (select2InitializedElements.has(elementId)) {
+                $element.select2('destroy');
+                select2InitializedElements.delete(elementId);
+            }
+        }
+
+        function reinitializeSelect2(selector, options = {}) {
+            destroySelect2(selector);
+            initializeSelect2(selector, options);
+        }
+
         function showLoading(message = '読み込み中...') {
             $('#loading-message').text(message);
             $('#loading-overlay').removeClass('hidden')
@@ -11263,31 +11359,46 @@
                     await initMasterDataDropdowns();
                 }
 
-                // 雇用形態を取得 (master_dataから)
-                const { data: masters, error } = await supabase
-                    .from('master_data')
-                    .select('*')
-                    .eq('type', 'employment_type')
-                    .eq('is_active', true)
-                    .order('sort_order')
+                // 雇用形態を取得 (キャッシュまたはmaster_dataから)
+                let validMasters;
 
-                if (error) throw error
+                if (masterDataCache.isValid() && masterDataCache.employmentTypes) {
+                    console.log('Using cached employment types');
+                    validMasters = masterDataCache.employmentTypes;
+                } else {
+                    console.log('Fetching employment types from database');
 
-                // フィルタリング: 自社専用データを優先、なければグローバルデータを使用
-                // 1. まず自社専用のデータを取得
-                const orgSpecific = masters.filter(m => m.organization_id === currentUser.organization_id);
+                    const { data: masters, error } = await supabase
+                        .from('master_data')
+                        .select('type, label, value, organization_id, sort_order') // 必要なカラムのみ取得
+                        .eq('type', 'employment_type')
+                        .eq('is_active', true)
+                        .order('sort_order')
 
-                // 2. グローバルデータを取得
-                const globalData = masters.filter(m => m.organization_id === null);
+                    if (error) throw error
 
-                // 3. 自社専用データで既に存在するlabelを記録 (valueではなくlabelで判定)
-                const orgSpecificLabels = new Set(orgSpecific.map(m => m.label));
+                    // フィルタリング: 自社専用データを優先、なければグローバルデータを使用
+                    // 1. まず自社専用のデータを取得
+                    const orgSpecific = masters.filter(m => m.organization_id === currentUser.organization_id);
 
-                // 4. グローバルデータから、自社専用データと重複しないものだけを取得
-                const nonDuplicateGlobal = globalData.filter(m => !orgSpecificLabels.has(m.label));
+                    // 2. グローバルデータを取得
+                    const globalData = masters.filter(m => m.organization_id === null);
 
-                // 5. 自社専用データとグローバルデータを結合
-                let validMasters = [...orgSpecific, ...nonDuplicateGlobal];
+                    // 3. 自社専用データで既に存在するlabelを記録 (valueではなくlabelで判定)
+                    const orgSpecificLabels = new Set(orgSpecific.map(m => m.label));
+
+                    // 4. グローバルデータから、自社専用データと重複しないものだけを取得
+                    const nonDuplicateGlobal = globalData.filter(m => !orgSpecificLabels.has(m.label));
+
+                    // 5. 自社専用データとグローバルデータを結合
+                    validMasters = [...orgSpecific, ...nonDuplicateGlobal];
+
+                    // キャッシュを更新
+                    masterDataCache.employmentTypes = validMasters;
+                    if (!masterDataCache.lastUpdated) {
+                        masterDataCache.lastUpdated = Date.now();
+                    }
+                }
 
                 console.log('Employment types after filtering:', validMasters.map(m => `${m.label} (org: ${m.organization_id ? 'custom' : 'global'}, value: ${m.value})`));
 
