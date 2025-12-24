@@ -11884,7 +11884,18 @@
                         $(this).select2('destroy');
                     }
                 });
-                $('.select2').select2({
+
+                // 管理者用フォームのSelect2は特別な設定が必要
+                $('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').select2({
+                    language: "ja",
+                    width: '100%',
+                    closeOnSelect: false,
+                    allowClear: true,
+                    placeholder: '選択してください'
+                });
+
+                // その他のSelect2は標準設定
+                $('.select2').not('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').select2({
                     language: "ja",
                     width: 'resolve'
                 });
@@ -12951,39 +12962,8 @@
                     console.log('Loading master data for user:', user);
                     await loadMasterDataForProfile(user);
 
-                    // Select2設定（複数選択時の挙動改善）
-                    // loadMasterDataForProfileで既に値がセットされているので、値を保持したまま再初期化
-                    setTimeout(() => {
-                        // 現在の値を保存
-                        const currentJobType = $('#admin-user-job-type').val();
-                        const currentIndustry = $('#admin-user-industry').val();
-                        const currentEmploymentType = $('#admin-user-employment-type').val();
-                        const currentPrefecture = $('#admin-user-prefecture').val();
-
-                        console.log('Preserving values before Select2 re-init:', {
-                            jobType: currentJobType,
-                            industry: currentIndustry,
-                            employmentType: currentEmploymentType,
-                            prefecture: currentPrefecture
-                        });
-
-                        // Select2を再初期化（設定を上書き）
-                        $('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').select2({
-                            width: '100%',
-                            closeOnSelect: false,
-                            allowClear: true,
-                            placeholder: '選択してください',
-                            language: 'ja'
-                        });
-
-                        // 値を復元
-                        if (currentJobType) $('#admin-user-job-type').val(currentJobType).trigger('change');
-                        if (currentIndustry) $('#admin-user-industry').val(currentIndustry).trigger('change');
-                        if (currentEmploymentType) $('#admin-user-employment-type').val(currentEmploymentType).trigger('change');
-                        if (currentPrefecture) $('#admin-user-prefecture').val(currentPrefecture).trigger('change');
-
-                        console.log('Values restored after Select2 re-init');
-                    }, 100);
+                    // loadMasterDataForProfile内で既にSelect2の初期化と値のセットが完了している
+                    console.log('Master data loaded and values set successfully');
                 } catch (err) {
                     console.error('Failed to load master data:', err);
                     // エラーが出てもフォームは開くようにする（ただし値はセットされない可能性がある）
