@@ -12934,10 +12934,20 @@
                 return;
             }
 
+            console.log('Fetched userData:', userData);
+            console.log('candidate_profiles:', userData.candidate_profiles);
+
             // フラット化
             const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
             const user = { ...userData, ...profile };
             user.id = userData.id; // ID確保
+
+            console.log('Merged user object:', {
+                desired_job_type: user.desired_job_type,
+                desired_industry: user.desired_industry,
+                desired_employment_type: user.desired_employment_type,
+                desired_location: user.desired_location
+            });
 
             // 権限チェック: コーチ/CAは担当求職者のみ編集可能
             if (['coach', 'ca'].includes(currentUser.role)) {
