@@ -12952,7 +12952,22 @@
                     await loadMasterDataForProfile(user);
 
                     // Select2設定（複数選択時の挙動改善）
+                    // loadMasterDataForProfileで既に値がセットされているので、値を保持したまま再初期化
                     setTimeout(() => {
+                        // 現在の値を保存
+                        const currentJobType = $('#admin-user-job-type').val();
+                        const currentIndustry = $('#admin-user-industry').val();
+                        const currentEmploymentType = $('#admin-user-employment-type').val();
+                        const currentPrefecture = $('#admin-user-prefecture').val();
+
+                        console.log('Preserving values before Select2 re-init:', {
+                            jobType: currentJobType,
+                            industry: currentIndustry,
+                            employmentType: currentEmploymentType,
+                            prefecture: currentPrefecture
+                        });
+
+                        // Select2を再初期化（設定を上書き）
                         $('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').select2({
                             width: '100%',
                             closeOnSelect: false,
@@ -12960,6 +12975,14 @@
                             placeholder: '選択してください',
                             language: 'ja'
                         });
+
+                        // 値を復元
+                        if (currentJobType) $('#admin-user-job-type').val(currentJobType).trigger('change');
+                        if (currentIndustry) $('#admin-user-industry').val(currentIndustry).trigger('change');
+                        if (currentEmploymentType) $('#admin-user-employment-type').val(currentEmploymentType).trigger('change');
+                        if (currentPrefecture) $('#admin-user-prefecture').val(currentPrefecture).trigger('change');
+
+                        console.log('Values restored after Select2 re-init');
                     }, 100);
                 } catch (err) {
                     console.error('Failed to load master data:', err);
@@ -13021,6 +13044,11 @@
 
         window.closeAdminUserModal = function () {
             console.log('--- closeAdminUserModal Triggered ---');
+            console.trace('closeAdminUserModal called from:');
+
+            // Reset the ready flag
+            isModalReady = false;
+
             $('#admin-user-modal').addClass('hidden').attr('style', 'display: none !important;');
         }
 
@@ -13212,19 +13240,28 @@
 
         // ユーザー保存処理
         $('#admin-user-form').off('submit').on('submit', async function (e) {
+            console.log('=== FORM SUBMIT TRIGGERED ===');
+            console.log('isModalReady:', isModalReady);
+            console.log('Event:', e);
+
             e.preventDefault();
             e.stopPropagation();
 
-            if (!currentUser) return;
+            if (!currentUser) {
+                console.warn('No current user, aborting submit');
+                return;
+            }
 
             // Prevent submission if modal is not fully loaded
             if (!isModalReady) {
-                console.warn('Modal not ready for submission yet');
+                console.warn('Modal not ready for submission yet - BLOCKING SUBMIT');
                 return false;
             }
 
             const userId = $('#admin-user-id').val();
             const role = $('#admin-user-role').val();
+
+            console.log('Proceeding with save - userId:', userId, 'role:', role);
 
             if (!userId) {
                 console.error('No user ID found');
