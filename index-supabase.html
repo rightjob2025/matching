@@ -13237,7 +13237,16 @@
             $('#admin-user-name').val(user.name);
             $('#admin-user-furigana').val(user.furigana || '');
             $('#admin-user-email').val(user.email);
-            $('#admin-user-role').val(user.role);
+
+            // 権限ラベルの更新
+            const $roleSelect = $('#admin-user-role');
+            $roleSelect.find('option[value="org_admin"]').text(getRoleLabel('org_admin'));
+            $roleSelect.find('option[value="admin"]').text(getRoleLabel('admin'));
+            $roleSelect.find('option[value="coach"]').text(getRoleLabel('coach'));
+            $roleSelect.find('option[value="ca"]').text(getRoleLabel('ca'));
+            $roleSelect.find('option[value="candidate"]').text(getRoleLabel('candidate'));
+
+            $roleSelect.val(user.role);
             $('#admin-user-status').val(user.status || 'active');
 
             // 権限変更の制御: 管理者のみ可能
@@ -14399,22 +14408,31 @@
         }
 
         function getRoleLabel(role) {
-            // 組織ごとのカスタマイズ名称を確認
-            let customLabel = null;
-            if (window.currentUser && window.currentUser.organizations && window.currentUser.organizations.settings) {
-                const labels = window.currentUser.organizations.settings.role_labels;
-                if (labels && labels[role]) {
-                    customLabel = labels[role];
-                }
-            }
-
             const roles = {
                 'super_admin': 'スーパー管理者',
                 'org_admin': '組織管理者',
                 'admin': '管理者',
                 'coach': 'CA・RA',
+                'ca': 'CA',
+                'ra': 'RA',
                 'candidate': '求職者'
             };
+
+            // 組織ごとのカスタマイズ名称を確認
+            let customLabel = null;
+            if (window.currentUser && window.currentUser.organizations && window.currentUser.organizations.settings) {
+                const labels = window.currentUser.organizations.settings.role_labels || {};
+
+                // 特定のロールが設定されているか
+                if (labels && labels[role]) {
+                    customLabel = labels[role];
+                }
+                // ca, ra の場合は coach の設定を流用する（個別に設定されていなければ）
+                else if ((role === 'ca' || role === 'ra') && labels && labels['coach']) {
+                    customLabel = labels['coach'] + (role === 'ca' ? ' (CA)' : ' (RA)');
+                }
+            }
+
             return customLabel || roles[role] || role;
         }
 
@@ -14499,6 +14517,15 @@
             } else {
                 $('#user-reg-title').text('新規ユーザー登録');
                 $('#reg-role').val('');
+
+                // 権限ラベルの更新
+                const $regRoleSelect = $('#reg-role-select');
+                $regRoleSelect.empty();
+                $regRoleSelect.append(`<option value="admin">${getRoleLabel('admin')}</option>`);
+                $regRoleSelect.append(`<option value="coach">${getRoleLabel('coach')}</option>`);
+                $regRoleSelect.append(`<option value="ca">${getRoleLabel('ca')}</option>`);
+                $regRoleSelect.append(`<option value="org_admin">${getRoleLabel('org_admin')}</option>`);
+
                 $('#reg-role-section').removeClass('hidden');
                 $('#reg-candidate-fields').addClass('hidden');
             }
