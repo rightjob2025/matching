@@ -673,7 +673,7 @@
             </div>
 
             <nav class="px-4 space-y-2 flex-1 overflow-y-auto">
-                <a href="#" data-page="dashboard"
+                <a href="#" id="nav-dashboard" data-page="dashboard"
                     class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
                     <i class="fas fa-home w-5"></i>
                     <span class="ml-3">ダッシュボード</span>
@@ -5201,8 +5201,25 @@
                     $('#ai-scout-link').addClass('hidden')
                 }
 
-                // ダッシュボードに移動
-                await loadDashboard()
+                // ダッシュボードメニューの表示制御（求職者は非表示）
+                if (userData.role === 'candidate') {
+                    $('#nav-dashboard').addClass('hidden')
+                } else {
+                    $('#nav-dashboard').removeClass('hidden')
+                }
+
+                // ログイン後の初期画面を設定
+                if (userData.role === 'candidate') {
+                    // 求職者の場合は求人検索画面を表示
+                    await loadJobs()
+                    showAppContent('jobs-content')
+                    $('.nav-link[data-page="jobs"]').addClass('bg-indigo-50 text-indigo-600')
+                } else {
+                    // その他のユーザーはダッシュボードを表示
+                    await loadDashboard()
+                    $('.nav-link[data-page="dashboard"]').addClass('bg-indigo-50 text-indigo-600')
+                }
+
                 loadNotifications()
                 showPage('app-page')
 
