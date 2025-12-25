@@ -13224,8 +13224,8 @@
                 desired_location: user.desired_location
             });
 
-            // 権限チェック: コーチ/CAは担当求職者のみ編集可能
-            if (['coach', 'ca'].includes(currentUser.role)) {
+            // 権限チェック: コーチ/CA/RAは担当求職者のみ編集可能
+            if (['coach', 'ca', 'ra'].includes(currentUser.role)) {
                 if (user.role !== 'candidate' || user.coach_id !== currentUser.id) {
                     alert('このユーザーを編集する権限がありません');
                     return;
@@ -16355,7 +16355,7 @@
 
         function updateMenuVisibility(role) {
             const adminRoles = ['org_admin', 'admin', 'super_admin'];
-            const staffRoles = [...adminRoles, 'coach', 'ca', 'ra'];
+            const staffRoles = ['org_admin', 'admin', 'coach', 'ca', 'ra', 'super_admin'];
 
             if (adminRoles.includes(role)) $('#admin-menu').removeClass('hidden');
             else $('#admin-menu').addClass('hidden');
@@ -16363,11 +16363,13 @@
             if (role === 'super_admin') $('#super-admin-menu').removeClass('hidden');
             else $('#super-admin-menu').addClass('hidden');
 
-            if (role === 'coach') $('#coach-menu').removeClass('hidden');
-            else $('#coach-menu').addClass('hidden');
-
-            if (staffRoles.includes(role)) $('#ai-scout-link').removeClass('hidden');
-            else $('#ai-scout-link').addClass('hidden');
+            if (staffRoles.includes(role)) {
+                $('#coach-menu').removeClass('hidden');
+                $('#ai-scout-link').removeClass('hidden');
+            } else {
+                $('#coach-menu').addClass('hidden');
+                $('#ai-scout-link').addClass('hidden');
+            }
 
             if (role === 'candidate') $('#nav-dashboard').addClass('hidden');
             else $('#nav-dashboard').removeClass('hidden');
