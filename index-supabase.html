@@ -9156,6 +9156,14 @@
                     .eq('role', 'candidate')
                     .eq('organization_id', currentUser.organization_id);
 
+                // エージェント閲覧制限が有効な場合、スタッフ権限なら自分の担当のみに絞り込む
+                const isStaff = ['coach', 'ca', 'ra'].includes(currentUser.role);
+                const limitView = currentUser.organizations && currentUser.organizations.settings && currentUser.organizations.settings.limit_agent_view === true;
+                if (isStaff && limitView) {
+                    console.log('Search restricted to assigned candidates only');
+                    query = query.eq('coach_id', currentUser.id);
+                }
+
                 const { data: users, error } = await query;
                 if (error) throw error;
 
@@ -12493,11 +12501,15 @@
             showLoading()
             try {
                 // 担当ユーザーを取得
-                const { data: users } = await supabase
+                let studentQuery = supabase
                     .from('users')
                     .select('*')
                     .eq('coach_id', currentUser.id)
-                    .order('created_at', { ascending: false })
+                    .eq('organization_id', currentUser.organization_id)
+                    .order('created_at', { ascending: false });
+
+                const { data: users, error } = await studentQuery;
+                if (error) throw error;
 
                 renderCoachStudents(users || [])
             } catch (error) {
