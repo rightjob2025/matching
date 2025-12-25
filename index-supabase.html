@@ -663,11 +663,10 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- 組織設定 -->
                 <div class="border-t pt-4 mt-4">
-                    <h4 class="text-sm font-bold text-gray-700 mb-2">セキュリティ設定</h4>
-                    <div class="space-y-2">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">組織・セキュリティ設定</h4>
+                    <div class="space-y-2 mb-4">
                         <label class="flex items-center">
                             <input type="checkbox" id="org-setting-email-required"
                                 class="form-checkbox h-4 w-4 text-indigo-600">
@@ -684,6 +683,31 @@
                             <span class="ml-2 text-sm text-gray-700">エージェント閲覧制限(担当求職者のみ表示)</span>
                         </label>
                     </div>
+
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">役割の表示名称設定</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">組織管理者</label>
+                            <input type="text" id="org-role-label-org_admin" placeholder="組織管理者"
+                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">管理者</label>
+                            <input type="text" id="org-role-label-admin" placeholder="管理者"
+                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">CA・RA (スタッフ)</label>
+                            <input type="text" id="org-role-label-coach" placeholder="CA・RA"
+                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">求職者</label>
+                            <input type="text" id="org-role-label-candidate" placeholder="求職者"
+                                class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">※未入力の場合はデフォルト名称が使用されます</p>
                 </div>
 
                 <div class="flex justify-end pt-4 gap-3">
@@ -13150,12 +13174,12 @@
         let adminCoachesCache = [];
 
         async function loadAdminCoaches() {
-            // コーチとCAを取得
+            // コーチ、CA、RAに加えて管理者も担当者として取得可能にする
             const { data: coaches } = await supabase
                 .from('users')
                 .select('id, name, role, status')
                 .eq('organization_id', currentUser.organization_id)
-                .in('role', ['coach', 'ca']);
+                .in('role', ['coach', 'ca', 'ra', 'admin', 'org_admin']);
             // 停止中ユーザーを除外
             adminCoachesCache = (coaches || []).filter(u => u.status !== 'suspended');
         }
@@ -13234,7 +13258,7 @@
                 coachSelect.empty();
                 coachSelect.append('<option value="">未設定</option>');
                 adminCoachesCache.forEach(c => {
-                    const roleLabel = c.role === 'ca' ? '(CA)' : '(CA・RA)';
+                    const roleLabel = `(${getRoleLabel(c.role)})`;
                     coachSelect.append(`<option value="${c.id}">${c.name} ${roleLabel}</option>`);
                 });
                 if (user.coach_id) {
@@ -14375,6 +14399,15 @@
         }
 
         function getRoleLabel(role) {
+            // 組織ごとのカスタマイズ名称を確認
+            let customLabel = null;
+            if (window.currentUser && window.currentUser.organizations && window.currentUser.organizations.settings) {
+                const labels = window.currentUser.organizations.settings.role_labels;
+                if (labels && labels[role]) {
+                    customLabel = labels[role];
+                }
+            }
+
             const roles = {
                 'super_admin': 'スーパー管理者',
                 'org_admin': '組織管理者',
@@ -14382,7 +14415,7 @@
                 'coach': 'CA・RA',
                 'candidate': '求職者'
             };
-            return roles[role] || role;
+            return customLabel || roles[role] || role;
         }
 
         function getRoleBadgeColor(role) {
@@ -16466,6 +16499,13 @@
                         $('#org-setting-email-required').prop('checked', settings.candidate_email_required !== false); // デフォルトtrue
                         $('#org-setting-password-required').prop('checked', settings.candidate_password_required !== false); // デフォルトtrue
                         $('#org-setting-limit-agent-view').prop('checked', settings.limit_agent_view === true); // デフォルトfalse
+
+                        // ロール名称の読み込み
+                        const roleLabels = settings.role_labels || {};
+                        $('#org-role-label-org_admin').val(roleLabels.org_admin || '');
+                        $('#org-role-label-admin').val(roleLabels.admin || '');
+                        $('#org-role-label-coach').val(roleLabels.coach || '');
+                        $('#org-role-label-candidate').val(roleLabels.candidate || '');
                     } else {
                         console.warn(`Organization with ID ${orgId} not found in cache.`);
                     }
@@ -16543,7 +16583,13 @@
                 ...currentSettings,
                 candidate_email_required: $('#org-setting-email-required').is(':checked'),
                 candidate_password_required: $('#org-setting-password-required').is(':checked'),
-                limit_agent_view: $('#org-setting-limit-agent-view').is(':checked')
+                limit_agent_view: $('#org-setting-limit-agent-view').is(':checked'),
+                role_labels: {
+                    org_admin: $('#org-role-label-org_admin').val().trim() || null,
+                    admin: $('#org-role-label-admin').val().trim() || null,
+                    coach: $('#org-role-label-coach').val().trim() || null,
+                    candidate: $('#org-role-label-candidate').val().trim() || null
+                }
             };
 
             // 初期管理者情報（新規作成時のみ）
