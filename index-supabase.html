@@ -5449,20 +5449,18 @@
                     if (insertError) {
                         // 既にユーザーレコードが存在する場合（メールアドレス重複など）
                         if (insertError.code === '23505') {
-                            console.log('Conflict detected. Attempting to fetch correct user ID via RPC...');
+                            console.log('User already exists in DB. Resolving ID and linking to this org...');
 
-                            // セキュリティ定義関数(RPC)経由で既存ユーザーのIDを取得（RLSの影響を受けない）
                             const { data: finalUserId, error: rpcError } = await supabase
                                 .rpc('get_user_id_by_email', { target_email: email });
 
                             if (rpcError || !finalUserId) {
                                 console.error('Failed to resolve existing user via RPC:', rpcError);
-                                throw new Error('既存ユーザーの特定に失敗しました。管理者に連絡してください。');
+                                throw new Error('既存のアカウント情報を取得できませんでした。');
                             }
 
-                            console.log('Existing user resolved ID:', finalUserId);
+                            console.log('Target User ID resolved:', finalUserId);
 
-                            // 既存ユーザーを当該組織のメンバーとして追加
                             const { error: memberError } = await supabase
                                 .from('organization_members')
                                 .insert({
@@ -5471,13 +5469,19 @@
                                     role: role
                                 });
 
-                            if (memberError && memberError.code !== '23505') {
-                                console.error('Failed to add user to organization members:', memberError);
-                                throw new Error('組織への加入に失敗しました: ' + memberError.message);
+                            if (memberError) {
+                                if (memberError.code === '23505') {
+                                    console.log('User is already a member of this organization.');
+                                } else {
+                                    console.error('Failed to add existing user to members:', memberError);
+                                    throw new Error('組織への加入に失敗しました: ' + memberError.message);
+                                }
+                            } else {
+                                console.log('Successfully added existing user to organization_members.');
                             }
                         } else {
-                            console.error('User DB insert error:', insertError);
-                            throw new Error('ユーザーデータの作成に失敗しました: ' + insertError.message);
+                            console.error('Unexpected DB insert error:', insertError);
+                            throw new Error('ユーザー情報の保存中にエラーが発生しました: ' + insertError.message);
                         }
                     }
                     else {
@@ -16197,12 +16201,14 @@
             if (!currentUser) return;
             showLoading('所属組織を取得中...');
             try {
+                // user_idだけでなく、念のためメールアドレスが一致する全所属を取得
+                // ※ organization_members に email カラムはないため、usersテーブルを経由して取得
                 const { data: memberships, error } = await supabase
                     .from('organization_members')
-                    .select('organization_id, role, organizations(name, code)')
-                    .eq('user_id', currentUser.id);
+                    .select('organization_id, role, organizations(name, code), users!inner(email)')
+                    .eq('users.email', currentUser.email);
 
-                console.log('Switch Modal Debug: Memberships result:', memberships);
+                console.log('Switch Modal Debug: All memberships for email', currentUser.email, ':', memberships);
 
                 if (error) {
                     console.error('Switch Modal Debug: Error fetching memberships:', error);
