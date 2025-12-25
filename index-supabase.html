@@ -5018,7 +5018,8 @@
                 'admin-master-content',
                 'admin-settings-content',
                 'admin-templates-content',
-                'super-admin-organizations-content'
+                'super-admin-organizations-content',
+                'coach-students-content'
             ];
 
             // 管理者系ページの場合はヘッダーを隠し、要素を最上部に移動
@@ -5090,6 +5091,12 @@
                             // 企業管理は初回のみロード
                             if (typeof loadCompanies === 'function') {
                                 await loadCompanies();
+                            }
+                            break;
+
+                        case 'coach-students-content':
+                            if (typeof loadCoachStudents === 'function') {
+                                await loadCoachStudents();
                             }
                             break;
 
@@ -12537,6 +12544,10 @@
         function renderCoachStudents(users) {
             console.log('renderCoachStudents START', users);
             const container = $('#coach-students-container')
+            if (container.length === 0) {
+                console.error('Error: #coach-students-container not found');
+                return;
+            }
             container.empty()
 
             if (!users || users.length === 0) {
