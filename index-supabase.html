@@ -5447,28 +5447,43 @@
                         });
 
                     if (insertError) {
-                        // 既にユーザーレコードが存在する場合（別組織ですでに登録済みの場合）
+                        // 既にユーザーレコードが存在する場合（メールアドレス重複など）
                         if (insertError.code === '23505') {
-                            console.log('User record already exists, adding to organization_members for this org.');
+                            console.log('Conflict detected. Attempting to fetch correct user ID from DB...');
+
+                            // DBから既存のユーザー情報をメールアドレスで検索し、正しいIDを取得する
+                            const { data: existingUser, error: fetchError } = await supabase
+                                .from('users')
+                                .select('id')
+                                .eq('email', email)
+                                .maybeSingle();
+
+                            if (fetchError || !existingUser) {
+                                console.error('Failed to resolve existing user:', fetchError);
+                                throw new Error('既存ユーザーの特定に失敗しました。管理者に連絡してください。');
+                            }
+
+                            const finalUserId = existingUser.id;
 
                             // 既存ユーザーを当該組織のメンバーとして追加
                             const { error: memberError } = await supabase
                                 .from('organization_members')
                                 .insert({
                                     organization_id: organizationId,
-                                    user_id: authData.user.id,
+                                    user_id: finalUserId,
                                     role: role
                                 });
 
                             if (memberError && memberError.code !== '23505') {
-                                console.error('Failed to add existing user to organization:', memberError);
+                                console.error('Failed to add user to organization members:', memberError);
                                 throw new Error('組織への加入に失敗しました: ' + memberError.message);
                             }
                         } else {
                             console.error('User DB insert error:', insertError);
                             throw new Error('ユーザーデータの作成に失敗しました: ' + insertError.message);
                         }
-                    } else {
+                    }
+                    else {
                         // 新しくユーザーレコードが作成された場合、トリガーが自動的に members に入れるか、
                         // または手動で（トリガーがない環境の場合）追加を確認
                         console.log('New user record created successfully.');
