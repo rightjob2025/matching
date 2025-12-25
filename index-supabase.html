@@ -12497,7 +12497,15 @@
         let adminJobsCache = [];
 
         async function loadCoachStudents() {
-            if (!currentUser) return
+            if (!currentUser) {
+                console.warn('loadCoachStudents: currentUser is null');
+                return;
+            }
+            console.log('loadCoachStudents START', {
+                userId: currentUser.id,
+                role: currentUser.role,
+                orgId: currentUser.organization_id
+            });
             showLoading()
             try {
                 // 担当ユーザーを取得
@@ -12508,23 +12516,31 @@
                     .eq('organization_id', currentUser.organization_id)
                     .order('created_at', { ascending: false });
 
+                console.log('Executing studentQuery...');
                 const { data: users, error } = await studentQuery;
-                if (error) throw error;
 
+                if (error) {
+                    console.error('studentQuery error:', error);
+                    throw error;
+                }
+
+                console.log(`Loaded ${users ? users.length : 0} assigned students`);
                 renderCoachStudents(users || [])
             } catch (error) {
                 console.error('Load students error:', error)
-                alert('担当ユーザーの読み込みに失敗しました')
+                alert('担当ユーザーの読み込みに失敗しました: ' + (error.message || error));
             } finally {
                 hideLoading()
             }
         }
 
         function renderCoachStudents(users) {
+            console.log('renderCoachStudents START', users);
             const container = $('#coach-students-container')
             container.empty()
 
-            if (users.length === 0) {
+            if (!users || users.length === 0) {
+                console.log('No assigned students to render');
                 container.html('<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">担当ユーザーがいません</td></tr>')
                 return
             }
@@ -12532,15 +12548,15 @@
             const html = users.map(u => `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${u.name}</div>
-                        <div class="text-sm text-gray-500">${u.email}</div>
+                        <div class="text-sm font-medium text-gray-900">${u.name || '名前なし'}</div>
+                        <div class="text-sm text-gray-500">${u.email || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <!-- ここに進捗状況（応募数など）を表示できると良い -->
                         -
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${new Date(u.created_at).toLocaleDateString()}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button onclick="showAdminUserModal('${u.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
@@ -12551,6 +12567,7 @@
             `).join('')
 
             container.html(html)
+            console.log('renderCoachStudents DONE');
         }
 
         // ========================
@@ -16348,6 +16365,7 @@
                 $('#org-name').text(orgName);
 
                 // メニューの再構築（役割に応じて表示/非表示）
+                loadedPages.clear(); // キャッシュをクリア
                 updateMenuVisibility(role);
 
                 // 4. ダッシュボードへ戻る
@@ -18801,6 +18819,7 @@
                             if (data) {
                                 currentUser = data
                                 window.currentUser = data;
+                                console.log('Session restored for:', currentUser.name, 'Role:', currentUser.role);
 
                                 // スーパー管理者の場合、組織切り替えロジックを適用
                                 if (currentUser.role === 'super_admin') {
@@ -18824,56 +18843,15 @@
                                     initOrgSwitcher();
                                 }
 
-                                // 管理者メニューの表示制御
-                                if (currentUser.role === 'org_admin' || currentUser.role === 'admin' || currentUser.role === 'super_admin') {
-                                    $('#admin-menu').removeClass('hidden')
-                                } else {
-                                    $('#admin-menu').addClass('hidden')
-                                }
+                                // UI反映
+                                $('#user-name').text(currentUser.name);
+                                $('#user-role').text(getRoleLabel(currentUser.role));
+                                $('#org-name').text(currentUser.organizations ? currentUser.organizations.name : '');
 
-                                // コーチメニューの表示制御
-                                if (currentUser.role === 'coach' || currentUser.role === 'ca') {
-                                    $('#coach-menu').removeClass('hidden')
-                                } else {
-                                    $('#coach-menu').addClass('hidden')
-                                }
+                                // メニュー表示の更新
+                                updateMenuVisibility(currentUser.role);
 
-                                // スーパー管理者メニューの表示制御
-                                if (currentUser.role === 'super_admin') {
-                                    $('#super-admin-menu').removeClass('hidden')
-                                } else {
-                                    $('#super-admin-menu').addClass('hidden')
-                                }
-
-                                // 外部プロフィール解析メニューの制御（求職者には非表示）
-                                const isAgent = ['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role);
-                                if (isAgent) {
-                                    $('#ai-scout-link').removeClass('hidden');
-                                } else {
-                                    $('#ai-scout-link').addClass('hidden');
-                                }
-
-                                // 求職者検索メニューの制御（求職者には非表示）
-                                if (currentUser.role === 'candidate') {
-                                    $('#nav-candidate-search').addClass('hidden');
-                                    $('#profile-search-btn').removeClass('hidden'); // プロフィール検索ボタン表示
-                                } else {
-                                    $('#nav-candidate-search').removeClass('hidden');
-                                    $('#profile-search-btn').addClass('hidden');
-                                }
-
-                                // サイドバーのユーザー情報を更新
-                                $('#user-name').text(currentUser.name)
-                                $('#user-role').text(getRoleLabel(currentUser.role))
-                                $('#org-name').text(currentUser.organizations?.name || '')
-
-
-                                // ダッシュボードメニューの表示制御（求職者は非表示）
-                                if (currentUser.role === 'candidate') {
-                                    $('#nav-dashboard').addClass('hidden');
-                                } else {
-                                    $('#nav-dashboard').removeClass('hidden');
-                                }
+                                // ダッシュボードへ
 
                                 // loadDashboardの呼び出しをロールで分岐
                                 if (currentUser.role === 'candidate') {
