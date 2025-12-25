@@ -616,10 +616,25 @@
             <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
                 <div class="text-center mb-8">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">新規登録</h1>
-                    <p class="text-gray-600">招待リンクから登録してください</p>
+                    <p class="text-gray-600">組織コードを入力して登録してください</p>
                 </div>
 
                 <form id="signup-form" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">組織コード <span
+                                class="text-xs text-gray-500 font-normal">（担当者から配布されたコード）</span></label>
+                        <div class="flex gap-2">
+                            <input type="text" id="signup-org-code" required placeholder="例: A1B2C3D4"
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase">
+                            <button type="button" id="check-org-code"
+                                class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm font-medium whitespace-nowrap">
+                                確認
+                            </button>
+                        </div>
+                        <p id="org-name-display" class="mt-2 text-sm text-green-600 font-bold hidden"></p>
+                        <p id="org-code-error" class="mt-1 text-sm text-red-500 hidden"></p>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">お名前</label>
                         <input type="text" id="signup-name" required
@@ -5240,81 +5255,104 @@
             }
         }
 
-        async function signup(name, furigana, email, password, invitationToken) {
+        async function signup(name, furigana, email, password, invitationToken, orgCode) {
             showLoading()
             hideError('signup-error')
 
             try {
-                // 招待トークンの検証 (RPCを使用)
-                const { data: invitation, error: invError } = await supabase
-                    .rpc('get_invitation_by_token', { token_input: invitationToken })
-                    .single()
+                let organizationId = null;
+                let role = 'user'; // Default role
+                let invitationId = null;
 
-                if (invError || !invitation) {
-                    throw new Error('無効な招待リンクです')
+                // 1. 招待トークンがある場合の検証
+                if (invitationToken) {
+                    const { data: invitation, error: invError } = await supabase
+                        .rpc('get_invitation_by_token', { token_input: invitationToken })
+                        .single()
+
+                    if (invError || !invitation) {
+                        throw new Error('無効な招待リンクです')
+                    }
+                    if (new Date(invitation.expires_at) < new Date()) {
+                        throw new Error('招待リンクの有効期限が切れています')
+                    }
+                    if (invitation.accepted_at) {
+                        throw new Error('この招待リンクは既に使用されています')
+                    }
+                    organizationId = invitation.organization_id;
+                    role = invitation.role;
+                    invitationId = invitation.id;
+                }
+                // 2. 組織コードがある場合の検証
+                else if (orgCode) {
+                    const { data: orgData, error: orgError } = await supabase
+                        .rpc('get_organization_name_by_code', { org_code: orgCode })
+
+                    if (orgError || !orgData || orgData.length === 0) {
+                        throw new Error('無効な組織コードです');
+                    }
+                    organizationId = orgData[0].id;
+                    // role はデフォルトで 'user'
+                } else {
+                    throw new Error('招待リンクまたは組織コードが必要です');
                 }
 
-                if (new Date(invitation.expires_at) < new Date()) {
-                    throw new Error('招待リンクの有効期限が切れています')
-                }
+                console.log('Attempting signup with:', { email, name, organizationId, role })
 
-                if (invitation.accepted_at) {
-                    throw new Error('この招待リンクは既に使用されています')
-                }
-
-                console.log('Attempting signup with:', { email, name })
-
-                // ユーザー登録（Edge Function経由でAuthユーザー作成とDB登録を一括で行う）
-                // email_confirm: true で作成されるため、メール確認は不要
-                const { data: resultData, error: createError } = await supabase.functions.invoke('create-user', {
-                    body: {
-                        email: email,
-                        password: password,
-                        name: name,
-                        furigana: furigana,
-                        organizationId: invitation.organization_id,
-                        role: invitation.role
+                // 3. Supabase Authでサインアップ
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            name: name,
+                            // メタデータとして保存しておくが、実際の所属はusers/organization_membersテーブルで管理
+                            organization_id: organizationId
+                        }
                     }
                 });
 
-                if (createError || (resultData && !resultData.success)) {
-                    console.error('User creation error:', createError || resultData?.error);
-                    throw new Error('ユーザー情報の登録に失敗しました: ' + (createError?.message || resultData?.error));
-                }
+                if (authError) throw authError;
 
-                console.log('User created successfully via Edge Function');
+                if (authData.user) {
+                    console.log('Auth user created:', authData.user.id);
 
-                // 自動的にログイン
-                const { error: loginError } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+                    // 4. Usersテーブルにレコード作成
+                    // NOTE: RLSにより、自分自身のIDでのみINSERT可能
+                    // トリガーで organization_members への同期も行われる
+                    const { error: insertError } = await supabase
+                        .from('users')
+                        .insert({
+                            id: authData.user.id,
+                            email: email,
+                            name: name,
+                            furigana: furigana,
+                            role: role,
+                            organization_id: organizationId, // レガシー互換 & トリガー用
+                            is_active: true
+                        });
 
-                if (loginError) {
-                    console.error('Auto login failed:', loginError);
-                    alert('登録は完了しましたが、自動ログインに失敗しました。手動でログインしてください。');
+                    if (insertError) {
+                        console.error('User DB insert error:', insertError);
+                        // Authユーザーは作成できているがDB作成に失敗した場合のハンドリング
+                        // 重複エラー等の可能性あり
+                        throw new Error('ユーザーデータの作成に失敗しました: ' + insertError.message);
+                    }
+
+                    // 5. 招待コードを使用した場合は使用済みに更新
+                    if (invitationId) {
+                        await supabase
+                            .from('invitations')
+                            .update({ accepted_at: new Date().toISOString() })
+                            .eq('id', invitationId);
+                    }
+
+                    alert('登録が完了しました。ログインしてください。');
                     showPage('login-page');
                 } else {
-                    // 招待を承認済みにマーク
-                    await supabase
-                        .from('invitations')
-                        .update({ accepted_at: new Date().toISOString() })
-                        .eq('id', invitation.id);
-
-                    alert('登録が完了しました。');
-                    // ログイン後の初期化処理は onAuthStateChange で行われるはず
+                    // メール確認待ち等のケース
+                    alert('確認メールが送信されました。メール内のリンクをクリックして登録を完了してください。');
                 }
-
-                console.log('User record created successfully');
-
-                // 招待を承認済みにマーク
-                await supabase
-                    .from('invitations')
-                    .update({ accepted_at: new Date().toISOString() })
-                    .eq('id', invitation.id)
-
-                alert('登録が完了しました。ログインしてください。')
-                showPage('login-page')
 
             } catch (error) {
                 console.error('Signup error:', error)
@@ -5323,6 +5361,7 @@
                 hideLoading()
             }
         }
+
 
         async function logout() {
             showLoading()
@@ -18042,6 +18081,40 @@
 
         $(document).ready(function () {
 
+            // Organization Code Validation
+            $('#check-org-code').on('click', async function () {
+                const code = $('#signup-org-code').val().trim();
+                const errorEl = $('#org-code-error');
+                const nameEl = $('#org-name-display');
+                const inputEl = $('#signup-org-code');
+
+                if (!code) {
+                    errorEl.text('コードを入力してください').removeClass('hidden');
+                    nameEl.addClass('hidden');
+                    inputEl.removeClass('border-green-500 bg-green-50');
+                    return;
+                }
+
+                try {
+                    errorEl.addClass('hidden');
+                    const { data, error } = await supabase.rpc('get_organization_name_by_code', { org_code: code });
+
+                    if (error) throw error;
+
+                    if (data && data.length > 0) {
+                        nameEl.text(`参加組織: ${data[0].name}`).removeClass('hidden');
+                        inputEl.addClass('border-green-500 bg-green-50');
+                    } else {
+                        errorEl.text('無効な組織コードです').removeClass('hidden');
+                        nameEl.addClass('hidden');
+                        inputEl.removeClass('border-green-500 bg-green-50');
+                    }
+                } catch (err) {
+                    console.error('Check Error:', err);
+                    errorEl.text('確認中にエラーが発生しました').removeClass('hidden');
+                }
+            });
+
             // ログインフォーム
             $('#login-form').on('submit', async function (e) {
                 e.preventDefault()
@@ -18058,8 +18131,10 @@
                 const email = $('#signup-email').val().trim()
                 const password = $('#signup-password').val()
                 const token = $('#invitation-token').val()
-                await signup(name, furigana, email, password, token)
+                const orgCode = $('#signup-org-code').val().trim()
+                await signup(name, furigana, email, password, token, orgCode)
             })
+
 
             // ログアウト
             $('#logout-btn').on('click', logout)
