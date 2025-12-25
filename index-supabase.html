@@ -9163,12 +9163,17 @@
                     .eq('role', 'candidate')
                     .eq('organization_id', currentUser.organization_id);
 
-                // エージェント閲覧制限が有効な場合、スタッフ権限なら自分の担当のみに絞り込む
+                // 管理者権限（org_admin, admin, super_admin）は常に全件表示
+                const isAdmin = ['org_admin', 'admin', 'super_admin'].includes(currentUser.role);
                 const isStaff = ['coach', 'ca', 'ra'].includes(currentUser.role);
                 const limitView = currentUser.organizations && currentUser.organizations.settings && (currentUser.organizations.settings.limit_agent_view === true || currentUser.organizations.settings.limit_agent_view === 'true');
-                if (isStaff && limitView) {
-                    console.log('Search restricted to assigned candidates only (Coach ID:', currentUser.id, ')');
+
+                if (!isAdmin && isStaff && limitView) {
+                    console.log('Search restricted to assigned candidates (Staff role)', currentUser.id);
                     query = query.eq('coach_id', currentUser.id);
+                } else if (isAdmin) {
+                    console.log('Search as Admin (Full access to organization)');
+                    // 管理者は特に絞り込みなし（RLSに任せる）
                 }
 
                 const { data: users, error } = await query;
