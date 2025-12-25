@@ -1002,7 +1002,11 @@
                     </div>
                     <div class="ml-3">
                         <p id="user-name" class="text-sm font-medium text-gray-900"></p>
-                        <p id="user-role" class="text-xs text-gray-500"></p>
+                        <p id="user-role" class="text-xs text-gray-400 mb-1"></p>
+                        <button onclick="showOrgSelectModalForSwitch()"
+                            class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
+                            <i class="fas fa-exchange-alt"></i> 組織を切り替える
+                        </button>
                     </div>
                 </div>
                 <button id="logout-btn"
@@ -16180,6 +16184,114 @@
         // ========================
         // Admin: Prompt Settings
         // ========================
+        // ========================
+        // Multi-tenant: Organization Switching
+        // ========================
+        window.showOrgSelectModalForSwitch = async function () {
+            if (!currentUser) return;
+            showLoading('所属組織を取得中...');
+            try {
+                const { data: memberships, error } = await supabase
+                    .from('organization_members')
+                    .select('organization_id, role, organizations(name, code)')
+                    .eq('user_id', currentUser.id);
+
+                if (error) throw error;
+
+                const modal = $('#org-select-modal');
+                const list = $('#org-select-list');
+                list.empty();
+
+                memberships.forEach(m => {
+                    const org = m.organizations;
+                    const isCurrent = m.organization_id === currentUser.organization_id;
+                    const btn = $(`
+                        <button class="w-full text-left px-4 py-3 ${isCurrent ? 'bg-indigo-600 text-white' : 'bg-gray-50 text-gray-900 hover:bg-indigo-50'} border rounded-lg transition items-center flex justify-between group">
+                            <div>
+                                <div class="font-bold">${org.name} ${isCurrent ? '<span class="text-[10px] ml-2 font-normal">(現在選択中)</span>' : ''}</div>
+                                <div class="text-xs ${isCurrent ? 'text-indigo-200' : 'text-gray-500'}">Role: ${m.role}</div>
+                            </div>
+                            <i class="fas fa-chevron-right ${isCurrent ? 'text-white' : 'text-gray-300'}"></i>
+                        </button>
+                    `);
+                    btn.on('click', async (e) => {
+                        e.preventDefault();
+                        if (isCurrent) {
+                            modal.addClass('hidden');
+                            return;
+                        }
+                        await switchOrganization(m.organization_id, m.role, org.name);
+                        modal.addClass('hidden');
+                    });
+                    list.append(btn);
+                });
+
+                hideLoading();
+                modal.removeClass('hidden');
+            } catch (error) {
+                console.error('Fetch memberships error:', error);
+                alert('組織情報の取得に失敗しました');
+                hideLoading();
+            }
+        };
+
+        async function switchOrganization(orgId, role, orgName) {
+            showLoading(`${orgName} に切り替え中...`);
+            try {
+                // 1. ユーザーの現在のデフォルト組織を更新
+                await supabase.from('users').update({
+                    organization_id: orgId,
+                    role: role // 既存ロジック互換のためusersのroleも一応更新（RLSが通る場合のみ）
+                }).eq('id', currentUser.id);
+
+                // 2. グローバル変数を更新
+                currentUser.organization_id = orgId;
+                currentUser.role = role;
+                currentUser.organizations = { name: orgName };
+                window.currentUser = currentUser;
+
+                // 3. UIの表示を初期化
+                $('#user-role').text(getRoleLabel(role));
+                $('#org-name').text(orgName);
+
+                // メニューの再構築（役割に応じて表示/非表示）
+                updateMenuVisibility(role);
+
+                // 4. ダッシュボードへ戻る
+                await loadDashboard();
+                showAppContent('dashboard-content');
+                $('.nav-link').removeClass('bg-indigo-50 text-indigo-600');
+                $('.nav-link[data-page="dashboard"]').addClass('bg-indigo-50 text-indigo-600');
+
+                alert(`${orgName} に切り替えました`);
+            } catch (error) {
+                console.error('Switch organization error:', error);
+                alert('切り替えに失敗しました。ページを再読み込みしてください。');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateMenuVisibility(role) {
+            const adminRoles = ['org_admin', 'admin', 'super_admin'];
+            const staffRoles = [...adminRoles, 'coach', 'ca', 'ra'];
+
+            if (adminRoles.includes(role)) $('#admin-menu').removeClass('hidden');
+            else $('#admin-menu').addClass('hidden');
+
+            if (role === 'super_admin') $('#super-admin-menu').removeClass('hidden');
+            else $('#super-admin-menu').addClass('hidden');
+
+            if (role === 'coach') $('#coach-menu').removeClass('hidden');
+            else $('#coach-menu').addClass('hidden');
+
+            if (staffRoles.includes(role)) $('#ai-scout-link').removeClass('hidden');
+            else $('#ai-scout-link').addClass('hidden');
+
+            if (role === 'candidate') $('#nav-dashboard').addClass('hidden');
+            else $('#nav-dashboard').removeClass('hidden');
+        }
+
         // ========================
         // Super Admin: Organization Management
         // ========================
