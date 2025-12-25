@@ -9158,9 +9158,9 @@
 
                 // エージェント閲覧制限が有効な場合、スタッフ権限なら自分の担当のみに絞り込む
                 const isStaff = ['coach', 'ca', 'ra'].includes(currentUser.role);
-                const limitView = currentUser.organizations && currentUser.organizations.settings && currentUser.organizations.settings.limit_agent_view === true;
+                const limitView = currentUser.organizations && currentUser.organizations.settings && (currentUser.organizations.settings.limit_agent_view === true || currentUser.organizations.settings.limit_agent_view === 'true');
                 if (isStaff && limitView) {
-                    console.log('Search restricted to assigned candidates only');
+                    console.log('Search restricted to assigned candidates only (Coach ID:', currentUser.id, ')');
                     query = query.eq('coach_id', currentUser.id);
                 }
 
@@ -18775,10 +18775,29 @@
                     // セッションがある場合、ユーザー情報を取得してダッシュボードへ
                     supabase
                         .from('users')
-                        .select('*, organizations!fk_users_organization(*)')
+                        .select('*, organizations!fk_users_organization(*), organization_members!inner(role)')
                         .eq('id', session.user.id)
+                        .eq('organization_members.organization_id', session.user.user_metadata.organization_id || null) // 暫定
                         .single()
                         .then(async ({ data }) => {
+                            if (!data) {
+                                // organization_members 込みで再取得（より確実な方法）
+                                const { data: userData } = await supabase
+                                    .from('users')
+                                    .select('*, organizations!fk_users_organization(*)')
+                                    .eq('id', session.user.id)
+                                    .single();
+
+                                const { data: memData } = await supabase
+                                    .from('organization_members')
+                                    .select('role')
+                                    .eq('user_id', session.user.id)
+                                    .eq('organization_id', userData.organization_id)
+                                    .single();
+
+                                data = { ...userData, role: memData ? memData.role : userData.role };
+                            }
+
                             if (data) {
                                 currentUser = data
                                 window.currentUser = data;
