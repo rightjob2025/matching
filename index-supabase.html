@@ -2815,6 +2815,12 @@
                                     </th>
                                 </tr>
                             </thead>
+                            <tbody id="super-admin-organizations-container" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        データを読み込み中...
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -16180,33 +16186,61 @@
         let superAdminOrgsCache = [];
 
         async function loadSuperAdminOrganizations() {
-            if (!currentUser || currentUser.role !== 'super_admin') return;
+            console.log('--- loadSuperAdminOrganizations START ---');
+            if (!currentUser) {
+                console.error('loadSuperAdminOrganizations: currentUser is missing');
+                return;
+            }
+            console.log('Current user role:', currentUser.role);
+            if (currentUser.role !== 'super_admin') {
+                console.warn('loadSuperAdminOrganizations: User is not super_admin');
+                return;
+            }
 
             showLoading();
             try {
-                // 組織一覧を取得（ユーザー数もカウントしたいが、まずはシンプルに組織情報のみ）
+                console.log('Fetching organizations from Supabase...');
                 const { data: orgs, error } = await supabase
                     .from('organizations')
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase fetch error:', error);
+                    throw error;
+                }
 
+                console.log('Orgs fetched:', orgs ? orgs.length : 0);
                 superAdminOrgsCache = orgs || [];
                 renderSuperAdminOrganizations(superAdminOrgsCache);
             } catch (error) {
                 console.error('Load organizations error:', error);
-                $('#super-admin-organizations-container').html('<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">読み込みに失敗しました</td></tr>');
+                const $errContainer = $('#super-admin-organizations-container');
+                if ($errContainer.length) {
+                    $errContainer.html('<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">読み込みに失敗しました: ' + error.message + '</td></tr>');
+                } else {
+                    console.error('Error container NOT FOUND');
+                }
             } finally {
                 hideLoading();
+                console.log('--- loadSuperAdminOrganizations END ---');
             }
         }
 
         function renderSuperAdminOrganizations(orgs) {
+            console.log('renderSuperAdminOrganizations called with', orgs.length, 'orgs');
             const container = $('#super-admin-organizations-container');
+            console.log('Container found:', container.length);
+
+            if (container.length === 0) {
+                console.error('CRITICAL: #super-admin-organizations-container NOT FOUND IN DOM');
+                return;
+            }
+
             container.empty();
 
             if (orgs.length === 0) {
+                console.log('No orgs to display.');
                 container.html('<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">組織がありません</td></tr>');
                 return;
             }
