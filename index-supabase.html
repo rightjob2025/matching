@@ -5178,6 +5178,10 @@
                     .select('organization_id, organizations(name, code, status)')
                     .eq('user_id', userId);
 
+                console.log('Login Debug: User ID', userId);
+                console.log('Login Debug: Memberships found', memberships);
+                if (memError) console.error('Login Debug: Membership Error', memError);
+
                 if (memError) {
                     console.error('Membership fetch error:', memError);
                     throw new Error('所属組織情報の取得に失敗しました');
