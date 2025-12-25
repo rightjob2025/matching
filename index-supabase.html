@@ -5449,21 +5449,18 @@
                     if (insertError) {
                         // 既にユーザーレコードが存在する場合（メールアドレス重複など）
                         if (insertError.code === '23505') {
-                            console.log('Conflict detected. Attempting to fetch correct user ID from DB...');
+                            console.log('Conflict detected. Attempting to fetch correct user ID via RPC...');
 
-                            // DBから既存のユーザー情報をメールアドレスで検索し、正しいIDを取得する
-                            const { data: existingUser, error: fetchError } = await supabase
-                                .from('users')
-                                .select('id')
-                                .eq('email', email)
-                                .maybeSingle();
+                            // セキュリティ定義関数(RPC)経由で既存ユーザーのIDを取得（RLSの影響を受けない）
+                            const { data: finalUserId, error: rpcError } = await supabase
+                                .rpc('get_user_id_by_email', { target_email: email });
 
-                            if (fetchError || !existingUser) {
-                                console.error('Failed to resolve existing user:', fetchError);
+                            if (rpcError || !finalUserId) {
+                                console.error('Failed to resolve existing user via RPC:', rpcError);
                                 throw new Error('既存ユーザーの特定に失敗しました。管理者に連絡してください。');
                             }
 
-                            const finalUserId = existingUser.id;
+                            console.log('Existing user resolved ID:', finalUserId);
 
                             // 既存ユーザーを当該組織のメンバーとして追加
                             const { error: memberError } = await supabase
@@ -16205,7 +16202,16 @@
                     .select('organization_id, role, organizations(name, code)')
                     .eq('user_id', currentUser.id);
 
-                if (error) throw error;
+                console.log('Switch Modal Debug: Memberships result:', memberships);
+
+                if (error) {
+                    console.error('Switch Modal Debug: Error fetching memberships:', error);
+                    throw error;
+                }
+
+                if (!memberships || memberships.length === 0) {
+                    console.warn('Switch Modal Debug: No memberships found for user', currentUser.id);
+                }
 
                 const modal = $('#org-select-modal');
                 const list = $('#org-select-list');
