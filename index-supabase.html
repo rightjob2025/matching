@@ -16298,6 +16298,8 @@
                         $('#org-setting-email-required').prop('checked', settings.candidate_email_required !== false); // デフォルトtrue
                         $('#org-setting-password-required').prop('checked', settings.candidate_password_required !== false); // デフォルトtrue
                         $('#org-setting-limit-agent-view').prop('checked', settings.limit_agent_view === true); // デフォルトfalse
+                    } else {
+                        console.warn(`Organization with ID ${orgId} not found in cache.`);
                     }
                 } else {
                     $('#org-modal-title').text('新規組織作成');
@@ -20051,6 +20053,155 @@
                     <button onclick="sendScoutMessage()"
                         class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center">
                         <i class="fas fa-paper-plane mr-2"></i>送信する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Organization Modal -->
+    <div id="organization-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+        style="z-index: 50;">
+        <div class="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900" id="org-modal-title">組織編集</h3>
+                <button onclick="closeOrganizationModal()"
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="organization-form" class="space-y-4">
+                <input type="hidden" id="org-id">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">組織名 <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="org-name-input" required
+                        class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-50">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">プラン</label>
+                        <select id="org-plan"
+                            class="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="free">Free</option>
+                            <option value="standard">Standard</option>
+                            <option value="premium">Premium</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ステータス</label>
+                        <select id="org-status"
+                            class="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="active">有効</option>
+                            <option value="suspended">停止中</option>
+                            <option value="cancelled">解約済</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">最大ユーザー数</label>
+                        <input type="number" id="org-max-users" min="1"
+                            class="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">有効期限</label>
+                        <input type="date" id="org-valid-until"
+                            class="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- 初期管理者設定（新規作成時のみ表示） -->
+                <div id="org-initial-admin-fields" class="border-t pt-4 mt-4 hidden">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">初期管理者設定</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">管理者名 <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="org-admin-name"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">管理者メール <span
+                                    class="text-red-500">*</span></label>
+                            <input type="email" id="org-admin-email"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">※このアドレスに招待メールが送信されます</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 組織設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">セキュリティ設定</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="org-setting-email-required"
+                                class="form-checkbox h-4 w-4 text-indigo-600">
+                            <span class="ml-2 text-sm text-gray-700">求職者のメールアドレス入力を必須にする</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="org-setting-password-required"
+                                class="form-checkbox h-4 w-4 text-indigo-600">
+                            <span class="ml-2 text-sm text-gray-700">求職者のパスワード設定を必須にする</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="org-setting-limit-agent-view"
+                                class="form-checkbox h-4 w-4 text-indigo-600">
+                            <span class="ml-2 text-sm text-gray-700">エージェント閲覧制限（自社求職者のみ表示）</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4 gap-3">
+                    <button type="button" onclick="closeOrganizationModal()"
+                        class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm">保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invitation URL Modal -->
+    <div id="invitation-url-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+        style="z-index: 60;">
+        <div class="bg-white rounded-lg w-full max-w-md p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                    <i class="fas fa-check text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">招待URLを発行しました</h3>
+                <p class="text-sm text-gray-500 mt-2">
+                    <span id="invite-org-name" class="font-bold"></span> の管理者として<br>
+                    <span id="invite-admin-email" class="font-bold"></span> を招待しました。
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">招待URL</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="invitation-url-display" readonly
+                            class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm text-gray-600">
+                        <button onclick="copyInvitationUrl()"
+                            class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700" title="コピー">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">※メール送信に失敗した場合などは、このURLを直接管理者に伝えてください。</p>
+                </div>
+
+                <div class="flex flex-col gap-2 mt-6">
+                    <button onclick="sendInvitationEmail()"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:text-sm">
+                        <i class="fas fa-paper-plane mr-2 pt-1"></i> メールを再送信
+                    </button>
+                    <button onclick="closeInvitationUrlModal()"
+                        class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:text-sm">
+                        閉じる
                     </button>
                 </div>
             </div>
