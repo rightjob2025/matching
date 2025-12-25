@@ -16266,49 +16266,59 @@
         }
 
         window.showOrganizationModal = function (orgId = null) {
-            const form = $('#organization-form')[0];
-            form.reset();
-            $('#org-id').val('');
-
-            if (orgId) {
-                const org = superAdminOrgsCache.find(o => o.id === orgId);
-                if (org) {
-                    $('#org-modal-title').text('組織編集');
-                    $('#org-id').val(org.id);
-                    $('#org-name-input').val(org.name);
-                    $('#org-plan').val(org.plan_type || 'free');
-                    $('#org-status').val(org.status || 'active');
-                    $('#org-max-users').val(org.max_users || 5);
-                    if (org.valid_until) {
-                        $('#org-valid-until').val(new Date(org.valid_until).toISOString().split('T')[0]);
-                    }
-                    // 編集時は初期管理者入力欄を隠す
-                    $('#org-initial-admin-fields').addClass('hidden');
-                    $('#org-admin-name').removeAttr('required');
-                    $('#org-admin-email').removeAttr('required');
-
-                    // 設定の読み込み
-                    const settings = org.settings || {};
-                    $('#org-setting-email-required').prop('checked', settings.candidate_email_required !== false); // デフォルトtrue
-                    $('#org-setting-password-required').prop('checked', settings.candidate_password_required !== false); // デフォルトtrue
-                    $('#org-setting-limit-agent-view').prop('checked', settings.limit_agent_view === true); // デフォルトfalse
+            console.log('showOrganizationModal called with ID:', orgId);
+            try {
+                const form = $('#organization-form')[0];
+                if (!form) {
+                    console.error('Organization form not found');
+                    return;
                 }
-            } else {
-                $('#org-modal-title').text('新規組織作成');
-                $('#org-plan').val('free');
-                $('#org-status').val('active');
-                $('#org-max-users').val(5);
-                // 新規時は初期管理者入力欄を表示
-                $('#org-initial-admin-fields').removeClass('hidden');
-                $('#org-admin-name').attr('required', 'required');
-                $('#org-admin-email').attr('required', 'required');
+                form.reset();
+                $('#org-id').val('');
 
-                // デフォルト設定
-                $('#org-setting-email-required').prop('checked', true);
-                $('#org-setting-password-required').prop('checked', true);
+                if (orgId) {
+                    const org = superAdminOrgsCache.find(o => o.id === orgId);
+                    if (org) {
+                        $('#org-modal-title').text('組織編集');
+                        $('#org-id').val(org.id);
+                        $('#org-name-input').val(org.name);
+                        $('#org-plan').val(org.plan_type || 'free');
+                        $('#org-status').val(org.status || 'active');
+                        $('#org-max-users').val(org.max_users || 5);
+                        if (org.valid_until) {
+                            $('#org-valid-until').val(new Date(org.valid_until).toISOString().split('T')[0]);
+                        }
+                        // 編集時は初期管理者入力欄を隠す
+                        $('#org-initial-admin-fields').addClass('hidden');
+                        $('#org-admin-name').removeAttr('required');
+                        $('#org-admin-email').removeAttr('required');
+
+                        // 設定の読み込み
+                        const settings = org.settings || {};
+                        $('#org-setting-email-required').prop('checked', settings.candidate_email_required !== false); // デフォルトtrue
+                        $('#org-setting-password-required').prop('checked', settings.candidate_password_required !== false); // デフォルトtrue
+                        $('#org-setting-limit-agent-view').prop('checked', settings.limit_agent_view === true); // デフォルトfalse
+                    }
+                } else {
+                    $('#org-modal-title').text('新規組織作成');
+                    $('#org-plan').val('free');
+                    $('#org-status').val('active');
+                    $('#org-max-users').val(5);
+                    // 新規時は初期管理者入力欄を表示
+                    $('#org-initial-admin-fields').removeClass('hidden');
+                    $('#org-admin-name').attr('required', 'required');
+                    $('#org-admin-email').attr('required', 'required');
+
+                    // デフォルト設定
+                    $('#org-setting-email-required').prop('checked', true);
+                    $('#org-setting-password-required').prop('checked', true);
+                }
+
+                $('#organization-modal').removeClass('hidden');
+            } catch (error) {
+                console.error('Error in showOrganizationModal:', error);
+                alert('モーダルの表示中にエラーが発生しました: ' + error.message);
             }
-
-            $('#organization-modal').removeClass('hidden');
         }
 
         window.closeOrganizationModal = function () {
