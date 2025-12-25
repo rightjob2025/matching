@@ -5230,10 +5230,13 @@
                                     <i class="fas fa-chevron-right text-indigo-300 group-hover:text-indigo-600"></i>
                                 </button>
                             `);
-                            btn.on('click', () => {
+                            btn.on('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 modal.addClass('hidden');
                                 resolve({ id: m.organization_id, name: org.name });
                             });
+
                             list.append(btn);
                         });
 
