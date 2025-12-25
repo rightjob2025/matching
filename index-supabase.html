@@ -571,6 +571,24 @@
         </div>
     </div>
 
+    <!-- Organization Selection Modal -->
+    <div id="org-select-modal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">所属組織を選択</h3>
+                <div id="org-select-list" class="space-y-3 max-h-60 overflow-y-auto">
+                    <!-- Org Buttons provided by JS -->
+                </div>
+                <div class="mt-4">
+                    <button onclick="logout()" class="text-sm text-gray-500 hover:text-gray-700 underline">
+                        ログアウトして戻る
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Login Page -->
     <div id="login-page" class="page active">
         <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 px-4">
@@ -5150,24 +5168,102 @@
 
                 if (authError) throw authError
 
-                // ユーザープロファイルを取得
+                const userId = authData.user.id;
+
+                // ---------------------------------------------------------
+                // 組織所属情報の確認 (Multi-tenant check)
+                // ---------------------------------------------------------
+                const { data: memberships, error: memError } = await supabase
+                    .from('organization_members')
+                    .select('organization_id, organizations(name, code, status)')
+                    .eq('user_id', userId);
+
+                if (memError) {
+                    console.error('Membership fetch error:', memError);
+                    throw new Error('所属組織情報の取得に失敗しました');
+                }
+
+                if (!memberships || memberships.length === 0) {
+                    // 所属がない場合 (通常ありえないが、不整合対策)
+                    throw new Error('所属する組織が見つかりません');
+                }
+
+                // ユーザープロファイルを取得 (Base Profile)
                 const { data: userData, error: userError } = await supabase
                     .from('users')
-                    .select('*, organizations!fk_users_organization(*)')
-                    .eq('id', authData.user.id)
-                    .maybeSingle()
+                    .select('*')
+                    .eq('id', userId)
+                    .maybeSingle();
 
-                if (userError) {
-                    console.error('User fetch error:', userError);
-                    throw new Error('ユーザー情報の取得に失敗しました: ' + userError.message);
+                if (userError || !userData) {
+                    throw new Error('ユーザー情報の取得に失敗しました');
                 }
 
-                if (!userData) {
-                    throw new Error('ユーザー情報が見つかりません。管理者にお問い合わせください。');
+                let targetOrgId = userData.organization_id; // Default to current setting
+                let targetOrgName = '';
+
+                // 複数組織に所属している場合、または現在の設定が無効な場合
+                if (memberships.length > 1) {
+                    // 選択モーダルを表示してユーザーに選ばせる
+                    // ここで一旦処理を中断し、ユーザー入力を待つ必要があるため、Promiseでラップする実装にするか、
+                    // あるいはシンプルなUI表示切り替えで実装する。
+                    // ここでは「モーダルを表示し、選択されたら後続処理を実行する」関数に切り分けるのが適切だが、
+                    // login関数内で完結させるため、一時的にUIを表示してコールバックを待つ形をとる。
+
+                    hideLoading(); // ローディング一旦解除
+
+                    // 組織選択ロジック (Promise wrapper)
+                    const selectedOrg = await new Promise((resolve) => {
+                        const modal = $('#org-select-modal');
+                        const list = $('#org-select-list');
+                        list.empty();
+
+                        memberships.forEach(m => {
+                            const org = m.organizations;
+                            // 停止中の組織は除外するなど可能だが、一旦すべて表示
+                            const btn = $(`
+                                <button class="w-full text-left px-4 py-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition items-center flex justify-between group">
+                                    <div>
+                                        <div class="font-bold text-indigo-900">${org.name}</div>
+                                        <div class="text-xs text-indigo-500">${org.code || ''}</div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-indigo-300 group-hover:text-indigo-600"></i>
+                                </button>
+                            `);
+                            btn.on('click', () => {
+                                modal.addClass('hidden');
+                                resolve({ id: m.organization_id, name: org.name });
+                            });
+                            list.append(btn);
+                        });
+
+                        modal.removeClass('hidden');
+                    });
+
+                    showLoading('ログイン処理中...'); // ローディング再開
+                    targetOrgId = selectedOrg.id;
+                    targetOrgName = selectedOrg.name;
+
+                    // ユーザーのデフォルト組織を更新しておく（次回ログイン時の優先候補として）
+                    // ※ RLSエラーになる可能性があるため、失敗しても無視する
+                    await supabase.from('users').update({ organization_id: targetOrgId }).eq('id', userId);
+
+                } else {
+                    // 1つだけの場合、それを確定
+                    targetOrgId = memberships[0].organization_id;
+                    // targetOrgName = memberships[0].organizations.name; // selectの構造による
                 }
 
-                currentUser = userData
-                window.currentUser = userData  // グローバルにも設定
+                // currentUserオブジェクトを構築
+                // userDataには古い organization_id が入っている可能性があるため上書き
+                currentUser = {
+                    ...userData,
+                    organization_id: targetOrgId,
+                    organizations: { // 擬似的に結合情報を更新
+                        name: targetOrgName || memberships.find(m => m.organization_id === targetOrgId)?.organizations?.name
+                    }
+                };
+                window.currentUser = currentUser;
 
                 // ステータスチェック (利用停止中の場合はログアウト)
                 if (userData.status === 'suspended') {
@@ -5181,10 +5277,10 @@
                 await supabase
                     .from('login_history')
                     .insert({
-                        organization_id: userData.organization_id,
-                        user_id: userData.id,
-                        name: userData.name,
-                        email: userData.email,
+                        organization_id: currentUser.organization_id,
+                        user_id: currentUser.id,
+                        name: currentUser.name,
+                        email: currentUser.email,
                         user_agent: navigator.userAgent
                     })
 
@@ -5244,7 +5340,8 @@
                 showPage('app-page')
 
                 // ログイン操作を記録（ユーザーデータを渡す）
-                await auditLog.userLoggedIn(userData);
+                await auditLog.userLoggedIn(currentUser);
+
 
 
             } catch (error) {
