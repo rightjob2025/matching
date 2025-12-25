@@ -18320,7 +18320,26 @@
                                 }
 
 
-                                loadDashboard()
+                                // ダッシュボードメニューの表示制御（求職者は非表示）
+                                if (currentUser.role === 'candidate') {
+                                    $('#nav-dashboard').addClass('hidden');
+                                } else {
+                                    $('#nav-dashboard').removeClass('hidden');
+                                }
+
+                                // loadDashboardの呼び出しをロールで分岐
+                                if (currentUser.role === 'candidate') {
+                                    await loadJobs();
+                                    showAppContent('jobs-content');
+                                    // ナビゲーションのハイライト
+                                    $('.nav-link').removeClass('bg-indigo-50 text-indigo-600');
+                                    $('.nav-link[data-page="jobs"]').addClass('bg-indigo-50 text-indigo-600');
+                                } else {
+                                    loadDashboard();
+                                    // 通常のフローではshowPage('app-page')でデフォルトのダッシュボードが表示されるが、念のため
+                                    $('.nav-link[data-page="dashboard"]').addClass('bg-indigo-50 text-indigo-600');
+                                }
+
                                 loadNotifications()
                                 initMasterDataDropdowns(); // マスタデータ読み込み
                                 showPage('app-page')
