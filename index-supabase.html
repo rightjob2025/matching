@@ -5201,6 +5201,11 @@
                     $('#ai-scout-link').addClass('hidden')
                 }
 
+                // サイドバーのユーザー情報を更新
+                $('#user-name').text(currentUser.name)
+                $('#user-role').text(getRoleLabel(currentUser.role))
+                $('#org-name').text(currentUser.organizations?.name || '')
+
                 // ダッシュボードメニューの表示制御（求職者は非表示）
                 if (userData.role === 'candidate') {
                     $('#nav-dashboard').addClass('hidden')
@@ -18318,6 +18323,11 @@
                                     $('#nav-candidate-search').removeClass('hidden');
                                     $('#profile-search-btn').addClass('hidden');
                                 }
+
+                                // サイドバーのユーザー情報を更新
+                                $('#user-name').text(currentUser.name)
+                                $('#user-role').text(getRoleLabel(currentUser.role))
+                                $('#org-name').text(currentUser.organizations?.name || '')
 
 
                                 // ダッシュボードメニューの表示制御（求職者は非表示）
