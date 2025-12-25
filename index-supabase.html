@@ -14166,7 +14166,29 @@
 
         function renderAdminUsers(users) {
             const container = $('#admin-users-container')
+            const infoContainer = $('#org-info-display'); // Placeholder for Org Info
             container.empty()
+
+            // Display Organization Code for Org Admins
+            if (currentUser && ['org_admin', 'admin'].includes(currentUser.role)) {
+                if ($('#org-code-info').length === 0) {
+                    // Add Org Code Display Area if not exists
+                    const headerSection = $('#admin-users-content h2').parent();
+                    // Fetch Org Code async
+                    (async () => {
+                        const { data, error } = await supabase.from('organizations').select('code').eq('id', currentUser.organization_id).single();
+                        if (data && data.code) {
+                            headerSection.append(`
+                                <div id="org-code-info" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg inline-block">
+                                    <span class="text-sm text-blue-800 font-bold">組織コード: </span>
+                                    <span class="text-lg font-mono text-blue-900 mx-2">${data.code}</span>
+                                    <span class="text-xs text-gray-500">（このコードを求職者に共有してください）</span>
+                                </div>
+                             `);
+                        }
+                    })();
+                }
+            }
 
             if (users.length === 0) {
                 container.html('<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">ユーザーがいません</td></tr>')
@@ -16080,6 +16102,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${org.name}</div>
                         <div class="text-xs text-gray-500">ID: ${org.id}</div>
+                        <div class="text-xs text-indigo-600 font-mono mt-1">Code: ${org.code || '-'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
