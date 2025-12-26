@@ -11652,30 +11652,41 @@
 
         // おすすめ理由の編集
         window.editRecommendationReason = function (recId) {
-            console.log('editRecommendationReason called with ID:', recId);
+            console.log('Edit Recommendation Reason requested for ID:', recId);
+
             const rec = allRecommendations.find(r => r.id === recId);
             if (!rec) {
-                console.warn('Recommendation not found for ID:', recId);
-                return;
+                console.warn('Recommendation not found in allRecommendations. ID:', recId);
+                const cachedRec = typeof allRecommendationsCache !== 'undefined' ? allRecommendationsCache.find(r => r.id === recId) : null;
+                if (!cachedRec) {
+                    console.error('CRITICAL: Recommendation ID not found anywhere.');
+                    return;
+                }
             }
 
-            const currentReason = rec.reason || rec.match_reason || '';
+            const targetRec = rec || (typeof allRecommendationsCache !== 'undefined' ? allRecommendationsCache.find(r => r.id === recId) : null);
+            const currentReason = targetRec ? (targetRec.reason || targetRec.match_reason || '') : '';
 
-            // モーダルに値をセット
-            $('#edit-rec-reason-id').val(recId);
-            $('#edit-rec-reason-text').val(currentReason);
-
-            // モーダルを表示
+            // モーダル要素を取得
             const modal = $('#edit-recommendation-reason-modal');
             if (modal.length === 0) {
-                console.error('Modal element not found: #edit-recommendation-reason-modal');
+                console.error('ERROR: #edit-recommendation-reason-modal not found in DOM.');
                 alert('編集モーダルが見つかりません。');
                 return;
             }
+
+            // 値をセット
+            $('#edit-rec-reason-id').val(recId);
+            $('#edit-rec-reason-text').val(currentReason);
+
+            // 強制的に表示（Tailwindのhiddenを消し、さらにinline styleで上書き）
             modal.removeClass('hidden');
+            modal.attr('style', 'display: flex !important; z-index: 100001;');
+
+            console.log('Modal display logic executed. Modal should be visible.');
         }
         window.closeEditRecReasonModal = function () {
-            $('#edit-recommendation-reason-modal').addClass('hidden');
+            $('#edit-recommendation-reason-modal').addClass('hidden').attr('style', 'display: none !important;');
         }
 
         window.saveRecommendationReason = async function () {
