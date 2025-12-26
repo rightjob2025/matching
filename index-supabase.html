@@ -11138,6 +11138,10 @@
 
             const container = $('#recommendations-container');
 
+            // 見送り済みデータの取得
+            const dismissedKey = (window.currentUser ? `dismissed_recs_${window.currentUser.id}` : 'dismissed_recs_temp');
+            const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]'));
+
             // ユーザーフィルタリング
             let displayRecs = recs;
             if (currentSelectedUserId) {
@@ -11157,9 +11161,6 @@
             });
 
             // ソート処理
-            // 見送り済みデータの取得
-            const dismissedKey = currentUser ? `dismissed_recs_${currentUser.id}` : 'dismissed_recs_temp';
-            const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]'));
 
             filteredRecs.sort((a, b) => {
                 // 見送り済みを後ろへ
