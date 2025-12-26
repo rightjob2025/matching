@@ -11651,18 +11651,28 @@
         }
 
         // おすすめ理由の編集
-        window.editRecommendationReason = async function (recId) {
+        window.editRecommendationReason = function (recId) {
             const rec = allRecommendations.find(r => r.id === recId);
             if (!rec) return;
 
             const currentReason = rec.reason || rec.match_reason || '';
-            const newReason = prompt('おすすめ理由を編集してください:', currentReason);
+            // モーダルに値をセット
+            $('#edit-rec-reason-id').val(recId);
+            $('#edit-rec-reason-text').val(currentReason);
 
-            if (newReason === null) return; // キャンセル
+            // モーダルを表示
+            $('#edit-recommendation-reason-modal').removeClass('hidden');
+        }
+        window.closeEditRecReasonModal = function () {
+            $('#edit-recommendation-reason-modal').addClass('hidden');
+        }
+
+        window.saveRecommendationReason = async function () {
+            const recId = $('#edit-rec-reason-id').val();
+            const newReason = $('#edit-rec-reason-text').val();
 
             showLoading();
             try {
-                // window.currentUserを使用
                 const user = window.currentUser;
 
                 const { error } = await supabase
@@ -11678,9 +11688,13 @@
                 alert('おすすめ理由を更新しました');
 
                 // キャッシュを更新
-                rec.reason = newReason;
-                rec.recommended_by = user.id;
+                const rec = allRecommendations.find(r => r.id === recId);
+                if (rec) {
+                    rec.reason = newReason;
+                    rec.recommended_by = user.id;
+                }
 
+                closeEditRecReasonModal();
                 // 再描画
                 renderRecommendations();
             } catch (error) {
@@ -20408,7 +20422,48 @@
                 </div>
             </div>
         </div>
-    </div>
+        <!-- Edit Recommendation Reason Modal -->
+        <div id="edit-recommendation-reason-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 40000;">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-0 overflow-hidden transform transition-all">
+                <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center text-white">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <i class="fas fa-edit"></i> おすすめ理由の編集
+                    </h3>
+                    <button onclick="closeEditRecReasonModal()"
+                        class="text-white hover:text-indigo-200 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <input type="hidden" id="edit-rec-reason-id">
+                    <div class="mb-4">
+                        <label for="edit-rec-reason-text" class="block text-sm font-semibold text-gray-700 mb-2">
+                            記述内容
+                        </label>
+                        <textarea id="edit-rec-reason-text" rows="8"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 leading-relaxed transition-all"
+                            placeholder="おすすめの理由を具体的に入力してください..."></textarea>
+                        <p class="mt-2 text-xs text-gray-500">
+                            ※保存すると求職者の画面にも反映されます。
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-8">
+                        <button onclick="closeEditRecReasonModal()"
+                            class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+                            キャンセル
+                        </button>
+                        <button onclick="saveRecommendationReason()"
+                            class="px-8 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-md transition-all">
+                            変更を保存する
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 </body>
 
