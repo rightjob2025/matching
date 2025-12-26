@@ -11146,10 +11146,13 @@
 
             // タブに応じてフィルタリング
             let filteredRecs = displayRecs.filter(rec => {
+                const isDismissed = dismissed.has(rec.job_id);
                 if (currentRecommendationTab === 'matches') {
-                    return rec.score >= 50;
+                    // 提案タブ: スコア50%以上 かつ 見送りでない
+                    return rec.score >= 50 && !isDismissed;
                 } else {
-                    return rec.score < 50;
+                    // アンマッチタブ: スコア49%以下 または 見送り済み
+                    return rec.score < 50 || isDismissed;
                 }
             });
 
@@ -11411,31 +11414,37 @@
                                 推薦日: ${new Date(rec.created_at).toLocaleDateString('ja-JP')}
                             </span>
                             ${!isApplied ? `
-                            <button onclick="event.stopPropagation(); applyForJob('${rec.job_id}', '${rec.user_id}')" 
-                                class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">
-                                <i class="fas fa-paper-plane mr-2"></i>代理応募
-                            </button>
+                                ${rec.score >= 50 && !isDismissed ? `
+                                <button onclick="event.stopPropagation(); window.dismissRecommendation('${rec.job_id}')" 
+                                    class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition font-medium">
+                                    <i class="fas fa-eye-slash mr-1"></i>見送る
+                                </button>
+                                ` : ''}
+                                <button onclick="event.stopPropagation(); applyForJob('${rec.job_id}', '${rec.user_id}')" 
+                                    class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">
+                                    <i class="fas fa-paper-plane mr-2"></i>代理応募
+                                </button>
                             ` : `
-                            <span class="text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">
-                                <i class="fas fa-check mr-1"></i>応募済み
-                            </span>
+                                <span class="text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">
+                                    <i class="fas fa-check mr-1"></i>応募済み
+                                </span>
                             `}
                         ` : `
-                            ${!isDismissed ? `
-                            <button onclick="event.stopPropagation(); dismissRecommendation('${rec.job_id}')" 
-                                class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition font-medium">
-                                <i class="fas fa-eye-slash mr-1"></i>見送る
-                            </button>
+                            ${!isDismissed && rec.score >= 50 ? `
+                                <button onclick="event.stopPropagation(); dismissRecommendation('${rec.job_id}')" 
+                                    class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition font-medium">
+                                    <i class="fas fa-eye-slash mr-1"></i>見送る
+                                </button>
                             ` : ''}
                             ${!isApplied ? `
-                            <button onclick="event.stopPropagation(); applyForJob('${rec.job_id}')" 
-                                class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">
-                                応募する
-                            </button>
+                                <button onclick="event.stopPropagation(); applyForJob('${rec.job_id}')" 
+                                    class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">
+                                    応募する
+                                </button>
                             ` : `
-                            <span class="text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">
-                                <i class="fas fa-check mr-1"></i>応募済み
-                            </span>
+                                <span class="text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">
+                                    <i class="fas fa-check mr-1"></i>応募済み
+                                </span>
                             `}
                         `}
                     </div>
