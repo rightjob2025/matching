@@ -1470,7 +1470,7 @@
             <!-- Recommendations Page -->
             <div id="recommendations-content" class="app-content p-6 hidden">
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 class="text-xl font-semibold mb-2">AI提案</h2>
+                    <h2 class="text-xl font-semibold mb-2">おすすめ求人</h2>
                     <p class="text-gray-600">あなたのプロフィールに基づいて、AIが最適な求人を提案します。</p>
                 </div>
 
@@ -8388,7 +8388,7 @@
                         <h5 class="font-bold text-indigo-900">
                             <i class="fas fa-search-plus mr-2"></i>その他の求人でスカウトを作成
                         </h5>
-                        <p class="text-sm text-indigo-700">AI提案以外の求人を指定してスカウト文面を作成できます。</p>
+                        <p class="text-sm text-indigo-700">おすすめ求人以外の求人を指定してスカウト文面を作成できます。</p>
                     </div>
                     <button onclick="openJobSelectorForScout()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow transition">
                         求人を選択
@@ -11353,14 +11353,32 @@
                     <div class="${rec.score >= 50 ? 'bg-indigo-50' : 'bg-red-50'} rounded-lg p-4 mb-4">
                         ${rec.score >= 50 && rec.recommended_by ? `
                             <h4 class="text-sm font-bold text-indigo-900 mb-2">
-                                <i class="fas fa-user-tie mr-2"></i>エージェントからのおすすめ理由
+                                <i class="fas fa-user-tie mr-2"></i>おすすめ理由
                             </h4>
-                            <p class="text-sm text-indigo-800 leading-relaxed">${rec.match_reason || rec.reason}</p>
+                            <div class="relative group/reason">
+                                <p class="text-sm text-indigo-800 leading-relaxed">${rec.match_reason || rec.reason}</p>
+                                ${isAdminOrCoach ? `
+                                    <button onclick="event.stopPropagation(); window.editRecommendationReason('${rec.id}')" 
+                                        class="absolute -top-1 -right-1 p-2 text-indigo-400 hover:text-indigo-600 opacity-0 group-hover/reason:opacity-100 transition-opacity"
+                                        title="理由を編集">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
                         ` : `
                             <h4 class="text-sm font-bold ${rec.score >= 50 ? 'text-indigo-900' : 'text-red-900'} mb-2">
                                 <i class="fas ${rec.score >= 50 ? 'fa-lightbulb' : 'fa-exclamation-triangle'} mr-2"></i>${rec.score >= 50 ? 'AIによる推薦理由' : 'AIによる不一致理由'}
                             </h4>
-                            <p class="text-sm ${rec.score >= 50 ? 'text-indigo-800' : 'text-red-800'} leading-relaxed">${rec.match_reason || rec.reason}</p>
+                            <div class="relative group/reason">
+                                <p class="text-sm ${rec.score >= 50 ? 'text-indigo-800' : 'text-red-800'} leading-relaxed">${rec.match_reason || rec.reason}</p>
+                                ${isAdminOrCoach ? `
+                                    <button onclick="event.stopPropagation(); window.editRecommendationReason('${rec.id}')" 
+                                        class="absolute -top-1 -right-1 p-2 text-indigo-400 hover:text-indigo-600 opacity-0 group-hover/reason:opacity-100 transition-opacity"
+                                        title="${rec.score >= 50 ? 'おすすめ理由を入力' : '不一致理由を修正'}">
+                                        <i class="fas ${rec.score >= 50 ? 'fa-plus-circle' : 'fa-edit'} text-xs"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
                         `}
                         ${rec.details && rec.details.trim().length > 0 ? (() => {
                         const itemId = `rec-detail-${rec.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -11627,6 +11645,47 @@
             } catch (error) {
                 console.error('Re-run error:', error);
                 alert('再判定中にエラーが発生しました: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // おすすめ理由の編集
+        window.editRecommendationReason = async function (recId) {
+            const rec = allRecommendations.find(r => r.id === recId);
+            if (!rec) return;
+
+            const currentReason = rec.reason || rec.match_reason || '';
+            const newReason = prompt('おすすめ理由を編集してください:', currentReason);
+
+            if (newReason === null) return; // キャンセル
+
+            showLoading();
+            try {
+                // window.currentUserを使用
+                const user = window.currentUser;
+
+                const { error } = await supabase
+                    .from('recommendations')
+                    .update({
+                        reason: newReason,
+                        recommended_by: user.id
+                    })
+                    .eq('id', recId);
+
+                if (error) throw error;
+
+                alert('おすすめ理由を更新しました');
+
+                // キャッシュを更新
+                rec.reason = newReason;
+                rec.recommended_by = user.id;
+
+                // 再描画
+                renderRecommendations();
+            } catch (error) {
+                console.error('Update reason error:', error);
+                alert('更新に失敗しました: ' + error.message);
             } finally {
                 hideLoading();
             }
@@ -18752,7 +18811,7 @@
                     'jobs': '求人検索',
                     'ai-scout': 'AIスカウト',
                     'applications': '応募状況',
-                    'recommendations': 'AI提案',
+                    'recommendations': 'おすすめ求人',
                     'profile': 'プロフィール',
                     'admin-jobs': '求人管理',
                     'admin-companies': '企業管理',
