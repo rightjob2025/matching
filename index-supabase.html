@@ -11300,8 +11300,9 @@
                 const cardStyle = isDismissed ? 'bg-gray-100 opacity-60' : 'bg-white border-gray-200 hover:shadow-md';
 
                 return `
-                <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden group cursor-pointer" 
+                <div class="${cardStyle} border rounded-lg p-6 transition mb-4 relative overflow-hidden group cursor-pointer rec-card" 
                      data-user-id="${rec.user_id}" 
+                     data-job-id="${rec.job_id}"
                      onclick="showJobDetailModal('${rec.job_id}')">
                     ${isAdminOrCoach ? `
                     <div class="absolute top-0 left-0 p-3 z-20" onclick="event.stopPropagation()">
@@ -19289,17 +19290,34 @@
         // ========================
 
         // おすすめ求人を見送る（最下部へ移動＆グレーアウト）
+        // おすすめ求人を見送る（最下部へ移動＆グレーアウト）
         window.dismissRecommendation = function (jobId) {
-            if (!currentUser) return;
-            const key = `dismissed_recs_${currentUser.id}`;
+            if (!window.currentUser) return;
+
+            // 視覚的な即時フィードバック（クリックしたカードをグレーアウト）
+            const card = $(`.rec-card[data-job-id="${jobId}"]`);
+            if (card.length > 0) {
+                card.css({
+                    'opacity': '0.3',
+                    'filter': 'grayscale(100%)',
+                    'pointer-events': 'none',
+                    'transition': 'all 0.4s ease'
+                });
+            }
+
+            const key = `dismissed_recs_${window.currentUser.id}`;
             let dismissed = JSON.parse(localStorage.getItem(key) || '[]');
 
             if (!dismissed.includes(jobId)) {
                 dismissed.push(jobId);
                 localStorage.setItem(key, JSON.stringify(dismissed));
 
-                // 再描画
-                renderRecommendations();
+                // 少し待ってから再描画（グレーアウトを見せるため）
+                setTimeout(() => {
+                    if (typeof renderRecommendations === 'function') {
+                        renderRecommendations();
+                    }
+                }, 400);
             }
         }
 
