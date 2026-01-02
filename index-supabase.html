@@ -466,36 +466,33 @@
             border-bottom: none;
         }
 
-        /* Custom Scrollbar - More Visible */
+        /* Essential Scrollbar Styling */
+        .custom-scrollbar {
+            overflow-y: auto !important;
+            scrollbar-gutter: stable;
+            /* Reserve space for scrollbar to avoid jumps */
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
             width: 10px;
             height: 10px;
-            display: block !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f8fafc;
+            background: #f1f5f9;
             border-radius: 5px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 5px;
-            border: 2px solid #f8fafc;
+            border: 2px solid #f1f5f9;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6366f1;
-            /* Indigo on hover to be sure */
-        }
-
-        /* Force scrollbar to be visible */
-        .custom-scrollbar {
-            overflow-y: scroll !important;
-            scrollbar-width: auto !important;
-            /* Standard browser scrollbar */
-            scrollbar-color: #cbd5e1 #f8fafc;
-            -webkit-overflow-scrolling: touch;
+            background: #94a3b8;
         }
 
         /* Modal Animation */
@@ -1106,6 +1103,7 @@
                             <select id="org-switcher"
                                 class="border border-red-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-red-50 text-red-900 font-medium">
                                 <option value="">組織を選択...</option>
+                                </option>
                             </select>
                         </div>
 
@@ -3414,20 +3412,20 @@
                         </div>
 
                         <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 overflow-hidden bg-gray-50 flex flex-col" style="height: 0;">
-                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0 h-full">
+                        <div class="flex-1 overflow-hidden bg-gray-50">
+                            <div class="flex flex-col lg:flex-row h-full">
 
                                 <!-- 左カラム: プロフィール詳細 (スクロール可) -->
-                                <div class="lg:col-span-5 h-full border-r bg-white flex flex-col min-h-0">
-                                    <div id="candidate-preview-content"
-                                        class="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8 pb-32">
+                                <div
+                                    class="w-full lg:w-[40%] h-full border-r bg-white overflow-y-auto custom-scrollbar p-8">
+                                    <div id="candidate-preview-content" class="space-y-8 pb-20">
                                         <!-- Profile details will be loaded here -->
                                     </div>
                                 </div>
 
                                 <!-- 右カラム: 管理情報 (スクロール可) -->
-                                <div class="lg:col-span-7 h-full flex flex-col bg-gray-50 min-h-0 overflow-hidden">
-                                    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8 pb-32">
+                                <div class="w-full lg:w-[60%] h-full overflow-y-auto custom-scrollbar bg-gray-50 p-8">
+                                    <div class="space-y-8 pb-20">
                                         <!-- 選考進捗セクション -->
                                         <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                                             <div class="flex justify-between items-center mb-6">
