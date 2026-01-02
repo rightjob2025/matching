@@ -466,6 +466,48 @@
             border-bottom: none;
         }
 
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Firefox */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db #f1f1f1;
+        }
+
+        /* Modal Animation */
+        .animate-fade-in-up {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Utility overrides */
         /* Candidate Detail Tabs */
         .candidate-tab-btn.active {
@@ -3365,19 +3407,20 @@
                         </div>
 
                         <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 overflow-hidden p-8 bg-gray-50">
-                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+                        <div class="flex-1 overflow-hidden p-4 md:p-8 bg-gray-50 min-h-0">
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-0">
 
                                 <!-- 左カラム: プロフィール詳細 (スクロール可) -->
-                                <div class="lg:col-span-5 h-full overflow-y-auto pr-4 custom-scrollbar">
-                                    <div id="candidate-preview-content" class="space-y-6">
+                                <div
+                                    class="lg:col-span-5 h-full overflow-y-auto pr-4 custom-scrollbar min-h-0 flex flex-col">
+                                    <div id="candidate-preview-content" class="space-y-6 pb-8">
                                         <!-- Profile details will be loaded here -->
                                     </div>
                                 </div>
 
                                 <!-- 右カラム: 管理情報 (スクロール可) -->
                                 <div
-                                    class="lg:col-span-7 h-full flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+                                    class="lg:col-span-7 h-full flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar min-h-0">
 
                                     <!-- 選考進捗セクション -->
                                     <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
@@ -3390,14 +3433,12 @@
                                         </div>
                                         <div id="selection-progress-container" class="space-y-4">
                                             <!-- Selection list will be rendered here -->
-                                            <div class="text-center py-12 text-gray-400">
-                                                <i class="fas fa-spinner fa-spin text-2xl"></i>
-                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- 面談履歴セクション -->
-                                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex-1">
+                                    <div
+                                        class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex-1 min-h-0 flex flex-col mb-8">
                                         <div class="flex justify-between items-center mb-6">
                                             <h4 class="font-bold text-lg text-gray-900 flex items-center">
                                                 <i
@@ -3409,11 +3450,8 @@
                                                 <i class="fas fa-plus mr-2"></i>履歴を記録
                                             </button>
                                         </div>
-                                        <div id="interview-list-container" class="space-y-4">
+                                        <div id="interview-list-container" class="space-y-4 flex-1 overflow-y-visible">
                                             <!-- Interviews will be rendered here -->
-                                            <div class="text-center py-12 text-gray-400">
-                                                <i class="fas fa-spinner fa-spin text-2xl"></i>
-                                            </div>
                                         </div>
                                     </div>
 
