@@ -16954,9 +16954,11 @@
             if (staffRoles.includes(role)) {
                 $('#coach-menu').removeClass('hidden');
                 $('#ai-scout-link').removeClass('hidden');
+                $('#nav-candidate-search').removeClass('hidden');
             } else {
                 $('#coach-menu').addClass('hidden');
                 $('#ai-scout-link').addClass('hidden');
+                $('#nav-candidate-search').addClass('hidden');
             }
 
             if (role === 'candidate') $('#nav-dashboard').addClass('hidden');
