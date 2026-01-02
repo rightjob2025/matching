@@ -469,28 +469,23 @@
         /* --- HIGH VISIBILITY SCROLLBAR --- */
         .custom-scrollbar {
             overflow-y: scroll !important;
-            scrollbar-width: auto !important;
-            /* Non-webkit browsers */
-            scrollbar-color: #4f46e5 #e2e8f0 !important;
-            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin !important;
+            scrollbar-color: #4f46e5 #f1f5f9 !important;
         }
 
-        /* Webkit browsers (Chrome, Safari, Edge) */
         .custom-scrollbar::-webkit-scrollbar {
-            width: 14px !important;
+            width: 12px !important;
             display: block !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #e2e8f0 !important;
-            border-radius: 4px !important;
+            background: #f1f5f9 !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background-color: #4f46e5 !important;
-            border-radius: 4px !important;
-            border: 2px solid #e2e8f0 !important;
-            min-height: 50px !important;
+            border-radius: 6px !important;
+            border: 2px solid #f1f5f9 !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -3383,9 +3378,9 @@
                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
                     style="z-index: 30000;">
                     <div
-                        class="bg-white rounded-2xl w-full max-w-7xl mx-4 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
-                        <!-- ヘッダー -->
-                        <div class="flex justify-between items-center px-8 py-5 border-b bg-white">
+                        class="bg-white rounded-2xl w-full max-w-7xl mx-4 h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+                        <!-- ヘッダー (固定) -->
+                        <div class="flex-none flex justify-between items-center px-8 py-5 border-b bg-white">
                             <div class="flex items-center gap-4">
                                 <div id="candidate-avatar-header"
                                     class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-inner">
@@ -3413,8 +3408,7 @@
                         </div>
 
                         <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 bg-gray-50 flex flex-col lg:flex-row overflow-hidden"
-                            style="height: 600px; max-height: calc(92vh - 100px); min-height: 0;">
+                        <div class="flex-1 min-h-0 bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
 
                             <!-- 左カラム: プロフィール詳細 (スクロール可) -->
                             <div id="candidate-preview-content"
