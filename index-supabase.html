@@ -8036,8 +8036,14 @@
         }
 
         window.closeInterviewRecordModal = function () {
-            $('#interview-record-modal').addClass('hidden');
+            console.log('Closing interview record modal');
+            const modal = $('#interview-record-modal');
+            modal.addClass('hidden').attr('style', 'display: none !important;');
+
+            // 状態リセット
             $('#interview-id').val('');
+            $('#interview-content').val('');
+            $('#interview-next-action').val('');
         }
 
         window.editInterviewRecord = async function (interviewId) {
@@ -8070,9 +8076,11 @@
             }
         }
 
-        // 面談履歴保存
-        $('#interview-record-form').on('submit', async function (e) {
+        // 面談履歴保存 (委譲を使用してイベントを確実にする)
+        $(document).off('submit', '#interview-record-form').on('submit', '#interview-record-form', async function (e) {
             e.preventDefault();
+            console.log('Submitting interview record form');
+
             const candidateId = $('#interview-candidate-id').val();
             const interviewId = $('#interview-id').val();
             const date = $('#interview-date').val();
@@ -8080,7 +8088,14 @@
             const content = $('#interview-content').val();
             const nextAction = $('#interview-next-action').val();
 
-            if (!currentUser || !candidateId) return;
+            if (!currentUser) {
+                alert('ユーザー情報が取得できません。再度ログインしてください。');
+                return;
+            }
+            if (!candidateId) {
+                alert('候補者情報が取得できません');
+                return;
+            }
 
             showLoading('保存中...');
             try {
