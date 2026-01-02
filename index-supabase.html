@@ -466,29 +466,35 @@
             border-bottom: none;
         }
 
-        /* Scrollbar Styling - Forced Visibility */
+        /* --- Ultra-Visible Scrollbar Styling --- */
         .custom-scrollbar {
-            overflow-y: auto !important;
+            overflow-y: scroll !important;
+            /* Force gutter visibility */
+            scrollbar-width: thin !important;
+            scrollbar-color: #4f46e5 #f1f5f9 !important;
             -webkit-overflow-scrolling: touch;
         }
 
+        /* Chrome, Edge, Safari */
         .custom-scrollbar::-webkit-scrollbar {
-            width: 10px !important;
+            width: 12px !important;
             display: block !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #f1f5f9 !important;
+            border-radius: 10px !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1 !important;
-            border-radius: 5px !important;
-            border: 2px solid #f1f5f9 !important;
+            background-color: #4f46e5 !important;
+            border-radius: 10px !important;
+            border: 3px solid #f1f5f9 !important;
+            min-height: 40px !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6366f1 !important;
+            background-color: #4338ca !important;
         }
 
         /* Modal Animation */
@@ -3402,350 +3408,350 @@
                                 <button onclick="closeCandidatePreview()"
                                     class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all">
                                     <i class="fas fa-times text-xl"></i>
-                                </button>
                             </div>
-                        </div>
 
-                        <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 bg-gray-50 overflow-hidden" style="height: calc(92vh - 88px);">
-                            <div class="flex flex-col lg:flex-row h-full">
+                            <!-- メインコンテンツ (集約画面) -->
+                            <div class="flex-1 bg-gray-50 flex flex-col lg:flex-row overflow-hidden"
+                                style="height: calc(92vh - 90px);">
 
                                 <!-- 左カラム: プロフィール詳細 (スクロール可) -->
-                                <div
-                                    class="w-full lg:w-[40%] h-full border-r bg-white overflow-y-auto custom-scrollbar p-8">
-                                    <div id="candidate-preview-content" class="space-y-8 pb-20">
-                                        <!-- Profile details will be loaded here -->
-                                    </div>
+                                <div id="candidate-preview-content"
+                                    class="w-full lg:w-[42%] h-full bg-white border-r overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
+                                    <!-- Profile details will be loaded here -->
                                 </div>
 
                                 <!-- 右カラム: 管理情報 (スクロール可) -->
-                                <div class="w-full lg:w-[60%] h-full overflow-y-auto custom-scrollbar bg-gray-50 p-8">
-                                    <div class="space-y-8 pb-20">
-                                        <!-- 選考進捗セクション -->
-                                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                            <div class="flex justify-between items-center mb-6">
-                                                <h4 class="font-bold text-lg text-gray-900 flex items-center">
-                                                    <i
-                                                        class="fas fa-tasks mr-2 text-indigo-600 bg-indigo-50 p-2 rounded-lg"></i>
-                                                    エントリー中の案件 / 選考状況
-                                                </h4>
-                                            </div>
-                                            <div id="selection-progress-container" class="space-y-4">
-                                                <!-- Selection list will be rendered here -->
-                                            </div>
+                                <div
+                                    class="w-full lg:w-[58%] h-full bg-gray-50 overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
+                                    <!-- 選考進捗セクション -->
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                                        <div class="flex justify-between items-center mb-6">
+                                            <h4 class="font-bold text-lg text-gray-900 flex items-center">
+                                                <i
+                                                    class="fas fa-tasks mr-2 text-indigo-600 bg-indigo-50 p-2 rounded-lg"></i>
+                                                エントリー中の案件 / 選考状況
+                                            </h4>
                                         </div>
+                                        <div id="selection-progress-container" class="space-y-4">
+                                            <!-- Selection list will be rendered here -->
+                                        </div>
+                                    </div>
 
-                                        <!-- 面談履歴セクション -->
-                                        <div
-                                            class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-0 flex flex-col">
-                                            <div class="flex justify-between items-center mb-6">
-                                                <h4 class="font-bold text-lg text-gray-900 flex items-center">
-                                                    <i
-                                                        class="fas fa-comments mr-2 text-blue-600 bg-blue-50 p-2 rounded-lg"></i>
-                                                    面談履歴・対応メモ
-                                                </h4>
-                                                <button onclick="openInterviewRecordModal()"
-                                                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 text-sm font-bold flex items-center transition-all shadow-md transform hover:-translate-y-0.5">
-                                                    <i class="fas fa-plus mr-2"></i>履歴を記録
-                                                </button>
-                                            </div>
-                                            <div id="interview-list-container" class="space-y-4">
-                                                <!-- Interviews will be rendered here -->
-                                            </div>
+                                    <!-- 面談履歴セクション -->
+                                    <div
+                                        class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+                                        <div class="flex justify-between items-center mb-6">
+                                            <h4 class="font-bold text-lg text-gray-900 flex items-center">
+                                                <i
+                                                    class="fas fa-comments mr-2 text-blue-600 bg-blue-50 p-2 rounded-lg"></i>
+                                                面談履歴・対応メモ
+                                            </h4>
+                                            <button onclick="openInterviewRecordModal()"
+                                                class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 text-sm font-bold flex items-center transition-all shadow-md transform hover:-translate-y-0.5">
+                                                <i class="fas fa-plus mr-2"></i>履歴を記録
+                                            </button>
+                                        </div>
+                                        <div id="interview-list-container" class="space-y-4">
+                                            <!-- Interviews will be rendered here -->
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
+
+
+                    <!-- 面談履歴記録モーダル -->
+                    <div id="interview-record-modal"
+                        class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden"
+                        style="z-index: 31000;">
+                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 animate-fade-in-up">
+                            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                                <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                                    <i class="fas fa-clipboard-list text-indigo-600 mr-2"></i>面談履歴を保存
+                                </h3>
+                                <button onclick="closeInterviewRecordModal()"
+                                    class="text-gray-400 hover:text-gray-600 transition-colors">
+                                    <i class="fas fa-times text-2xl"></i>
+                                </button>
+                            </div>
+                            <form id="interview-record-form" class="space-y-5">
+                                <input type="hidden" id="interview-candidate-id">
+                                <input type="hidden" id="interview-id">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-1">実施日</label>
+                                        <input type="date" id="interview-date"
+                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
+                                            required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-1">面談種別</label>
+                                        <select id="interview-type"
+                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all">
+                                            <option value="初回面談">初回面談</option>
+                                            <option value="フォロー面談">フォロー面談</option>
+                                            <option value="カジュアル面談">カジュアル面談</option>
+                                            <option value="模擬面接">模擬面接</option>
+                                            <option value="電話連絡">電話連絡</option>
+                                            <option value="その他">その他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">内容・メモ</label>
+                                    <textarea id="interview-content" rows="8"
+                                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm leading-relaxed"
+                                        placeholder="話した内容、印象、懸念点などを入力してください" required></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">ネクストアクション</label>
+                                    <input type="text" id="interview-next-action"
+                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
+                                        placeholder="例: 〇〇社の求人を案内する、来週月曜日に進捗確認など">
+                                </div>
+                                <div class="flex justify-end gap-3 pt-4 border-t">
+                                    <button type="button" onclick="closeInterviewRecordModal()"
+                                        class="px-6 py-2 border rounded-lg hover:bg-gray-50 transition-all text-sm font-bold text-gray-600">
+                                        キャンセル
+                                    </button>
+                                    <button type="submit"
+                                        class="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition-all text-sm font-bold shadow-md transform hover:-translate-y-0.5">
+                                        履歴を保存する
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+
                 </div>
+            </div>
 
+            <!-- 求人選択モーダル -->
+            <div id="job-selection-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                style="z-index: 11000;">
+                <div class="bg-white rounded-lg w-full max-w-2xl p-6 flex flex-col max-h-[90vh]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-search-plus text-indigo-600 mr-2"></i>スカウト求人を選択
+                        </h3>
+                        <button onclick="closeJobSelectorForScout()"
+                            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
 
-                <!-- 面談履歴記録モーダル -->
-                <div id="interview-record-modal"
-                    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden"
-                    style="z-index: 31000;">
-                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 animate-fade-in-up">
-                        <div class="flex justify-between items-center mb-6 border-b pb-4">
-                            <h3 class="text-xl font-bold text-gray-900 flex items-center">
-                                <i class="fas fa-clipboard-list text-indigo-600 mr-2"></i>面談履歴を保存
-                            </h3>
-                            <button onclick="closeInterviewRecordModal()"
-                                class="text-gray-400 hover:text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">企業名</label>
+                            <input type="text" id="selector-search-company"
+                                class="w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="企業名で検索...">
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-600 mb-1">勤務地（都道府県）</label>
+                                <select id="selector-search-prefecture"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                                    <option value="">指定なし</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-600 mb-1">職務内容・職種</label>
+                                <input type="text" id="selector-search-keyword"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                                    placeholder="キーワード...">
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <button onclick="searchJobsForScout()"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded shadow transition">
+                                <i class="fas fa-search mr-2"></i>検索
                             </button>
                         </div>
-                        <form id="interview-record-form" class="space-y-5">
-                            <input type="hidden" id="interview-candidate-id">
-                            <input type="hidden" id="interview-id">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">実施日</label>
-                                    <input type="date" id="interview-date"
-                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
-                                        required>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">面談種別</label>
-                                    <select id="interview-type"
-                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all">
-                                        <option value="初回面談">初回面談</option>
-                                        <option value="フォロー面談">フォロー面談</option>
-                                        <option value="カジュアル面談">カジュアル面談</option>
-                                        <option value="模擬面接">模擬面接</option>
-                                        <option value="電話連絡">電話連絡</option>
-                                        <option value="その他">その他</option>
-                                    </select>
-                                </div>
+                    </div>
+
+                    <div id="selector-job-results" class="flex-1 overflow-y-auto space-y-2 border-t pt-4">
+                        <div class="text-center py-8 text-gray-400">
+                            検索条件を入力して検索してください
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 外部プロフィール解析モーダル -->
+            <!-- Admin: AI Prompts -->
+            <div id="admin-prompts-content" class="app-content p-2 hidden">
+                <div class="max-w-full mx-auto">
+                    <div class="flex justify-between items-center mb-2 px-2">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">AIプロンプト設定</h2>
+                        </div>
+                        <button onclick="savePrompts()"
+                            class="bg-indigo-600 text-white px-4 py-1.5 rounded hover:bg-indigo-700 shadow-sm transition-all flex items-center text-sm font-medium">
+                            <i class="fas fa-save mr-1.5"></i>保存
+                        </button>
+                    </div>
+
+                    <!-- ① スコアリング -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold border border-indigo-100">分析</span>
+                                <h3 class="text-base font-bold text-gray-800">マッチングスコアリング</h3>
+                                <span class="text-xs text-gray-500">マッチング詳細分析・スコア算出用</span>
                             </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">内容・メモ</label>
-                                <textarea id="interview-content" rows="8"
-                                    class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm leading-relaxed"
-                                    placeholder="話した内容、印象、懸念点などを入力してください" required></textarea>
+                        </div>
+                        <textarea id="prompt-scoring"
+                            class="w-full h-64 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="プロンプトを入力してください..."></textarea>
+                    </div>
+
+                    <!-- ② 紹介理由 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-bold border border-green-100">生成</span>
+                                <h3 class="text-base font-bold text-gray-800">紹介理由コメント</h3>
+                                <span class="text-xs text-gray-500">求職者向け紹介理由（100文字程度）用</span>
                             </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">ネクストアクション</label>
-                                <input type="text" id="interview-next-action"
-                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-                                    placeholder="例: 〇〇社の求人を案内する、来週月曜日に進捗確認など">
+                        </div>
+                        <textarea id="prompt-reason"
+                            class="w-full h-32 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="プロンプトを入力してください..."></textarea>
+                    </div>
+
+                    <!-- ③ 推薦文 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-bold border border-blue-100">書類</span>
+                                <h3 class="text-base font-bold text-gray-800">推薦文（紹介状）</h3>
+                                <span class="text-xs text-gray-500">求職者への推薦文生成用</span>
                             </div>
-                            <div class="flex justify-end gap-3 pt-4 border-t">
-                                <button type="button" onclick="closeInterviewRecordModal()"
-                                    class="px-6 py-2 border rounded-lg hover:bg-gray-50 transition-all text-sm font-bold text-gray-600">
-                                    キャンセル
-                                </button>
-                                <button type="submit"
-                                    class="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition-all text-sm font-bold shadow-md transform hover:-translate-y-0.5">
-                                    履歴を保存する
-                                </button>
+                        </div>
+                        <textarea id="prompt-recommendation-letter"
+                            class="w-full h-48 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="プロンプトを入力してください..."></textarea>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-xs font-bold border border-orange-100">送信</span>
+                                <h3 class="text-base font-bold text-gray-800">スカウトメッセージ</h3>
+                                <span class="text-xs text-gray-500">企業から求職者へのスカウト文生成用</span>
                             </div>
-                        </form>
+                        </div>
+                        <textarea id="prompt-scout-message"
+                            class="w-full h-48 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="プロンプトを入力してください..."></textarea>
+                    </div>
+
+                    <!-- ⑤ 求人解析 (System Prompt) -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-bold border border-purple-100">解析</span>
+                                <h3 class="text-base font-bold text-gray-800">求人解析 (System)</h3>
+                                <span class="text-xs text-gray-500">CSVインポート時の求人情報解析用</span>
+                            </div>
+                        </div>
+                        <textarea id="prompt-job-description"
+                            class="w-full h-64 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="解析ロジック（JSON定義など）..."></textarea>
+                    </div>
+
+                    <!-- ⑥ CSVマッピング (System Prompt) -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-bold border border-purple-100">解析</span>
+                                <h3 class="text-base font-bold text-gray-800">CSVマッピング (System)</h3>
+                                <span class="text-xs text-gray-500">CSVヘッダーの自動マップ用</span>
+                            </div>
+                        </div>
+                        <textarea id="prompt-csv-mapping"
+                            class="w-full h-48 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="マッピングロジック..."></textarea>
+                    </div>
+
+                    <!-- ⑦ 外部プロフィール解析 (System Prompt) -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
+                        <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-bold border border-purple-100">解析</span>
+                                <h3 class="text-base font-bold text-gray-800">外部プロフィール解析 (System)</h3>
+                                <span class="text-xs text-gray-500">PDF/画像アップロード時の解析用</span>
+                            </div>
+                        </div>
+                        <textarea id="prompt-external-profile-analysis"
+                            class="w-full h-80 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
+                            placeholder="解析プロンプト..."></textarea>
                     </div>
                 </div>
-
-
-            </div>
-    </div>
-
-    <!-- 求人選択モーダル -->
-    <div id="job-selection-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-        style="z-index: 11000;">
-        <div class="bg-white rounded-lg w-full max-w-2xl p-6 flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">
-                    <i class="fas fa-search-plus text-indigo-600 mr-2"></i>スカウト求人を選択
-                </h3>
-                <button onclick="closeJobSelectorForScout()"
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
             </div>
 
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 space-y-3">
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">企業名</label>
-                    <input type="text" id="selector-search-company"
-                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="企業名で検索...">
-                </div>
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-600 mb-1">勤務地（都道府県）</label>
-                        <select id="selector-search-prefecture"
-                            class="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-                            <option value="">指定なし</option>
-                        </select>
+            <!-- Admin: Company Management Page -->
+            <div id="admin-companies-content" class="app-content p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">企業管理</h2>
+                            <p class="text-gray-600 text-sm mt-1">登録されている企業の一覧と管理</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="showCompanyCsvImportModal()"
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                <i class="fas fa-file-csv mr-2"></i>CSVインポート
+                            </button>
+                            <button onclick="showCompanyForm()"
+                                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                                <i class="fas fa-plus mr-2"></i>新規企業登録
+                            </button>
+                        </div>
                     </div>
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-600 mb-1">職務内容・職種</label>
-                        <input type="text" id="selector-search-keyword"
-                            class="w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="キーワード...">
+                    <div class="mb-4">
+                        <input type="text" id="company-search" placeholder="企業名、業界、所在地で検索..."
+                            class="w-full px-4 py-2 border rounded-lg" onkeyup="filterCompanies()">
                     </div>
                 </div>
-                <div class="text-right">
-                    <button onclick="searchJobsForScout()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded shadow transition">
-                        <i class="fas fa-search mr-2"></i>検索
-                    </button>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200" id="companies-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    企業名</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    業界</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    所在地</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Webサイト</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companies-container" class="bg-white divide-y divide-gray-200">
+                            <!-- Companies will be loaded here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <div id="selector-job-results" class="flex-1 overflow-y-auto space-y-2 border-t pt-4">
-                <div class="text-center py-8 text-gray-400">
-                    検索条件を入力して検索してください
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 外部プロフィール解析モーダル -->
-    <!-- Admin: AI Prompts -->
-    <div id="admin-prompts-content" class="app-content p-2 hidden">
-        <div class="max-w-full mx-auto">
-            <div class="flex justify-between items-center mb-2 px-2">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800">AIプロンプト設定</h2>
-                </div>
-                <button onclick="savePrompts()"
-                    class="bg-indigo-600 text-white px-4 py-1.5 rounded hover:bg-indigo-700 shadow-sm transition-all flex items-center text-sm font-medium">
-                    <i class="fas fa-save mr-1.5"></i>保存
-                </button>
-            </div>
-
-            <!-- ① スコアリング -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold border border-indigo-100">分析</span>
-                        <h3 class="text-base font-bold text-gray-800">マッチングスコアリング</h3>
-                        <span class="text-xs text-gray-500">マッチング詳細分析・スコア算出用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-scoring"
-                    class="w-full h-64 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="プロンプトを入力してください..."></textarea>
-            </div>
-
-            <!-- ② 紹介理由 -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-bold border border-green-100">生成</span>
-                        <h3 class="text-base font-bold text-gray-800">紹介理由コメント</h3>
-                        <span class="text-xs text-gray-500">求職者向け紹介理由（100文字程度）用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-reason"
-                    class="w-full h-32 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="プロンプトを入力してください..."></textarea>
-            </div>
-
-            <!-- ③ 推薦文 -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-bold border border-blue-100">書類</span>
-                        <h3 class="text-base font-bold text-gray-800">推薦文（紹介状）</h3>
-                        <span class="text-xs text-gray-500">求職者への推薦文生成用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-recommendation-letter"
-                    class="w-full h-48 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="プロンプトを入力してください..."></textarea>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-xs font-bold border border-orange-100">送信</span>
-                        <h3 class="text-base font-bold text-gray-800">スカウトメッセージ</h3>
-                        <span class="text-xs text-gray-500">企業から求職者へのスカウト文生成用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-scout-message"
-                    class="w-full h-48 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="プロンプトを入力してください..."></textarea>
-            </div>
-
-            <!-- ⑤ 求人解析 (System Prompt) -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-bold border border-purple-100">解析</span>
-                        <h3 class="text-base font-bold text-gray-800">求人解析 (System)</h3>
-                        <span class="text-xs text-gray-500">CSVインポート時の求人情報解析用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-job-description"
-                    class="w-full h-64 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="解析ロジック（JSON定義など）..."></textarea>
-            </div>
-
-            <!-- ⑥ CSVマッピング (System Prompt) -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-bold border border-purple-100">解析</span>
-                        <h3 class="text-base font-bold text-gray-800">CSVマッピング (System)</h3>
-                        <span class="text-xs text-gray-500">CSVヘッダーの自動マップ用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-csv-mapping"
-                    class="w-full h-48 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="マッピングロジック..."></textarea>
-            </div>
-
-            <!-- ⑦ 外部プロフィール解析 (System Prompt) -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3">
-                <div class="mb-2 border-b border-gray-100 pb-2 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs font-bold border border-purple-100">解析</span>
-                        <h3 class="text-base font-bold text-gray-800">外部プロフィール解析 (System)</h3>
-                        <span class="text-xs text-gray-500">PDF/画像アップロード時の解析用</span>
-                    </div>
-                </div>
-                <textarea id="prompt-external-profile-analysis"
-                    class="w-full h-80 px-3 py-2 bg-gray-50 border border-gray-200 rounded font-mono text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white focus:border-transparent transition-all leading-relaxed resize-y"
-                    placeholder="解析プロンプト..."></textarea>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin: Company Management Page -->
-    <div id="admin-companies-content" class="app-content p-6 hidden">
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">企業管理</h2>
-                    <p class="text-gray-600 text-sm mt-1">登録されている企業の一覧と管理</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="showCompanyCsvImportModal()"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                        <i class="fas fa-file-csv mr-2"></i>CSVインポート
-                    </button>
-                    <button onclick="showCompanyForm()"
-                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-                        <i class="fas fa-plus mr-2"></i>新規企業登録
-                    </button>
-                </div>
-            </div>
-            <div class="mb-4">
-                <input type="text" id="company-search" placeholder="企業名、業界、所在地で検索..."
-                    class="w-full px-4 py-2 border rounded-lg" onkeyup="filterCompanies()">
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200" id="companies-table">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            企業名</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            業界</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            所在地</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Webサイト</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            操作</th>
-                    </tr>
-                </thead>
-                <tbody id="companies-container" class="bg-white divide-y divide-gray-200">
-                    <!-- Companies will be loaded here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-    </main>
+        </main>
     </div>
 
     <!-- Company Form Modal -->
