@@ -468,7 +468,7 @@
 
         /* --- Ultra-Visible Scrollbar Styling --- */
         .custom-scrollbar {
-            overflow-y: scroll !important;
+            overflow-y: auto !important;
             /* Force gutter visibility */
             scrollbar-width: thin !important;
             scrollbar-color: #4f46e5 #f1f5f9 !important;
@@ -3413,18 +3413,17 @@
                         </div>
 
                         <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 bg-gray-50 flex flex-col lg:flex-row overflow-hidden"
-                            style="height: calc(92vh - 90px);">
+                        <div class="flex-1 bg-gray-50 flex flex-col lg:flex-row overflow-hidden min-h-0">
 
                             <!-- 左カラム: プロフィール詳細 (スクロール可) -->
                             <div id="candidate-preview-content"
-                                class="w-full lg:w-[42%] h-full bg-white border-r overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
+                                class="w-full lg:w-[42%] h-full bg-white border-r overflow-y-auto custom-scrollbar p-8 space-y-8 pb-32">
                                 <!-- Profile details will be loaded here -->
                             </div>
 
                             <!-- 右カラム: 管理情報 (スクロール可) -->
                             <div
-                                class="w-full lg:w-[58%] h-full bg-gray-50 overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
+                                class="w-full lg:w-[58%] h-full bg-gray-50 overflow-y-auto custom-scrollbar p-8 space-y-8 pb-32">
                                 <!-- 選考進捗セクション -->
                                 <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                                     <div class="flex justify-between items-center mb-6">
