@@ -10680,7 +10680,7 @@
             try {
                 const updateButtons = (active) => {
                     // リスト用アイコン
-                    const listIcon = $(`#fav - btn - ${jobId} i`);
+                    const listIcon = $(`#fav-btn-${jobId} i`);
                     if (active) {
                         listIcon.removeClass('far text-gray-400').addClass('fas text-pink-500');
                     } else {
@@ -10688,7 +10688,7 @@
                     }
 
                     // モーダル用ボタン
-                    const modalBtn = $(`#modal - fav - btn - ${jobId} `);
+                    const modalBtn = $(`#modal-fav-btn-${jobId}`);
                     if (modalBtn.length) {
                         if (active) {
                             modalBtn.removeClass('border-gray-300 text-gray-700').addClass('border-pink-500 text-pink-600');
