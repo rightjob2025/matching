@@ -3334,75 +3334,95 @@
                 <div id="candidate-preview-modal"
                     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
                     style="z-index: 30000;">
-                    <div class="bg-white rounded-lg w-full max-w-5xl p-6 max-h-[90vh] flex flex-col">
-                        <div class="flex justify-between items-center mb-4 border-b pb-4">
-                            <h3 class="text-2xl font-bold text-gray-900" id="candidate-detail-title">候補者詳細</h3>
-                            <button onclick="closeCandidatePreview()"
-                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-
-                        <!-- タブメニュー -->
-                        <div class="border-b border-gray-200 mb-6">
-                            <nav class="flex -mb-px space-x-8" aria-label="Tabs">
-                                <button onclick="switchCandidateDetailTab('profile')" id="btn-tab-profile"
-                                    class="candidate-tab-btn border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                    プロフィール
-                                </button>
-                                <button onclick="switchCandidateDetailTab('interviews')" id="btn-tab-interviews"
-                                    class="candidate-tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                    面談履歴
-                                </button>
-                                <button onclick="switchCandidateDetailTab('progress')" id="btn-tab-progress"
-                                    class="candidate-tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                    選考進捗
-                                </button>
-                            </nav>
-                        </div>
-
-                        <div id="candidate-detail-body" class="flex-1 overflow-y-auto pr-2">
-                            <!-- プロフィールタブ -->
-                            <div id="tab-content-profile" class="candidate-tab-content space-y-6">
-                                <div id="candidate-preview-content">
-                                    <!-- Candidate details will be loaded here -->
+                    <div
+                        class="bg-white rounded-2xl w-full max-w-7xl mx-4 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+                        <!-- ヘッダー -->
+                        <div class="flex justify-between items-center px-8 py-5 border-b bg-white">
+                            <div class="flex items-center gap-4">
+                                <div id="candidate-avatar-header"
+                                    class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-inner">
+                                    ?
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-900 leading-tight"
+                                        id="candidate-detail-title">候補者詳細</h3>
+                                    <p id="candidate-email-header" class="text-sm text-gray-500"></p>
+                                </div>
+                                <div id="candidate-status-badge-header" class="ml-4">
+                                    <!-- Status badge will be injected here -->
                                 </div>
                             </div>
-
-                            <!-- 面談履歴タブ -->
-                            <div id="tab-content-interviews" class="candidate-tab-content hidden space-y-6">
-                                <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                                    <h4 class="font-bold text-gray-700">面談記録一覧</h4>
-                                    <button onclick="openInterviewRecordModal()"
-                                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm flex items-center transition-all shadow-sm">
-                                        <i class="fas fa-plus mr-2"></i>面談履歴を記録
-                                    </button>
-                                </div>
-                                <div id="interview-list-container" class="space-y-4">
-                                    <!-- Interviews will be rendered here -->
-                                    <div class="text-center py-8 text-gray-500">
-                                        <i class="fas fa-comments text-3xl mb-2 block"></i>
-                                        <p>面談履歴はありません</p>
-                                    </div>
-                                </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="showAdminUserModal($('#interview-candidate-id').val())"
+                                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-bold flex items-center transition-all">
+                                    <i class="fas fa-edit mr-2 text-gray-400"></i>情報を編集
+                                </button>
+                                <button onclick="closeCandidatePreview()"
+                                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
                             </div>
+                        </div>
 
-                            <!-- 選考進捗タブ -->
-                            <div id="tab-content-progress" class="candidate-tab-content hidden space-y-6">
-                                <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                                    <h4 class="font-bold text-gray-700">エントリー中の案件 / 選考状況</h4>
-                                </div>
-                                <div id="selection-progress-container" class="space-y-6">
-                                    <!-- Selection list will be rendered here -->
-                                    <div class="text-center py-8 text-gray-500">
-                                        <i class="fas fa-tasks text-3xl mb-2 block"></i>
-                                        <p>進行中の選考はありません</p>
+                        <!-- メインコンテンツ (集約画面) -->
+                        <div class="flex-1 overflow-hidden p-8 bg-gray-50">
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+
+                                <!-- 左カラム: プロフィール詳細 (スクロール可) -->
+                                <div class="lg:col-span-5 h-full overflow-y-auto pr-4 custom-scrollbar">
+                                    <div id="candidate-preview-content" class="space-y-6">
+                                        <!-- Profile details will be loaded here -->
                                     </div>
+                                </div>
+
+                                <!-- 右カラム: 管理情報 (スクロール可) -->
+                                <div
+                                    class="lg:col-span-7 h-full flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+
+                                    <!-- 選考進捗セクション -->
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                                        <div class="flex justify-between items-center mb-6">
+                                            <h4 class="font-bold text-lg text-gray-900 flex items-center">
+                                                <i
+                                                    class="fas fa-tasks mr-2 text-indigo-600 bg-indigo-50 p-2 rounded-lg"></i>
+                                                エントリー中の案件 / 選考状況
+                                            </h4>
+                                        </div>
+                                        <div id="selection-progress-container" class="space-y-4">
+                                            <!-- Selection list will be rendered here -->
+                                            <div class="text-center py-12 text-gray-400">
+                                                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 面談履歴セクション -->
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex-1">
+                                        <div class="flex justify-between items-center mb-6">
+                                            <h4 class="font-bold text-lg text-gray-900 flex items-center">
+                                                <i
+                                                    class="fas fa-comments mr-2 text-blue-600 bg-blue-50 p-2 rounded-lg"></i>
+                                                面談履歴・対応メモ
+                                            </h4>
+                                            <button onclick="openInterviewRecordModal()"
+                                                class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 text-sm font-bold flex items-center transition-all shadow-md transform hover:-translate-y-0.5">
+                                                <i class="fas fa-plus mr-2"></i>履歴を記録
+                                            </button>
+                                        </div>
+                                        <div id="interview-list-container" class="space-y-4">
+                                            <!-- Interviews will be rendered here -->
+                                            <div class="text-center py-12 text-gray-400">
+                                                <i class="fas fa-spinner fa-spin text-2xl"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- 面談履歴記録モーダル -->
                 <div id="interview-record-modal"
@@ -7780,9 +7800,8 @@
                 return;
             }
 
-            // タブを初期化
             $('#interview-candidate-id').val(candidateId);
-            switchCandidateDetailTab('profile');
+            showLoading();
 
             showLoading();
             try {
@@ -7803,23 +7822,12 @@
                 const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : (userData.candidate_profiles || {});
                 const candidate = { ...userData, ...profile };
 
-                $('#candidate-detail-title').text(`候補者詳細: ${candidate.name || '名前未設定'}`);
+                $('#candidate-detail-title').text(candidate.name || '名前未設定');
+                $('#candidate-email-header').text(candidate.email || '');
+                $('#candidate-avatar-header').text(candidate.name ? candidate.name.charAt(0) : '?');
 
-
-                // プレビューコンテンツを生成
+                // プレビューコンテンツを生成 (ヘッダー情報を除いた詳細)
                 const content = `
-            <!--基本情報 -->
-                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6 mb-6">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                                ${candidate.name ? candidate.name.charAt(0) : '?'}
-                            </div>
-                            <div>
-                                <h4 class="text-2xl font-bold text-gray-900">${candidate.name || '名前未設定'}</h4>
-                                <p class="text-gray-600">${candidate.email || ''}</p>
-                            </div>
-                        </div>
-                    </div>
 
                     <!--希望条件 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -7969,6 +7977,11 @@
 
                 console.log('Updating candidate preview visibility (z-index 99999)...');
                 modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 99999 !important; visibility: visible !important; opacity: 1 !important;');
+
+                // 集約画面用のデータロード
+                loadInterviewHistory(candidateId);
+                loadSelectionProgress(candidateId);
+
                 console.log('viewCandidateProfile process complete');
 
             } catch (error) {
