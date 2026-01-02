@@ -7976,8 +7976,8 @@
                 // Move to body to avoid parent clipping/z-index issues
                 $('body').append(modal);
 
-                console.log('Updating candidate preview visibility (z-index 99999)...');
-                modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 99999 !important; visibility: visible !important; opacity: 1 !important;');
+                console.log('Updating candidate preview visibility...');
+                modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 40000 !important; visibility: visible !important; opacity: 1 !important;');
 
                 // 集約画面用のデータロード
                 loadInterviewHistory(candidateId);
@@ -8016,14 +8016,23 @@
 
         // --- 面談履歴機能 ---
         window.openInterviewRecordModal = function () {
-            const candidateId = $('#admin-user-id').val() || $('#interview-candidate-id').val();
-            if (!candidateId) return;
+            const candidateId = $('#interview-candidate-id').val() || $('#admin-user-id').val();
+            console.log('Opening interview record modal for candidate:', candidateId);
+            if (!candidateId) {
+                alert('候補者が特定できません');
+                return;
+            }
 
+            const modal = $('#interview-record-modal');
+            $('body').append(modal); // Ensure it's at body level
+
+            $('#interview-id').val('');
             $('#interview-candidate-id').val(candidateId);
             $('#interview-date').val(new Date().toISOString().split('T')[0]);
             $('#interview-content').val('');
             $('#interview-next-action').val('');
-            $('#interview-record-modal').removeClass('hidden');
+
+            modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 50000 !important;');
         }
 
         window.closeInterviewRecordModal = function () {
@@ -8042,6 +8051,9 @@
 
                 if (error) throw error;
 
+                const modal = $('#interview-record-modal');
+                $('body').append(modal);
+
                 $('#interview-id').val(data.id);
                 $('#interview-candidate-id').val(data.candidate_id);
                 $('#interview-date').val(data.interview_date);
@@ -8049,7 +8061,7 @@
                 $('#interview-content').val(data.content);
                 $('#interview-next-action').val(data.next_action);
 
-                $('#interview-record-modal').removeClass('hidden');
+                modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 50000 !important;');
             } catch (err) {
                 console.error('Edit interview error:', err);
                 alert('面談詳細の取得に失敗しました');
