@@ -466,31 +466,36 @@
             border-bottom: none;
         }
 
-        /* Custom Scrollbar */
+        /* Custom Scrollbar - More Visible */
         .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
+            display: block !important;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
+            background: #f8fafc;
+            border-radius: 5px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #cbd5e1;
-            border-radius: 10px;
-            border: 2px solid #f1f5f9;
+            border-radius: 5px;
+            border: 2px solid #f8fafc;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: #6366f1;
+            /* Indigo on hover to be sure */
         }
 
-        /* Firefox */
+        /* Force scrollbar to be visible */
         .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
+            overflow-y: scroll !important;
+            scrollbar-width: auto !important;
+            /* Standard browser scrollbar */
+            scrollbar-color: #cbd5e1 #f8fafc;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Modal Animation */
@@ -3409,7 +3414,7 @@
                         </div>
 
                         <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 min-h-0 bg-gray-50 overflow-hidden">
+                        <div class="flex-1 overflow-hidden bg-gray-50 flex flex-col" style="height: 0;">
                             <div class="grid grid-cols-1 lg:grid-cols-12 gap-0 h-full">
 
                                 <!-- 左カラム: プロフィール詳細 (スクロール可) -->
