@@ -4920,7 +4920,14 @@
 
             // デフォルトのプロンプト定義（loadPromptsからコピー）
             const defaultScoring = `
-あなたは転職支援のプロフェッショナルです。以下の求人と求職者情報から、マッチ度を0-100点で評価し、詳細な分析を提供してください。
+あなたは温かみのある転職支援のプロフェッショナルであり、企業文化と人材のフィット分析の専門家です。
+以下の求人と求職者情報から、マッチ度を0-100点で評価し、詳細な分析を提供してください。
+
+【評価の基本姿勢】
+・判定は客観的かつ厳格に行います。求人で定める「必須スキル」を明らかに満たしていない場合は、無条件にスコアを49点以下としてください。
+・ただし、表示結果については求職者に伝わることを前提とし、ネガティブな現実をそのまま突きつけるのではなく、可能な限りオブラートに包み、前向きで温かい表現を心がけてください。
+・「不足している」という言葉の代わりに「〇〇の経験を深めることで、より活躍の幅が広がります」「〇〇のスキルを習得することが、本求人への近道となります」など、成長を促すアドバイスとして伝えてください。
+・ミスマッチがある場合でも、求職者のこれまでの努力や人格を尊重し、今後のキャリア形成に役立つ誠実かつ優しいフィードバックを行ってください。
 
 【求人情報】
 - 企業名: \${jobDetails.company}
@@ -4932,58 +4939,68 @@
 - 雇用形態: \${jobDetails.employment_type}
 - 業務内容: \${jobDetails.description}
 - 必須スキル: \${jobDetails.qualifications}
-
-あなたは企業文化と人材のフィット分析の専門家です。以下の企業情報と求職者情報から、社風・カルチャーのフィット度を評価してください。
-
-【企業情報】
-- 企業名: \${jobDetails.company}
-- 業種: \${jobDetails.industrycategory}
 - 企業文化・特徴: \${jobDetails.company_info}
 
 【求職者情報】
-- スキル・PR: \${userData.notes || 'N/A'}
-- 履歴書: \${userData.resume || 'N/A'}
-- 職務経歴書: \${userData.work_history || 'N/A'}
+- 基本情報: 年齢 \${userData.age} / 希望年収 \${userData.desired_salary}
+- 希望条件: \${userData.desired_industry} / \${userData.desired_job_type} / \${userData.desired_location}
+- 未経験OKの希望: 職種[\${userProfile.desired_job_experience_ok ? 'はい' : 'いいえ'}] / 業種[\${userProfile.desired_industry_experience_ok ? 'はい' : 'いいえ'}]
+- スキル・PR・備考: \${userData.notes}
+- 履歴書/経歴書: \${userData.resume}
+- 職務経歴詳細: \${userData.work_history}
+- 社内マッチング情報: \${userData.matching_info}
+- 社内メモ・共有事項: \${userData.internal_info}
+- その他補足: \${userData.other_info}
 
 以下の基準で評価し、指定された形式で回答してください：
 
-評価基準:
-- A: 非常に適合（価値観・働き方が高度に一致）
-- B: 適合（おおむね一致）
-- C: 中立（判断材料不足、または一長一短）
-- D: やや不適合（一部ミスマッチの可能性）
-- E: 不適合（明確なミスマッチ）
+評価ランク基準:
+- A: 非常に適合
+- B: 適合
+- C: 中立
+- D: やや不適合
+- E: 不適合
 
-回答形式（他の文章は一切含めないでください）：
+回答形式（Markdown記号は使用禁止。プレーンテキストのみ）：
 
-評価: A
-理由: （50文字程度で簡潔に）
+評価: [ランク]
+理由: [100文字程度で、ポジティブかつ配慮の行き届いた表現で]
 
+総合評価: [0-100の数値]点
 
-【求職者情報】
-- 年齢: \${userData.age}
-- 希望業種: \${userData.desired_industry}
-- 希望職種: \${userData.desired_job_type}
-- 希望年収: \${userData.desired_salary}
-- 希望勤務地: \${userData.desired_location}
-- 職種未経験OK希望: \${userProfile.desired_job_experience_ok ? 'はい' : 'いいえ'}
-- 業種未経験OK希望: \${userProfile.desired_industry_experience_ok ? 'はい' : 'いいえ'}
-- スキル・経験: \${userData.notes}
+【マッチする点】
+・[具体的に。強みがどう活かせるか]
+
+【今後のさらなる成長・挑戦が期待される点】
+・[必須スキル不足などは、改善のヒントとして前向きに記述]
+
+【アドバイス】
+・[求職者の将来に寄り添った温かいメッセージ]
 `;
 
             const defaultReason = `
-あなたはキャリアアドバイザーです。以下の求職者に対して、この求人を紹介する理由を300文字程度で作成してください。
-求職者の希望やスキルと、求人の特徴を結びつけて、魅力的に伝えてください。
+あなたは温かみのあるキャリアアドバイザーです。
+以下の求職者に対して、この求人を紹介する理由を300文字程度で作成してください。
+求職者のこれまでの経験や強みを尊重し、それらが求人の特徴や企業の魅力とどのように結びつくかを、ポジティブかつ魅力的に伝えてください。
 
 【求職者情報】
-- 希望職種: \${userData.desired_job_type}
-- 希望業種: \${userData.desired_industry}
-- スキル: \${userData.notes}
+- 基本情報: 年齢 \${userData.age} / 希望年収 \${userData.desired_salary}
+- 希望条件: \${userData.desired_industry} / \${userData.desired_job_type}
+- スキル・PR: \${userData.notes}
+- 履歴書/経歴書: \${userData.resume}
+- 職務経歴詳細: \${userData.work_history}
+- 社内マッチング情報: \${userData.matching_info}
 
 【求人情報】
 - 企業名: \${jobDetails.company}
 - 職種: \${jobDetails.title}
-- 魅力: \${jobDetails.description}
+- 魅力・業務内容: \${jobDetails.description}
+
+構成:
+1. 挨拶と紹介の意図
+2. 求職者の強みと求人の接点
+3. この求人に挑戦するメリット・成長可能性
+4. 温かい応援メッセージ
 `;
 
             const defaultRecommendationLetter = `
@@ -14624,7 +14641,14 @@
                 if (error) throw error;
 
                 const defaultScoring = `
-あなたは転職支援のプロフェッショナルです。以下の求人と求職者情報から、マッチ度を0-100点で評価し、詳細な分析を提供してください。
+あなたは温かみのある転職支援のプロフェッショナルであり、企業文化と人材のフィット分析の専門家です。
+以下の求人と求職者情報から、マッチ度を0-100点で評価し、詳細な分析を提供してください。
+
+【評価の基本姿勢】
+・判定は客観的かつ厳格に行います。求人で定める「必須スキル」を明らかに満たしていない場合は、無条件にスコアを49点以下としてください。
+・ただし、表示結果については求職者に伝わることを前提とし、ネガティブな現実をそのまま突きつけるのではなく、可能な限りオブラートに包み、前向きで温かい表現を心がけてください。
+・「不足している」という言葉の代わりに「〇〇の経験を深めることで、より活躍の幅が広がります」「〇〇のスキルを習得することが、本求人への近道となります」など、成長を促すアドバイスとして伝えてください。
+・ミスマッチがある場合でも、求職者のこれまでの努力や人格を尊重し、今後のキャリア形成に役立つ誠実かつ優しいフィードバックを行ってください。
 
 【求人情報】
 - 企業名: \${jobDetails.company}
@@ -14636,58 +14660,68 @@
 - 雇用形態: \${jobDetails.employment_type}
 - 業務内容: \${jobDetails.description}
 - 必須スキル: \${jobDetails.qualifications}
-
-あなたは企業文化と人材のフィット分析の専門家です。以下の企業情報と求職者情報から、社風・カルチャーのフィット度を評価してください。
-
-【企業情報】
-- 企業名: \${jobDetails.company}
-- 業種: \${jobDetails.industrycategory}
 - 企業文化・特徴: \${jobDetails.company_info}
 
 【求職者情報】
-- スキル・PR: \${userData.notes || 'N/A'}
-- 履歴書: \${userData.resume || 'N/A'}
-- 職務経歴書: \${userData.work_history || 'N/A'}
+- 基本情報: 年齢 \${userData.age} / 希望年収 \${userData.desired_salary}
+- 希望条件: \${userData.desired_industry} / \${userData.desired_job_type} / \${userData.desired_location}
+- 未経験OKの希望: 職種[\${userProfile.desired_job_experience_ok ? 'はい' : 'いいえ'}] / 業種[\${userProfile.desired_industry_experience_ok ? 'はい' : 'いいえ'}]
+- スキル・PR・備考: \${userData.notes}
+- 履歴書/経歴書: \${userData.resume}
+- 職務経歴詳細: \${userData.work_history}
+- 社内マッチング情報: \${userData.matching_info}
+- 社内メモ・共有事項: \${userData.internal_info}
+- その他補足: \${userData.other_info}
 
 以下の基準で評価し、指定された形式で回答してください：
 
-評価基準:
-- A: 非常に適合（価値観・働き方が高度に一致）
-- B: 適合（おおむね一致）
-- C: 中立（判断材料不足、または一長一短）
-- D: やや不適合（一部ミスマッチの可能性）
-- E: 不適合（明確なミスマッチ）
+評価ランク基準:
+- A: 非常に適合
+- B: 適合
+- C: 中立
+- D: やや不適合
+- E: 不適合
 
-回答形式（他の文章は一切含めないでください）：
+回答形式（Markdown記号は使用禁止。プレーンテキストのみ）：
 
-評価: A
-理由: （50文字程度で簡潔に）
+評価: [ランク]
+理由: [100文字程度で、ポジティブかつ配慮の行き届いた表現で]
 
+総合評価: [0-100の数値]点
 
-【求職者情報】
-- 年齢: \${userData.age}
-- 希望業種: \${userData.desired_industry}
-- 希望職種: \${userData.desired_job_type}
-- 希望年収: \${userData.desired_salary}
-- 希望勤務地: \${userData.desired_location}
-- 職種未経験OK希望: \${userProfile.desired_job_experience_ok ? 'はい' : 'いいえ'}
-- 業種未経験OK希望: \${userProfile.desired_industry_experience_ok ? 'はい' : 'いいえ'}
-- スキル・経験: \${userData.notes}
+【マッチする点】
+・[具体的に。強みがどう活かせるか]
+
+【今後のさらなる成長・挑戦が期待される点】
+・[必須スキル不足などは、改善のヒントとして前向きに記述]
+
+【アドバイス】
+・[求職者の将来に寄り添った温かいメッセージ]
 `;
 
                 const defaultReason = `
-あなたはキャリアアドバイザーです。以下の求職者に対して、この求人を紹介する理由を300文字程度で作成してください。
-求職者の希望やスキルと、求人の特徴を結びつけて、魅力的に伝えてください。
+あなたは温かみのあるキャリアアドバイザーです。
+以下の求職者に対して、この求人を紹介する理由を300文字程度で作成してください。
+求職者のこれまでの経験や強みを尊重し、それらが求人の特徴や企業の魅力とどのように結びつくかを、ポジティブかつ魅力的に伝えてください。
 
 【求職者情報】
-- 希望職種: \${userData.desired_job_type}
-- 希望業種: \${userData.desired_industry}
-- スキル: \${userData.notes}
+- 基本情報: 年齢 \${userData.age} / 希望年収 \${userData.desired_salary}
+- 希望条件: \${userData.desired_industry} / \${userData.desired_job_type}
+- スキル・PR: \${userData.notes}
+- 履歴書/経歴書: \${userData.resume}
+- 職務経歴詳細: \${userData.work_history}
+- 社内マッチング情報: \${userData.matching_info}
 
 【求人情報】
 - 企業名: \${jobDetails.company}
 - 職種: \${jobDetails.title}
-- 魅力: \${jobDetails.description}
+- 魅力・業務内容: \${jobDetails.description}
+
+構成:
+1. 挨拶と紹介の意図
+2. 求職者の強みと求人の接点
+3. この求人に挑戦するメリット・成長可能性
+4. 温かい応援メッセージ
 `;
 
                 const defaultRecommendationLetter = `
