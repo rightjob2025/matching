@@ -1645,7 +1645,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
                                 <input type="date" id="profile-birth-date" class="w-full px-4 py-2 border rounded-lg"
@@ -1656,6 +1656,23 @@
                                 <input type="number" id="profile-age" class="w-full px-4 py-2 border rounded-lg"
                                     min="0">
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                                <select id="profile-gender" class="w-full px-4 py-2 border rounded-lg">
+                                    <option value="">選択してください</option>
+                                    <option value="男性">男性</option>
+                                    <option value="女性">女性</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">現住所（都道府県）</label>
+                            <select id="profile-current-location"
+                                class="w-full px-4 py-2 border rounded-lg select2-prefecture">
+                                <option value="">都道府県を選択</option>
+                            </select>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3045,18 +3062,35 @@
                                     <input type="number" id="admin-user-salary"
                                         class="w-full px-4 py-2 border rounded-lg" min="0">
                                 </div>
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
                                         <input type="date" id="admin-user-birth-date"
-                                            class="w-full px-4 py-2 border rounded-lg"
+                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
                                             onchange="calculateAge(this.value, '#admin-user-age')">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">年齢</label>
                                         <input type="number" id="admin-user-age"
-                                            class="w-full px-4 py-2 border rounded-lg">
+                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all font-mono"
+                                            min="0">
                                     </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                                        <select id="admin-user-gender" class="w-full px-4 py-2 border rounded-lg">
+                                            <option value="">選択</option>
+                                            <option value="男性">男性</option>
+                                            <option value="女性">女性</option>
+                                            <option value="その他">その他</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">現住所（居住地）</label>
+                                    <select id="admin-user-current-location" class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="">都道府県を選択</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">学歴</label>
@@ -3401,8 +3435,11 @@
                                     ?
                                 </div>
                                 <div>
-                                    <h3 class="text-2xl font-bold text-gray-900 leading-tight"
-                                        id="candidate-detail-title">候補者詳細</h3>
+                                    <h3 class="text-2xl font-bold text-gray-900 leading-tight flex items-center gap-3">
+                                        <span id="candidate-detail-title">候補者詳細</span>
+                                        <span id="candidate-header-meta"
+                                            class="text-sm font-normal text-gray-500 bg-gray-100 px-3 py-1 rounded-full"></span>
+                                    </h3>
                                     <p id="candidate-email-header" class="text-sm text-gray-500"></p>
                                 </div>
                                 <div id="candidate-status-badge-header" class="ml-4">
@@ -7872,10 +7909,21 @@
                 $('#candidate-email-header').text(candidate.email || '');
                 $('#candidate-avatar-header').text(candidate.name ? candidate.name.charAt(0) : '?');
 
+                // ヘッダーメタ情報 (年齢、性別、居住地)
+                const metaParts = [];
+                if (candidate.age) metaParts.push(`${candidate.age}歳`);
+                if (candidate.gender) metaParts.push(candidate.gender);
+                if (candidate.current_location) metaParts.push(candidate.current_location);
+
+                if (metaParts.length > 0) {
+                    $('#candidate-header-meta').text(metaParts.join(' / ')).show();
+                } else {
+                    $('#candidate-header-meta').hide();
+                }
+
                 // プレビューコンテンツを生成 (ヘッダー情報を除いた詳細)
                 const content = `
-
-                    <!--希望条件 -->
+                    <!-- 1. 希望条件 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
                             <i class="fas fa-star mr-2 text-yellow-500"></i>希望条件
@@ -7897,7 +7945,7 @@
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">雇用形態</p>
-                                <p class="font-medium text-gray-900">${candidate.desired_employment_type || '未設定'}</p>
+                                <p class="font-medium text-gray-900">${window.formatArrayValue(candidate.desired_employment_type)}</p>
                             </div>
                             <div class="col-span-1 md:col-span-2">
                                 <p class="text-sm text-gray-600 mb-2">こだわり条件</p>
@@ -7910,118 +7958,81 @@
                         </div>
                     </div>
 
-                    <!--スキル -->
-            ${candidate.skills ? `
+                    <!-- 2. スキル -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
                             <i class="fas fa-code mr-2 text-blue-500"></i>スキル
                         </h4>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.skills}</p>
+                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.skills || '-'}</p>
                         </div>
                     </div>
-                    ` : ''
-                    }
 
-                    <!--職務経歴 -->
-            ${candidate.work_history ? `
+                    <!-- 3. 職歴概要 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
-                            <i class="fas fa-briefcase mr-2 text-green-500"></i>職務経歴
+                            <i class="fas fa-briefcase mr-2 text-green-500"></i>職歴概要
                         </h4>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.work_history}</p>
+                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.work_history || '-'}</p>
                         </div>
                     </div>
-                    ` : ''
-                    }
 
-                    <!--履歴書(詳細) -->
-            ${candidate.resume ? `
-                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                        <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
-                            <i class="fas fa-file-alt mr-2 text-gray-500"></i>履歴書
-                        </h4>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.resume}</p>
-                        </div>
-                    </div>
-                    ` : ''
-                    }
-
-                    <!--履歴情報 -->
-            ${candidate.history_info ? `
+                    <!-- 4. 履歴情報 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
                             <i class="fas fa-history mr-2 text-indigo-500"></i>履歴情報
                         </h4>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.history_info}</p>
+                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.history_info || '-'}</p>
                         </div>
                     </div>
-                    ` : ''
-                    }
 
-                    <!--学歴 -->
-            ${candidate.education ? `
+                    <!-- 5. 社内マッチング情報 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
-                            <i class="fas fa-graduation-cap mr-2 text-purple-500"></i>学歴
+                            <i class="fas fa-file-alt mr-2 text-gray-500"></i>社内マッチング情報
                         </h4>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap">${candidate.education}</p>
+                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.resume || '-'}</p>
                         </div>
                     </div>
-                    ` : ''
-                    }
 
-                    <!--資格 -->
-            ${candidate.certifications ? `
-                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                        <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
-                            <i class="fas fa-certificate mr-2 text-orange-500"></i>資格
-                        </h4>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap">${candidate.certifications}</p>
-                        </div>
-                    </div>
-                    ` : ''
-                    }
-
-                    <!--自分PR / 備考-->
-            ${candidate.notes || candidate.self_pr ? `
+                    <!-- 6. 社内メモ・共有事項 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
                             <i class="fas fa-user-circle mr-2 text-pink-500"></i>社内メモ・共有事項
                         </h4>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.notes || candidate.self_pr}</p>
+                            <p class="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">${candidate.notes || candidate.self_pr || '-'}</p>
                         </div>
                     </div>
-                    ` : ''
-                    }
 
-                    <!--その他情報 -->
-            <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
-                    <i class="fas fa-info-circle mr-2 text-gray-500"></i>その他情報
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">電話番号</p>
-                        <p class="font-medium text-gray-900">${candidate.phone || '-'}</p>
+                    <!-- その他基本情報 (必要最低限) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
+                            <i class="fas fa-info-circle mr-2 text-gray-500"></i>基本情報
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">年齢</p>
+                                <p class="font-medium text-gray-900">${candidate.age ? candidate.age + '歳' : '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">学歴</p>
+                                <p class="font-medium text-gray-900">${candidate.education || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">電話番号</p>
+                                <p class="font-medium text-gray-900">${candidate.phone || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">登録日</p>
+                                <p class="font-medium text-gray-900">${new Date(candidate.created_at).toLocaleDateString('ja-JP')}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">登録日</p>
-                        <p class="font-medium text-gray-900">${new Date(candidate.created_at).toLocaleDateString('ja-JP')}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">更新日</p>
-                        <p class="font-medium text-gray-900">${new Date(candidate.updated_at).toLocaleDateString('ja-JP')}</p>
-                    </div>
-                </div>
-            </div>
-        `;
+                `;
 
                 console.log('Final step: Rendering to candidate preview and forcing visibility.');
                 $('#candidate-preview-content').html(content);
@@ -12952,6 +12963,20 @@
                         const restStr = unmatched.join(' / ');
                         $('#profile-city').val(restStr);
                         $('#admin-user-city').val(restStr);
+
+                        // 性別と現住所のセット
+                        $('#profile-gender').val(user.gender || '');
+                        $('#admin-user-gender').val(user.gender || '');
+
+                        // 都道府県プルダウンの初期化 (現住所用)
+                        const prefSelects = $('#profile-current-location, #admin-user-current-location');
+                        prefSelects.empty().append('<option value="">都道府県を選択</option>');
+                        prefectures.forEach(p => {
+                            prefSelects.append(`<option value="${p}">${p}</option>`);
+                        });
+                        $('#profile-current-location').val(user.current_location || '');
+                        $('#admin-user-current-location').val(user.current_location || '');
+
                     }
                     console.log('loadMasterDataForProfile: Done');
                 }
@@ -13091,6 +13116,8 @@
                 available_start_date: $('#profile-start-date').val() || null,
                 birth_date: $('#profile-birth-date').val() || null,
                 age: $('#profile-age').val() ? parseInt($('#profile-age').val()) : null,
+                gender: $('#profile-gender').val() || null,
+                current_location: $('#profile-current-location').val() || null,
                 phone: $('#profile-phone').val().trim() || null,
 
                 // 詳細職歴の取得
@@ -14416,6 +14443,8 @@
                         notes: notes,
                         birth_date: $('#admin-user-birth-date').val() || null,
                         age: $('#admin-user-age').val() ? parseInt($('#admin-user-age').val()) : null,
+                        gender: $('#admin-user-gender').val() || null,
+                        current_location: $('#admin-user-current-location').val() || null,
                         education: $('#admin-user-education').val().trim() || null,
                         phone: $('#admin-user-phone').val().trim() || null,
                         updated_at: new Date().toISOString()
