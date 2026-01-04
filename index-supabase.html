@@ -1467,6 +1467,11 @@
                             <option value="salary-desc">希望年収が高い順</option>
                             <option value="salary-asc">希望年収が低い順</option>
                         </select>
+                        <select id="c-search-management-status" class="px-4 py-2 border rounded-lg">
+                            <option value="all">すべて（管理ステータス）</option>
+                            <option value="active" selected>活動中のみ</option>
+                            <option value="inactive">活動終了のみ</option>
+                        </select>
                     </div>
 
                     <div class="flex justify-center gap-4 pt-4 border-t mt-4">
@@ -3004,12 +3009,22 @@
                             </div>
 
                             <!-- ステータス -->
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">利用ステータス</label>
-                                <select id="admin-user-status" class="w-full px-4 py-2 border rounded-lg">
-                                    <option value="active">利用中</option>
-                                    <option value="suspended">停止</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">利用ステータス</label>
+                                    <select id="admin-user-status" class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="active">利用中</option>
+                                        <option value="suspended">停止</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">管理ステータス</label>
+                                    <select id="admin-user-management-status"
+                                        class="w-full px-4 py-2 border rounded-lg">
+                                        <option value="active">活動中</option>
+                                        <option value="inactive">活動終了</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- 求職者用フィールド -->
@@ -7471,6 +7486,9 @@
                             <span class="px-3 py-1 ${getScoreColor(matchScore)} rounded-full text-sm font-medium">
                                 マッチ度: ${matchScore.toFixed(1)}%
                             </span>
+                            <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${candidate.management_status === 'inactive' ? 'bg-gray-200 text-gray-700' : 'bg-blue-100 text-blue-800'}">
+                                ${candidate.management_status === 'inactive' ? '活動終了' : '活動中'}
+                            </span>
                         </div>
 
                         <!-- 基本情報 -->
@@ -9675,6 +9693,7 @@
             $('#c-search-industry-category').val(null).trigger('change');
             $('#c-search-employment-type').val(null).trigger('change');
             $('#c-search-sort').val('created_at-desc');
+            $('#c-search-management-status').val('active');
             searchCandidates();
         }
 
@@ -9700,6 +9719,7 @@
             const empType = $('#c-search-employment-type').val(); // array
             const minSal = $('#c-search-salary-min').val();
             const sort = $('#c-search-sort').val();
+            const managementStatus = $('#c-search-management-status').val();
 
             try {
                 let query = supabase.from('users')
@@ -9728,6 +9748,14 @@
                     const p = Array.isArray(u.candidate_profiles) ? u.candidate_profiles[0] : u.candidate_profiles;
                     return { ...u, ...p, id: u.id }; // Combine
                 });
+
+                // 停止中ユーザーの除外
+                results = results.filter(u => u.status !== 'suspended');
+
+                // 管理ステータスのフィルタリング
+                if (managementStatus && managementStatus !== 'all') {
+                    results = results.filter(u => u.management_status === managementStatus || (managementStatus === 'active' && !u.management_status));
+                }
 
                 if (keyword) {
                     results = results.filter(u =>
@@ -9885,8 +9913,8 @@
                     return { ...u, ...p, id: u.id };
                 });
 
-                // 停止中ユーザーの除外
-                candidates = candidates.filter(u => u.status !== 'suspended');
+                // 停止中ユーザーおよび活動終了ユーザーの除外
+                candidates = candidates.filter(u => u.status !== 'suspended' && u.management_status !== 'inactive');
 
                 // 1. ルールベーススコアリング
                 const scored = candidates.map(c => {
@@ -11581,6 +11609,8 @@
                     if (currentUser.role === 'coach' || currentUser.role === 'ca') {
                         candidateQuery = candidateQuery.eq('coach_id', currentUser.id);
                     }
+                    // 活動終了ユーザーを除外
+                    candidateQuery = candidateQuery.neq('management_status', 'inactive');
 
                     const { data: candidates, error: candidateError } = await candidateQuery;
                     if (!candidateError && candidates) {
@@ -13717,6 +13747,7 @@
                     .select('id, name')
                     .eq('organization_id', currentUser.organization_id)
                     .in('role', ['admin', 'super_admin', 'coach', 'ca'])
+                    .neq('management_status', 'inactive')
                     .order('name');
 
                 const picSelect1 = $('#job-pic-user-1');
@@ -13913,11 +13944,11 @@
             // コーチ、CA、RAに加えて管理者も担当者として取得可能にする
             const { data: coaches } = await supabase
                 .from('users')
-                .select('id, name, role, status')
+                .select('id, name, role, status, management_status')
                 .eq('organization_id', currentUser.organization_id)
                 .in('role', ['coach', 'ca', 'ra', 'admin', 'org_admin']);
-            // 停止中ユーザーを除外
-            adminCoachesCache = (coaches || []).filter(u => u.status !== 'suspended');
+            // 停止中ユーザーまたは管理ステータスが「活動終了」のユーザーを除外
+            adminCoachesCache = (coaches || []).filter(u => u.status !== 'suspended' && (u.management_status !== 'inactive'));
         }
 
         window.showAdminUserModal = async function (userId) {
@@ -13985,6 +14016,7 @@
 
             $roleSelect.val(user.role);
             $('#admin-user-status').val(user.status || 'active');
+            $('#admin-user-management-status').val(user.management_status || 'active');
 
             // 権限変更の制御: 管理者のみ可能
             if (['org_admin', 'admin', 'super_admin'].includes(currentUser.role)) {
@@ -14348,6 +14380,7 @@
                 furigana: $('#admin-user-furigana').val().trim(),
                 email: $('#admin-user-email').val().trim(),
                 status: $('#admin-user-status').val(),
+                management_status: $('#admin-user-management-status').val(),
                 updated_at: new Date().toISOString()
             };
 
@@ -14568,9 +14601,16 @@
                         <div class="text-xs text-indigo-600 mt-1 font-bold">${window.formatSalaryValue(u.desired_salary)}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.status === 'suspended' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                            ${u.status === 'suspended' ? '停止中' : '利用中'}
-                        </span>
+                        <div class="mb-1">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.status === 'suspended' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                                ${u.status === 'suspended' ? '停止中' : '利用中'}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.management_status === 'inactive' ? 'bg-gray-200 text-gray-700' : 'bg-blue-100 text-blue-800'}">
+                                ${u.management_status === 'inactive' ? '活動終了' : '活動中'}
+                            </span>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button onclick="viewCandidateProfile('${u.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
@@ -15185,6 +15225,18 @@
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(u.role)}">
                             ${getRoleLabel(u.role)}
                         </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="mb-1">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.status === 'suspended' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                                ${u.status === 'suspended' ? '停止中' : '利用中'}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.management_status === 'inactive' ? 'bg-gray-200 text-gray-700' : 'bg-blue-100 text-blue-800'}">
+                                ${u.management_status === 'inactive' ? '活動終了' : '活動中'}
+                            </span>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${new Date(u.created_at).toLocaleDateString()}
