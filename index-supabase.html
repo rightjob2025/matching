@@ -11917,7 +11917,7 @@
                         const skillMatch = text.match(/マッチ度評価[\s\S]*?理由[:：]([\s\S]*?)(?=総合評価|社風|$)/);
                         if (skillMatch) skillReason = skillMatch[1].trim();
 
-                        const cultureMatch = text.match(/社風・カルチャーのフィット度評価[\s\S]*?評価[:：]\s*([A-E\-])[\s\S]*?理由[:：]([\s\S]*?)$/);
+                        const cultureMatch = text.match(/社風・カルチャーのフィット度評価[\s\S]*?評価[:：]\s*([A-E\-])[\s\S]*?理由[:：]([\s\S]*)/);
                         if (cultureMatch) {
                             cultureRank = cultureMatch[1].trim();
                             cultureReason = cultureMatch[2].trim();
