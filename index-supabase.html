@@ -11930,35 +11930,83 @@
                     </div>
 
                     <div class="${rec.score >= 50 ? 'bg-indigo-50' : 'bg-red-50'} rounded-lg p-4 mb-4">
-                        ${rec.score >= 50 && rec.recommended_by ? `
-                            <h4 class="text-sm font-bold text-indigo-900 mb-2 flex justify-between items-center">
-                                <span><i class="fas fa-user-tie mr-2"></i>おすすめ理由</span>
-                                ${isAdminOrCoach ? `
-                                    <button onclick="event.stopPropagation(); window.editRecommendationReason('${rec.id}')" 
-                                        class="p-1 px-2 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-md shadow-sm transition-all text-xs flex items-center gap-1"
-                                        title="理由を編集">
-                                        <i class="fas fa-edit"></i> 編集
-                                    </button>
-                                ` : ''}
-                            </h4>
-                            <div class="relative">
-                                <p class="text-sm text-indigo-800 leading-relaxed">${rec.match_reason || rec.reason}</p>
+                        ${(() => {
+                        // テキスト解析ロジック
+                        const text = rec.match_reason || rec.reason || '';
+
+                        // セクション抽出用正規表現
+                        // フォーマット:
+                        // マッチ度評価
+                        // 評価: A
+                        // 理由: ...
+                        // 社風・カルチャーのフィット度評価
+                        // 評価: B
+                        // 理由: ...
+
+                        let skillReason = text;
+                        let skillRank = '';
+                        let cultureReason = '';
+                        let cultureRank = '';
+
+                        // 簡易パース
+                        const skillMatch = text.match(/マッチ度評価[\s\S]*?理由[:：]([\s\S]*?)(?=社風|$)/);
+                        if (skillMatch) skillReason = skillMatch[1].trim();
+
+                        const cultureMatch = text.match(/社風・カルチャーのフィット度評価[\s\S]*?評価[:：]\s*([A-E\-])[\s\S]*?理由[:：]([\s\S]*?)$/);
+                        if (cultureMatch) {
+                            cultureRank = cultureMatch[1].trim();
+                            cultureReason = cultureMatch[2].trim();
+                        }
+
+                        // ランクごとの色定義
+                        const getRankColor = (r) => {
+                            if (['A', 'B'].includes(r)) return 'bg-sky-100 text-sky-800 border-sky-200'; // Sky Blue
+                            if (r === 'C') return 'bg-gray-100 text-gray-800 border-gray-200'; // Gray
+                            if (['D', 'E'].includes(r)) return 'bg-orange-100 text-orange-800 border-orange-200'; // Orange
+                            return 'bg-gray-100 text-gray-500';
+                        };
+
+                        const getRankLabelColor = (r) => {
+                            if (['A', 'B'].includes(r)) return 'bg-sky-600 text-white';
+                            if (r === 'C') return 'bg-gray-500 text-white';
+                            if (['D', 'E'].includes(r)) return 'bg-orange-500 text-white';
+                            return 'bg-gray-400 text-white';
+                        };
+
+                        return `
+                            <!-- スキルマッチセクション -->
+                            <div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4 mb-3">
+                                <h4 class="text-blue-700 font-bold mb-2 flex items-center">
+                                    <span class="mr-2">|</span> スキルマッチ
+                                </h4>
+                                <p class="text-sm text-gray-800 leading-relaxed">${skillReason}</p>
                             </div>
-                        ` : `
-                            <h4 class="text-sm font-bold ${rec.score >= 50 ? 'text-indigo-900' : 'text-red-900'} mb-2 flex justify-between items-center">
-                                <span><i class="fas ${rec.score >= 50 ? 'fa-lightbulb' : 'fa-exclamation-triangle'} mr-2"></i>${rec.score >= 50 ? 'AIによる推薦理由' : 'AIによる不一致理由'}</span>
-                                ${isAdminOrCoach ? `
-                                    <button onclick="event.stopPropagation(); window.editRecommendationReason('${rec.id}')" 
-                                        class="p-1 px-2 bg-white border ${rec.score >= 50 ? 'border-indigo-200 text-indigo-600 hover:bg-indigo-50' : 'border-red-200 text-red-600 hover:bg-red-50'} rounded-md shadow-sm transition-all text-xs flex items-center gap-1"
-                                        title="${rec.score >= 50 ? '理由を入力' : '不一致理由を修正'}">
-                                        <i class="fas ${rec.score >= 50 ? 'fa-plus-circle' : 'fa-edit'}"></i> ${rec.score >= 50 ? '編集' : '修正'}
-                                    </button>
-                                ` : ''}
-                            </h4>
-                            <div class="relative">
-                                <p class="text-sm ${rec.score >= 50 ? 'text-indigo-800' : 'text-red-800'} leading-relaxed">${rec.match_reason || rec.reason}</p>
+
+                            <!-- 社風・カルチャーマッチセクション (データがある場合のみ) -->
+                            ${cultureRank && cultureRank !== '-' ? `
+                            <div class="bg-white border rounded-lg p-3 flex items-start gap-3 ${getRankColor(cultureRank)}">
+                                <div class="flex-shrink-0">
+                                    <span class="inline-block px-3 py-1 text-sm font-bold rounded ${getRankLabelColor(cultureRank)}">
+                                        社風: ${cultureRank}
+                                    </span>
+                                </div>
+                                <p class="text-sm leading-relaxed self-center">
+                                    ${cultureReason || '詳細な判定データがありません'}
+                                </p>
                             </div>
-                        `}
+                            ` : ''}
+                            
+                            <!-- 編集ボタン (管理者・コーチ用) -->
+                            ${isAdminOrCoach ? `
+                                <div class="mt-2 text-right">
+                                    <button onclick="event.stopPropagation(); window.editRecommendationReason('${rec.id}')" 
+                                        class="text-xs text-indigo-600 hover:text-indigo-800 underline">
+                                        <i class="fas fa-edit"></i> 理由を編集
+                                    </button>
+                                </div>
+                            ` : ''}
+                            `;
+                    })()}
                         ${rec.details && rec.details.trim().length > 0 ? (() => {
                         const itemId = `rec-detail-${rec.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                         if (!window.aiResultDetails) window.aiResultDetails = {};
