@@ -12498,27 +12498,67 @@
             selectedRecs.forEach((rec, idx) => {
                 const job = rec.jobs;
                 const driveUrl = job.url || 'URLなし';
-                const reason = rec.reason || rec.recommendation_reason || rec.match_reason || '';
-                const cleanReason = reason.replace(/^(理由|推薦理由|マッチ理由)[:：\s]*/, '').trim();
 
-                // 1. jobDetails (全部入り)
-                jobDetailsText += `【案件 ${idx + 1}】\n`;
-                jobDetailsText += `企業名: ${job.company} \n`;
-                jobDetailsText += `職種: ${job.title} \n`;
-                jobDetailsText += `マッチ度: ${rec.score}%\n`;
-                if (cleanReason) jobDetailsText += `おすすめ理由: ${cleanReason} \n`;
-                jobDetailsText += `詳細URL: ${driveUrl} \n\n`;
+                // AI出力テキストの取得とクリーニング
+                let fullText = rec.details || rec.reason || rec.recommendation_reason || rec.match_reason || '';
+
+                // ツールログの除去（念のためフロントエンドでも実施）
+                const headerIndex = fullText.indexOf('マッチ度評価');
+                if (headerIndex !== -1) fullText = fullText.substring(headerIndex);
+                fullText = fullText.replace(/tool_code[\s\S]*?print\(.*?\)/g, '')
+                    .replace(/thought\n[\s\S]*?(?=\n\n|\Z)/g, '')
+                    .replace(/^```[\s\S]*?```/gm, '')
+                    .trim();
+
+                // 各要素の抽出
+                let matchReason = '';
+                let cultureGrade = '-';
+                let cultureReason = '';
+
+                // マッチ度区画の抽出
+                const matchSectionMatch = fullText.match(/マッチ度評価([\s\S]*?)(?:社風・カルチャー|$)/);
+                if (matchSectionMatch) {
+                    const m = matchSectionMatch[1].match(/理由[:：]\s*([^\n]+)/);
+                    if (m) matchReason = m[1].trim();
+                } else {
+                    // 区画が見つからない場合、最初の「理由:」を採用
+                    const m = fullText.match(/理由[:：]\s*([^\n]+)/);
+                    if (m) matchReason = m[1].trim();
+                }
+
+                // フォールバック: 全く抽出できなければ全文を使用（ただし短めにする）
+                if (!matchReason && fullText) {
+                    matchReason = fullText.length > 100 ? fullText.substring(0, 100) + '...' : fullText;
+                }
+
+                // 社風区画の抽出
+                const cultureSectionMatch = fullText.match(/社風・カルチャーのフィット度評価([\s\S]*)/);
+                if (cultureSectionMatch) {
+                    const section = cultureSectionMatch[1];
+                    const gm = section.match(/評価[:：]\s*([A-E\-])/);
+                    if (gm) cultureGrade = gm[1];
+                    const rm = section.match(/理由[:：]\s*([^\n]+)/);
+                    if (rm) cultureReason = rm[1].trim();
+                }
+
+                // 1. jobDetails (理想フォーマット)
+                jobDetailsText += `求人${idx + 1}\n`;
+                jobDetailsText += `企業名： ${job.company}\n`;
+                jobDetailsText += `求人名： ${job.title}\n`;
+                jobDetailsText += `マッチ度： ${rec.score}点 (${matchReason})\n`;
+                jobDetailsText += `社風マッチ： ${cultureGrade} (${cultureReason})\n`;
+                jobDetailsText += `求人ID： ${driveUrl}\n\n`;
 
                 // 2. jobList (理由なし)
                 jobListText += `【案件 ${idx + 1}】 ${job.company} / ${job.title}\n`;
                 jobListText += `詳細URL: ${driveUrl}\n\n`;
 
-                // 3. recommendationReason (理由のみリスト)
-                if (cleanReason) {
+                // 3. recommendationReason (理由のみリスト - マッチ度理由を使用)
+                if (matchReason) {
                     if (selectedRecs.length > 1) {
-                        reasonsText += `■ ${job.company} (${job.title})\n${cleanReason}\n\n`;
+                        reasonsText += `■ ${job.company} (${job.title})\n${matchReason}\n\n`;
                     } else {
-                        reasonsText = cleanReason;
+                        reasonsText = matchReason;
                     }
                 }
             });
