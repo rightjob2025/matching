@@ -7718,7 +7718,9 @@
                 if (data.success) {
                     console.log('Scout message generated successfully');
                     $('#scout-subject').val(data.subject);
-                    $('#scout-body').val(data.body);
+                    // エスケープされた改行文字を実際の改行に変換
+                    const bodyWithNewlines = data.body.replace(/\\n/g, '\n');
+                    $('#scout-body').val(bodyWithNewlines);
                 } else {
                     throw new Error(data.error || '生成に失敗しました');
                 }
