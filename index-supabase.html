@@ -923,6 +923,8 @@
             <div class="p-6 flex-shrink-0">
                 <h2 class="text-2xl font-bold text-indigo-600">RightJob</h2>
                 <p id="org-name" class="text-sm text-gray-600 mt-1"></p>
+                <p id="org-code-display"
+                    class="text-xs text-gray-500 mt-1 font-mono bg-gray-100 px-2 py-1 rounded inline-block"></p>
             </div>
 
             <nav class="px-4 space-y-2 flex-1 overflow-y-auto">
@@ -5632,6 +5634,7 @@
                 $('#user-name').text(currentUser.name)
                 $('#user-role').text(getRoleLabel(currentUser.role))
                 $('#org-name').text(currentUser.organizations?.name || '')
+                $('#org-code-display').text(currentUser.organizations?.code ? `コード: ${currentUser.organizations.code}` : '')
 
                 // ダッシュボードメニューの表示制御（求職者は非表示）
                 if (userData.role === 'candidate') {
@@ -17219,6 +17222,7 @@
                 // 3. UIの表示を初期化
                 $('#user-role').text(getRoleLabel(role));
                 $('#org-name').text(orgName);
+                $('#org-code-display').text(''); // 組織コードは後で更新される
 
                 // メニューの再構築（役割に応じて表示/非表示）
                 loadedPages.clear(); // キャッシュをクリア
@@ -18736,6 +18740,7 @@
             $('#user-name').text(currentUser.name)
             $('#user-role').text(getRoleLabel(currentUser.role))
             $('#org-name').text(currentUser.organizations?.name || '')
+            $('#org-code-display').text(currentUser.organizations?.code ? `コード: ${currentUser.organizations.code}` : '')
 
             const contentArea = $('#dashboard-content');
             contentArea.empty(); // 全体をクリアして再構築
@@ -19705,6 +19710,7 @@
                                 $('#user-name').text(currentUser.name);
                                 $('#user-role').text(getRoleLabel(currentUser.role));
                                 $('#org-name').text(currentUser.organizations ? currentUser.organizations.name : '');
+                                $('#org-code-display').text(currentUser.organizations?.code ? `コード: ${currentUser.organizations.code}` : '');
 
                                 // メニュー表示の更新
                                 updateMenuVisibility(currentUser.role);
