@@ -11642,16 +11642,31 @@
                     finalRecs = recs.filter(r => assignedUserIds.includes(r.user_id));
                 }
 
-                // 応募済み求人を取得（求職者の場合は自分、管理者/コーチの場合は選択されたユーザー）
+                // 応募済み求人を取得
                 let appliedJobIds = new Set();
-                const targetUserId = isAdminOrCoach ? null : currentUser.id; // 管理者は複数ユーザーの推薦を見るので、ここでは求職者のみ
 
-                if (targetUserId) {
+                if (isAdminOrCoach) {
+                    // 管理者/コーチの場合: 全ユーザーの応募済み求人を取得
+                    try {
+                        const { data: applications } = await supabase
+                            .from('applications')
+                            .select('job_id, user_id')
+                            .eq('organization_id', currentUser.organization_id);
+
+                        if (applications) {
+                            // 全ての応募済み求人IDをSetに格納
+                            appliedJobIds = new Set(applications.map(a => a.job_id));
+                        }
+                    } catch (error) {
+                        console.error('Failed to load applications:', error);
+                    }
+                } else {
+                    // 求職者の場合: 自分の応募済み求人のみ取得
                     try {
                         const { data: applications } = await supabase
                             .from('applications')
                             .select('job_id')
-                            .eq('user_id', targetUserId);
+                            .eq('user_id', currentUser.id);
 
                         if (applications) {
                             appliedJobIds = new Set(applications.map(a => a.job_id));
@@ -11899,6 +11914,11 @@
                                 </span>
                                 ${isApplied ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-check-circle mr-1"></i>応募済み</span>` : ''}
                                 ${isDismissed ? `<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-eye-slash mr-1"></i>見送り</span>` : ''}
+                            </div>
+                            ` : ''}
+                            ${!isAdminOrCoach && isApplied ? `
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-check-circle mr-1"></i>応募済み</span>
                             </div>
                             ` : ''}
 
