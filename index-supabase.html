@@ -15317,7 +15317,7 @@
                 }
                 // ca, ra の場合は coach の設定を流用する（個別に設定されていなければ）
                 else if ((role === 'ca' || role === 'ra') && labels && labels['coach']) {
-                    customLabel = labels['coach'] + (role === 'ca' ? ' (CA)' : ' (RA)');
+                    customLabel = labels['coach'];
                 }
             }
 
