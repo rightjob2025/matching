@@ -3003,7 +3003,6 @@
                                     <option value="org_admin">組織管理者</option>
                                     <option value="admin">管理者</option>
                                     <option value="coach">CA・RA</option>
-                                    <option value="ca">CA</option>
                                     <option value="candidate">求職者</option>
                                 </select>
                             </div>
@@ -14051,7 +14050,6 @@
             $roleSelect.find('option[value="org_admin"]').text(getRoleLabel('org_admin'));
             $roleSelect.find('option[value="admin"]').text(getRoleLabel('admin'));
             $roleSelect.find('option[value="coach"]').text(getRoleLabel('coach'));
-            $roleSelect.find('option[value="ca"]').text(getRoleLabel('ca'));
             $roleSelect.find('option[value="candidate"]').text(getRoleLabel('candidate'));
 
             $roleSelect.val(user.role);
@@ -15411,7 +15409,6 @@
                 $regRoleSelect.empty();
                 $regRoleSelect.append(`<option value="admin">${getRoleLabel('admin')}</option>`);
                 $regRoleSelect.append(`<option value="coach">${getRoleLabel('coach')}</option>`);
-                $regRoleSelect.append(`<option value="ca">${getRoleLabel('ca')}</option>`);
                 $regRoleSelect.append(`<option value="org_admin">${getRoleLabel('org_admin')}</option>`);
 
                 $('#reg-role-section').removeClass('hidden');
