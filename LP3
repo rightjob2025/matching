@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RightJob AIマッチング | あなたの経験を最大限に活かす、AIパートナー</title>
+    <meta name="description" content="人材紹介会社向けAIマッチングプラットフォーム。PDF履歴書の自動解析、AIマッチング、スカウト文面生成で採用業務を革新。週に数時間の工数削減を実現。">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#4F46E5',
+                            green: '#10B981',
+                            purple: '#8B5CF6',
+                            orange: '#F59E0B',
+                            dark: '#0F172A',
+                            light: '#F0FDF4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        /* Animation styles */
+        .fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .ai-gradient { background: linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%); }
+    </style>
+</head>
+<body class="text-slate-800 bg-white antialiased">
+
+    <!-- Header -->
+    <header class="fixed w-full bg-white/95 backdrop-blur-md z-50 border-b border-slate-200 shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 ai-gradient rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    <i data-lucide="brain" class="w-6 h-6"></i>
+                </div>
+                <span class="font-black text-xl tracking-tight text-slate-900">RightJob AIマッチング</span>
+            </div>
+            <nav class="hidden lg:flex gap-8 text-sm font-bold text-slate-600">
+                <a href="#features" class="hover:text-brand-blue transition">機能紹介</a>
+                <a href="#process" class="hover:text-brand-blue transition">活用プロセス</a>
+                <a href="#tips" class="hover:text-brand-blue transition">活用のコツ</a>
+            </nav>
+            <a href="#contact" class="px-6 py-2.5 text-sm font-black text-white bg-brand-orange rounded-full hover:bg-amber-600 transition shadow-lg">
+                無料デモを予約
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-24 md:pt-44 md:pb-32 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-brand-blue rounded-full filter blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-96 h-96 bg-brand-purple rounded-full filter blur-3xl"></div>
+        </div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-4xl mx-auto text-center space-y-8 fade-up visible">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-brand-blue/20 rounded-full shadow-sm">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-brand-blue"></i>
+                    <span class="text-sm font-bold text-brand-blue">AI技術でエージェント業務を次世代へ</span>
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-black leading-tight text-slate-900">
+                    あなたの経験を最大限に活かす、<span class="bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">AIパートナー</span>
+                </h1>
+                
+                <p class="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-3xl mx-auto">
+                    RightJob AIマッチングは、<br class="hidden md:block">
+                    エージェント業務のあらゆる側面を強化する<br class="hidden md:block">
+                    次世代型マッチングプラットフォームです。
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+                    <a href="#features" class="px-10 py-5 text-lg font-black text-white ai-gradient rounded-2xl hover:shadow-2xl transition transform hover:-translate-y-1">
+                        機能を詳しく見る
+                        <i data-lucide="arrow-right" class="inline-block ml-2 w-5 h-5"></i>
+                    </a>
+                    <a href="#contact" class="px-10 py-5 text-lg font-black text-slate-700 bg-white border-2 border-slate-200 rounded-2xl hover:border-brand-blue transition">
+                        無料デモを予約
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto mt-20 pt-16 border-t border-slate-200">
+                <div class="text-center">
+                    <div class="text-4xl font-black text-brand-blue mb-2">数秒</div>
+                    <div class="text-sm text-slate-600 font-medium">PDF履歴書解析</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-black text-brand-purple mb-2">数秒</div>
+                    <div class="text-sm text-slate-600 font-medium">AIマッチング</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-black text-brand-green mb-2">数分</div>
+                    <div class="text-sm text-slate-600 font-medium">CSVデータ取込</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-black text-brand-orange mb-2">最大95%</div>
+                    <div class="text-sm text-slate-600 font-medium">工数削減効果<br><span class="text-xs">(当社比)</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Features Section -->
+    <section id="features" class="py-24 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center max-w-3xl mx-auto mb-20 fade-up">
+                <span class="text-brand-blue font-bold tracking-wider text-sm uppercase mb-3 block">Core Features</span>
+                <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                    3つのコア機能で<br class="md:hidden">採用業務を革新
+                </h2>
+                <p class="text-lg text-slate-600">
+                    AI技術を活用した独自アルゴリズムで、採用のあらゆるプロセスを効率化します
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- AI Matching -->
+                <div class="fade-up bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 border border-brand-blue/20 hover:shadow-2xl transition transform hover:-translate-y-2">
+                    <div class="w-16 h-16 ai-gradient rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg">
+                        <i data-lucide="brain" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900 mb-4">AIマッチング</h3>
+                    <p class="text-slate-600 font-medium mb-6 leading-relaxed">
+                        独自アルゴリズムによる高精度な適合度評価。求人と候補者を多角的に分析し、最適なマッチングを実現します。
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-blue"></i>
+                            スキル・経験の詳細分析
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-blue"></i>
+                            文化・社風の適合性評価
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-blue"></i>
+                            マッチング理由の可視化
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Scout -->
+                <div class="fade-up bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-8 border border-brand-purple/20 hover:shadow-2xl transition transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-brand-purple to-pink-500 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg">
+                        <i data-lucide="pen-tool" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900 mb-4">AIスカウト</h3>
+                    <p class="text-slate-600 font-medium mb-6 leading-relaxed">
+                        候補者プロファイルに基づく自動求人推薦・文面生成。あなたの文体を学習し、パーソナライズされたスカウトを作成。
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-purple"></i>
+                            エージェントの文体学習
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-purple"></i>
+                            候補者別カスタマイズ
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-purple"></i>
+                            自動下書き・推薦文作成
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PDF Auto Extract -->
+                <div class="fade-up bg-gradient-to-br from-green-50 to-teal-50 rounded-3xl p-8 border border-brand-green/20 hover:shadow-2xl transition transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-gradient-to-br from-brand-green to-teal-500 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg">
+                        <i data-lucide="file-scan" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900 mb-4">PDF自動抽出</h3>
+                    <p class="text-slate-600 font-medium mb-6 leading-relaxed">
+                        履歴書・求人票からのデータ自動入力。PDFアップロードで氏名、職務経歴、スキル等を瞬時にデータベース化。
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-green"></i>
+                            履歴書・求人票対応
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-green"></i>
+                            手作業からの完全解放
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <i data-lucide="check" class="w-4 h-4 text-brand-green"></i>
+                            週に数時間の工数削減
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PDF Feature Detail Section -->
+    <section class="py-24 bg-slate-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                        手作業でのデータ入力を撲滅し、<br class="hidden md:block">週に数時間を取り戻す
+                    </h2>
+                    <p class="text-lg text-slate-600 max-w-4xl mx-auto">
+                        履歴書や求人票のPDFをアップロードするだけで、氏名、職務経歴、スキル、求人内容などの重要データをAIが自動で読み取り、システムに正確に入力します。コピー&ペーストの作業はもう必要ありません。
+                    </p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12 items-center mb-16 fade-up">
+                    <div class="bg-white rounded-3xl p-12 shadow-xl">
+                        <div class="text-center mb-8">
+                            <div class="text-slate-400 font-black text-xl mb-6">Before</div>
+                            <div class="flex flex-col items-center gap-6">
+                                <i data-lucide="user" class="w-20 h-20 text-slate-300"></i>
+                                <i data-lucide="clock" class="w-12 h-12 text-slate-300"></i>
+                                <div class="text-slate-600 font-bold">手作業によるデータ入力</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-brand-blue to-brand-purple rounded-3xl p-12 shadow-2xl text-white">
+                        <div class="text-center mb-8">
+                            <div class="text-white/90 font-black text-xl mb-6">After</div>
+                            <div class="flex flex-col items-center gap-6">
+                                <i data-lucide="file-text" class="w-16 h-16"></i>
+                                <i data-lucide="arrow-down" class="w-8 h-8"></i>
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="brain" class="w-10 h-10"></i>
+                                    <span class="text-2xl font-black">AI</span>
+                                </div>
+                                <i data-lucide="arrow-down" class="w-8 h-8"></i>
+                                <i data-lucide="database" class="w-16 h-16"></i>
+                                <div class="font-bold mt-2">PDF自動抽出による即時データベース化</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detailed items list -->
+                <div class="bg-white rounded-3xl p-10 shadow-xl fade-up">
+                    <h3 class="text-2xl font-black text-slate-900 mb-4 text-center">抽出可能な項目リスト</h3>
+                    <p class="text-center text-brand-blue font-bold mb-8">✓ 主要項目は完全カバー</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-brand-green/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="user-check" class="w-6 h-6 text-brand-green"></i>
+                                </div>
+                                <h4 class="font-black text-lg">PDF履歴書</h4>
+                            </div>
+                            <ul class="space-y-2 ml-13">
+                                <li class="text-slate-700 font-medium">• 氏名、連絡先、学歴</li>
+                                <li class="text-slate-700 font-medium">• 職務経歴、保有スキル</li>
+                                <li class="text-slate-700 font-medium">• 資格・免許</li>
+                                <li class="text-slate-500 font-medium italic">• その他多数...</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-brand-blue/10 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="briefcase" class="w-6 h-6 text-brand-blue"></i>
+                                </div>
+                                <h4 class="font-black text-lg">PDF求人票</h4>
+                            </div>
+                            <ul class="space-y-2 ml-13">
+                                <li class="text-slate-700 font-medium">• 企業名、求人タイトル、職種</li>
+                                <li class="text-slate-700 font-medium">• 勤務地、給与、仕事内容</li>
+                                <li class="text-slate-700 font-medium">• 必要スキル</li>
+                                <li class="text-slate-500 font-medium italic">• その他多数...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advanced Search Section -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                        膨大なデータから、最適な候補者と求人を瞬時に見つけ出す
+                    </h2>
+                    <p class="text-lg text-slate-600 max-w-4xl mx-auto">
+                        キーワード、スキル、勤務地、年収など、複数の条件を組み合わせることで、検索の精度を極限まで高めることができます。
+                    </p>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <div class="inline-block px-6 py-2 bg-slate-100 border-2 border-slate-300 rounded-full text-sm font-black text-slate-600">
+                        <i data-lucide="monitor" class="inline-block w-4 h-4 mr-2"></i>RightJob AIマッチング
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-8 mb-12">
+                    <div class="bg-slate-50 rounded-3xl p-8 border-2 border-slate-200 fade-up">
+                        <div class="flex items-center gap-3 mb-6">
+                            <i data-lucide="search" class="w-8 h-8 text-brand-blue"></i>
+                            <h3 class="text-2xl font-black text-slate-900">求職者検索</h3>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 shadow-lg">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-bold text-slate-700">キーワード:</span>
+                                    <div class="px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-xs font-bold">SaaS営業</div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-bold text-slate-700">勤務地:</span>
+                                    <div class="px-3 py-1 bg-brand-green/10 text-brand-green rounded-full text-xs font-bold">東京都</div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-bold text-slate-700">経験年数:</span>
+                                    <div class="px-3 py-1 bg-brand-purple/10 text-brand-purple rounded-full text-xs font-bold">5年以上</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 rounded-3xl p-8 border-2 border-slate-200 fade-up">
+                        <div class="flex items-center gap-3 mb-6">
+                            <i data-lucide="briefcase" class="w-8 h-8 text-brand-purple"></i>
+                            <h3 class="text-2xl font-black text-slate-900">求人検索</h3>
+                        </div>
+                        <div class="bg-white rounded-2xl p-6 shadow-lg">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-bold text-slate-700">業種:</span>
+                                    <div class="px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-xs font-bold">IT・Web</div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-bold text-slate-700">年収:</span>
+                                    <div class="px-3 py-1 bg-brand-orange/10 text-brand-orange rounded-full text-xs font-bold">600万円以上</div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-bold text-slate-700">雇用形態:</span>
+                                    <div class="px-3 py-1 bg-brand-green/10 text-brand-green rounded-full text-xs font-bold">正社員</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 text-white fade-up">
+                    <h3 class="text-2xl font-black mb-6 flex items-center gap-3">
+                        <i data-lucide="zap" class="w-8 h-8 text-brand-orange"></i>
+                        機能ハイライト
+                    </h3>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="filter" class="w-6 h-6 text-brand-blue flex-shrink-0"></i>
+                            <div>
+                                <div class="font-black mb-1">多角的フィルター</div>
+                                <div class="text-sm text-slate-300">職種、業種、スキル、勤務地、雇用形態など、詳細な条件で絞り込み。</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="git-merge" class="w-6 h-6 text-brand-purple flex-shrink-0"></i>
+                            <div>
+                                <div class="font-black mb-1">AND/OR検索</div>
+                                <div class="text-sm text-slate-300">柔軟なロジックで検索条件をカスタマイズ。</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="bookmark" class="w-6 h-6 text-brand-green flex-shrink-0"></i>
+                            <div>
+                                <div class="font-black mb-1">保存機能</div>
+                                <div class="text-sm text-slate-300">よく使う検索条件を保存し、ワンクリックで呼び出し可能。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 2: AI Matching Detail -->
+    <section id="process" class="py-24 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                        わずか数秒で、候補者の可能性を最大限に引き出す
+                    </h2>
+                    <p class="text-2xl font-bold text-brand-blue mb-4">STEP 2: AIによる高速解析と求人推薦</p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8 mb-16">
+                    <div class="bg-white rounded-3xl p-8 shadow-xl fade-up">
+                        <div class="w-16 h-16 bg-brand-blue/10 rounded-2xl flex items-center justify-center text-brand-blue mb-6">
+                            <i data-lucide="file-text" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 mb-4">候補者プロファイル要約</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            履歴書からスキル、経験、志向性を自動で抽出し、分かりやすく要約します。
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white rounded-3xl p-8 shadow-xl fade-up">
+                        <div class="w-16 h-16 bg-brand-purple/10 rounded-2xl flex items-center justify-center text-brand-purple mb-6">
+                            <i data-lucide="briefcase" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 mb-4">推薦求人</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            候補者に最も適した求人を「マッチ度」と共に提示します。
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white rounded-3xl p-8 shadow-xl fade-up">
+                        <div class="w-16 h-16 bg-brand-green/10 rounded-2xl flex items-center justify-center text-brand-green mb-6">
+                            <i data-lucide="sparkles" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 mb-4">マッチング理由</h3>
+                        <p class="text-slate-600 leading-relaxed">
+                            「なぜこの求人が最適なのか」その根拠を具体的かつ論理的に説明します。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <div class="inline-block px-6 py-2 bg-white border-2 border-brand-blue/30 rounded-full text-sm font-black text-brand-blue shadow-sm">
+                        <i data-lucide="monitor" class="inline-block w-4 h-4 mr-2"></i>RightJob AIマッチング
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-3xl p-12 shadow-2xl fade-up">
+                    <div class="flex items-center gap-4 mb-8">
+                        <i data-lucide="award" class="w-12 h-12 text-brand-orange"></i>
+                        <h3 class="text-3xl font-black text-slate-900">AIが導き出す、スキルとカルチャーの最適解</h3>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="mb-6">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-bold text-slate-700">スキル</span>
+                                    <span class="font-black text-brand-blue">37%</span>
+                                </div>
+                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-brand-blue w-[37%]"></div>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-bold text-slate-700">経験</span>
+                                    <span class="font-black text-brand-blue">60%</span>
+                                </div>
+                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-brand-blue w-[60%]"></div>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-bold text-slate-700">文化</span>
+                                    <span class="font-black text-brand-green">95%</span>
+                                </div>
+                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-brand-green w-[95%]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-center p-10 bg-gradient-to-br from-brand-blue to-brand-purple rounded-3xl text-white">
+                                <div class="text-lg font-bold mb-2">総合マッチ度</div>
+                                <div class="text-6xl font-black">95.0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 p-6 bg-brand-light border-l-4 border-brand-green rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="lightbulb" class="w-6 h-6 text-brand-green flex-shrink-0 mt-1"></i>
+                            <div>
+                                <div class="font-black text-slate-900 mb-2">AI評価理由</div>
+                                <p class="text-slate-700 leading-relaxed text-sm">
+                                    「必須要件のSaaS立ち上げ経験を完全に満たし、企業文化への適合性が極めて高いため、候補者の志向性と企業が求める『必要な実践力と価値観』が強く合致すると判断しました。過去の実績に基づくビジネスプロセス構築力が非常に高く評価されています。」
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 3: AI Scout -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                        候補者の心に響く、最初の一通をAIが作成
+                    </h2>
+                    <p class="text-2xl font-bold text-brand-purple mb-4">STEP 3: AIによるスカウト文面生成</p>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <div class="inline-block px-6 py-2 bg-slate-100 border-2 border-slate-300 rounded-full text-sm font-black text-slate-600">
+                        <i data-lucide="monitor" class="inline-block w-4 h-4 mr-2"></i>RightJob AIマッチング
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="fade-up">
+                        <div class="bg-white border-2 border-slate-200 rounded-3xl p-8 shadow-xl">
+                            <div class="flex items-center justify-between mb-6 pb-4 border-b">
+                                <h3 class="text-lg font-black text-slate-900">生成されたスカウト文面</h3>
+                                <i data-lucide="mail" class="w-6 h-6 text-brand-purple"></i>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-500 mb-1">件名:</div>
+                                    <div class="text-sm font-bold text-slate-900 bg-slate-50 p-3 rounded-lg">
+                                        【RightJob 當山】BU******様の事業企画・SaaS推進のご経験に感動しました！新たな挑戦の可能性を一緒に探しませんか？
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-500 mb-1">本文:</div>
+                                    <div class="text-xs text-slate-700 bg-slate-50 p-4 rounded-lg leading-relaxed h-72 overflow-y-auto">
+                                        BU******様<br><br>
+                                        はじめまして！Rightjobの當山と申します。<br><br>
+                                        BU******様の職務経歴書を拝見し、特にCOO直下で事業企画マネージャーとしてSaaSプロダクトの立ち上げからKPI達成、さらにはSalesforceやKintone導入による業務システム化までを一貫して推進されてきたご経験に、大変感銘を受けました。<br><br>
+                                        現在の市場において、単なる営業力だけでなく、ビジネスプロセスを構造的に捉え、ツールを駆使して再現性のある仕組みを構築できる人材は極めて稀有です。BU******様がこれまで培ってこられた「攻めのIT活用」と「組織横断的な推進力」は、多くの成長企業が切望している専門性そのものです。<br><br>
+                                        もしよろしければ、現在のご状況を伺いつつ、BU******様のこれまでのご経験をさらにスケールさせられるような、新たなステージについて意見交換をさせていただけないでしょうか？<br><br>
+                                        ご多忙の折とは存じますが、一度カジュアルにお話しできる機会をいただけますと幸いです。<br><br>
+                                        ご連絡を心よりお待ちしております。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-6 fade-up">
+                        <div class="bg-gradient-to-br from-brand-purple to-pink-500 rounded-2xl p-6 text-white shadow-lg">
+                            <h3 class="text-lg font-black mb-2 flex items-center gap-2">
+                                <i data-lucide="user-check" class="w-5 h-5"></i>パーソナライズされた件名
+                            </h3>
+                            <p class="text-white/90 text-sm leading-relaxed">具体的な実績に触れることで開封率を大幅に向上させます。</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-brand-blue to-brand-purple rounded-2xl p-6 text-white shadow-lg">
+                            <h3 class="text-lg font-black mb-2 flex items-center gap-2">
+                                <i data-lucide="target" class="w-5 h-5"></i>志向性を捉えた動機付け
+                            </h3>
+                            <p class="text-white/90 text-sm leading-relaxed">キャリア価値観を分析し、それに合わせた魅力的な提案を行います。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learning Feature -->
+    <section id="tips" class="py-24 bg-slate-900 text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black mb-6">AIに、あなたの言葉で語らせる</h2>
+                    <p class="text-2xl font-bold text-brand-orange mb-4">Pro-Tip 1: 「あなたらしさ」をAIに学習させる</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div class="fade-up">
+                        <p class="text-lg text-slate-300 mb-8 leading-relaxed">
+                            AIはあなたの過去のコミュニケーションのスタイルを学習します。丁寧さ、改行のクセまで反映し、あなた自身が書いたかのようなスカウト文面を生成します。
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="file-input" class="w-5 h-5 text-brand-blue"></i>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="font-black text-white mb-1">Step 1: 入力</div>
+                                    <div class=\"text-slate-400\">過去のスカウトメールを3件以上入力します。</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="cpu" class="w-5 h-5 text-brand-purple"></i>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="font-black text-white mb-1">Step 2: 分析</div>
+                                    <div class="text-slate-400">「分析してスタイルを生成」をクリックします。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-3xl p-8 text-slate-900 fade-up">
+                        <h4 class="font-black mb-4 border-b pb-2">自分の文体を設定する</h4>
+                        <div class="space-y-3 mb-6">
+                            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-500">サンプル #1: 初めまして。株式会社RightJob AIマッチングの當山です...</div>
+                            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-500">サンプル #2: お世話になります。以前ご紹介した...</div>
+                        </div>
+                        <button class="w-full py-3 bg-gradient-to-r from-brand-blue to-brand-purple text-white font-black rounded-xl text-sm">
+                            分析してスタイルを生成
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section class="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">データが、あなたの最強の武器になる</h2>
+                    <p class="text-2xl font-bold text-brand-blue mb-4">Pro-Tip 2: 成果を可視化し、次の一手を最適化する</p>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <div class="inline-block px-6 py-2 bg-white border-2 border-brand-blue/30 rounded-full text-sm font-black text-brand-blue shadow-sm">
+                        <i data-lucide="monitor" class="inline-block w-4 h-4 mr-2"></i>RightJob AIマッチング
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-3xl p-10 shadow-2xl fade-up">
+                    <div class="grid md:grid-cols-2 gap-12">
+                        <div>
+                            <h3 class="text-xl font-black mb-6 flex items-center gap-2"><i data-lucide="user" class="text-brand-blue"></i> 個人の成績</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-6 rounded-2xl text-center">
+                                    <div class="text-3xl font-black text-brand-blue">7</div>
+                                    <div class="text-xs font-bold text-slate-500 mt-1">送信数</div>
+                                </div>
+                                <div class="bg-slate-50 p-6 rounded-2xl text-center">
+                                    <div class="text-3xl font-black text-brand-green">2</div>
+                                    <div class="text-xs font-bold text-slate-500 mt-1">返信数</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black mb-6 flex items-center gap-2"><i data-lucide="users" class="text-brand-purple"></i> 組織全体の成績</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-brand-blue/5 p-6 rounded-2xl text-center border border-brand-blue/10">
+                                    <div class="text-3xl font-black text-brand-blue">24</div>
+                                    <div class="text-xs font-bold text-slate-500 mt-1">送信数</div>
+                                </div>
+                                <div class="bg-brand-green/5 p-6 rounded-2xl text-center border border-brand-green/10">
+                                    <div class="text-3xl font-black text-brand-green">8</div>
+                                    <div class="text-xs font-bold text-slate-500 mt-1">返信数</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Management Section -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">採用プロセス全体を、シームレスに管理</h2>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 fade-up">
+                        <i data-lucide="list-checks" class="w-10 h-10 text-brand-blue mb-4"></i>
+                        <h3 class="text-xl font-black mb-3">進捗ステータス管理</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">選考ステータスを簡単に追跡。変更履歴も自動で記録されます。</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 fade-up">
+                        <i data-lucide="download" class="w-10 h-10 text-brand-green mb-4"></i>
+                        <h3 class="text-xl font-black mb-3">CSV一括取込</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">既存の候補者リストや求人データをAIマッピングで簡単に移行可能です。</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 fade-up">
+                        <i data-lucide="file-text" class="w-10 h-10 text-brand-purple mb-4"></i>
+                        <h3 class="text-xl font-black mb-3">AI推薦文作成</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">人事担当者や経営者に響く推薦理由をAIが自動生成します。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integration Section -->
+    <section class="py-24 bg-slate-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-6">既存システムとの併用も可能</h2>
+                    <p class="text-lg text-slate-600">既にお使いのシステムはそのまま活用しながら、RightJob AIマッチングのAI機能を追加できます。</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-12 fade-up">
+                    <div class="bg-white rounded-3xl p-10 shadow-xl">
+                        <h3 class="text-2xl font-black mb-6 flex items-center gap-3"><i data-lucide="layers" class="text-brand-blue"></i> 既存システム + α</h3>
+                        <p class="text-sm text-slate-600 mb-8">PDF解析やスカウト文面生成など、必要な機能だけを既存のフローに追加導入可能です。</p>
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="px-4 py-2 bg-slate-100 rounded-lg text-xs font-bold">既存システム</div>
+                            <i data-lucide="plus" class="text-brand-orange"></i>
+                            <div class="px-4 py-2 ai-gradient text-white rounded-lg text-xs font-bold">RightJob AI</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-3xl p-10 shadow-xl">
+                        <h3 class="text-2xl font-black mb-6 flex items-center gap-3"><i data-lucide="database" class="text-brand-green"></i> データベース統合</h3>
+                        <p class="text-sm text-slate-600 mb-8">CSVインポートにより、求職者・求人DBを一元化し、AIマッチングを即座に開始できます。</p>
+                        <div class="flex items-center justify-center gap-4">
+                            <i data-lucide="users" class="text-slate-400"></i>
+                            <i data-lucide="arrow-right" class="text-slate-300"></i>
+                            <i data-lucide="database" class="text-brand-green"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="py-32 bg-gradient-to-br from-slate-900 via-brand-dark to-slate-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand-blue rounded-full filter blur-3xl"></div>
+            <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-brand-purple rounded-full filter blur-3xl"></div>
+        </div>
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div class="max-w-4xl mx-auto fade-up">
+                <h2 class="text-5xl md:text-6xl font-black mb-8 leading-tight">専門知識とAIの融合で、<br>最高精度の採用決定を。</h2>
+                <a href="#" class="px-12 py-6 text-xl font-black text-white bg-brand-orange rounded-full hover:bg-amber-500 transition shadow-2xl inline-block">無料デモを予約する</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-400 py-16 border-t border-slate-800">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 ai-gradient rounded-lg flex items-center justify-center text-white font-bold"><i data-lucide="brain"></i></div>
+                    <span class="font-black text-xl text-slate-200">RightJob AIマッチング</span>
+                </div>
+                <nav class="flex gap-8 text-sm font-bold">
+                    <a href="#features" class="hover:text-brand-blue">機能紹介</a>
+                    <a href="#process" class="hover:text-brand-blue">活用プロセス</a>
+                    <a href="https://rightjob.info/one-record-company/" target="_blank" rel="noopener noreferrer" class="hover:text-brand-blue">運営会社</a>
+                </nav>
+            </div>
+            <div class="text-center text-xs border-t border-slate-800 pt-8">
+                <p>© 2026 RightJob AIマッチング System. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Fade-up animation on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+            
+            // Smooth scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
