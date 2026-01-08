@@ -20008,7 +20008,7 @@
         }
 
         // 職務経歴書プレビューモーダルを開く
-        async function openResumePreviewModal(applicationId) {
+        window.openResumePreviewModal = async function (applicationId) {
             const modal = $('#resume-preview-modal');
             modal.removeClass('hidden').css('display', 'flex');
 
@@ -20190,7 +20190,7 @@
         }
 
         // フォーマット関数
-        function formatWorkHistory(workHistory) {
+        window.formatWorkHistory = function (workHistory) {
             if (!Array.isArray(workHistory)) return '';
 
             return workHistory.map((item, index) => {
@@ -20204,14 +20204,14 @@
             }).join('\n');
         }
 
-        function formatList(items) {
+        window.formatList = function (items) {
             if (Array.isArray(items)) {
                 return items.map((s, i) => `• ${s}`).join('\n');
             }
             return items || '';
         }
 
-        function formatSkills(skills) {
+        window.formatSkills = function (skills) {
             if (!skills) return '';
 
             let text = '';
@@ -20227,7 +20227,7 @@
             return text;
         }
 
-        function formatRecommendationLetter(data) {
+        window.formatRecommendationLetter = function (data) {
             let text = `${data.date || new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}現在\n\n`;
             text += `${data.recipient || '採用ご担当者様'}\n\n`;
             text += `件名: ${data.subject || '候補者推薦の件'}\n\n`;
