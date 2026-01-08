@@ -19993,6 +19993,7 @@
         let currentDocumentType = null;
         let currentDocumentData = null;
 
+
         // 職務経歴書・推薦状を生成（モーダル表示版）
         window.generateDocument = async function (applicationId, type) {
             console.log('generateDocument called:', { applicationId, type });
@@ -20001,9 +20002,9 @@
             currentDocumentType = type;
 
             if (type === 'resume') {
-                openResumePreviewModal(applicationId);
+                window.openResumePreviewModal(applicationId);
             } else {
-                openRecommendationDocPreviewModal(applicationId);
+                window.openRecommendationDocPreviewModal(applicationId);
             }
         }
 
