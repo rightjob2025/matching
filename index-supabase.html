@@ -11206,7 +11206,8 @@
             try {
                 let query = supabase
                     .from('applications')
-                    .select('*, jobs(*), users(name), recommendation_text, resume_document_url, recommendation_letter_url') // 職務経歴書・推薦状URLを追加
+                    .select('*, jobs(*), users(name), recommendation_text') // 一時的にresume/recommendation URLを除外
+                    // .select('*, jobs(*), users(name), recommendation_text, resume_document_url, recommendation_letter_url')
                     .order('updated_at', { ascending: false })
 
                 if (currentUser.role === 'super_admin' || currentUser.role === 'org_admin' || currentUser.role === 'admin') {
@@ -11242,7 +11243,8 @@
                 renderApplications(applications)
             } catch (error) {
                 console.error('Load applications error:', error)
-                $('#applications-container').html('<p class="text-red-500">応募履歴の読み込みに失敗しました</p>')
+                console.error('Error details:', JSON.stringify(error, null, 2))
+                $('#applications-container').html(`<p class="text-red-500">応募履歴の読み込みに失敗しました: ${error.message || JSON.stringify(error)}</p>`)
             } finally {
                 hideLoading()
             }
