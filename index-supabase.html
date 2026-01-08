@@ -20021,6 +20021,9 @@
             const modal = $('#resume-preview-modal');
             console.log('Modal element found:', modal.length);
 
+            // モーダルをbodyの直下に移動（親要素の影響を受けないようにする）
+            modal.appendTo('body');
+
             modal.removeClass('hidden').css('display', 'flex');
             console.log('Modal display set to flex');
 
@@ -20075,8 +20078,12 @@
         }
 
         // 推薦状プレビューモーダルを開く
-        async function openRecommendationDocPreviewModal(applicationId) {
+        window.openRecommendationDocPreviewModal = async function (applicationId) {
             const modal = $('#recommendation-doc-preview-modal');
+
+            // モーダルをbodyの直下に移動（親要素の影響を受けないようにする）
+            modal.appendTo('body');
+
             modal.removeClass('hidden').css('display', 'flex');
 
             // 生成中表示
