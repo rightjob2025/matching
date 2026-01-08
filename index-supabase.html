@@ -11206,7 +11206,7 @@
             try {
                 let query = supabase
                     .from('applications')
-                    .select('*, jobs(*), users(name), recommendation_text') // users(name)とrecommendation_textを取得
+                    .select('*, jobs(*), users(name), recommendation_text, resume_document_url, recommendation_letter_url') // 職務経歴書・推薦状URLを追加
                     .order('updated_at', { ascending: false })
 
                 if (currentUser.role === 'super_admin' || currentUser.role === 'org_admin' || currentUser.role === 'admin') {
@@ -11308,6 +11308,14 @@
                                 <button onclick="openRecommendationModal('${app.id}')" class="text-sm font-medium flex items-center ${app.recommendation_text ? 'text-green-600 hover:text-green-800' : 'text-indigo-600 hover:text-indigo-800'}">
                                     <i class="fas ${app.recommendation_text ? 'fa-check-circle' : 'fa-file-alt'} mr-1"></i>
                                     ${app.recommendation_text ? '推薦文編集' : '推薦文作成'}
+                                </button>
+                                <button onclick="generateDocument('${app.id}', 'resume')" class="text-sm font-medium flex items-center ${app.resume_document_url ? 'text-blue-600 hover:text-blue-800' : 'text-blue-600 hover:text-blue-800'}">
+                                    <i class="fas ${app.resume_document_url ? 'fa-download' : 'fa-file-word'} mr-1"></i>
+                                    ${app.resume_document_url ? '職務経歴書DL' : '職務経歴書作成'}
+                                </button>
+                                <button onclick="generateDocument('${app.id}', 'recommendation')" class="text-sm font-medium flex items-center ${app.recommendation_letter_url ? 'text-purple-600 hover:text-purple-800' : 'text-purple-600 hover:text-purple-800'}">
+                                    <i class="fas ${app.recommendation_letter_url ? 'fa-download' : 'fa-file-word'} mr-1"></i>
+                                    ${app.recommendation_letter_url ? '推薦状DL' : '推薦状作成'}
                                 </button>
                                 ` : ''}
                                 ${['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role) ? `
@@ -19971,6 +19979,77 @@
                 alert('推薦文の生成に失敗しました: ' + (error.message || error));
             } finally {
                 btn.html(originalHtml).prop('disabled', false);
+            }
+        }
+
+        // 職務経歴書・推薦状を生成
+        window.generateDocument = async function (applicationId, type) {
+            console.log('generateDocument called:', { applicationId, type });
+
+            const documentName = type === 'resume' ? '職務経歴書' : '推薦状';
+
+            // 既に生成済みの場合はダウンロード
+            try {
+                const { data: app, error: fetchError } = await window.supabase
+                    .from('applications')
+                    .select('resume_document_url, recommendation_letter_url')
+                    .eq('id', applicationId)
+                    .single();
+
+                if (fetchError) throw fetchError;
+
+                const documentUrl = type === 'resume' ? app.resume_document_url : app.recommendation_letter_url;
+
+                if (documentUrl) {
+                    // 既に生成済み - ダウンロード
+                    window.open(documentUrl, '_blank');
+                    return;
+                }
+            } catch (error) {
+                console.error('Failed to check document status:', error);
+            }
+
+            // 生成処理
+            showLoading(`${documentName}を生成中...`);
+
+            try {
+                if (!window.supabase) throw new Error('Supabase client not initialized');
+
+                console.log(`Invoking generate-application-document for ${type}:`, applicationId);
+
+                const { data, error } = await window.supabase.functions.invoke('generate-application-document', {
+                    body: {
+                        applicationId: applicationId,
+                        type: type
+                    },
+                    headers: {
+                        'x-user-id': currentUser?.id || ''
+                    }
+                });
+
+                if (error) throw error;
+                if (!data.success) throw new Error(data.error || '生成に失敗しました');
+
+                console.log('Document generation success:', data);
+
+                // 成功メッセージ
+                alert(`${documentName}を生成しました!`);
+
+                // ダウンロード
+                if (data.documentUrl) {
+                    window.open(data.documentUrl, '_blank');
+                }
+
+                // 応募一覧を再読み込み
+                if (typeof loadApplications === 'function') {
+                    loadApplications();
+                }
+
+            } catch (error) {
+                console.error('Failed to generate document:', error);
+                alert(`${documentName}の生成に失敗しました: ${error.message || error}`);
+            } finally {
+                hideLoading();
             }
         }
 
