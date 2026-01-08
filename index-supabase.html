@@ -20016,15 +20016,22 @@
 
         // 職務経歴書プレビューモーダルを開く
         window.openResumePreviewModal = async function (applicationId) {
+            console.log('openResumePreviewModal START, applicationId:', applicationId);
+
             const modal = $('#resume-preview-modal');
+            console.log('Modal element found:', modal.length);
+
             modal.removeClass('hidden').css('display', 'flex');
+            console.log('Modal display set to flex');
 
             // 生成中表示
             $('#resume-generating').show();
             $('#resume-preview-content').hide();
             $('#resume-error').hide();
+            console.log('Loading state shown');
 
             try {
+                console.log('Calling Edge Function...');
                 // Edge Functionを呼び出してAI生成
                 const { data, error } = await window.supabase.functions.invoke('generate-application-document', {
                     body: {
@@ -20036,10 +20043,13 @@
                     }
                 });
 
+                console.log('Edge Function response:', { data, error });
+
                 if (error) throw error;
                 if (!data.success) throw new Error(data.error);
 
                 currentDocumentData = data.documentData;
+                console.log('Document data received:', currentDocumentData);
 
                 // プレビューに表示
                 $('#resume-summary').val(data.documentData.summary || '');
@@ -20049,9 +20059,12 @@
                 $('#resume-self-pr').val(data.documentData.self_pr || '');
                 $('#resume-motivation').val(data.documentData.motivation || '志望動機を記入してください');
 
+                console.log('Form fields populated');
+
                 // プレビュー表示
                 $('#resume-generating').hide();
                 $('#resume-preview-content').show();
+                console.log('Preview content shown');
 
             } catch (error) {
                 console.error('Resume generation error:', error);
