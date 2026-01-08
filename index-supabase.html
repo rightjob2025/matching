@@ -20001,11 +20001,17 @@
             currentDocumentApplicationId = applicationId;
             currentDocumentType = type;
 
+            console.log('About to call modal function for type:', type);
+
             if (type === 'resume') {
+                console.log('Calling window.openResumePreviewModal');
                 window.openResumePreviewModal(applicationId);
             } else {
+                console.log('Calling window.openRecommendationDocPreviewModal');
                 window.openRecommendationDocPreviewModal(applicationId);
             }
+
+            console.log('Modal function called');
         }
 
         // 職務経歴書プレビューモーダルを開く
