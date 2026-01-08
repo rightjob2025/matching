@@ -1076,7 +1076,7 @@
                         <p id="user-name" class="text-sm font-medium text-gray-900"></p>
                         <p id="user-role" class="text-xs text-gray-400 mb-1"></p>
                         <button onclick="showOrgSelectModalForSwitch()"
-                            class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
+                            class="hidden text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
                             <i class="fas fa-exchange-alt"></i> 組織を切り替える
                         </button>
                     </div>
@@ -14568,6 +14568,9 @@
             if (!currentUser) return
             showLoading()
             try {
+                console.log('loadAdminCandidates - currentUser:', currentUser);
+                console.log('loadAdminCandidates - role:', currentUser.role);
+
                 // 組織設定を確認（閲覧制限）
                 let limitView = false;
                 if (['coach', 'ca', 'ra'].includes(currentUser.role)) {
@@ -14577,8 +14580,10 @@
                         .eq('id', currentUser.organization_id)
                         .single();
 
+                    console.log('loadAdminCandidates - org settings:', org);
                     if (org && org.settings && org.settings.limit_agent_view) {
                         limitView = true;
+                        console.log('loadAdminCandidates - limit_agent_view is enabled');
                     }
                 }
 
@@ -14593,10 +14598,14 @@
 
                 // 閲覧制限が有効な場合、担当者でフィルタリング
                 if (limitView) {
+                    console.log('loadAdminCandidates - filtering by coach_id:', currentUser.id);
                     query = query.eq('coach_id', currentUser.id);
                 }
 
                 const { data: users, error } = await query;
+
+                console.log('loadAdminCandidates - query result:', { users, error });
+                console.log('loadAdminCandidates - number of users:', users?.length || 0);
 
                 if (error) throw error
 
