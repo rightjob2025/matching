@@ -11698,6 +11698,7 @@
         // タブ切り替え関数
         window.switchRecommendationTab = function (tab) {
             currentRecommendationTab = tab;
+            currentRecommendationPage = 1; // ページ番号をリセット
 
             // タブのスタイルを更新
             $('.rec-tab').removeClass('border-indigo-600 text-indigo-600').addClass('border-transparent text-gray-500');
@@ -11710,6 +11711,7 @@
         // ソート切り替え関数
         window.sortRecommendations = function (option) {
             currentSortOption = option;
+            currentRecommendationPage = 1; // ページ番号をリセット
             renderRecommendations(allRecommendations, isAdminOrCoachView, allCandidatesList, appliedJobIdsCache);
         }
 
@@ -12340,8 +12342,9 @@
         // 推薦結果のフィルタリング
         window.filterRecommendations = function (userId) {
             currentSelectedUserId = userId;
+            currentRecommendationPage = 1; // ページ番号をリセット
             // 再レンダリングをトリガーして、フィルタリングロジックを適用
-            renderRecommendations(allRecommendations, isAdminOrCoachView, allCandidatesList);
+            renderRecommendations(allRecommendations, isAdminOrCoachView, allCandidatesList, appliedJobIdsCache);
         }
 
         window.generateAIRecommendations = async function () {
