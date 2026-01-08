@@ -19983,45 +19983,46 @@
             }
         }
 
-        // 職務経歴書・推薦状を生成
+
+        // ========================================
+        // 職務経歴書・推薦状プレビューモーダル機能
+        // ========================================
+
+        // グローバル変数
+        let currentDocumentApplicationId = null;
+        let currentDocumentType = null;
+        let currentDocumentData = null;
+
+        // 職務経歴書・推薦状を生成（モーダル表示版）
         window.generateDocument = async function (applicationId, type) {
             console.log('generateDocument called:', { applicationId, type });
 
-            const documentName = type === 'resume' ? '職務経歴書' : '推薦状';
+            currentDocumentApplicationId = applicationId;
+            currentDocumentType = type;
 
-            // 既に生成済みの場合はダウンロード
-            try {
-                const { data: app, error: fetchError } = await window.supabase
-                    .from('applications')
-                    .select('resume_document_url, recommendation_letter_url')
-                    .eq('id', applicationId)
-                    .single();
-
-                if (fetchError) throw fetchError;
-
-                const documentUrl = type === 'resume' ? app.resume_document_url : app.recommendation_letter_url;
-
-                if (documentUrl) {
-                    // 既に生成済み - ダウンロード
-                    window.open(documentUrl, '_blank');
-                    return;
-                }
-            } catch (error) {
-                console.error('Failed to check document status:', error);
+            if (type === 'resume') {
+                openResumePreviewModal(applicationId);
+            } else {
+                openRecommendationDocPreviewModal(applicationId);
             }
+        }
 
-            // 生成処理
-            showLoading(`${documentName}を生成中...`);
+        // 職務経歴書プレビューモーダルを開く
+        async function openResumePreviewModal(applicationId) {
+            const modal = $('#resume-preview-modal');
+            modal.removeClass('hidden').css('display', 'flex');
+
+            // 生成中表示
+            $('#resume-generating').show();
+            $('#resume-preview-content').hide();
+            $('#resume-error').hide();
 
             try {
-                if (!window.supabase) throw new Error('Supabase client not initialized');
-
-                console.log(`Invoking generate-application-document for ${type}:`, applicationId);
-
+                // Edge Functionを呼び出してAI生成
                 const { data, error } = await window.supabase.functions.invoke('generate-application-document', {
                     body: {
                         applicationId: applicationId,
-                        type: type
+                        type: 'resume'
                     },
                     headers: {
                         'x-user-id': currentUser?.id || ''
@@ -20029,30 +20030,245 @@
                 });
 
                 if (error) throw error;
-                if (!data.success) throw new Error(data.error || '生成に失敗しました');
+                if (!data.success) throw new Error(data.error);
 
-                console.log('Document generation success:', data);
+                currentDocumentData = data.documentData;
 
-                // 成功メッセージ
-                alert(`${documentName}を生成しました!`);
+                // プレビューに表示
+                $('#resume-summary').val(data.documentData.summary || '');
+                $('#resume-work-history').val(formatWorkHistory(data.documentData.work_history));
+                $('#resume-strengths').val(formatList(data.documentData.strengths || data.documentData.match_highlights));
+                $('#resume-skills').val(formatSkills(data.documentData.skills));
+                $('#resume-self-pr').val(data.documentData.self_pr || '');
+                $('#resume-motivation').val(data.documentData.motivation || '志望動機を記入してください');
 
-                // ダウンロード
-                if (data.documentUrl) {
-                    window.open(data.documentUrl, '_blank');
-                }
-
-                // 応募一覧を再読み込み
-                if (typeof loadApplications === 'function') {
-                    loadApplications();
-                }
+                // プレビュー表示
+                $('#resume-generating').hide();
+                $('#resume-preview-content').show();
 
             } catch (error) {
-                console.error('Failed to generate document:', error);
-                alert(`${documentName}の生成に失敗しました: ${error.message || error}`);
+                console.error('Resume generation error:', error);
+                $('#resume-generating').hide();
+                $('#resume-error-message').text(error.message || '生成に失敗しました');
+                $('#resume-error').show();
+            }
+        }
+
+        // 推薦状プレビューモーダルを開く
+        async function openRecommendationDocPreviewModal(applicationId) {
+            const modal = $('#recommendation-doc-preview-modal');
+            modal.removeClass('hidden').css('display', 'flex');
+
+            // 生成中表示
+            $('#recommendation-doc-generating').show();
+            $('#recommendation-doc-preview-content').hide();
+            $('#recommendation-doc-error').hide();
+
+            try {
+                // Edge Functionを呼び出してAI生成
+                const { data, error } = await window.supabase.functions.invoke('generate-application-document', {
+                    body: {
+                        applicationId: applicationId,
+                        type: 'recommendation'
+                    },
+                    headers: {
+                        'x-user-id': currentUser?.id || ''
+                    }
+                });
+
+                if (error) throw error;
+                if (!data.success) throw new Error(data.error);
+
+                currentDocumentData = data.documentData;
+
+                // 推薦状を整形して表示
+                const formattedText = formatRecommendationLetter(data.documentData);
+                $('#recommendation-doc-full-text').val(formattedText);
+
+                // プレビュー表示
+                $('#recommendation-doc-generating').hide();
+                $('#recommendation-doc-preview-content').show();
+
+            } catch (error) {
+                console.error('Recommendation generation error:', error);
+                $('#recommendation-doc-generating').hide();
+                $('#recommendation-doc-error-message').text(error.message || '生成に失敗しました');
+                $('#recommendation-doc-error').show();
+            }
+        }
+
+        // モーダルを閉じる
+        window.closeResumePreviewModal = function () {
+            $('#resume-preview-modal').addClass('hidden').css('display', 'none');
+            currentDocumentApplicationId = null;
+            currentDocumentData = null;
+        }
+
+        window.closeRecommendationDocPreviewModal = function () {
+            $('#recommendation-doc-preview-modal').addClass('hidden').css('display', 'none');
+            currentDocumentApplicationId = null;
+            currentDocumentData = null;
+        }
+
+        // 再生成
+        window.regenerateResume = async function () {
+            if (currentDocumentApplicationId) {
+                await openResumePreviewModal(currentDocumentApplicationId);
+            }
+        }
+
+        window.regenerateRecommendationDoc = async function () {
+            if (currentDocumentApplicationId) {
+                await openRecommendationDocPreviewModal(currentDocumentApplicationId);
+            }
+        }
+
+        // Word出力
+        window.downloadResumeWord = async function () {
+            showLoading('Word文書を生成中...');
+
+            try {
+                // 編集された内容を取得
+                const editedData = {
+                    summary: $('#resume-summary').val(),
+                    work_history_text: $('#resume-work-history').val(),
+                    strengths_text: $('#resume-strengths').val(),
+                    skills_text: $('#resume-skills').val(),
+                    self_pr: $('#resume-self-pr').val(),
+                    motivation: $('#resume-motivation').val()
+                };
+
+                // テキストファイルとしてダウンロード（簡易実装）
+                const content = `職務経歴書\n\n■職務要約\n${editedData.summary}\n\n■職務経歴\n${editedData.work_history_text}\n\n■強み・活かせる経験\n${editedData.strengths_text}\n\n■PCスキル・資格\n${editedData.skills_text}\n\n■自己PR\n${editedData.self_pr}\n\n■志望動機\n${editedData.motivation}`;
+
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `職務経歴書_${currentDocumentApplicationId}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // モーダルを閉じる
+                closeResumePreviewModal();
+
+                alert('職務経歴書をダウンロードしました!');
+
+            } catch (error) {
+                console.error('Word generation error:', error);
+                alert(`ダウンロードに失敗しました: ${error.message}`);
             } finally {
                 hideLoading();
             }
         }
+
+        window.downloadRecommendationDocWord = async function () {
+            showLoading('Word文書を生成中...');
+
+            try {
+                const content = $('#recommendation-doc-full-text').val();
+
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `推薦状_${currentDocumentApplicationId}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // モーダルを閉じる
+                closeRecommendationDocPreviewModal();
+
+                alert('推薦状をダウンロードしました!');
+
+            } catch (error) {
+                console.error('Word generation error:', error);
+                alert(`ダウンロードに失敗しました: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // フォーマット関数
+        function formatWorkHistory(workHistory) {
+            if (!Array.isArray(workHistory)) return '';
+
+            return workHistory.map((item, index) => {
+                let text = `${index + 1}. ${item.period || ''}\n`;
+                text += `   ${item.company || ''} - ${item.position || ''}\n`;
+                text += `   ${item.description || ''}\n`;
+                if (item.skills_used && item.skills_used.length > 0) {
+                    text += `   使用スキル: ${item.skills_used.join(', ')}\n`;
+                }
+                return text;
+            }).join('\n');
+        }
+
+        function formatList(items) {
+            if (Array.isArray(items)) {
+                return items.map((s, i) => `• ${s}`).join('\n');
+            }
+            return items || '';
+        }
+
+        function formatSkills(skills) {
+            if (!skills) return '';
+
+            let text = '';
+            if (skills.technical && Array.isArray(skills.technical)) {
+                text += `技術スキル: ${skills.technical.join(', ')}\n`;
+            }
+            if (skills.business && Array.isArray(skills.business)) {
+                text += `ビジネススキル: ${skills.business.join(', ')}\n`;
+            }
+            if (skills.certifications && Array.isArray(skills.certifications)) {
+                text += `資格: ${skills.certifications.join(', ')}`;
+            }
+            return text;
+        }
+
+        function formatRecommendationLetter(data) {
+            let text = `${data.date || new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}現在\n\n`;
+            text += `${data.recipient || '採用ご担当者様'}\n\n`;
+            text += `件名: ${data.subject || '候補者推薦の件'}\n\n`;
+            text += `${data.greeting || '拝啓 時下ますますご清栄のこととお慶び申し上げます。'}\n\n`;
+            text += `${data.introduction || ''}\n\n`;
+
+            if (data.candidate_overview) {
+                text += `【候補者概要】\n${data.candidate_overview}\n\n`;
+            }
+
+            if (data.match_points && Array.isArray(data.match_points)) {
+                text += `【マッチングポイント】\n`;
+                data.match_points.forEach((point, index) => {
+                    if (typeof point === 'object') {
+                        text += `\n${index + 1}. ${point.title || ''}\n`;
+                        text += `${point.description || ''}\n`;
+                    } else {
+                        text += `${index + 1}. ${point}\n`;
+                    }
+                });
+                text += `\n`;
+            }
+
+            if (data.strengths && Array.isArray(data.strengths)) {
+                text += `【候補者の強み】\n`;
+                data.strengths.forEach((strength, index) => {
+                    text += `${index + 1}. ${strength}\n`;
+                });
+                text += `\n`;
+            }
+
+            if (data.why_recommend) {
+                text += `【推薦理由】\n${data.why_recommend}\n\n`;
+            }
+
+            text += `${data.closing || '何卒ご検討のほど、よろしくお願い申し上げます。'}\n\n`;
+            text += `${data.signature || '敬具'}`;
+
+            return text;
+        }
+
 
         // 推薦文を保存
         window.saveRecommendation = async function () {
@@ -21309,6 +21525,200 @@
     </div>
 
     <!-- Dynamic modal is injected here via JS -->
+    <!-- 職務経歴書プレビューモーダル -->
+    <div id="resume-preview-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center"
+        style="z-index: 10003; display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-5xl max-h-[90vh] overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-file-alt"></i>
+                    職務経歴書プレビュー
+                </h2>
+                <button onclick="closeResumePreviewModal()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 180px);">
+                <!-- 生成中表示 -->
+                <div id="resume-generating" class="text-center py-16">
+                    <i class="fas fa-spinner fa-spin text-6xl text-indigo-600 mb-6"></i>
+                    <p class="text-xl text-gray-700 font-medium">AIが職務経歴書を生成中...</p>
+                    <p class="text-sm text-gray-500 mt-2">求人情報とマッチング分析に基づいて最適な内容を作成しています</p>
+                </div>
+
+                <!-- プレビュー表示 -->
+                <div id="resume-preview-content" class="hidden space-y-4">
+                    <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+                        <p class="text-sm text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            生成された内容を確認・編集してから「Word出力」ボタンでダウンロードできます
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                <i class="fas fa-user-circle text-indigo-600"></i>
+                                職務要約
+                            </label>
+                            <textarea id="resume-summary" rows="4"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="職務要約が表示されます"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                <i class="fas fa-briefcase text-indigo-600"></i>
+                                職務経歴
+                            </label>
+                            <textarea id="resume-work-history" rows="10"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm"
+                                placeholder="職務経歴が表示されます"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-star text-indigo-600"></i>
+                                    強み・活かせる経験
+                                </label>
+                                <textarea id="resume-strengths" rows="6"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="強みが表示されます"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-laptop-code text-indigo-600"></i>
+                                    PCスキル・資格
+                                </label>
+                                <textarea id="resume-skills" rows="6"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="スキル・資格が表示されます"></textarea>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                <i class="fas fa-comment-dots text-indigo-600"></i>
+                                自己PR
+                            </label>
+                            <textarea id="resume-self-pr" rows="5"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="自己PRが表示されます"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                <i class="fas fa-heart text-indigo-600"></i>
+                                志望動機
+                            </label>
+                            <textarea id="resume-motivation" rows="5"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="志望動機が表示されます"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- エラー表示 -->
+                <div id="resume-error" class="hidden text-center py-16">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-600 mb-6"></i>
+                    <p class="text-xl text-red-600 font-medium" id="resume-error-message"></p>
+                    <button onclick="regenerateResume()"
+                        class="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                        <i class="fas fa-redo mr-2"></i>再試行
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 p-6 border-t bg-gray-50">
+                <button onclick="closeResumePreviewModal()"
+                    class="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 font-medium">
+                    キャンセル
+                </button>
+                <button onclick="regenerateResume()"
+                    class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 font-medium">
+                    <i class="fas fa-sync"></i>
+                    再生成
+                </button>
+                <button onclick="downloadResumeWord()"
+                    class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 font-medium">
+                    <i class="fas fa-file-word"></i>
+                    Word出力
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 推薦状プレビューモーダル -->
+    <div id="recommendation-doc-preview-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center"
+        style="z-index: 10003; display: none;">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-purple-600 to-pink-600">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-file-signature"></i>
+                    推薦状プレビュー
+                </h2>
+                <button onclick="closeRecommendationDocPreviewModal()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 180px);">
+                <!-- 生成中表示 -->
+                <div id="recommendation-doc-generating" class="text-center py-16">
+                    <i class="fas fa-spinner fa-spin text-6xl text-purple-600 mb-6"></i>
+                    <p class="text-xl text-gray-700 font-medium">AIが推薦状を生成中...</p>
+                    <p class="text-sm text-gray-500 mt-2">企業向けの正式な推薦状を作成しています</p>
+                </div>
+
+                <!-- プレビュー表示 -->
+                <div id="recommendation-doc-preview-content" class="hidden">
+                    <div class="bg-purple-50 border-l-4 border-purple-600 p-4 mb-6">
+                        <p class="text-sm text-purple-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            生成された推薦状を確認・編集してから「Word出力」ボタンでダウンロードできます
+                        </p>
+                    </div>
+
+                    <div class="bg-white border-2 border-gray-200 rounded-lg p-6">
+                        <textarea id="recommendation-doc-full-text" rows="25"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-serif text-sm leading-relaxed"
+                            placeholder="推薦状が表示されます"></textarea>
+                    </div>
+                </div>
+
+                <!-- エラー表示 -->
+                <div id="recommendation-doc-error" class="hidden text-center py-16">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-600 mb-6"></i>
+                    <p class="text-xl text-red-600 font-medium" id="recommendation-doc-error-message"></p>
+                    <button onclick="regenerateRecommendationDoc()"
+                        class="mt-6 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        <i class="fas fa-redo mr-2"></i>再試行
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 p-6 border-t bg-gray-50">
+                <button onclick="closeRecommendationDocPreviewModal()"
+                    class="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 font-medium">
+                    キャンセル
+                </button>
+                <button onclick="regenerateRecommendationDoc()"
+                    class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 font-medium">
+                    <i class="fas fa-sync"></i>
+                    再生成
+                </button>
+                <button onclick="downloadRecommendationDocWord()"
+                    class="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 font-medium">
+                    <i class="fas fa-file-word"></i>
+                    Word出力
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
