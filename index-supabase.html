@@ -11207,7 +11207,7 @@
                 let query = supabase
                     .from('applications')
                     .select('*, jobs(*), users(name), recommendation_text') // 一時的にresume/recommendation URLを除外
-                    // .select('*, jobs(*), users(name), recommendation_text, resume_document_url, recommendation_letter_url')
+                    .select('*, jobs(*), users(name), recommendation_text, resume_document_url, recommendation_letter_url')
                     .order('updated_at', { ascending: false })
 
                 if (currentUser.role === 'super_admin' || currentUser.role === 'org_admin' || currentUser.role === 'admin') {
