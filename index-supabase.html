@@ -22,6 +22,10 @@
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- docx for Word document generation -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+    <!-- FileSaver for file download -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
@@ -20165,16 +20169,94 @@
                     motivation: $('#resume-motivation').val()
                 };
 
-                // テキストファイルとしてダウンロード（簡易実装）
-                const content = `職務経歴書\n\n■職務要約\n${editedData.summary}\n\n■職務経歴\n${editedData.work_history_text}\n\n■強み・活かせる経験\n${editedData.strengths_text}\n\n■PCスキル・資格\n${editedData.skills_text}\n\n■自己PR\n${editedData.self_pr}\n\n■志望動機\n${editedData.motivation}`;
+                // docxライブラリを使用してWord文書を生成
+                const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
 
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `職務経歴書_${currentDocumentApplicationId}.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
+                const doc = new Document({
+                    sections: [{
+                        properties: {},
+                        children: [
+                            // タイトル
+                            new Paragraph({
+                                text: "職務経歴書",
+                                heading: HeadingLevel.TITLE,
+                                alignment: AlignmentType.CENTER,
+                                spacing: { after: 400 }
+                            }),
+
+                            // 職務要約
+                            new Paragraph({
+                                text: "■ 職務要約",
+                                heading: HeadingLevel.HEADING_1,
+                                spacing: { before: 300, after: 200 }
+                            }),
+                            new Paragraph({
+                                text: editedData.summary || '',
+                                spacing: { after: 300 }
+                            }),
+
+                            // 職務経歴
+                            new Paragraph({
+                                text: "■ 職務経歴",
+                                heading: HeadingLevel.HEADING_1,
+                                spacing: { before: 300, after: 200 }
+                            }),
+                            ...editedData.work_history_text.split('\n').map(line =>
+                                new Paragraph({ text: line })
+                            ),
+                            new Paragraph({ text: '', spacing: { after: 300 } }),
+
+                            // 強み・活かせる経験
+                            new Paragraph({
+                                text: "■ 強み・活かせる経験",
+                                heading: HeadingLevel.HEADING_1,
+                                spacing: { before: 300, after: 200 }
+                            }),
+                            ...editedData.strengths_text.split('\n').map(line =>
+                                new Paragraph({ text: line })
+                            ),
+                            new Paragraph({ text: '', spacing: { after: 300 } }),
+
+                            // PCスキル・資格
+                            new Paragraph({
+                                text: "■ PCスキル・資格",
+                                heading: HeadingLevel.HEADING_1,
+                                spacing: { before: 300, after: 200 }
+                            }),
+                            ...editedData.skills_text.split('\n').map(line =>
+                                new Paragraph({ text: line })
+                            ),
+                            new Paragraph({ text: '', spacing: { after: 300 } }),
+
+                            // 自己PR
+                            new Paragraph({
+                                text: "■ 自己PR",
+                                heading: HeadingLevel.HEADING_1,
+                                spacing: { before: 300, after: 200 }
+                            }),
+                            new Paragraph({
+                                text: editedData.self_pr || '',
+                                spacing: { after: 300 }
+                            }),
+
+                            // 志望動機
+                            new Paragraph({
+                                text: "■ 志望動機",
+                                heading: HeadingLevel.HEADING_1,
+                                spacing: { before: 300, after: 200 }
+                            }),
+                            new Paragraph({
+                                text: editedData.motivation || ''
+                            })
+                        ]
+                    }]
+                });
+
+                // Word文書をBlobとして生成
+                const blob = await Packer.toBlob(doc);
+
+                // ファイルをダウンロード
+                saveAs(blob, `職務経歴書_${currentDocumentApplicationId}.docx`);
 
                 // モーダルを閉じる
                 closeResumePreviewModal();
@@ -20195,13 +20277,37 @@
             try {
                 const content = $('#recommendation-doc-full-text').val();
 
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `推薦状_${currentDocumentApplicationId}.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
+                // docxライブラリを使用してWord文書を生成
+                const { Document, Paragraph, HeadingLevel, AlignmentType } = docx;
+
+                const doc = new Document({
+                    sections: [{
+                        properties: {},
+                        children: [
+                            // タイトル
+                            new Paragraph({
+                                text: "推薦状",
+                                heading: HeadingLevel.TITLE,
+                                alignment: AlignmentType.CENTER,
+                                spacing: { after: 400 }
+                            }),
+
+                            // 本文（改行を保持）
+                            ...content.split('\n').map(line =>
+                                new Paragraph({
+                                    text: line,
+                                    spacing: { after: 100 }
+                                })
+                            )
+                        ]
+                    }]
+                });
+
+                // Word文書をBlobとして生成
+                const blob = await Packer.toBlob(doc);
+
+                // ファイルをダウンロード
+                saveAs(blob, `推薦状_${currentDocumentApplicationId}.docx`);
 
                 // モーダルを閉じる
                 closeRecommendationDocPreviewModal();
