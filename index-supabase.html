@@ -11305,7 +11305,7 @@
                                 <span class="px-3 py-1 rounded-full text-sm font-medium ${status.color}">
                                     ${status.label}
                                 </span>
-                                ${['org_admin', 'admin', 'super_admin', 'coach', 'ca'].includes(currentUser.role) ? `
+                                ${['org_admin', 'admin', 'super_admin', 'coach', 'ca', 'ra'].includes(currentUser.role) ? `
                                 <button onclick="openRecommendationModal('${app.id}')" class="text-sm font-medium flex items-center ${app.recommendation_text ? 'text-green-600 hover:text-green-800' : 'text-indigo-600 hover:text-indigo-800'}">
                                     <i class="fas ${app.recommendation_text ? 'fa-check-circle' : 'fa-file-alt'} mr-1"></i>
                                     ${app.recommendation_text ? '推薦文編集' : '推薦文作成'}
@@ -11318,8 +11318,6 @@
                                     <i class="fas ${app.recommendation_letter_url ? 'fa-download' : 'fa-file-word'} mr-1"></i>
                                     ${app.recommendation_letter_url ? '推薦状DL' : '推薦状作成'}
                                 </button>
-                                ` : ''}
-                                ${['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role) ? `
                                 <button onclick="openProgressModal('${app.id}')"
                                     class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
                                     <i class="fas fa-tasks"></i>
