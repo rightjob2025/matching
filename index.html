@@ -3571,9 +3571,9 @@
 
                 $(document).on('submit', '#apply-form', async function (e) {
                     e.preventDefault();
-                    const jobId = $(this).data('job-id');
-                    const recId = $(this).data('rec-id'); // ▼▼▼ 変更：rec-idを取得
-                    const targetUserId = $(this).data('target-user-id') || null; // ★★★ 追加: 代理応募対象IDを取得 ★★★
+                    const jobId = $(this).data('jobId');
+                    const recId = $(this).data('recId'); // ▼▼▼ 変更：rec-idを取得
+                    const targetUserId = $(this).data('targetUserId') || null; // ★★★ 修正: camelCaseで取得 ★★★
                     const dates = $('.interview-date').map((i, el) => $(el).val()).get().filter(Boolean);
                     const notes = $('#application-notes').val();
                     const aspirationLevel = $('#aspiration-level').val();
@@ -4869,10 +4869,10 @@
 
                 // --- Recommendations List: Manager Single Apply Button ---
                 $(document).on('click', '.manager-apply-single-btn', function () {
-                    const jobId = $(this).data('job-id');
-                    const recId = $(this).data('rec-id');
-                    const targetUserId = $(this).data('user-id'); // ★ 代理応募対象のユーザーID
-                    const targetUserName = $(this).data('user-name'); // ★ 代理応募対象のユーザー名
+                    const jobId = $(this).data('jobId');
+                    const recId = $(this).data('recId');
+                    const targetUserId = $(this).data('userId'); // ★ 代理応募対象のユーザーID
+                    const targetUserName = $(this).data('userName'); // ★ 代理応募対象のユーザー名
 
                     // ユーザー用の応募モーダルを流用
                     const content = `<form id="apply-form" data-job-id="${jobId}" data-rec-id="${recId}" data-target-user-id="${targetUserId}"> 
