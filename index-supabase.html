@@ -953,7 +953,7 @@
                 <a href="#" data-page="applications"
                     class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
                     <i class="fas fa-file-alt w-5"></i>
-                    <span class="ml-3">応募状況</span>
+                    <span class="ml-3">応募・選考状況</span>
                 </a>
                 <a href="#" data-page="recommendations"
                     class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition">
@@ -1507,8 +1507,8 @@
             <div id="applications-content" class="app-content p-6 hidden">
                 <div class="bg-white rounded-lg shadow p-6 mb-6 flex justify-between items-center">
                     <div>
-                        <h2 class="text-xl font-semibold mb-2">応募履歴</h2>
-                        <p class="text-gray-600">応募した求人の一覧です。</p>
+                        <h2 class="text-xl font-semibold mb-2">応募・選考履歴</h2>
+                        <p class="text-gray-600">応募・選考中の求人の一覧です。</p>
                     </div>
                     <button onclick="exportApplicationsCsv()" id="export-applications-btn"
                         class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 hidden">
@@ -11184,7 +11184,7 @@
                     // 通知レコード作成
                     const notifications = Array.from(notifyUserIds).map(uid => ({
                         user_id: uid,
-                        title: '新規応募がありました',
+                        title: '新規応募・選考登録がありました',
                         message: message,
                         read: false,
                         created_at: new Date().toISOString()
@@ -19642,7 +19642,7 @@
                     'dashboard': 'ダッシュボード',
                     'jobs': '求人検索',
                     'ai-scout': 'AIスカウト',
-                    'applications': '応募状況',
+                    'applications': '応募・選考状況',
                     'recommendations': 'おすすめ求人',
                     'profile': 'プロフィール',
                     'admin-jobs': '求人管理',
