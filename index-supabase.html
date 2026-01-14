@@ -18957,14 +18957,21 @@
 
             } catch (e) {
                 console.error('Smart Import Error:', e);
-                alert('解析に失敗しました: ' + e.message);
+                hideLoading();
+
+                let errorMsg = e.message;
+                if (e.context && e.context.json) {
+                    const detail = e.context.json;
+                    errorMsg = detail.error || detail.message || errorMsg;
+                    if (detail.details) errorMsg += ' (' + detail.details + ')';
+                }
+
+                alert('解析に失敗しました: ' + errorMsg);
             } finally {
                 hideLoading();
             }
         }
 
-
-        // ========================
         // Dashboard
         // ========================
         let dashboardChartInstances = {};
