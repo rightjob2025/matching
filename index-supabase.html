@@ -19676,7 +19676,7 @@
                     // セッションがある場合、ユーザー情報を取得してダッシュボードへ
                     supabase
                         .from('users')
-                        .select('*, organizations!fk_users_organization(*), organization_members!inner(role)')
+                        .select('*, organizations(*), organization_members!inner(role)')
                         .eq('id', session.user.id)
                         .eq('organization_members.organization_id', session.user.user_metadata.organization_id || null) // 暫定
                         .single()
@@ -19685,7 +19685,7 @@
                                 // organization_members 込みで再取得（より確実な方法）
                                 const { data: userData } = await supabase
                                     .from('users')
-                                    .select('*, organizations!fk_users_organization(*)')
+                                    .select('*, organizations(*)')
                                     .eq('id', session.user.id)
                                     .single();
 
