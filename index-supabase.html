@@ -2407,10 +2407,6 @@
                             <p class="text-gray-600 mb-2">求人の作成・編集・削除ができます。</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="showJobSmartImportModal()"
-                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                                <i class="fas fa-magic mr-2"></i>AI求人登録
-                            </button>
                             <button onclick="showJobCsvImportModal()"
                                 class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                                 <i class="fas fa-file-csv mr-2"></i>CSVインポート
@@ -4008,187 +4004,185 @@
         <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b flex justify-between items-center">
                 <h2 id="job-modal-title" class="text-xl font-bold">求人作成</h2>
-                <div class="flex items-center gap-2">
-                    <input type="file" id="job-pdf-upload" accept=".pdf" multiple class="hidden"
-                        onchange="handleJobPdfUpload(this)">
-                    <button onclick="$('#job-pdf-upload').click()"
-                        class="bg-green-100 text-green-700 px-3 py-1.5 rounded hover:bg-green-200 text-xs flex items-center transition">
-                        <i class="fas fa-file-pdf mr-1"></i>PDF読込
-                    </button>
-                    <button onclick="showJobSmartImportModal()"
-                        class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 text-xs flex items-center transition">
-                        <i class="fas fa-magic mr-1"></i>AI読込
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <input type="file" id="job-pdf-upload" accept=".pdf" multiple class="hidden"
+                            onchange="handleJobPdfUpload(this)">
+                        <button onclick="$('#job-pdf-upload').click()"
+                            class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-xs flex items-center">
+                            <i class="fas fa-file-pdf mr-1"></i>PDF読込
+                        </button>
+                    </div>
+                    <button onclick="closeJobModal()"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
                     </button>
                 </div>
-                <button onclick="closeJobModal()"
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
             </div>
+            <form id="job-form" class="p-6 space-y-4">
+                <input type="hidden" id="job-id">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">求人タイトル *</label>
+                    <input type="text" id="job-title" required class="w-full px-4 py-2 border rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">会社名 *</label>
+                    <div class="flex gap-2">
+                        <select id="job-company-select"
+                            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            onchange="handleCompanySelect(this.value)">
+                            <option value="">企業を選択してください</option>
+                            <option value="new">+ 新規企業を作成</option>
+                        </select>
+                        <input type="hidden" id="job-company-id">
+                        <input type="hidden" id="job-company-name-hidden">
+                        <!-- For backward compatibility or display -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">勤務地 *</label>
+                        <input type="text" id="job-location" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">雇用形態 *</label>
+                        <select id="job-employment-type" required class="w-full px-4 py-2 border rounded-lg">
+                            <option value="正社員">正社員</option>
+                            <option value="契約社員">契約社員</option>
+                            <option value="派遣社員">派遣社員</option>
+                            <option value="業務委託">業務委託</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">最低年収（万円）</label>
+                        <input type="number" id="job-salary-min" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">最高年収（万円）</label>
+                        <input type="number" id="job-salary-max" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">職種カテゴリ</label>
+                        <select id="job-category" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">業界カテゴリ</label>
+                        <select id="job-industry-category" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="job-experience-ok" class="w-4 h-4 text-indigo-600 rounded">
+                        <span class="text-sm text-gray-700">職種未経験可</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="job-industry-experience-ok" class="w-4 h-4 text-indigo-600 rounded">
+                        <span class="text-sm text-gray-700">業界未経験可</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="job-is-remote" class="w-4 h-4 text-indigo-600 rounded">
+                        <span class="text-sm text-gray-700">リモートワーク可</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">勤務時間</label>
+                        <input type="text" id="job-work-hours" placeholder="例: 9:00 - 18:00"
+                            class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">休日休暇</label>
+                        <input type="text" id="job-holidays" placeholder="例: 完全週休2日制（土日祝）"
+                            class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">福利厚生</label>
+                    <textarea id="job-benefits" rows="3" placeholder="例: 社会保険完備、交通費支給"
+                        class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">選考フロー</label>
+                    <textarea id="job-interview-process" rows="3" placeholder="例: 書類選考 → 一次面接 → 最終面接"
+                        class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">求人URL</label>
+                    <input type="url" id="job-url" placeholder="https://example.com/job/..."
+                        class="w-full px-4 py-2 border rounded-lg">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">担当者1</label>
+                        <select id="job-pic-user-1" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">担当者2</label>
+                        <select id="job-pic-user-2" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">求人詳細 *</label>
+                    <textarea id="job-description" required rows="6" placeholder="仕事内容、業務の詳細など"
+                        class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">必須要件</label>
+                    <textarea id="job-requirements" rows="4" placeholder="必須スキル、経験年数、資格など"
+                        class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">尚可要件（歓迎スキル）</label>
+                    <textarea id="job-welcome-requirements" rows="4" placeholder="あると望ましいスキル、経験など"
+                        class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ステータス</label>
+                    <select id="job-status" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="active">公開中</option>
+                        <option value="draft">下書き</option>
+                        <option value="closed">募集終了</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeJobModal()"
+                        class="px-6 py-2 border rounded-lg hover:bg-gray-50">
+                        キャンセル
+                    </button>
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
+                        保存
+                    </button>
+                </div>
+            </form>
         </div>
-        <form id="job-form" class="p-6 space-y-4">
-            <input type="hidden" id="job-id">
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">求人タイトル *</label>
-                <input type="text" id="job-title" required class="w-full px-4 py-2 border rounded-lg">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">会社名 *</label>
-                <div class="flex gap-2">
-                    <select id="job-company-select"
-                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        onchange="handleCompanySelect(this.value)">
-                        <option value="">企業を選択してください</option>
-                        <option value="new">+ 新規企業を作成</option>
-                    </select>
-                    <input type="hidden" id="job-company-id">
-                    <input type="hidden" id="job-company-name-hidden">
-                    <!-- For backward compatibility or display -->
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">勤務地 *</label>
-                    <input type="text" id="job-location" required class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">雇用形態 *</label>
-                    <select id="job-employment-type" required class="w-full px-4 py-2 border rounded-lg">
-                        <option value="正社員">正社員</option>
-                        <option value="契約社員">契約社員</option>
-                        <option value="派遣社員">派遣社員</option>
-                        <option value="業務委託">業務委託</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">最低年収（万円）</label>
-                    <input type="number" id="job-salary-min" class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">最高年収（万円）</label>
-                    <input type="number" id="job-salary-max" class="w-full px-4 py-2 border rounded-lg">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">職種カテゴリ</label>
-                    <select id="job-category" class="w-full px-4 py-2 border rounded-lg">
-                        <option value="">選択してください</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">業界カテゴリ</label>
-                    <select id="job-industry-category" class="w-full px-4 py-2 border rounded-lg">
-                        <option value="">選択してください</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex gap-6">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="job-experience-ok" class="w-4 h-4 text-indigo-600 rounded">
-                    <span class="text-sm text-gray-700">職種未経験可</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="job-industry-experience-ok" class="w-4 h-4 text-indigo-600 rounded">
-                    <span class="text-sm text-gray-700">業界未経験可</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="job-is-remote" class="w-4 h-4 text-indigo-600 rounded">
-                    <span class="text-sm text-gray-700">リモートワーク可</span>
-                </label>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">勤務時間</label>
-                    <input type="text" id="job-work-hours" placeholder="例: 9:00 - 18:00"
-                        class="w-full px-4 py-2 border rounded-lg">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">休日休暇</label>
-                    <input type="text" id="job-holidays" placeholder="例: 完全週休2日制（土日祝）"
-                        class="w-full px-4 py-2 border rounded-lg">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">福利厚生</label>
-                <textarea id="job-benefits" rows="3" placeholder="例: 社会保険完備、交通費支給"
-                    class="w-full px-4 py-2 border rounded-lg"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">選考フロー</label>
-                <textarea id="job-interview-process" rows="3" placeholder="例: 書類選考 → 一次面接 → 最終面接"
-                    class="w-full px-4 py-2 border rounded-lg"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">求人URL</label>
-                <input type="url" id="job-url" placeholder="https://example.com/job/..."
-                    class="w-full px-4 py-2 border rounded-lg">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">担当者1</label>
-                    <select id="job-pic-user-1" class="w-full px-4 py-2 border rounded-lg">
-                        <option value="">選択してください</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">担当者2</label>
-                    <select id="job-pic-user-2" class="w-full px-4 py-2 border rounded-lg">
-                        <option value="">選択してください</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">求人詳細 *</label>
-                <textarea id="job-description" required rows="6" placeholder="仕事内容、業務の詳細など"
-                    class="w-full px-4 py-2 border rounded-lg"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">必須要件</label>
-                <textarea id="job-requirements" rows="4" placeholder="必須スキル、経験年数、資格など"
-                    class="w-full px-4 py-2 border rounded-lg"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">尚可要件（歓迎スキル）</label>
-                <textarea id="job-welcome-requirements" rows="4" placeholder="あると望ましいスキル、経験など"
-                    class="w-full px-4 py-2 border rounded-lg"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ステータス</label>
-                <select id="job-status" class="w-full px-4 py-2 border rounded-lg">
-                    <option value="active">公開中</option>
-                    <option value="draft">下書き</option>
-                    <option value="closed">募集終了</option>
-                </select>
-            </div>
-
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" onclick="closeJobModal()" class="px-6 py-2 border rounded-lg hover:bg-gray-50">
-                    キャンセル
-                </button>
-                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
-                    保存
-                </button>
-            </div>
-        </form>
-    </div>
     </div>
 
     <!-- Prompt Form Modal -->
@@ -4246,68 +4240,7 @@
 
 
     <!-- Job Smart Import Modal (Text/Image) -->
-    <div id="job-smart-import-modal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] hidden">
-        <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
-            <div
-                class="p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center">
-                <h2 class="text-xl font-bold flex items-center">
-                    <i class="fas fa-magic mr-3"></i>AI求人解析・登録
-                </h2>
-                <button onclick="closeJobSmartImportModal()" class="text-white hover:text-gray-200 transition">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-6">
-                <p class="text-sm text-gray-600">
-                    求人票のテキストを貼り付けるか、求人画像のファイルをアップロードしてください。AIが自動的に項目を解析し、入力します。
-                </p>
 
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">1. テキストを貼り付け</label>
-                    <textarea id="job-smart-import-text" rows="6"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
-                        placeholder="求人票のテキストをここに貼り付けてください..."></textarea>
-                </div>
-
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div class="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-3 bg-white text-gray-400 font-medium">または</span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">2. 画像/PDFファイルをアップロード</label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="job-smart-import-file"
-                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-point hover:bg-gray-50 hover:border-blue-400 transition-all group">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <i
-                                    class="fas fa-cloud-upload-alt text-3xl text-gray-400 group-hover:text-blue-500 transition mb-2"></i>
-                                <p id="job-smart-import-filename" class="text-sm text-gray-500 font-medium">
-                                    クリックして画像を選択、またはドラッグ＆ドロップ</p>
-                                <p class="text-xs text-gray-400 mt-1">対応形式: PNG, JPG, JPEG, PDF</p>
-                            </div>
-                            <input id="job-smart-import-file" type="file" class="hidden" accept="image/*,.pdf"
-                                onchange="updateSmartImportFilename(this)" />
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-4 border-t">
-                    <button onclick="closeJobSmartImportModal()"
-                        class="px-6 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition drop-shadow-sm">キャンセル</button>
-                    <button onclick="processJobSmartImport()"
-                        class="px-8 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-700 hover:to-indigo-700 transition transform hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center">
-                        <i class="fas fa-brain mr-2"></i>AIで解析を開始
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
     <!-- CSV Mapping Modal -->
@@ -18640,24 +18573,7 @@
                         continue;
                     }
 
-                    let result;
-                    try {
-                        result = await analyzeDocumentWithAI(text, 'job_description', options);
-                    } catch (apiError) {
-                        console.error('API Error Details:', apiError);
-                        // Supabase FunctionsHttpErrorの場合、詳細なレスポンスが含まれている可能性がある
-                        let errorMessage = apiError.message;
-                        if (apiError.context && apiError.context.json) {
-                            try {
-                                const errorJson = await apiError.context.json();
-                                if (errorJson.error) errorMessage += `\nServer Error: ${errorJson.error}`;
-                                if (errorJson.details) errorMessage += `\nDetails: ${errorJson.details}`;
-                            } catch (e) {
-                                // JSON parse error, ignore
-                            }
-                        }
-                        throw new Error(`AI解析エラー: ${errorMessage}`);
-                    }
+                    let result = await analyzeDocumentWithAI(text, 'job_description', options);
 
                     if (Array.isArray(result)) {
                         result = result[0] || {};
@@ -18736,7 +18652,6 @@
                             location: result.location || '未定',
                             salary_min: result.salary_min || null,
                             salary_max: result.salary_max || null,
-                            salary_max: result.salary_max || null,
                             description: result.description || '',
                             requirements: result.requirements || '',
                             welcome_requirements: result.welcome_requirements || '',
@@ -18766,7 +18681,53 @@
 
                     } else {
                         // 単一ファイルモード：フォームに入力
-                        await fillJobFormFromAiResult(result, companyId, isDuplicate, duplicates);
+                        // フォームのセレクトボックスを更新して選択状態にする
+                        const select = $('#job-company-select');
+                        if (select.find(`option[value="${companyId}"]`).length === 0) {
+                            select.append(`<option value="${companyId}">${result.company}</option>`);
+                        }
+                        select.val(companyId);
+                        $('#job-company-id').val(companyId);
+
+                        if (isDuplicate) {
+                            alert(`⚠️ 重複の可能性があります！\n\n既存の求人:\n${duplicates.map(d => `・${d.company} / ${d.title}`).join('\n')}\n\n入力を続行しますが、内容を確認してください。`);
+                        }
+
+                        $('#job-title').val(result.title);
+                        // $('#job-company').val(result.company); // 不要
+                        $('#job-location').val(result.location);
+                        if (result.salary_min) $('#job-salary-min').val(result.salary_min / 10000);
+                        if (result.salary_max) $('#job-salary-max').val(result.salary_max / 10000);
+                        $('#job-description').val(result.description);
+                        $('#job-requirements').val(result.requirements);
+                        $('#job-welcome-requirements').val(result.welcome_requirements);
+
+                        $('#job-work-hours').val(result.work_hours);
+                        $('#job-holidays').val(result.holidays);
+                        $('#job-benefits').val(result.benefits);
+                        $('#job-interview-process').val(result.interview_process);
+
+                        if (result.employment_type) $('#job-employment-type').val(result.employment_type);
+
+                        if (result.is_remote !== undefined) $('#job-is-remote').prop('checked', result.is_remote);
+                        if (result.job_experience_ok !== undefined) $('#job-experience-ok').prop('checked', result.job_experience_ok);
+                        if (result.industry_experience_ok !== undefined) $('#job-industry-experience-ok').prop('checked', result.industry_experience_ok);
+
+                        // カテゴリのセット（マスタ値から最も近い値を選択）
+                        if (result.job_category) {
+                            const closestJobCategory = findClosestMasterValue(result.job_category, masterJobCategories);
+                            if (closestJobCategory) {
+                                $('#job-category').val(closestJobCategory);
+                            }
+                        }
+                        if (result.industry_category) {
+                            const closestIndustryCategory = findClosestMasterValue(result.industry_category, masterIndustries);
+                            if (closestIndustryCategory) {
+                                $('#job-industry-category').val(closestIndustryCategory);
+                            }
+                        }
+
+                        alert('解析が完了しました。内容を確認してください。');
                     }
                 }
 
@@ -18781,196 +18742,11 @@
                 alert('解析処理中にエラーが発生しました: ' + error.message)
             } finally {
                 hideLoading()
-                if (input) input.value = ''
+                input.value = ''
             }
         }
 
-        window.fillJobFormFromAiResult = async function (result, companyId = null, isDuplicate = false, duplicates = []) {
-            // フォームのセレクトボックスを更新して選択状態にする
-            const select = $('#job-company-select');
-            if (companyId) {
-                if (select.find(`option[value="${companyId}"]`).length === 0) {
-                    select.append(`<option value="${companyId}">${result.company}</option>`);
-                }
-                select.val(companyId).trigger('change');
-                $('#job-company-id').val(companyId);
-            }
 
-            if (isDuplicate) {
-                alert(`⚠️ 重複の可能性があります！\n\n既存の求人:\n${duplicates.map(d => `・${d.company} / ${d.title}`).join('\n')}\n\n入力を続行しますが、内容を確認してください。`);
-            }
-
-            $('#job-title').val(result.title || '');
-            $('#job-location').val(result.location || '');
-            if (result.salary_min) $('#job-salary-min').val(result.salary_min / 10000);
-            if (result.salary_max) $('#job-salary-max').val(result.salary_max / 10000);
-            $('#job-description').val(result.description || '');
-            $('#job-requirements').val(result.requirements || '');
-            $('#job-welcome-requirements').val(result.welcome_requirements || '');
-
-            $('#job-work-hours').val(result.work_hours || '');
-            $('#job-holidays').val(result.holidays || '');
-            $('#job-benefits').val(result.benefits || '');
-            $('#job-interview-process').val(result.interview_process || '');
-
-            if (result.employment_type) $('#job-employment-type').val(result.employment_type).trigger('change');
-
-            if (result.is_remote !== undefined) $('#job-is-remote').prop('checked', !!result.is_remote);
-            if (result.job_experience_ok !== undefined) $('#job-experience-ok').prop('checked', !!result.job_experience_ok);
-            if (result.industry_experience_ok !== undefined) $('#job-industry-experience-ok').prop('checked', !!result.industry_experience_ok);
-
-            // カテゴリのセット（マスタ値から最も近い値を選択）
-            if (result.job_category) {
-                const closestJobCategory = findClosestMasterValue(result.job_category, masterJobCategories);
-                if (closestJobCategory) {
-                    $('#job-category').val(closestJobCategory).trigger('change');
-                }
-            }
-            if (result.industry_category) {
-                const closestIndustryCategory = findClosestMasterValue(result.industry_category, masterIndustries);
-                if (closestIndustryCategory) {
-                    $('#job-industry-category').val(closestIndustryCategory).trigger('change');
-                }
-            }
-
-            // フォームを表示
-            $('#job-modal').removeClass('hidden');
-
-            alert('解析が完了しました。内容を確認してください。');
-        }
-
-        window.showJobSmartImportModal = function () {
-            $('#job-smart-import-text').val('');
-            $('#job-smart-import-file').val('');
-            $('#job-smart-import-filename').text('クリックして画像を選択、またはドラッグ＆ドロップ');
-            $('#job-smart-import-modal').removeClass('hidden');
-        }
-
-        window.closeJobSmartImportModal = function () {
-            $('#job-smart-import-modal').addClass('hidden');
-        }
-
-        window.updateSmartImportFilename = function (input) {
-            if (input.files.length > 0) {
-                $('#job-smart-import-filename').text(input.files[0].name);
-            } else {
-                $('#job-smart-import-filename').text('クリックして画像を選択、またはドラッグ＆ドロップ');
-            }
-        }
-
-        window.processJobSmartImport = async function () {
-            const textInput = $('#job-smart-import-text').val().trim();
-            const fileInput = document.getElementById('job-smart-import-file');
-            const file = fileInput.files[0];
-
-            if (!textInput && !file) {
-                alert('テキストを入力するか、ファイルを選択してください');
-                return;
-            }
-
-            showLoading('AIが解析中...');
-            try {
-                let base64Image = null;
-                let mimeType = null;
-                let textToAnalyze = textInput;
-
-                if (file) {
-                    if (file.type === 'application/pdf') {
-                        // PDFの場合はテキスト抽出
-                        textToAnalyze = await extractTextFromPDF(file);
-                    } else if (file.type.startsWith('image/')) {
-                        // 画像の場合はBase64変換
-                        base64Image = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => resolve(e.target.result);
-                            reader.readAsDataURL(file);
-                        });
-                        mimeType = file.type;
-                    }
-                }
-
-                const options = {
-                    job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
-                    industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
-                };
-
-                // AI呼び出し
-                const { data, error } = await supabase.functions.invoke('analyze-document', {
-                    body: {
-                        text: textToAnalyze || null,
-                        image: base64Image,
-                        mime_type: mimeType,
-                        type: 'job_description',
-                        options: options
-                    }
-                });
-
-                if (error) throw error;
-                let result = data;
-                if (Array.isArray(result)) result = result[0];
-
-                if (!result.title || !result.company) {
-                    throw new Error('求人情報を正しく抽出できませんでした。内容を詳しく入力するか、別の画像をお試しください。');
-                }
-
-                // 会社名の解決
-                let companyId = null;
-                const { data: existingCompany } = await supabase
-                    .from('companies')
-                    .select('id')
-                    .eq('organization_id', currentUser.organization_id)
-                    .eq('name', result.company)
-                    .single();
-
-                if (existingCompany) {
-                    companyId = existingCompany.id;
-                } else {
-                    if (confirm(`企業「${result.company}」は未登録です。\n新規登録しますか？`)) {
-                        const { data: newCompany, error: createError } = await supabase
-                            .from('companies')
-                            .insert({
-                                organization_id: currentUser.organization_id,
-                                name: result.company,
-                                location: result.location
-                            })
-                            .select()
-                            .single();
-                        if (createError) throw createError;
-                        companyId = newCompany.id;
-                    }
-                }
-
-                // 重複チェック
-                const { data: duplicates } = await supabase
-                    .from('jobs')
-                    .select('id, title, company')
-                    .eq('organization_id', currentUser.organization_id)
-                    .ilike('company', `%${result.company}%`)
-                    .ilike('title', `%${result.title}%`)
-                    .neq('status', 'closed');
-
-                const isDuplicate = duplicates && duplicates.length > 0;
-
-                // フォームに反映
-                closeJobSmartImportModal();
-                await fillJobFormFromAiResult(result, companyId, isDuplicate, duplicates);
-
-            } catch (e) {
-                console.error('Smart Import Error:', e);
-                hideLoading();
-
-                let errorMsg = e.message;
-                if (e.context && e.context.json) {
-                    const detail = e.context.json;
-                    errorMsg = detail.error || detail.message || errorMsg;
-                    if (detail.details) errorMsg += ' (' + detail.details + ')';
-                }
-
-                alert('解析に失敗しました: ' + errorMsg);
-            } finally {
-                hideLoading();
-            }
-        }
 
         // Dashboard
         // ========================
