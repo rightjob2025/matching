@@ -20766,7 +20766,7 @@
 
                 // 5. 統計UIの表示とリストのレンダリング
                 const statsHtml = `
-                < div class="grid grid-cols-2 gap-4 mb-6" >
+                    <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-indigo-50 rounded-lg p-4 text-center border border-indigo-100">
                             <p class="text-xs text-gray-500 font-bold mb-1">自分のスカウト送信数</p>
                             <p class="text-2xl font-bold text-indigo-700">${myCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
@@ -20775,7 +20775,7 @@
                             <p class="text-xs text-gray-500 font-bold mb-1">組織全体のスカウト送信数</p>
                             <p class="text-2xl font-bold text-gray-700">${orgCount || 0}<span class="text-sm font-normal text-gray-500 ml-1">件</span></p>
                         </div>
-                    </div >
+                    </div>
                 `;
 
                 if (!candidates || candidates.length === 0) {
@@ -20838,13 +20838,13 @@
                 ];
 
                 const statusChangeHandler = lastMsg
-                    ? `onchange = "updateScoutStatus('${lastMsg.id}', this.value)"`
-                    : `disabled title = "スカウトを作成するとステータスを変更できます"`;
+                    ? `onchange="updateScoutStatus('${lastMsg.id}', this.value)"`
+                    : `disabled title="スカウトを作成するとステータスを変更できます"`;
 
                 const statusSelect = `
-                < select ${statusChangeHandler} class="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 w-28" >
+                    <select ${statusChangeHandler} class="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 w-28">
                     ${statusOptions.map(opt => `<option value="${opt.val}" ${currentStatus === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                    </select >
+                    </select>
                 `;
 
                 // Title display
@@ -20854,7 +20854,7 @@
                     : (c.profile_text || '').substring(0, 30) + '...';
 
                 return `
-                < tr >
+                    <tr>
                         <td class="px-6 py-4">
                             <div class="text-sm font-bold text-gray-900 truncate" style="max-width: 250px;" title="${c.profile_text}">
                                 ${displayTitle}
@@ -20881,12 +20881,12 @@
                                 <i class="fas fa-file-alt mr-1"></i>詳細・履歴
                             </button>
                         </td>
-                    </tr >
+                    </tr>
                 `;
             }).join('');
 
             const tableHtml = `
-                < div class="overflow-x-auto border border-gray-200 rounded-lg" >
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -20902,7 +20902,7 @@
                             ${rows}
                         </tbody>
                     </table>
-                </div >
+                </div>
                 `;
 
             container.html(tableHtml);
