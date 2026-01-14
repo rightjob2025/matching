@@ -11379,6 +11379,30 @@
         let currentApplicationData = null;
         let applicationStatuses = [];
 
+        function getSelectionStatusLabel(value) {
+            if (!value) return '-';
+            // すでに日本語（ラベル）の場合はそのまま返す
+            if (/^[^\x00-\x7F]+$/.test(value)) return value;
+
+            // マスタから検索
+            if (applicationStatuses && applicationStatuses.length > 0) {
+                const status = applicationStatuses.find(s => s.value === value);
+                if (status) return status.label;
+            }
+
+            // フォールバック
+            const labels = {
+                'pending': '書類選考中',
+                'screening': '書類選考中',
+                'interview': '面接予定',
+                'offered': '内定',
+                'rejected': '不合格',
+                'withdrawn': '辞退',
+                'applied': '応募完了'
+            };
+            return labels[value] || value;
+        }
+
         window.openProgressModal = async function (applicationId) {
             showLoading();
             try {
@@ -11396,7 +11420,7 @@
                 $('#progress-job-title').text(application.jobs.title);
                 $('#progress-company-name').text(application.jobs.company);
                 $('#progress-user-name').text(`応募者: ${application.users.name}`);
-                $('#progress-current-status').val(application.status || '応募完了');
+                $('#progress-current-status').data('code', application.status || 'applied').val(getSelectionStatusLabel(application.status || 'applied'));
 
                 // ステータスマスタデータを読み込み
                 await loadApplicationStatuses();
@@ -11486,7 +11510,7 @@
                         </div>
                         <div class="flex-1 pb-6">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="font-semibold text-gray-900">${item.old_status || '新規'} → ${item.new_status}</span>
+                                <span class="font-semibold text-gray-900">${getSelectionStatusLabel(item.old_status) || '新規'} → ${getSelectionStatusLabel(item.new_status)}</span>
                                 <span class="text-xs text-gray-500">${date}</span>
                             </div>
                             ${item.changed_by_name ? `<p class="text-sm text-gray-600 mb-1">変更者: ${item.changed_by_name}</p>` : ''}
@@ -11504,7 +11528,7 @@
             showLoading();
 
             const applicationId = $('#progress-application-id').val();
-            const oldStatus = $('#progress-current-status').val();
+            const oldStatus = $('#progress-current-status').data('code');
             const newStatus = $('#progress-new-status').val();
             const notes = $('#progress-notes').val();
 
