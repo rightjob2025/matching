@@ -9175,10 +9175,17 @@
                     </div>
 
                     <div class="border-t pt-4">
-                        <p class="text-xs text-gray-500 font-bold mb-2">生成されたスカウト文面</p>
-                        <div class="bg-gray-50 p-4 rounded border border-gray-200">
-                            <p class="font-bold text-gray-900 mb-2 border-b pb-2 text-sm">件名: ${match.scout_subject}</p>
-                            <p class="text-gray-700 text-sm whitespace-pre-wrap scout-body-text">${(match.scout_body || '').replace(/\\n/g, '\n')}</p>
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-xs text-gray-500 font-bold">生成されたスカウト文面 (編集可)</p>
+                            <span class="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded italic">クリックして直接編集できます</span>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded border border-gray-200 focus-within:border-indigo-300 focus-within:ring-1 focus-within:ring-indigo-100 transition-all">
+                            <div class="flex items-center mb-2 border-b border-gray-200 pb-2">
+                                <span class="text-sm font-bold text-gray-400 mr-2 flex-shrink-0">件名:</span>
+                                <input type="text" class="scout-subject-input w-full font-bold text-gray-900 border-none bg-transparent focus:ring-0 text-sm p-0" value="${match.scout_subject}">
+                            </div>
+                            <textarea class="scout-body-textarea w-full text-gray-700 text-sm bg-transparent border-none focus:ring-0 p-0 resize-none overflow-hidden leading-relaxed" 
+                                      oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">${(match.scout_body || '').replace(/\\n/g, '\n')}</textarea>
                         </div>
                         
                         <!-- Feedback UI -->
@@ -9201,6 +9208,11 @@
             });
 
             currentAnalysisOffset += nextMatches.length;
+
+            // Textareaの初期高さを調整
+            setTimeout(() => {
+                $('.scout-body-textarea').trigger('input');
+            }, 100);
 
             if (currentAnalysisOffset < currentAnalysisMatches.length) {
                 $('#load-more-analysis-container').removeClass('hidden');
@@ -9289,7 +9301,7 @@
 
             const jobId = container.data('job-id');
             // Find scout content nearby
-            const scoutContent = $(btn).closest('.border-t').find('.scout-body-text').text();
+            const scoutContent = $(btn).closest('.border-t').find('.scout-body-textarea').val() || $(btn).closest('.border-t').find('.scout-body-text').text();
 
             // Visual feedback
             container.find('button').addClass('text-gray-200').removeClass('text-yellow-500');
@@ -10167,8 +10179,8 @@
 
         window.copyToClipboard = function (btn) {
             const card = $(btn).closest('.bg-white');
-            const subject = card.find('p:contains("件名:")').text().replace('件名: ', '');
-            const body = card.find('.scout-body-text').text();
+            const subject = (card.find('.scout-subject-input').val() || card.find('p:contains("件名:")').text().replace('件名: ', '') || '').trim();
+            const body = (card.find('.scout-body-textarea').val() || card.find('.scout-body-text').text() || '').trim();
 
             const textToCopy = `件名: ${subject} \n\n${body} `;
 
@@ -21197,8 +21209,8 @@
 
         window.saveScoutMessage = async function (btn, jobId) {
             const container = $(btn).closest('.bg-white'); // Card container
-            const subject = container.find('p:contains("件名:")').text().replace('件名: ', '').trim();
-            const body = container.find('.scout-body-text').text().trim();
+            const subject = (container.find('.scout-subject-input').val() || container.find('p:contains("件名:")').text().replace('件名: ', '') || '').trim();
+            const body = (container.find('.scout-body-textarea').val() || container.find('.scout-body-text').text() || '').trim();
 
             if (!subject || !body) {
                 alert('スカウト文面が取得できませんでした');
