@@ -1560,7 +1560,7 @@
                         // 見送りボタン: 操作可能なら全ロール表示
                         const rejectButton = isActionable ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-slate-400 text-white recommendation-list-reject-btn" data-rec-id="${rec.recommendation_id}">見送る</button>` : '';
                         // 応募ボタン(ユーザー用): 操作可能かつ「ユーザー」ロールの場合のみ表示
-                        const applyButtonUser = isActionable && !isManager ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white recommendation-list-apply-btn" data-job-id="${rec.job_id}" data-rec-id="${rec.recommendation_id}">応募</button>` : '';
+                        const applyButtonUser = isActionable && !isManager ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white recommendation-list-apply-btn" data-job-id="${rec.job_id}" data-rec-id="${rec.recommendation_id}" data-user-id="${rec.user_id}">応募</button>` : '';
                         // ★★★ 代理応募ボタン(管理者用): 操作可能かつ「管理者」ロールの場合のみ表示 ★★★
                         const applyButtonManager = isActionable && isManager ? `<button class="font-bold py-1 px-3 text-sm rounded-lg shadow-md bg-indigo-600 text-white manager-apply-single-btn" data-job-id="${rec.job_id}" data-rec-id="${rec.recommendation_id}" data-user-id="${rec.user_id}" data-user-name="${rec.user_name || ''}">代理応募</button>` : '';
                         // ▲▲▲ 変更 ▲▲▲
@@ -4555,10 +4555,11 @@
 
                 // --- Recommendations List: Single Apply Button ---
                 $(document).on('click', '.recommendation-list-apply-btn', function () {
-                    const jobId = $(this).data('job-id');
-                    const recId = $(this).data('rec-id'); // Get the rec-id
+                    const jobId = $(this).data('jobId');
+                    const recId = $(this).data('recId'); // Get the rec-id
+                    const userId = $(this).data('userId'); // ★ 追加: ユーザーIDを取得
                     // 既存の応募モーダルロジックを流用
-                    const content = `<form id="apply-form" data-job-id="${jobId}" data-rec-id="${recId}">
+                    const content = `<form id="apply-form" data-job-id="${jobId}" data-rec-id="${recId}" data-target-user-id="${userId || ''}">
                                         <div class="space-y-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-slate-700">志望度 <span class="text-red-500">*</span></label>
@@ -4629,11 +4630,12 @@
                         const el = $(this);
                         const title = el.data('title');
                         const company = el.data('company');
-                        const jobId = el.data('job-id');
-                        const recId = el.data('rec-id');
+                        const jobId = el.data('jobId');
+                        const recId = el.data('recId');
+                        const userId = el.data('userId'); // ★ 追加: ユーザーIDを取得
 
                         jobListHtml += `<li class="text-sm font-medium text-slate-700">${title} <span class="text-xs text-slate-500">(${company})</span></li>`;
-                        jobsToApply.push({ jobId: jobId, recId: recId });
+                        jobsToApply.push({ jobId: jobId, recId: recId, userId: userId }); // ★ 変更: userIdを追加
                     });
                     jobListHtml += '</ul>';
 
@@ -4695,7 +4697,7 @@
                     try {
                         // 1. Apply for all jobs
                         const applyPromises = jobsToApply.map(job =>
-                            api.call('applyForJob', [job.jobId, dates, notes, aspirationLevel])
+                            api.call('applyForJob', [job.jobId, dates, notes, aspirationLevel, job.userId]) // ★ 変更: job.userIdを追加
                         );
                         await Promise.all(applyPromises);
 
