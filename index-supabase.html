@@ -1422,11 +1422,6 @@
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
                     <div class="flex items-center gap-4">
                         <h2 class="text-2xl font-bold text-gray-900">求人検索</h2>
-                        <button onclick="searchByProfile()" class="ai-search-btn" id="ai-search-global-btn">
-                            <i class="fas fa-robot"></i> AIで求人を探す
-                        </button>
-                        <i class="far fa-question-circle text-gray-400 cursor-help"
-                            title="あなたのプロフィールや希望条件に合った求人をAIが自動で探し出します"></i>
                     </div>
                 </div>
 
@@ -1630,26 +1625,28 @@
                 <!-- 一括推薦/AIマッチング診断バー -->
                 <!-- 一括推薦/AIマッチング診断バー -->
                 <div id="bulk-recommend-bar"
-                    class="fixed bottom-16 left-1/2 md:left-[calc(50%+128px)] transform -translate-x-1/2 z-50 bg-white border border-indigo-100 rounded-full shadow-2xl px-8 py-4 hidden flex items-center justify-between gap-8 transition-all duration-300 w-auto min-w-[320px] max-w-[90vw]">
+                    class="fixed bottom-6 left-1/2 md:left-[calc(50%+128px)] transform -translate-x-1/2 z-50 bg-white border border-indigo-100 rounded-full shadow-2xl px-4 sm:px-8 py-3 sm:py-4 hidden flex items-center justify-between gap-3 sm:gap-8 transition-all duration-300 w-[92vw] sm:w-auto max-w-[600px]">
                     <div class="flex items-center">
                         <div
-                            class="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center mr-3">
-                            <i class="fas fa-check"></i>
+                            class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center mr-2 sm:mr-3 shrink-0">
+                            <i class="fas fa-check text-xs sm:text-base"></i>
                         </div>
-                        <div>
-                            <span class="font-bold text-gray-800 block text-sm">一括紹介</span>
+                        <div class="leading-tight">
+                            <span class="font-bold text-gray-800 block text-[10px] sm:text-sm">選択状況</span>
                             <span class="text-indigo-600 font-bold"><span id="selected-jobs-count"
-                                    class="text-xl">0</span> <span class="text-sm text-gray-500">件を選択中</span></span>
+                                    class="text-base sm:text-xl">0</span> <span
+                                    class="text-[10px] sm:text-sm text-gray-500">件</span></span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 sm:gap-3">
                         <button onclick="clearAllSelectedJobs()"
-                            class="bg-gray-100 text-gray-600 px-4 py-3 rounded-full hover:bg-gray-200 font-bold shadow hover:shadow-md transition flex items-center">
-                            <i class="fas fa-times mr-2"></i>全解除
+                            class="bg-gray-100 text-gray-600 px-3 sm:px-4 py-2 sm:py-3 rounded-full hover:bg-gray-200 font-bold shadow hover:shadow-md transition flex items-center text-xs sm:text-sm">
+                            <i class="fas fa-times sm:mr-2"></i><span class="hidden sm:inline">全解除</span>
                         </button>
                         <button onclick="openBulkRecommendModal()"
-                            class="bar-button bg-indigo-600 text-white px-8 py-3 rounded-full hover:bg-indigo-700 font-bold shadow-lg hover:shadow-xl transition flex items-center transform hover:-translate-y-0.5">
-                            <i class="fas fa-paper-plane mr-2"></i>AIマッチを実行
+                            class="bar-button bg-indigo-600 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full hover:bg-indigo-700 font-bold shadow-lg hover:shadow-xl transition flex items-center transform hover:-translate-y-0.5 text-xs sm:text-sm">
+                            <i class="fas fa-paper-plane mr-1 sm:mr-2"></i>AIマッチ<span
+                                class="hidden sm:inline">を実行</span>
                         </button>
                     </div>
                 </div>
@@ -11054,12 +11051,12 @@
             }
 
             // Keyword tagging
-            setupFreeword('search-keyword', 'tags-keyword', window.searchJobsImmediate, 'tag-indigo');
-            setupFreeword('c-search-keyword', 'c-tags-keyword', window.searchCandidatesImmediate, 'tag-indigo');
+            setupFreeword('search-keyword', 'tags-keyword', null, 'tag-indigo');
+            setupFreeword('c-search-keyword', 'c-tags-keyword', null, 'tag-indigo');
 
             // Location tagging
-            setupFreeword('search-location', 'tags-freeword', window.searchJobsImmediate, 'tag-amber');
-            setupFreeword('c-search-location', 'c-tags-location', window.searchCandidatesImmediate, 'tag-amber');
+            setupFreeword('search-location', 'tags-freeword', null, 'tag-amber');
+            setupFreeword('c-search-location', 'c-tags-location', null, 'tag-amber');
         }
 
         // デバウンス関数
