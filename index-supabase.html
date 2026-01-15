@@ -642,14 +642,46 @@
             min-height: 24px;
         }
 
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            .filter-group-label {
+                font-size: 11px;
+                margin-bottom: 6px;
+                color: #64748b;
+            }
+
+            .premium-tag {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+
+            .search-card {
+                padding: 1.25rem !important;
+            }
+
+            .count-badge-premium {
+                padding: 8px 16px !important;
+                gap: 8px !important;
+            }
+
+            .count-number-premium {
+                font-size: 1.5rem !important;
+            }
+
+            .premium-slider-container {
+                padding: 4px 0;
+            }
+        }
+
         .premium-tag {
             display: inline-flex;
             align-items: center;
             padding: 4px 10px;
-            border-radius: 8px;
+            border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 500;
             transition: all 0.2s;
+            border: 1px solid transparent;
         }
 
         .tag-blue {
@@ -666,6 +698,16 @@
             background: #fffbeb !important;
             color: #d97706 !important;
             border: 1px solid #fef3c7 !important;
+        }
+
+        .tag-indigo {
+            background: #f5f3ff !important;
+            color: #4f46e5 !important;
+            border: 1px solid #ede9fe !important;
+        }
+
+        .tag-indigo:hover {
+            background: #ede9fe !important;
         }
 
         .tag-remove {
@@ -1422,8 +1464,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-                        <!-- Col 1: Keyword & Type -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Col 1: Keyword & Salary -->
                         <div class="space-y-4">
                             <div>
                                 <label class="filter-group-label">キーワード</label>
@@ -1432,7 +1474,8 @@
                                         class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                                     <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
                                 </div>
-                                <div class="flex gap-4 text-xs text-slate-500 mt-2 px-1">
+                                <div id="tags-keyword" class="tag-container mt-2"></div>
+                                <div class="flex gap-4 text-[10px] sm:text-xs text-slate-500 mt-2 px-1">
                                     <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
                                         <input type="radio" name="search-keyword-mode" value="OR" checked
                                             class="mr-1 accent-indigo-600"> OR検索
@@ -1450,96 +1493,93 @@
                                         class="premium-slider"
                                         oninput="$('#salary-display').text(this.value === '0' ? '指定なし' : this.value + ' 万円以上')">
                                     <div class="flex justify-between mt-2">
-                                        <span class="text-xs text-slate-400">0</span>
+                                        <span class="text-[10px] text-slate-400">0</span>
                                         <span id="salary-display" class="text-sm font-bold text-indigo-600">指定なし</span>
-                                        <span class="text-xs text-slate-400">2000万</span>
+                                        <span class="text-[10px] text-slate-400">2000万</span>
                                     </div>
                                     <input type="hidden" id="search-salary-min" value="0">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Col 2: Industry & Experience -->
+                        <!-- Col 2: Industry & Occupation -->
                         <div class="space-y-4">
                             <div>
                                 <label class="filter-group-label">業種</label>
-                                <select id="search-industry-category" class="w-full select2" multiple="multiple">
-                                </select>
-                                <div id="tags-industry" class="tag-container mt-2"></div>
+                                <select id="search-industry-category" class="w-full select2"
+                                    multiple="multiple"></select>
+                                <div id="tags-industry" class="tag-container mt-1"></div>
                             </div>
-                            <div>
-                                <label class="filter-group-label">未経験歓迎</label>
-                                <div class="flex flex-col gap-3">
-                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" id="search-job-experience-ok"
-                                            class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
-                                        <span class="text-sm text-slate-600 group-hover:text-slate-900">職種未経験OK</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" id="search-industry-experience-ok"
-                                            class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
-                                        <span class="text-sm text-slate-600 group-hover:text-slate-900">業界未経験OK</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Col 3: Occupation & Display Settings -->
-                        <div class="space-y-4">
                             <div>
                                 <label class="filter-group-label">職種</label>
-                                <select id="search-job-category" class="w-full select2" multiple="multiple">
-                                </select>
-                                <div id="tags-job" class="tag-container"></div>
+                                <select id="search-job-category" class="w-full select2" multiple="multiple"></select>
+                                <div id="tags-job" class="tag-container mt-1"></div>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Location & Employment -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="filter-group-label">勤務地</label>
+                                <select id="search-prefecture" class="w-full select2" multiple="multiple"></select>
+                                <div id="tags-prefecture" class="tag-container mt-1"></div>
                             </div>
                             <div>
-                                <label class="filter-group-label">表示設定</label>
-                                <div class="flex flex-col gap-3">
-                                    <label class="flex items-center gap-2 cursor-pointer group"
-                                        id="exclude-matched-container" style="display: none;">
-                                        <input type="checkbox" id="search-exclude-matched"
-                                            class="w-5 h-5 accent-purple-600 border-slate-300 rounded">
-                                        <span
-                                            class="text-sm text-purple-700 font-medium group-hover:text-purple-900">AIマッチ済みを除く</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                        <input type="checkbox" id="search-favorites-only"
-                                            class="w-5 h-5 accent-pink-500 border-slate-300 rounded">
-                                        <span
-                                            class="text-sm text-pink-600 font-medium group-hover:text-pink-900">お気に入りのみ</span>
-                                    </label>
-                                </div>
+                                <label class="filter-group-label">雇用形態</label>
+                                <select id="search-employment-type" class="w-full select2" multiple="multiple"></select>
+                                <div id="tags-employment" class="tag-container mt-1"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-6">
-                        <span id="toggle-advanced-search" class="toggle-link">
-                            さらに条件を追加 <i class="fas fa-chevron-down ml-1 transition-transform" id="advanced-icon"></i>
-                        </span>
-                    </div>
-
-                    <!-- Advanced Filters (Hidden by default) -->
-                    <div id="advanced-search-grid"
-                        class="hidden grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 pt-6 border-t border-slate-50 animate-fade-in">
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 pt-6 border-t border-slate-50">
+                        <!-- Col 1: Freeword -->
                         <div>
-                            <label class="filter-group-label">雇用形態</label>
-                            <select id="search-employment-type" class="w-full select2" multiple="multiple"></select>
-                            <div id="tags-employment" class="tag-container"></div>
-                        </div>
-                        <div>
-                            <label class="filter-group-label">勤務地</label>
-                            <select id="search-prefecture" class="w-full select2" multiple="multiple"></select>
-                            <div id="tags-prefecture" class="tag-container"></div>
-                        </div>
-                        <div>
-                            <label class="filter-group-label">フリーワード</label>
+                            <label class="filter-group-label">フリーワード（地名、駅名など）</label>
                             <div class="relative">
                                 <input type="text" id="search-location" placeholder="特定の地名、駅名など..."
                                     class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <i class="fas fa-map-marked-alt absolute right-3 top-3 text-slate-400"></i>
                             </div>
-                            <div id="tags-freeword" class="tag-container"></div>
+                            <div id="tags-freeword" class="tag-container mt-1"></div>
+                        </div>
+
+                        <!-- Col 2: Experience OK -->
+                        <div>
+                            <label class="filter-group-label">募集条件</label>
+                            <div class="flex flex-wrap gap-x-6 gap-y-3">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" id="search-job-experience-ok"
+                                        class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
+                                    <span class="text-sm text-slate-600 group-hover:text-slate-900">職種未経験OK</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" id="search-industry-experience-ok"
+                                        class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
+                                    <span class="text-sm text-slate-600 group-hover:text-slate-900">業界未経験OK</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Favorites & Display -->
+                        <div>
+                            <label class="filter-group-label">表示設定</label>
+                            <div class="flex flex-wrap gap-x-6 gap-y-3">
+                                <label class="flex items-center gap-2 cursor-pointer group"
+                                    id="exclude-matched-container" style="display: none;">
+                                    <input type="checkbox" id="search-exclude-matched"
+                                        class="w-5 h-5 accent-purple-600 border-slate-300 rounded">
+                                    <span
+                                        class="text-sm text-purple-700 font-medium group-hover:text-purple-900">AIマッチ済みを除く</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" id="search-favorites-only"
+                                        class="w-5 h-5 accent-pink-500 border-slate-300 rounded">
+                                    <span
+                                        class="text-sm text-pink-600 font-medium group-hover:text-pink-900">お気に入りのみ</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -1680,7 +1720,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         <!-- Col 1: Keyword & Salary -->
                         <div class="space-y-4">
                             <div>
@@ -1690,6 +1730,7 @@
                                         class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                                     <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
                                 </div>
+                                <div id="c-tags-keyword" class="tag-container mt-2"></div>
                             </div>
                             <div>
                                 <label class="filter-group-label">希望最低年収</label>
@@ -1698,10 +1739,10 @@
                                         value="0" class="premium-slider"
                                         oninput="$('#c-salary-display').text(this.value === '0' ? '指定なし' : this.value + ' 万円以上')">
                                     <div class="flex justify-between mt-2">
-                                        <span class="text-xs text-slate-400">0</span>
+                                        <span class="text-[10px] text-slate-400">0</span>
                                         <span id="c-salary-display"
                                             class="text-sm font-bold text-indigo-600">指定なし</span>
-                                        <span class="text-xs text-slate-400">2000万</span>
+                                        <span class="text-[10px] text-slate-400">2000万</span>
                                     </div>
                                     <input type="hidden" id="c-search-salary-min" value="0">
                                 </div>
@@ -1713,13 +1754,13 @@
                             <div>
                                 <label class="filter-group-label">希望職種</label>
                                 <select id="c-search-job-category" class="w-full select2" multiple="multiple"></select>
-                                <div id="c-tags-job" class="tag-container"></div>
+                                <div id="c-tags-job" class="tag-container mt-1"></div>
                             </div>
                             <div>
                                 <label class="filter-group-label">希望雇用形態</label>
                                 <select id="c-search-employment-type" class="w-full select2"
                                     multiple="multiple"></select>
-                                <div id="c-tags-employment" class="tag-container"></div>
+                                <div id="c-tags-employment" class="tag-container mt-1"></div>
                             </div>
                         </div>
 
@@ -1729,7 +1770,7 @@
                                 <label class="filter-group-label">希望業界</label>
                                 <select id="c-search-industry-category" class="w-full select2"
                                     multiple="multiple"></select>
-                                <div id="c-tags-industry" class="tag-container"></div>
+                                <div id="c-tags-industry" class="tag-container mt-1"></div>
                             </div>
                             <div>
                                 <label class="filter-group-label">管理ステータス</label>
@@ -1743,19 +1784,13 @@
                         </div>
                     </div>
 
-                    <div class="mb-6">
-                        <span id="c-toggle-advanced-search" class="toggle-link">
-                            さらに条件を追加 <i class="fas fa-chevron-down ml-1 transition-transform" id="c-advanced-icon"></i>
-                        </span>
-                    </div>
-
-                    <!-- Advanced Filters -->
-                    <div id="c-advanced-search-grid"
-                        class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pt-6 border-t border-slate-50">
+                    <!-- Additional Details (Always Visible) -->
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 pt-6 border-t border-slate-50">
                         <div>
                             <label class="filter-group-label">希望勤務地</label>
                             <select id="c-search-prefecture" class="w-full select2" multiple="multiple"></select>
-                            <div id="c-tags-prefecture" class="tag-container"></div>
+                            <div id="c-tags-prefecture" class="tag-container mt-1"></div>
                         </div>
                         <div>
                             <label class="filter-group-label">フリーワード（詳細勤務地など）</label>
@@ -1764,7 +1799,7 @@
                                     class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <i class="fas fa-map-marked-alt absolute right-3 top-3 text-slate-400"></i>
                             </div>
-                            <div id="c-tags-location" class="tag-container"></div>
+                            <div id="c-tags-location" class="tag-container mt-1"></div>
                         </div>
                     </div>
 
@@ -10033,6 +10068,7 @@
 
         window.clearCandidateSearch = function () {
             $('#c-search-keyword').val('');
+            $('#c-tags-keyword').empty();
             $('#c-search-location').val('');
             $('#c-tags-location').empty();
 
@@ -10064,15 +10100,24 @@
             $('#candidate-results-container').empty();
 
             // Build Query
+            // キーワードタグ
+            const kTags = [];
+            $('#c-tags-keyword .premium-tag').each(function () {
+                kTags.push($(this).text().trim().toLowerCase());
+            });
             let keyword = $('#c-search-keyword').val().toLowerCase().trim();
-            // フリーワードタグも含める
-            const tags = [];
+            if (kTags.length > 0) {
+                keyword = (keyword + ' ' + kTags.join(' ')).trim();
+            }
+
+            // フリーワードタグ（勤務地）
+            const fTags = [];
             $('#c-tags-location .premium-tag').each(function () {
-                tags.push($(this).text().trim());
+                fTags.push($(this).text().trim());
             });
             let location = $('#c-search-location').val().trim();
-            if (tags.length > 0) {
-                location = (location + ' ' + tags.join(' ')).trim();
+            if (fTags.length > 0) {
+                location = (location + ' ' + fTags.join(' ')).trim();
             }
 
             const pref = $('#c-search-prefecture').val(); // array
@@ -10914,33 +10959,6 @@
 
         // --- Premium Search UI Support ---
         function setupPremiumSearchUI() {
-            // Advanced search toggle (Jobs)
-            $('#toggle-advanced-search').off('click').on('click', function () {
-                const grid = $('#advanced-search-grid');
-                const icon = $('#advanced-icon');
-                grid.toggleClass('hidden');
-                if (grid.hasClass('hidden')) {
-                    icon.removeClass('rotate-180');
-                    $(this).find('span').text('さらに条件を追加');
-                } else {
-                    icon.addClass('rotate-180');
-                    $(this).find('span').text('条件を閉じる');
-                }
-            });
-
-            // Advanced search toggle (Candidates)
-            $('#c-toggle-advanced-search').off('click').on('click', function () {
-                const grid = $('#c-advanced-search-grid');
-                const icon = $('#c-advanced-icon');
-                grid.toggleClass('hidden');
-                if (grid.hasClass('hidden')) {
-                    icon.removeClass('rotate-180');
-                    $(this).find('span').text('さらに条件を追加');
-                } else {
-                    icon.addClass('rotate-180');
-                    $(this).find('span').text('条件を閉じる');
-                }
-            });
 
             // Salary slider sync
             $('#search-salary-slider').on('input', function () {
@@ -10995,27 +11013,34 @@
             syncTags('c-search-employment-type', 'c-tags-employment', 'tag-blue');
             syncTags('c-search-prefecture', 'c-tags-prefecture', 'tag-blue');
 
-            // Freelance Keyword Tagging (Freeword)
-            function setupFreeword(inputId, containerId, syncFunc) {
+            // Freelance Keyword Tagging
+            function setupFreeword(inputId, containerId, syncFunc, colorClass = 'tag-amber') {
                 const $input = $('#' + inputId);
                 const $container = $('#' + containerId);
                 if (!$input.length) return;
 
-                $input.on('keypress', function (e) {
+                $input.off('keypress').on('keypress', function (e) {
                     if (e.which === 13) {
                         e.preventDefault();
                         const val = $(this).val().trim();
                         if (val) {
-                            addFreewordTag(val, $container, syncFunc);
+                            addFreewordTag(val, $container, syncFunc, colorClass);
                             $(this).val('');
                         }
                     }
                 });
             }
 
-            function addFreewordTag(val, $container, syncFunc) {
+            function addFreewordTag(val, $container, syncFunc, colorClass) {
+                // 重複チェック
+                let exists = false;
+                $container.find('.premium-tag').each(function () {
+                    if ($(this).text().trim() === val) exists = true;
+                });
+                if (exists) return;
+
                 const $tag = $(`
-                    <span class="premium-tag tag-amber">
+                    <span class="premium-tag ${colorClass}">
                         ${val}
                         <i class="fas fa-times tag-remove ml-2 opacity-50 hover:opacity-100"></i>
                     </span>
@@ -11028,8 +11053,13 @@
                 if (syncFunc) syncFunc();
             }
 
-            setupFreeword('search-location', 'tags-freeword', window.searchJobsImmediate);
-            setupFreeword('c-search-location', 'c-tags-location', window.searchCandidatesImmediate);
+            // Keyword tagging
+            setupFreeword('search-keyword', 'tags-keyword', window.searchJobsImmediate, 'tag-indigo');
+            setupFreeword('c-search-keyword', 'c-tags-keyword', window.searchCandidatesImmediate, 'tag-indigo');
+
+            // Location tagging
+            setupFreeword('search-location', 'tags-freeword', window.searchJobsImmediate, 'tag-amber');
+            setupFreeword('c-search-location', 'c-tags-location', window.searchCandidatesImmediate, 'tag-amber');
         }
 
         // デバウンス関数
@@ -11045,14 +11075,24 @@
         const executeSearch = async function () {
             console.log('executeSearch called. Sort:', $('#search-sort').val());
 
-            // フリーワードタグも含める
-            let freeword = $('#search-location').val().trim();
-            const tags = [];
-            $('#tags-freeword .premium-tag').each(function () {
-                tags.push($(this).text().trim());
+            // キーワードタグ
+            const kTags = [];
+            $('#tags-keyword .premium-tag').each(function () {
+                kTags.push($(this).text().trim().toLowerCase());
             });
-            if (tags.length > 0) {
-                freeword = (freeword + ' ' + tags.join(' ')).trim();
+            let keyword = $('#search-keyword').val().toLowerCase().trim();
+            if (kTags.length > 0) {
+                keyword = (keyword + ' ' + kTags.join(' ')).trim();
+            }
+
+            // フリーワードタグ
+            let freeword = $('#search-location').val().trim();
+            const fTags = [];
+            $('#tags-freeword .premium-tag').each(function () {
+                fTags.push($(this).text().trim());
+            });
+            if (fTags.length > 0) {
+                freeword = (freeword + ' ' + fTags.join(' ')).trim();
             }
 
             const filters = {
@@ -11116,7 +11156,9 @@
         window.clearSearch = function () {
             // テキスト入力のクリア
             $('#search-keyword').val('');
+            $('#tags-keyword').empty();
             $('#search-location').val('');
+            $('#tags-freeword').empty();
             $('#search-salary-min').val('');
 
             // ラジオボタンのリセット
