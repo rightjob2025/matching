@@ -1755,6 +1755,16 @@
                                     <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
                                 </div>
                                 <div id="c-tags-keyword" class="tag-container mt-2"></div>
+                                <div class="flex gap-4 text-[10px] sm:text-xs text-slate-500 mt-2 px-1">
+                                    <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
+                                        <input type="radio" name="c-search-keyword-mode" value="OR" checked
+                                            class="mr-1 accent-indigo-600"> OR検索
+                                    </label>
+                                    <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
+                                        <input type="radio" name="c-search-keyword-mode" value="AND"
+                                            class="mr-1 accent-indigo-600"> AND検索
+                                    </label>
+                                </div>
                             </div>
                             <div>
                                 <label class="filter-group-label">希望最低年収</label>
@@ -10093,6 +10103,7 @@
         window.clearCandidateSearch = function () {
             $('#c-search-keyword').val('');
             $('#c-tags-keyword').empty();
+            $('input[name="c-search-keyword-mode"][value="OR"]').prop('checked', true);
             $('#c-search-location').val('');
             $('#c-tags-location').empty();
 
@@ -10183,11 +10194,28 @@
                 }
 
                 if (keyword) {
-                    results = results.filter(u =>
-                        (u.name && u.name.toLowerCase().includes(keyword)) ||
-                        (u.skills && u.skills.toLowerCase().includes(keyword)) ||
-                        (u.work_history && u.work_history.toLowerCase().includes(keyword))
-                    );
+                    const keywords = keyword.split(/[\s　]+/).filter(k => k);
+                    const mode = $('input[name="c-search-keyword-mode"]:checked').val() || 'OR';
+
+                    if (keywords.length > 0) {
+                        results = results.filter(u => {
+                            if (mode === 'OR') {
+                                // いずれかのキーワードが含まれていればOK
+                                return keywords.some(k =>
+                                    (u.name && u.name.toLowerCase().includes(k)) ||
+                                    (u.skills && u.skills.toLowerCase().includes(k)) ||
+                                    (u.work_history && u.work_history.toLowerCase().includes(k))
+                                );
+                            } else {
+                                // 全てのキーワードが含まれていなければならない
+                                return keywords.every(k =>
+                                    (u.name && u.name.toLowerCase().includes(k)) ||
+                                    (u.skills && u.skills.toLowerCase().includes(k)) ||
+                                    (u.work_history && u.work_history.toLowerCase().includes(k))
+                                );
+                            }
+                        });
+                    }
                 }
 
                 if (location) {
@@ -11120,7 +11148,7 @@
             }
 
             const filters = {
-                keyword: $('#search-keyword').val().trim(),
+                keyword: keyword,
                 keywordMode: $('input[name="search-keyword-mode"]:checked').val(),
                 location: freeword,
                 prefecture: $('#search-prefecture').val(),
