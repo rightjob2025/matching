@@ -1663,14 +1663,14 @@
                 <!-- 一括推薦/AIマッチング診断バー -->
                 <!-- 一括推薦/AIマッチング診断バー -->
                 <div id="bulk-recommend-bar"
-                    class="fixed bottom-6 left-1/2 md:left-[calc(50%+128px)] transform -translate-x-1/2 z-50 bg-white border border-indigo-100 rounded-full shadow-2xl px-4 sm:px-8 py-3 sm:py-4 hidden flex items-center justify-between gap-3 sm:gap-8 transition-all duration-300 w-[92vw] sm:w-auto max-w-[600px]">
+                    class="fixed bottom-10 left-1/2 md:left-[calc(50%+125px)] transform -translate-x-1/2 z-50 bg-white border border-indigo-100 rounded-full shadow-2xl px-4 sm:px-8 py-3 sm:py-4 hidden flex items-center justify-between gap-3 sm:gap-8 transition-all duration-300 w-[92vw] sm:w-auto max-w-[600px]">
                     <div class="flex items-center">
                         <div
                             class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center mr-2 sm:mr-3 shrink-0">
                             <i class="fas fa-check text-xs sm:text-base"></i>
                         </div>
                         <div class="leading-tight">
-                            <span class="font-bold text-gray-800 block text-[10px] sm:text-sm">選択状況</span>
+                            <span class="bar-title font-bold text-gray-800 block text-[10px] sm:text-sm">選択状況</span>
                             <span class="text-indigo-600 font-bold"><span id="selected-jobs-count"
                                     class="text-base sm:text-xl">0</span> <span
                                     class="text-[10px] sm:text-sm text-gray-500">件</span></span>
@@ -2204,7 +2204,7 @@
                             </div>
 
                             <div class="flex items-center gap-4 mt-2 mb-4">
-                                <label class="text-xs text-gray-500">過去転職回数 (自動計算):</label>
+                                <label class="text-xs text-gray-500">経験社数 (自動計算):</label>
                                 <input type="number" id="profile-job-change-count"
                                     class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm" readonly>
                             </div>
@@ -3557,7 +3557,7 @@
                                     </div>
 
                                     <div class="flex items-center gap-4 mt-2 mb-4">
-                                        <label class="text-xs text-gray-500">過去転職回数 (自動計算):</label>
+                                        <label class="text-xs text-gray-500">経験社数 (自動計算):</label>
                                         <input type="number" id="admin-user-job-change-count"
                                             class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm"
                                             readonly>
@@ -4928,7 +4928,7 @@
                             </div>
                             <div id="reg-work-history-list" class="space-y-4 mb-2"></div>
                             <div class="flex items-center gap-4 mt-2">
-                                <label class="text-xs text-gray-500">過去転職回数:</label>
+                                <label class="text-xs text-gray-500">経験社数 (自動計算):</label>
                                 <input type="number" id="reg-job-change-count"
                                     class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm" readonly
                                     value="0">
@@ -5705,7 +5705,7 @@
 
             // ページ遷移時にフロートバーを非表示にし、余白をリセット
             $('#bulk-recommend-bar, #candidate-float-bar').addClass('hidden translate-y-full').removeClass('translate-y-0');
-            $('#jobs-grid, #candidate-results-container').css('padding-bottom', '0');
+            $('#jobs-container, #candidate-results-container').css('padding-bottom', '0');
 
             // 求人検索ページが表示された場合、保存された検索条件を適用
             if (contentId === 'jobs-content') {
@@ -6894,37 +6894,39 @@
             const count = selectedJobIds.size;
             $('#selected-jobs-count').text(count);
 
-            // 修正: selectedTargetUserId を使用
-            const targetUserId = selectedTargetUserId;
             const isAgent = currentUser && ['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role);
             const isCandidate = currentUser && currentUser.role === 'candidate';
+            const targetUserId = selectedTargetUserId;
 
-            // 上部のボタンの制御を追加
+            const bar = $('#bulk-recommend-bar');
+            if (count > 0) {
+                if (isAgent && targetUserId) {
+                    bar.removeClass('hidden').removeClass('translate-y-full').addClass('translate-y-0');
+                    bar.find('.bar-title').text('AIマッチ');
+                    bar.find('.bar-button').text('AIマッチを実行');
+                    $('#jobs-container').css('padding-bottom', '120px');
+                } else if (isCandidate) {
+                    bar.removeClass('hidden').removeClass('translate-y-full').addClass('translate-y-0');
+                    bar.find('.bar-title').text('AIマッチング診断');
+                    bar.find('.bar-button').text('AIマッチングする');
+                    $('#jobs-container').css('padding-bottom', '120px');
+                } else {
+                    bar.addClass('translate-y-full');
+                    setTimeout(() => { if (selectedJobIds.size === 0) bar.addClass('hidden'); }, 300);
+                    $('#jobs-container').css('padding-bottom', '0');
+                }
+            } else {
+                bar.addClass('translate-y-full');
+                setTimeout(() => { if (selectedJobIds.size === 0) bar.addClass('hidden'); }, 300);
+                $('#jobs-container').css('padding-bottom', '0');
+            }
+
+            // 更新: 上部のボタン制御
             const batchAiBtn = $('#batch-ai-btn');
             if (count > 0 && (isCandidate || (isAgent && targetUserId))) {
                 batchAiBtn.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
             } else {
                 batchAiBtn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
-            }
-
-            // 下部のバーの制御
-            if (count > 0) {
-                if (isAgent && targetUserId) {
-                    // エージェントの場合: 推薦バーを表示
-                    $('#bulk-recommend-bar').removeClass('hidden');
-                    $('#bulk-recommend-bar .bar-title').text('AIマッチ');
-                    $('#bulk-recommend-bar .bar-button').text('AIマッチを実行');
-                } else if (isCandidate) {
-                    // 求職者の場合: AIマッチング診断バーを表示
-                    $('#bulk-recommend-bar').removeClass('hidden');
-                    $('#bulk-recommend-bar .bar-title').text('AIマッチング診断');
-                    $('#bulk-recommend-bar .bar-button').text('AIマッチングする');
-                } else {
-                    // エージェントだがユーザー未選択の場合
-                    $('#bulk-recommend-bar').addClass('hidden');
-                }
-            } else {
-                $('#bulk-recommend-bar').addClass('hidden');
             }
         }
 
@@ -9882,15 +9884,22 @@
 
             // Float Action Bar Setup
             const floatBar = $(`
-            <div id="candidate-float-bar" class="fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 hidden z-50 transition-transform transform translate-y-full flex justify-between items-center" style="left: 0; width: 100%;">
-                    <div class="flex items-center pl-4 md:pl-72">
-                        <span class="font-bold text-gray-800 text-lg mr-1" id="c-selected-count">0</span>
-                        <span class="text-gray-600 text-sm">人の候補者を選択中</span>
-                        <button onclick="clearAllSelectedCandidates()" class="ml-4 text-xs bg-gray-200 hover:bg-gray-300 text-gray-600 font-medium py-1 px-3 rounded transition">全解除</button>
+            <div id="candidate-float-bar" class="fixed bottom-10 left-1/2 md:left-[calc(50%+125px)] transform -translate-x-1/2 z-50 bg-white border border-indigo-100 rounded-full shadow-2xl px-4 sm:px-8 py-3 sm:py-4 hidden flex items-center justify-between gap-3 sm:gap-8 transition-all duration-300 w-[92vw] sm:w-auto max-w-[700px]">
+                    <div class="flex items-center">
+                        <div class="bg-indigo-100 text-indigo-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center mr-2 sm:mr-3 shrink-0">
+                            <i class="fas fa-users text-xs sm:text-base"></i>
+                        </div>
+                        <div class="leading-tight">
+                            <span class="font-bold text-gray-800 block text-[10px] sm:text-sm">選択中の候補者</span>
+                            <span class="text-indigo-600 font-bold"><span id="c-selected-count" class="text-base sm:text-xl">0</span> <span class="text-[10px] sm:text-sm text-gray-500">名</span></span>
+                        </div>
                     </div>
-                    <div class="pr-4">
-                        <button id="btn-save-recommendations" onclick="saveCandidatesToRecommendations()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center">
-                            <i class="fas fa-star mr-2"></i>おすすめ求人に保存
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="clearAllSelectedCandidates()" class="bg-gray-100 text-gray-600 px-3 sm:px-4 py-2 sm:py-3 rounded-full hover:bg-gray-200 font-bold shadow hover:shadow-md transition flex items-center text-xs sm:text-sm">
+                            <i class="fas fa-times sm:mr-2"></i><span class="hidden sm:inline">全解除</span>
+                        </button>
+                        <button id="btn-save-recommendations" onclick="saveCandidatesToRecommendations()" class="bg-indigo-600 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full hover:bg-indigo-700 font-bold shadow-lg hover:shadow-xl transition flex items-center transform hover:-translate-y-0.5 text-xs sm:text-sm">
+                            <i class="fas fa-star mr-1 sm:mr-2"></i>おすすめ<span class="hidden sm:inline">求人に保存</span>
                         </button>
                     </div>
                 </div>
@@ -13862,7 +13871,7 @@
                     });
                     return list;
                 })(),
-                job_change_count: $('#profile-work-history-list .work-history-item').length,
+                job_change_count: parseInt($('#profile-job-change-count').val()) || 0,
 
                 updated_at: new Date().toISOString()
             }
@@ -14886,12 +14895,23 @@
             $item.find('.wh-description').val(data.description || '');
 
             container.append($item);
+
+            // 会社名が入力されたら再計算
+            $item.find('.wh-company').on('input', function () {
+                updateJobChangeCountInContainer(containerSelector, targetCountId);
+            });
+
             updateJobChangeCountInContainer(containerSelector, targetCountId);
         };
 
         window.updateJobChangeCountInContainer = function (containerSelector, countIdSelector) {
             const container = $(containerSelector);
-            const count = container.children().length;
+            const companies = new Set();
+            container.find('.wh-company').each(function () {
+                const val = $(this).val().trim();
+                if (val) companies.add(val);
+            });
+            const count = companies.size;
             $(countIdSelector).val(count);
             // 番号振り直し
             container.find('.work-history-item').each(function (i) {
@@ -15164,7 +15184,7 @@
 
                         // 構造化データ
                         work_history_structured: workHistoryList,
-                        job_change_count: workHistoryList.length,
+                        job_change_count: parseInt($('#admin-user-job-change-count').val()) || 0,
 
                         desired_job_experience_ok: $('#admin-user-job-exp-ok').is(':checked'),
                         desired_industry_experience_ok: $('#admin-user-industry-exp-ok').is(':checked'),
@@ -16115,11 +16135,22 @@
             $item.find('.wh-description').val(data.description || '');
 
             $('#reg-work-history-list').append($item);
+
+            // 会社名が入力されたら再計算
+            $item.find('.wh-company').on('input', function () {
+                updateRegJobChangeCount();
+            });
+
             updateRegJobChangeCount();
         };
 
         window.updateRegJobChangeCount = function () {
-            const count = $('#reg-work-history-list').children().length;
+            const companies = new Set();
+            $('#reg-work-history-list .wh-company').each(function () {
+                const val = $(this).val().trim();
+                if (val) companies.add(val);
+            });
+            const count = companies.size;
             $('#reg-job-change-count').val(count);
             $('#reg-work-history-list .reg-work-history-item').each(function (i) {
                 $(this).find('h5').text(`職歴 ${i + 1}`);
@@ -16273,7 +16304,7 @@
                         });
                     });
                     profileData.work_history_structured = workHistoryList;
-                    profileData.job_change_count = workHistoryList.length;
+                    profileData.job_change_count = parseInt($('#reg-job-change-count').val()) || 0;
                 }
 
                 const requestBody = {
