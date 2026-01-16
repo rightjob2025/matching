@@ -22867,6 +22867,22 @@
             container.scrollTop(container[0].scrollHeight);
         }
 
+        // Helper to match Select2 values by text label
+        function setSelect2ByLabels($element, labels) {
+            if (!labels || labels.length === 0) return;
+            const values = [];
+            $element.find('option').each(function () {
+                const optText = $(this).text().trim();
+                const optValue = $(this).val();
+                if (labels.some(l => optText.includes(l) || l.includes(optText))) {
+                    values.push(optValue);
+                }
+            });
+            if (values.length > 0) {
+                $element.val(values).trigger('change');
+            }
+        }
+
         async function applyAISearchFilters(type, filters) {
             console.log('Applying AI Filters:', type, filters);
 
@@ -22912,13 +22928,24 @@
 
                 // Multi-selects (Select2)
                 if (filters.prefectures && filters.prefectures.length > 0) {
-                    $('#search-prefecture').val(filters.prefectures).trigger('change');
+                    setSelect2ByLabels($('#search-prefecture'), filters.prefectures);
                 }
                 if (filters.job_categories && filters.job_categories.length > 0) {
-                    $('#search-job-category').val(filters.job_categories).trigger('change');
+                    setSelect2ByLabels($('#search-job-category'), filters.job_categories);
                 }
                 if (filters.industry_categories && filters.industry_categories.length > 0) {
-                    $('#search-industry-category').val(filters.industry_categories).trigger('change');
+                    setSelect2ByLabels($('#search-industry-category'), filters.industry_categories);
+                }
+                if (filters.employment_types && filters.employment_types.length > 0) {
+                    setSelect2ByLabels($('#search-employment-type'), filters.employment_types);
+                }
+
+                // Experience flags
+                if (filters.job_experience_ok) {
+                    $('#search-job-experience-ok').prop('checked', true);
+                }
+                if (filters.industry_experience_ok) {
+                    $('#search-industry-experience-ok').prop('checked', true);
                 }
 
                 // Trigger search
@@ -22962,13 +22989,16 @@
 
                 // Multi-selects
                 if (filters.prefectures && filters.prefectures.length > 0) {
-                    $('#c-search-prefecture').val(filters.prefectures).trigger('change');
+                    setSelect2ByLabels($('#c-search-prefecture'), filters.prefectures);
                 }
                 if (filters.job_categories && filters.job_categories.length > 0) {
-                    $('#c-search-job-category').val(filters.job_categories).trigger('change');
+                    setSelect2ByLabels($('#c-search-job-category'), filters.job_categories);
                 }
                 if (filters.industry_categories && filters.industry_categories.length > 0) {
-                    $('#c-search-industry-category').val(filters.industry_categories).trigger('change');
+                    setSelect2ByLabels($('#c-search-industry-category'), filters.industry_categories);
+                }
+                if (filters.employment_types && filters.employment_types.length > 0) {
+                    setSelect2ByLabels($('#c-search-employment-type'), filters.employment_types);
                 }
                 if (filters.salary_min) {
                     $('#c-search-salary-slider').val(filters.salary_min).trigger('input');
