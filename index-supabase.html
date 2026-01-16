@@ -882,23 +882,23 @@
 
         /* Floating AI Agent Styles */
         #ai-search-agent-trigger {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-            z-index: 10000;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 4px solid white;
+            position: fixed !important;
+            bottom: 30px !important;
+            right: 30px !important;
+            width: 64px !important;
+            height: 64px !important;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            font-size: 28px !important;
+            cursor: pointer !important;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4) !important;
+            z-index: 999999 !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            border: 4px solid white !important;
         }
 
         #ai-search-agent-trigger:hover {
@@ -1091,6 +1091,50 @@
 </head>
 
 <body>
+    <!-- Floating AI Search Agent -->
+    <div id="ai-search-agent-trigger" onclick="toggleAISearchChat()" style="display: flex;">
+        <i class="fas fa-robot"></i>
+        <div class="notification-dot"></div>
+    </div>
+
+    <div id="ai-search-agent-chat">
+        <div class="chat-header">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold">AI検索アシスタント</h3>
+                    <p class="text-[10px] opacity-80 uppercase tracking-tighter">Powered by Gemini 2.5 Flash</p>
+                </div>
+            </div>
+            <button onclick="toggleAISearchChat()" class="text-white/80 hover:text-white transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="ai-chat-body" class="chat-body custom-scrollbar">
+            <div class="chat-bubble ai">
+                こんにちは！キャリアアドバイザーAIです。😊<br>
+                「東京のエンジニアの求人を探して」や「30代で営業経験のある人を見つけて」など、自然な言葉で指示をいただければ、最適な情報を検索します。
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="chat-typing" class="typing-indicator" style="display: none;">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="chat-footer">
+            <input type="text" id="ai-chat-input" class="chat-input" placeholder="例: 年収600万以上の営業求人"
+                onkeypress="if(event.key === 'Enter') sendAIChatMessage()">
+            <button onclick="sendAIChatMessage()" class="chat-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
     <!-- Loading Spinner -->
     <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
         style="z-index: 20000;">
@@ -23215,50 +23259,7 @@
             </div>
         </div>
     </div>
-    <!-- Floating AI Search Agent -->
-    <div id="ai-search-agent-trigger" onclick="toggleAISearchChat()">
-        <i class="fas fa-robot"></i>
-        <div class="notification-dot"></div>
-    </div>
 
-    <div id="ai-search-agent-chat">
-        <div class="chat-header">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-robot text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold">AI検索アシスタント</h3>
-                    <p class="text-[10px] opacity-80 uppercase tracking-tighter">Powered by Gemini 2.5 Flash</p>
-                </div>
-            </div>
-            <button onclick="toggleAISearchChat()" class="text-white/80 hover:text-white transition">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-
-        <div id="ai-chat-body" class="chat-body custom-scrollbar">
-            <div class="chat-bubble ai">
-                こんにちは！キャリアアドバイザーAIです。😊<br>
-                「東京のエンジニアの求人を探して」や「30代で営業経験のある人を見つけて」など、自然な言葉で指示をいただければ、最適な情報を検索します。
-            </div>
-
-            <!-- Typing Indicator (Hidden by default) -->
-            <div id="chat-typing" class="typing-indicator" style="display: none;">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        </div>
-
-        <div class="chat-footer">
-            <input type="text" id="ai-chat-input" class="chat-input" placeholder="例: 年収600万以上の営業求人"
-                onkeypress="if(event.key === 'Enter') sendAIChatMessage()">
-            <button onclick="sendAIChatMessage()" class="chat-send-btn">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
 </body>
 
 </html>
