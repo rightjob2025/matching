@@ -22874,21 +22874,35 @@
                 // Switch to jobs page
                 $(`.nav-link[data-page="jobs"]`).click();
 
-                // Set keyword
+                // Set keyword tags (split by spaces, tabs, or commas)
                 if (filters.keyword) {
-                    $('#search-keyword').val(filters.keyword);
-                    // Add as tag if not already there
-                    const event = jQuery.Event("keypress");
-                    event.which = 13;
-                    $('#search-keyword').trigger(event);
+                    const words = filters.keyword.split(/[\s,、\t]+/).filter(w => w.length > 0);
+                    const $input = $('#search-keyword');
+                    words.forEach(word => {
+                        $input.val(word);
+                        const event = jQuery.Event("keypress");
+                        event.which = 13;
+                        $input.trigger(event);
+                    });
+                    // Clear the input after processing tags
+                    $input.val('');
+
+                    // Set mode if specified, default to OR for AI breadth
+                    const mode = filters.keyword_mode || 'OR';
+                    $(`input[name="search-keyword-mode"][value="${mode}"]`).prop('checked', true);
                 }
 
                 // Set location
                 if (filters.location) {
-                    $('#search-location').val(filters.location);
-                    const event = jQuery.Event("keypress");
-                    event.which = 13;
-                    $('#search-location').trigger(event);
+                    const locations = filters.location.split(/[\s,、\t]+/).filter(l => l.length > 0);
+                    const $locInput = $('#search-location');
+                    locations.forEach(loc => {
+                        $locInput.val(loc);
+                        const event = jQuery.Event("keypress");
+                        event.which = 13;
+                        $locInput.trigger(event);
+                    });
+                    $locInput.val('');
                 }
 
                 // Set salary
@@ -22911,26 +22925,39 @@
                 setTimeout(() => {
                     if (window.searchJobsImmediate) window.searchJobsImmediate();
                     else if (window.searchJobs) window.searchJobs();
-                }, 500);
+                }, 800);
 
             } else if (type === 'candidate') {
                 // Switch to candidate search page
                 $(`.nav-link[data-page="candidate-search"]`).click();
 
-                // Set keyword
+                // Set keyword tags
                 if (filters.keyword) {
-                    $('#c-search-keyword').val(filters.keyword);
-                    const event = jQuery.Event("keypress");
-                    event.which = 13;
-                    $('#c-search-keyword').trigger(event);
+                    const words = filters.keyword.split(/[\s,、\t]+/).filter(w => w.length > 0);
+                    const $input = $('#c-search-keyword');
+                    words.forEach(word => {
+                        $input.val(word);
+                        const event = jQuery.Event("keypress");
+                        event.which = 13;
+                        $input.trigger(event);
+                    });
+                    $input.val('');
+
+                    const mode = filters.keyword_mode || 'OR';
+                    $(`input[name="c-search-keyword-mode"][value="${mode}"]`).prop('checked', true);
                 }
 
                 // Set location text
                 if (filters.location) {
-                    $('#c-search-location').val(filters.location);
-                    const event = jQuery.Event("keypress");
-                    event.which = 13;
-                    $('#c-search-location').trigger(event);
+                    const locations = filters.location.split(/[\s,、\t]+/).filter(l => l.length > 0);
+                    const $locInput = $('#c-search-location');
+                    locations.forEach(loc => {
+                        $locInput.val(loc);
+                        const event = jQuery.Event("keypress");
+                        event.which = 13;
+                        $locInput.trigger(event);
+                    });
+                    $locInput.val('');
                 }
 
                 // Multi-selects
@@ -22950,7 +22977,7 @@
                 // Trigger search
                 setTimeout(() => {
                     if (window.searchCandidates) window.searchCandidates();
-                }, 500);
+                }, 800);
             }
         }
     </script>
