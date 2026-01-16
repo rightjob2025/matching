@@ -5145,6 +5145,9 @@
                     placeholder: '選択してください'
                 });
 
+                // 職歴入力用のdatalistを更新
+                updateWorkHistoryDatalists();
+
             } catch (error) {
                 console.error('Error loading master data:', error);
             }
@@ -8616,6 +8619,49 @@
                         </div>
                     </div>
 
+                    <!-- 3.5 詳細職歴 (構造化データ) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
+                            <i class="fas fa-list-ul mr-2 text-indigo-500"></i>経歴詳細
+                        </h4>
+                        <div class="space-y-4">
+                            ${candidate.work_history_structured && Array.isArray(candidate.work_history_structured) && candidate.work_history_structured.length > 0
+                        ? candidate.work_history_structured.map((wh, idx) => `
+                                    <div class="border-l-4 border-indigo-200 pl-4 py-1">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h5 class="font-bold text-gray-900">${wh.company_name || '名称未設定'}</h5>
+                                            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">${wh.period || '-'}</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 mb-2">
+                                            ${wh.industry ? `
+                                                <div class="flex items-start text-xs text-gray-600">
+                                                    <span class="font-semibold mr-1 w-16 flex-shrink-0 text-gray-400">業種:</span>
+                                                    <span>${wh.industry}</span>
+                                                </div>
+                                            ` : ''}
+                                            ${wh.job_category ? `
+                                                <div class="flex items-start text-xs text-gray-600">
+                                                    <span class="font-semibold mr-1 w-16 flex-shrink-0 text-gray-400">職種:</span>
+                                                    <span>${wh.job_category}</span>
+                                                </div>
+                                            ` : ''}
+                                            ${wh.role ? `
+                                                <div class="flex items-start text-xs text-gray-600">
+                                                    <span class="font-semibold mr-1 w-16 flex-shrink-0 text-gray-400">役職:</span>
+                                                    <span>${wh.role}</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        ${wh.description ? `
+                                            <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-white p-2 border border-gray-100 rounded">${wh.description}</div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')
+                        : '<p class="text-gray-400 text-sm text-center py-4 italic">構造化された職歴データはありません</p>'
+                    }
+                        </div>
+                    </div>
+
                     <!-- 4. 履歴情報 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -11627,6 +11673,43 @@
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
+                function populateSelectOptions(elementId, options, selectedValue = null) {
+                    const select = $(`#${elementId}`);
+                    if (select.length === 0) return;
+                    select.empty();
+                    select.append('<option value="">選択してください</option>');
+                    options.forEach(opt => {
+                        const label = typeof opt === 'object' ? opt.label : opt;
+                        const value = typeof opt === 'object' ? opt.value : opt;
+                        const isSelected = selectedValue === value ? 'selected' : '';
+                        select.append(`<option value="${value}" ${isSelected}>${label}</option>`);
+                    });
+                }
+
+                // 職歴入力用のdatalistを更新する関数
+                function updateWorkHistoryDatalists() {
+                    // 業界リスト
+                    let industryDatalist = $('#master-industry-list');
+                    if (industryDatalist.length === 0) {
+                        $('body').append('<datalist id="master-industry-list"></datalist>');
+                        industryDatalist = $('#master-industry-list');
+                    }
+                    industryDatalist.empty();
+                    masterIndustries.forEach(item => {
+                        industryDatalist.append(`<option value="${item}">`);
+                    });
+
+                    // 職種リスト
+                    let jobDatalist = $('#master-job-category-list');
+                    if (jobDatalist.length === 0) {
+                        $('body').append('<datalist id="master-job-category-list"></datalist>');
+                        jobDatalist = $('#master-job-category-list');
+                    }
+                    jobDatalist.empty();
+                    masterJobCategories.forEach(item => {
+                        jobDatalist.append(`<option value="${item}">`);
+                    });
+                }
                 savedSearches = searches
 
                 const select = $('#saved-searches-select')
@@ -14055,6 +14138,8 @@
                         list.push({
                             company_name: $(this).find('.wh-company').val(),
                             period: $(this).find('.wh-period').val(),
+                            industry: $(this).find('.wh-industry').val(),
+                            job_category: $(this).find('.wh-job-category').val(),
                             role: $(this).find('.wh-role').val(),
                             description: $(this).find('.wh-description').val()
                         });
@@ -15068,6 +15153,16 @@
                             <input type="text" class="wh-period w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: 2020/04 - 2023/03">
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">所属企業の業種</label>
+                            <input type="text" class="wh-industry w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: IT・通信" list="master-industry-list">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">職種</label>
+                            <input type="text" class="wh-job-category w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: 法人営業" list="master-job-category-list">
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="block text-xs text-gray-500 mb-1">役割・役職</label>
                         <input type="text" class="wh-role w-full px-3 py-2 border rounded text-sm bg-white" placeholder="役割・役職">
@@ -15081,6 +15176,8 @@
 
             $item.find('.wh-company').val(data.company_name || '');
             $item.find('.wh-period').val(data.period || '');
+            $item.find('.wh-industry').val(data.industry || '');
+            $item.find('.wh-job-category').val(data.job_category || '');
             $item.find('.wh-role').val(data.role || '');
             $item.find('.wh-description').val(data.description || '');
 
@@ -15347,6 +15444,8 @@
                         workHistoryList.push({
                             company_name: $(this).find('.wh-company').val(),
                             period: $(this).find('.wh-period').val(),
+                            industry: $(this).find('.wh-industry').val(),
+                            job_category: $(this).find('.wh-job-category').val(),
                             role: $(this).find('.wh-role').val(),
                             description: $(this).find('.wh-description').val()
                         });
@@ -16308,6 +16407,16 @@
                             <input type="text" class="wh-period w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: 2020/04 - 2023/03">
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">所属企業の業種</label>
+                            <input type="text" class="wh-industry w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: IT・通信" list="master-industry-list">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">職種</label>
+                            <input type="text" class="wh-job-category w-full px-3 py-2 border rounded text-sm bg-white" placeholder="例: 法人営業" list="master-job-category-list">
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="block text-xs text-gray-500 mb-1">役割・役職</label>
                         <input type="text" class="wh-role w-full px-3 py-2 border rounded text-sm bg-white" placeholder="役割・役職">
@@ -16321,6 +16430,8 @@
 
             $item.find('.wh-company').val(data.company_name || '');
             $item.find('.wh-period').val(data.period || '');
+            $item.find('.wh-industry').val(data.industry || '');
+            $item.find('.wh-job-category').val(data.job_category || '');
             $item.find('.wh-role').val(data.role || '');
             $item.find('.wh-description').val(data.description || '');
 
@@ -16489,6 +16600,8 @@
                         workHistoryList.push({
                             company_name: $(this).find('.wh-company').val(),
                             period: $(this).find('.wh-period').val(),
+                            industry: $(this).find('.wh-industry').val(),
+                            job_category: $(this).find('.wh-job-category').val(),
                             role: $(this).find('.wh-role').val(),
                             description: $(this).find('.wh-description').val()
                         });
