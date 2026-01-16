@@ -798,18 +798,17 @@
             background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
             color: white;
             padding: 8px 16px;
-            border-radius: 9999px;
-            font-weight: 700;
-            font-size: 0.875rem;
+            border-radius: 8px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
             transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
 
         .ai-search-btn:hover {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
         }
 
@@ -22546,6 +22545,163 @@
                 tbody.append(tr);
             });
         }
+
+        // --- AI Search Agent Logic ---
+        window.toggleAISearchChat = function () {
+            const chat = $('#ai-search-agent-chat');
+            const isVisible = chat.is(':visible');
+            if (isVisible) {
+                chat.fadeOut(200, () => chat.css('display', 'none'));
+            } else {
+                chat.css('display', 'flex').hide().fadeIn(300);
+                $('#ai-search-agent-trigger .notification-dot').hide();
+                $('#ai-chat-input').focus();
+            }
+        };
+
+        window.sendAIChatMessage = async function () {
+            const input = $('#ai-chat-input');
+            const text = input.val().trim();
+            if (!text) return;
+
+            // Clear input and add user bubble
+            input.val('');
+            addChatBubble('user', text);
+
+            // Show typing indicator
+            $('#chat-typing').show();
+            scrollToBottom();
+
+            try {
+                // Determine current context (what page am I on?)
+                const currentPage = $('.nav-link.active').data('page') || 'dashboard';
+
+                const { data, error } = await supabase.functions.invoke('ai-search-agent', {
+                    body: {
+                        prompt: text,
+                        currentContext: currentPage
+                    }
+                });
+
+                if (error) throw error;
+
+                // Hide typing
+                $('#chat-typing').hide();
+
+                if (data.explanation) {
+                    addChatBubble('ai', data.explanation);
+                }
+
+                if (data.filters) {
+                    applyAISearchFilters(data.searchType, data.filters);
+                }
+
+            } catch (error) {
+                console.error('AI Search Error:', error);
+                $('#chat-typing').hide();
+                addChatBubble('ai', 'すみません、検索処理でエラーが発生しました。時間を置いて再度お試しください。');
+            }
+            scrollToBottom();
+        };
+
+        function addChatBubble(role, text) {
+            const container = $('#ai-chat-body');
+            const bubble = $(`<div class="chat-bubble ${role}">${text}</div>`);
+            container.append(bubble);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const container = $('#ai-chat-body');
+            container.scrollTop(container[0].scrollHeight);
+        }
+
+        async function applyAISearchFilters(type, filters) {
+            console.log('Applying AI Filters:', type, filters);
+
+            if (type === 'job') {
+                // Switch to jobs page
+                $(`.nav-link[data-page="jobs"]`).click();
+
+                // Set keyword
+                if (filters.keyword) {
+                    $('#search-keyword').val(filters.keyword);
+                    // Add as tag if not already there
+                    const event = jQuery.Event("keypress");
+                    event.which = 13;
+                    $('#search-keyword').trigger(event);
+                }
+
+                // Set location
+                if (filters.location) {
+                    $('#search-location').val(filters.location);
+                    const event = jQuery.Event("keypress");
+                    event.which = 13;
+                    $('#search-location').trigger(event);
+                }
+
+                // Set salary
+                if (filters.salary_min) {
+                    $('#search-salary-slider').val(filters.salary_min).trigger('input');
+                }
+
+                // Multi-selects (Select2)
+                if (filters.prefectures && filters.prefectures.length > 0) {
+                    $('#search-prefecture').val(filters.prefectures).trigger('change');
+                }
+                if (filters.job_categories && filters.job_categories.length > 0) {
+                    $('#search-job-category').val(filters.job_categories).trigger('change');
+                }
+                if (filters.industry_categories && filters.industry_categories.length > 0) {
+                    $('#search-industry-category').val(filters.industry_categories).trigger('change');
+                }
+
+                // Trigger search
+                setTimeout(() => {
+                    if (window.searchJobsImmediate) window.searchJobsImmediate();
+                    else if (window.searchJobs) window.searchJobs();
+                }, 500);
+
+            } else if (type === 'candidate') {
+                // Switch to candidate search page
+                $(`.nav-link[data-page="candidate-search"]`).click();
+
+                // Set keyword
+                if (filters.keyword) {
+                    $('#c-search-keyword').val(filters.keyword);
+                    const event = jQuery.Event("keypress");
+                    event.which = 13;
+                    $('#c-search-keyword').trigger(event);
+                }
+
+                // Set location text
+                if (filters.location) {
+                    $('#c-search-location').val(filters.location);
+                    const event = jQuery.Event("keypress");
+                    event.which = 13;
+                    $('#c-search-location').trigger(event);
+                }
+
+                // Multi-selects
+                if (filters.prefectures && filters.prefectures.length > 0) {
+                    $('#c-search-prefecture').val(filters.prefectures).trigger('change');
+                }
+                if (filters.job_categories && filters.job_categories.length > 0) {
+                    $('#c-search-job-category').val(filters.job_categories).trigger('change');
+                }
+                if (filters.industry_categories && filters.industry_categories.length > 0) {
+                    $('#c-search-industry-category').val(filters.industry_categories).trigger('change');
+                }
+                if (filters.salary_min) {
+                    $('#c-search-salary-slider').val(filters.salary_min).trigger('input');
+                }
+
+                // Trigger search
+                setTimeout(() => {
+                    if (window.searchCandidates) window.searchCandidates();
+                }, 500);
+            }
+        }
     </script>
     <!-- Job Detail Modal -->
     <div id="job-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
@@ -22850,6 +23006,50 @@
                     Word出力
                 </button>
             </div>
+        </div>
+    </div>
+    <!-- Floating AI Search Agent -->
+    <div id="ai-search-agent-trigger" onclick="toggleAISearchChat()">
+        <i class="fas fa-robot"></i>
+        <div class="notification-dot"></div>
+    </div>
+
+    <div id="ai-search-agent-chat">
+        <div class="chat-header">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-robot text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold">AI検索アシスタント</h3>
+                    <p class="text-[10px] opacity-80 uppercase tracking-tighter">Powered by Gemini 2.5 Flash</p>
+                </div>
+            </div>
+            <button onclick="toggleAISearchChat()" class="text-white/80 hover:text-white transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="ai-chat-body" class="chat-body custom-scrollbar">
+            <div class="chat-bubble ai">
+                こんにちは！キャリアアドバイザーAIです。😊<br>
+                「東京のエンジニアの求人を探して」や「30代で営業経験のある人を見つけて」など、自然な言葉で指示をいただければ、最適な情報を検索します。
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="chat-typing" class="typing-indicator" style="display: none;">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="chat-footer">
+            <input type="text" id="ai-chat-input" class="chat-input" placeholder="例: 年収600万以上の営業求人"
+                onkeypress="if(event.key === 'Enter') sendAIChatMessage()">
+            <button onclick="sendAIChatMessage()" class="chat-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 </body>
