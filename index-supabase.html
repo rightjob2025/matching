@@ -22890,6 +22890,11 @@
                 // Switch to jobs page
                 $(`.nav-link[data-page="jobs"]`).click();
 
+                // Clear previous search if AI suggests it (Contextual behavior)
+                if (filters.shouldClear !== false) { // Default to clear if not explicitly additive
+                    if (window.clearSearch) window.clearSearch();
+                }
+
                 // Set keyword tags (split by spaces, tabs, or commas)
                 if (filters.keyword) {
                     const words = filters.keyword.split(/[\s,、\t]+/).filter(w => w.length > 0);
@@ -22957,6 +22962,11 @@
             } else if (type === 'candidate') {
                 // Switch to candidate search page
                 $(`.nav-link[data-page="candidate-search"]`).click();
+
+                // Clear previous search if AI suggests it
+                if (filters.shouldClear !== false) {
+                    if (window.clearCandidateSearch) window.clearCandidateSearch();
+                }
 
                 // Set keyword tags
                 if (filters.keyword) {
