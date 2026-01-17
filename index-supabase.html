@@ -11930,6 +11930,9 @@
                 if (!$select.length || !$container.length) return;
 
                 $select.off('change.syncTags').on('change.syncTags', function () {
+                    // Select2が初期化されているか確認
+                    if (!$select.hasClass('select2-hidden-accessible')) return;
+
                     $container.empty();
                     const selected = $select.select2('data') || [];
                     selected.forEach(item => {
