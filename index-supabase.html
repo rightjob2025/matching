@@ -22912,8 +22912,8 @@
                     // Clear the input after processing tags
                     $input.val('');
 
-                    // Set mode if specified, default to OR for AI breadth
-                    const mode = filters.keyword_mode || 'OR';
+                    // Set mode if specified, default to AND
+                    const mode = filters.keyword_mode || 'AND';
                     $(`input[name="search-keyword-mode"][value="${mode}"]`).prop('checked', true);
                 }
 
@@ -22984,7 +22984,7 @@
                     });
                     $input.val('');
 
-                    const mode = filters.keyword_mode || 'OR';
+                    const mode = filters.keyword_mode || 'AND';
                     $(`input[name="c-search-keyword-mode"][value="${mode}"]`).prop('checked', true);
                 }
 
