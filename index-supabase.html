@@ -6313,7 +6313,7 @@
 
                 loadNotifications()
                 showPage('app-page')
-                $('#ai-search-agent-trigger').attr('style', 'display: flex !important');
+                // $('#ai-search-agent-trigger').attr('style', 'display: flex !important'); // Temporarily OFF
 
                 // ログイン操作を記録（ユーザーデータを渡す）
                 await auditLog.userLoggedIn(currentUser);
@@ -20948,7 +20948,7 @@
                                 loadNotifications()
                                 initMasterDataDropdowns(); // マスタデータ読み込み
                                 showPage('app-page')
-                                $('#ai-search-agent-trigger').attr('style', 'display: flex !important');
+                                // $('#ai-search-agent-trigger').attr('style', 'display: flex !important'); // Temporarily OFF
                             }
                         })
                 }
