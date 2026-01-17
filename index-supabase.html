@@ -1866,6 +1866,36 @@
                         </div>
                     </div>
 
+                    <!-- AI Search Prompt -->
+                    <div
+                        class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <i class="fas fa-robot text-6xl text-indigo-600"></i>
+                        </div>
+                        <div class="relative">
+                            <label class="flex items-center gap-2 mb-3">
+                                <span class="bg-white p-2 rounded-lg shadow-sm text-indigo-600">
+                                    <i class="fas fa-magic"></i>
+                                </span>
+                                <span class="text-sm font-bold text-indigo-900">AI Search Assistant (プロンプト指示)</span>
+                                <span
+                                    class="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full font-bold uppercase tracking-wider">PREMIUM</span>
+                            </label>
+                            <div class="relative">
+                                <textarea id="search-ai-prompt"
+                                    placeholder="例: 急成長中のスタートアップでマネジメント経験があり、Javaに強い方を優先して..."
+                                    class="w-full bg-white border border-indigo-100 rounded-xl p-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-inner hover:border-indigo-300 min-h-[80px]"
+                                    rows="2"></textarea>
+                                <div class="mt-2 flex items-center gap-4 text-[10px] text-slate-500">
+                                    <span class="flex items-center gap-1">
+                                        <i class="fas fa-info-circle"></i>
+                                        通常のフィルタ条件に加えて、AIが指示内容に基づき順位付けと分析を行います。
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Actions -->
                     <div class="flex flex-wrap gap-6 justify-between items-center pt-6 border-t border-slate-100">
                         <div class="flex gap-4 items-center">
@@ -2095,6 +2125,36 @@
                                 <i class="fas fa-map-marked-alt absolute right-3 top-3 text-slate-400"></i>
                             </div>
                             <div id="c-tags-location" class="tag-container mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- AI Search Prompt -->
+                    <div
+                        class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <i class="fas fa-robot text-6xl text-indigo-600"></i>
+                        </div>
+                        <div class="relative">
+                            <label class="flex items-center gap-2 mb-3">
+                                <span class="bg-white p-2 rounded-lg shadow-sm text-indigo-600">
+                                    <i class="fas fa-magic"></i>
+                                </span>
+                                <span class="text-sm font-bold text-indigo-900">AI Search Assistant (プロンプト指示)</span>
+                                <span
+                                    class="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full font-bold uppercase tracking-wider">PREMIUM</span>
+                            </label>
+                            <div class="relative">
+                                <textarea id="c-search-ai-prompt"
+                                    placeholder="例: 大手SIer出身で、PM経験が豊富、コミュニケーション能力が高そうな方を優先して..."
+                                    class="w-full bg-white border border-indigo-100 rounded-xl p-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-inner hover:border-indigo-300 min-h-[80px]"
+                                    rows="2"></textarea>
+                                <div class="mt-2 flex items-center gap-4 text-[10px] text-slate-500">
+                                    <span class="flex items-center gap-1">
+                                        <i class="fas fa-info-circle"></i>
+                                        通常のフィルタ条件に加えて、AIが指示内容に基づき順位付けと分析を行います。
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -10632,6 +10692,7 @@
             $('#c-search-employment-type').val(null).trigger('change');
             $('#c-search-sort').val('created_at-desc');
             $('#c-search-management-status').val('active');
+            $('#c-search-ai-prompt').val('');
             searchCandidates();
         }
 
@@ -10676,6 +10737,7 @@
             const minSal = $('#c-search-salary-min').val();
             const sort = $('#c-search-sort').val();
             const managementStatus = $('#c-search-management-status').val();
+            const aiPrompt = $('#c-search-ai-prompt').val();
 
             try {
                 let query = supabase.from('users')
@@ -10766,8 +10828,39 @@
 
                 // ページネーション処理
                 currentCandidatePage = page;
-                currentCandidateFilters = filters;
+                currentCandidateFilters = { ...filters, aiPrompt };
                 allCandidatesCache = results;
+
+                // AI Ranking if prompt exists
+                if (aiPrompt && aiPrompt.trim().length > 0 && results.length > 0) {
+                    showLoading('AIが指示内容に基づき精査中...');
+                    try {
+                        const topResults = results.slice(0, 50); // プロンプト評価は上位50件に制限
+                        const { data: aiRanked, error: aiError } = await supabase.functions.invoke('score-ai-recommendations', {
+                            body: {
+                                type: 'candidate',
+                                customInstruction: aiPrompt,
+                                candidates: topResults
+                            }
+                        });
+
+                        if (!aiError && aiRanked) {
+                            // スコアをマッピング
+                            results.forEach(u => {
+                                const rank = aiRanked.find(r => r.id === u.id || r.user_id === u.id);
+                                if (rank) {
+                                    u.ai_score = rank.score;
+                                    u.ai_reason = rank.reason;
+                                }
+                            });
+                            // スコア順に並び替え
+                            results.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
+                        }
+                    } catch (err) {
+                        console.error('AI Ranking error:', err);
+                    }
+                    hideLoading();
+                }
 
                 const totalCount = results.length;
                 totalCandidatePages = Math.ceil(totalCount / CANDIDATES_PER_PAGE);
@@ -11117,12 +11210,13 @@
                 return renderCandidateCard({
                     candidate: c,
                     // マッチ度などは一旦0または検索結果から (検索ロジックによってはスコアが入る)
-                    match_score: c.match_score || 0,
+                    match_score: c.ai_score || c.match_score || 0,
                     skill_match_score: c.skill_match_score || 0,
                     experience_match_score: c.experience_match_score || 0,
                     location_match_score: c.location_match_score || 0,
                     salary_match_score: c.salary_match_score || 0,
-                    culture_match_score: c.culture_match_score || 0
+                    culture_match_score: c.culture_match_score || 0,
+                    recommendation_reason: c.ai_reason || ''
                 });
             }).join('');
             container.html(html);
@@ -11310,6 +11404,41 @@
                             }
                         }
                     }
+                }
+
+                // --- AI Ranking Logic (Jobs) ---
+                if (filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
+                    showLoading('AIが指示内容に基づき求人を精査中...');
+                    try {
+                        // 1次フィルタ後の全件をAIに渡す（ページネーション前だが、多すぎるといけないので上位50件程度にするのが安全）
+                        // ここでは、Supabaseから取得した現在のページの jobs だけでなく、
+                        // 本来的には「全ヒット件数の中から上位」を選びたいが、まずは現在の jobs に対して追加評価を行う。
+                        if (jobs && jobs.length > 0) {
+                            const { data: aiRanked, error: aiError } = await supabase.functions.invoke('score-ai-recommendations', {
+                                body: {
+                                    type: 'job',
+                                    customInstruction: filters.aiPrompt,
+                                    jobs: jobs
+                                }
+                            });
+
+                            if (!aiError && aiRanked) {
+                                // AIのスコアを jobs にマッピング
+                                jobs.forEach(job => {
+                                    const rank = aiRanked.find(r => r.job_id === job.id || r.id === job.id);
+                                    if (rank) {
+                                        job.ai_score = rank.score;
+                                        job.ai_reason = rank.reason;
+                                    }
+                                });
+                                // AIスコア順にソート（既にSupabaseでソート済みだがAI結果で上書き）
+                                jobs.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
+                            }
+                        }
+                    } catch (err) {
+                        console.error('AI Ranking error (Jobs):', err);
+                    }
+                    hideLoading();
                 }
 
                 // ソート順の適用
@@ -11675,7 +11804,8 @@
                 isRemote: $('#search-is-remote').is(':checked'),
                 excludeMatched: $('#search-exclude-matched').is(':checked'),
                 favoritesOnly: $('#search-favorites-only').is(':checked'),
-                sort: $('#search-sort').val()
+                sort: $('#search-sort').val(),
+                aiPrompt: $('#search-ai-prompt').val()
             }
 
             // 検索条件を保存
@@ -11726,6 +11856,7 @@
             $('#search-location').val('');
             $('#tags-freeword').empty();
             $('#search-salary-min').val('');
+            $('#search-ai-prompt').val('');
 
             // ラジオボタンのリセット
             $('input[name="search-keyword-mode"][value="OR"]').prop('checked', true);
@@ -12178,6 +12309,16 @@
                                 <span>${job.employment_type || '-'}</span>
                             </div>
                         </div>
+
+                        ${job.ai_score ? `
+                        <div class="mb-4 bg-indigo-50 border-l-4 border-indigo-500 p-3 rounded-r">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded">AI SEARCH</span>
+                                <span class="text-xs font-bold text-indigo-700">合致率: ${job.ai_score}%</span>
+                            </div>
+                            <p class="text-[11px] text-indigo-600 line-clamp-3 leading-relaxed">${job.ai_reason || ''}</p>
+                        </div>
+                        ` : ''}
 
                         ${job.welcome_requirements ? `
                         <div class="mb-2">
