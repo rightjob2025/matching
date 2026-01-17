@@ -6139,10 +6139,25 @@
             $(`#${pageId}`).addClass('active')
         }
 
+        let isChangingContent = false;
         async function showAppContent(contentId) {
+            if (isChangingContent) return;
+            isChangingContent = true;
+
             $('.app-content').addClass('hidden')
             const $target = $(`#${contentId}`);
             $target.removeClass('hidden')
+
+            // 画面遷移時に検索条件をリセット（意図しないAI実行を防ぐ）
+            try {
+                if (contentId === 'jobs-content') {
+                    if (typeof window.clearSearch === 'function') window.clearSearch();
+                } else if (contentId === 'candidates-content') {
+                    if (typeof window.clearCandidateSearch === 'function') window.clearCandidateSearch();
+                }
+            } catch (e) {
+                console.error('Clear filters error during transition:', e);
+            }
 
             // 管理者系ページ（ヘッダー重複・余白対策が必要なページ）のリスト
             const adminPages = [
@@ -6690,6 +6705,10 @@
         async function logout() {
             showLoading()
             try {
+                // 検索条件をクリア
+                if (typeof window.clearSearch === 'function') window.clearSearch();
+                if (typeof window.clearCandidateSearch === 'function') window.clearCandidateSearch();
+
                 // ログアウト操作を記録
                 await auditLog.userLoggedOut();
 
