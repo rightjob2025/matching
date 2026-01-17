@@ -889,7 +889,7 @@
             height: 64px !important;
             background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
             border-radius: 50% !important;
-            display: flex !important;
+            display: none !important;
             align-items: center !important;
             justify-content: center !important;
             color: white !important;
@@ -1092,7 +1092,7 @@
 
 <body>
     <!-- Floating AI Search Agent -->
-    <div id="ai-search-agent-trigger" onclick="toggleAISearchChat()" style="display: flex;">
+    <div id="ai-search-agent-trigger" onclick="toggleAISearchChat()">
         <i class="fas fa-robot"></i>
         <div class="notification-dot"></div>
     </div>
@@ -6313,6 +6313,7 @@
 
                 loadNotifications()
                 showPage('app-page')
+                $('#ai-search-agent-trigger').attr('style', 'display: flex !important');
 
                 // ログイン操作を記録（ユーザーデータを渡す）
                 await auditLog.userLoggedIn(currentUser);
@@ -6481,6 +6482,8 @@
                 currentUser = null
                 window.currentUser = null;
                 showPage('login-page')
+                $('#ai-search-agent-trigger').attr('style', 'display: none !important');
+                $('#ai-search-agent-chat').attr('style', 'display: none !important');
             } catch (error) {
                 console.error('Logout error:', error)
                 alert('ログアウトに失敗しました')
@@ -20945,6 +20948,7 @@
                                 loadNotifications()
                                 initMasterDataDropdowns(); // マスタデータ読み込み
                                 showPage('app-page')
+                                $('#ai-search-agent-trigger').attr('style', 'display: flex !important');
                             }
                         })
                 }
