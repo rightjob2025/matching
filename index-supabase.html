@@ -5880,6 +5880,44 @@
                 select.value = currentVal;
             }
         }
+        }
+
+        // 職歴入力用のdatalistを更新する関数
+        function updateWorkHistoryDatalists() {
+            // 業界リスト
+            let industryDatalist = $('#master-industry-list');
+            if (industryDatalist.length === 0) {
+                if ($('body').length > 0) {
+                    $('body').append('<datalist id="master-industry-list"></datalist>');
+                } else {
+                    return; // Body not ready
+                }
+                industryDatalist = $('#master-industry-list');
+            }
+            industryDatalist.empty();
+            if (typeof masterIndustries !== 'undefined' && Array.isArray(masterIndustries)) {
+                masterIndustries.forEach(item => {
+                    industryDatalist.append(`<option value="${item}">`);
+                });
+            }
+
+            // 職種リスト
+            let jobDatalist = $('#master-job-category-list');
+            if (jobDatalist.length === 0) {
+                if ($('body').length > 0) {
+                    $('body').append('<datalist id="master-job-category-list"></datalist>');
+                } else {
+                    return;
+                }
+                jobDatalist = $('#master-job-category-list');
+            }
+            jobDatalist.empty();
+            if (typeof masterJobCategories !== 'undefined' && Array.isArray(masterJobCategories)) {
+                masterJobCategories.forEach(item => {
+                    jobDatalist.append(`<option value="${item}">`);
+                });
+            }
+        }
 
         // Select2初期化管理
         const select2InitializedElements = new Set();
@@ -11406,41 +11444,6 @@
                     }
                 }
 
-                // --- AI Ranking Logic (Jobs) ---
-                if (filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
-                    showLoading('AIが指示内容に基づき求人を精査中...');
-                    try {
-                        // 1次フィルタ後の全件をAIに渡す（ページネーション前だが、多すぎるといけないので上位50件程度にするのが安全）
-                        // ここでは、Supabaseから取得した現在のページの jobs だけでなく、
-                        // 本来的には「全ヒット件数の中から上位」を選びたいが、まずは現在の jobs に対して追加評価を行う。
-                        if (jobs && jobs.length > 0) {
-                            const { data: aiRanked, error: aiError } = await supabase.functions.invoke('score-ai-recommendations', {
-                                body: {
-                                    type: 'job',
-                                    customInstruction: filters.aiPrompt,
-                                    jobs: jobs
-                                }
-                            });
-
-                            if (!aiError && aiRanked) {
-                                // AIのスコアを jobs にマッピング
-                                jobs.forEach(job => {
-                                    const rank = aiRanked.find(r => r.job_id === job.id || r.id === job.id);
-                                    if (rank) {
-                                        job.ai_score = rank.score;
-                                        job.ai_reason = rank.reason;
-                                    }
-                                });
-                                // AIスコア順にソート（既にSupabaseでソート済みだがAI結果で上書き）
-                                jobs.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
-                            }
-                        }
-                    } catch (err) {
-                        console.error('AI Ranking error (Jobs):', err);
-                    }
-                    hideLoading();
-                }
-
                 // ソート順の適用
                 const sortParam = filters.sort || 'created_at-desc';
                 console.log('Applying sort:', sortParam);
@@ -11466,6 +11469,38 @@
                 if (error) {
                     console.error('Supabase query error:', error);
                     throw error;
+                }
+
+                // --- AI Ranking Logic (Jobs) ---
+                if (filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
+                    showLoading('AIが指示内容に基づき求人を精査中...');
+                    try {
+                        if (jobs && jobs.length > 0) {
+                            const { data: aiRanked, error: aiError } = await supabase.functions.invoke('score-ai-recommendations', {
+                                body: {
+                                    type: 'job',
+                                    customInstruction: filters.aiPrompt,
+                                    jobs: jobs
+                                }
+                            });
+
+                            if (!aiError && aiRanked) {
+                                // AIのスコアを jobs にマッピング
+                                jobs.forEach(job => {
+                                    const rank = aiRanked.find(r => r.job_id === job.id || r.id === job.id);
+                                    if (rank) {
+                                        job.ai_score = rank.score;
+                                        job.ai_reason = rank.reason;
+                                    }
+                                });
+                                // AIスコア順にソート
+                                jobs.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
+                            }
+                        }
+                    } catch (err) {
+                        console.error('AI Ranking error (Jobs):', err);
+                    }
+                    hideLoading();
                 }
 
                 // 総ページ数を計算
@@ -12057,43 +12092,6 @@
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
-                function populateSelectOptions(elementId, options, selectedValue = null) {
-                    const select = $(`#${elementId}`);
-                    if (select.length === 0) return;
-                    select.empty();
-                    select.append('<option value="">選択してください</option>');
-                    options.forEach(opt => {
-                        const label = typeof opt === 'object' ? opt.label : opt;
-                        const value = typeof opt === 'object' ? opt.value : opt;
-                        const isSelected = selectedValue === value ? 'selected' : '';
-                        select.append(`<option value="${value}" ${isSelected}>${label}</option>`);
-                    });
-                }
-
-                // 職歴入力用のdatalistを更新する関数
-                function updateWorkHistoryDatalists() {
-                    // 業界リスト
-                    let industryDatalist = $('#master-industry-list');
-                    if (industryDatalist.length === 0) {
-                        $('body').append('<datalist id="master-industry-list"></datalist>');
-                        industryDatalist = $('#master-industry-list');
-                    }
-                    industryDatalist.empty();
-                    masterIndustries.forEach(item => {
-                        industryDatalist.append(`<option value="${item}">`);
-                    });
-
-                    // 職種リスト
-                    let jobDatalist = $('#master-job-category-list');
-                    if (jobDatalist.length === 0) {
-                        $('body').append('<datalist id="master-job-category-list"></datalist>');
-                        jobDatalist = $('#master-job-category-list');
-                    }
-                    jobDatalist.empty();
-                    masterJobCategories.forEach(item => {
-                        jobDatalist.append(`<option value="${item}">`);
-                    });
-                }
                 savedSearches = searches
 
                 const select = $('#saved-searches-select')
