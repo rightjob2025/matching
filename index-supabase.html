@@ -5396,6 +5396,7 @@
         window.supabase = supabaseClient
 
         // currentUserをグローバル変数として定義
+        let isInitialLoad = true;
         let currentUser = null;
         let isModalLoading = false;
         let isAImatchingResultView = false;
@@ -5946,14 +5947,9 @@
 
             if (count > 0 && count < 500) {
                 $box.removeClass('disabled');
-                // もしプロンプトに中身があれば自動で開く、なければ閉じたまま（ユーザー判断）
-                if ($(promptId).val().trim().length > 0) {
-                    $box.removeClass('collapsed');
-                }
             } else {
                 $box.addClass('disabled');
                 $box.addClass('collapsed');
-                // $(promptId).val(''); // 指示内容を勝手に消すと不便な場合があるので非活性化のみにする
             }
         }
 
@@ -6531,6 +6527,7 @@
 
                 loadNotifications()
                 showPage('app-page')
+                isInitialLoad = false;
                 // $('#ai-search-agent-trigger').attr('style', 'display: flex !important'); // Temporarily OFF
 
                 // ログイン操作を記録（ユーザーデータを渡す）
@@ -10989,8 +10986,12 @@
                 currentCandidateFilters = { ...filters, aiPrompt };
                 allCandidatesCache = results;
 
-                // AI Ranking if prompt exists
-                if (aiPrompt && aiPrompt.trim().length > 0 && results.length > 0) {
+                // AI検索ボックスの状態を更新
+                updateAISearchState('candidate', totalCount);
+
+                // AI Ranking if prompt exists and not initial load and box is active
+                const isAiBoxDisabled = $('#candidate-ai-search-box').hasClass('disabled');
+                if (!isInitialLoad && !isAiBoxDisabled && aiPrompt && aiPrompt.trim().length > 0 && results.length > 0) {
                     showLoading('AIが指示内容に基づき精査中...');
                     try {
                         const topResults = results.slice(0, 50); // プロンプト評価は上位50件に制限
@@ -11590,17 +11591,12 @@
 
                 console.log('Query result:', { jobs: jobs?.length, error, count });
 
-                if (error) {
-                    console.error('Supabase query error:', error);
-                    throw error;
-                }
-
                 // AI検索ボックスの状態を更新
                 updateAISearchState('job', count);
 
-
                 // --- AI Ranking Logic (Jobs) ---
-                if (filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
+                const isAiBoxDisabled = $('#job-ai-search-box').hasClass('disabled');
+                if (!isInitialLoad && !isAiBoxDisabled && filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
                     showLoading('AIが指示内容に基づき求人を精査中...');
                     try {
                         if (jobs && jobs.length > 0) {
