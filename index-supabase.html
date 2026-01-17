@@ -6144,125 +6144,119 @@
             if (isChangingContent) return;
             isChangingContent = true;
 
-            $('.app-content').addClass('hidden')
-            const $target = $(`#${contentId}`);
-            $target.removeClass('hidden')
-
-            // 画面遷移時に検索条件をリセット（意図しないAI実行を防ぐ）
             try {
-                if (contentId === 'jobs-content') {
-                    if (typeof window.clearSearch === 'function') window.clearSearch();
-                } else if (contentId === 'candidates-content') {
-                    if (typeof window.clearCandidateSearch === 'function') window.clearCandidateSearch();
+                $('.app-content').addClass('hidden')
+                const $target = $(`#${contentId}`);
+                $target.removeClass('hidden')
+
+                // 画面遷移時に検索条件をリセット（意図しないAI実行を防ぐ）
+                try {
+                    if (contentId === 'jobs-content') {
+                        if (typeof window.clearSearch === 'function') window.clearSearch();
+                    } else if (contentId === 'candidates-content') {
+                        if (typeof window.clearCandidateSearch === 'function') window.clearCandidateSearch();
+                    }
+                } catch (e) {
+                    console.error('Clear filters error during transition:', e);
                 }
-            } catch (e) {
-                console.error('Clear filters error during transition:', e);
-            }
 
-            // 管理者系ページ（ヘッダー重複・余白対策が必要なページ）のリスト
-            const adminPages = [
-                'admin-prompts-content',
-                'admin-jobs-content',
-                'admin-companies-content',
-                'admin-applicants-content',
-                'admin-candidates-content',
-                'admin-users-content',
-                'admin-csv-content',
-                'admin-log-content',
-                'admin-master-content',
-                'admin-settings-content',
-                'admin-templates-content',
-                'super-admin-organizations-content',
-                'coach-students-content'
-            ];
+                // 管理者系ページ（ヘッダー重複・余白対策が必要なページ）のリスト
+                const adminPages = [
+                    'admin-prompts-content',
+                    'admin-jobs-content',
+                    'admin-companies-content',
+                    'admin-applicants-content',
+                    'admin-candidates-content',
+                    'admin-users-content',
+                    'admin-csv-content',
+                    'admin-log-content',
+                    'admin-master-content',
+                    'admin-settings-content',
+                    'admin-templates-content',
+                    'super-admin-organizations-content',
+                    'coach-students-content'
+                ];
 
-            // 管理者系ページの場合はヘッダーを隠し、要素を最上部に移動
-            if (adminPages.includes(contentId)) {
-                $('header').addClass('hidden');
-                // 強制的にmain-contentの先頭に移動（見えない要素による余白排除）
-                $('.main-content').prepend($target);
-            } else {
-                $('header').removeClass('hidden');
-            }
+                // 管理者系ページの場合はヘッダーを隠し、要素を最上部に移動
+                if (adminPages.includes(contentId)) {
+                    $('header').addClass('hidden');
+                    // 強制的にmain-contentの先頭に移動（見えない要素による余白排除）
+                    $('.main-content').prepend($target);
+                } else {
+                    $('header').removeClass('hidden');
+                }
 
-            // ページ遷移時にフロートバーを非表示にし、余白をリセット
-            $('#bulk-recommend-bar, #candidate-float-bar').addClass('hidden translate-y-full').removeClass('translate-y-0');
-            $('#jobs-container, #candidate-results-container').css('padding-bottom', '0');
+                // ページ遷移時にフロートバーを非表示にし、余白をリセット
+                $('#bulk-recommend-bar, #candidate-float-bar').addClass('hidden translate-y-full').removeClass('translate-y-0');
+                $('#jobs-container, #candidate-results-container').css('padding-bottom', '0');
 
-            // 求人検索ページが表示された場合、保存された検索条件を適用
-            if (contentId === 'jobs-content') {
-                // loadSearchFilters関数が定義されているか確認（初期化前対策）
-                // loadSearchFilters関数が定義されているか確認（初期化前対策）
-                if (typeof loadSearchFilters === 'function' && typeof applySearchFilters === 'function') {
-                    // マスタデータがロード済みの場合のみ適用（未ロードの場合はloadJobs内で適用される）
-                    if (isSearchMasterLoaded) {
-                        const savedFilters = loadSearchFilters();
-                        if (savedFilters) {
-                            console.log('Auto-applying saved filters for jobs page (Master loaded)');
-                            applySearchFilters(savedFilters);
+                // 求人検索ページが表示された場合、保存された検索条件を適用
+                if (contentId === 'jobs-content') {
+                    // loadSearchFilters関数が定義されているか確認（初期化前対策）
+                    if (typeof loadSearchFilters === 'function' && typeof applySearchFilters === 'function') {
+                        // マスタデータがロード済みの場合のみ適用（未ロードの場合はloadJobs内で適用される）
+                        if (isSearchMasterLoaded) {
+                            const savedFilters = loadSearchFilters();
+                            if (savedFilters) {
+                                console.log('Auto-applying saved filters for jobs page (Master loaded)');
+                                applySearchFilters(savedFilters);
+                            }
                         }
                     }
                 }
-                // 注意: ここでloadJobsを呼ぶと、ナビゲーションクリック時のloadJobsと重複して2回呼ばれる可能性があるため、
-                // フィルタの適用（UIへのセット）のみを行う。
-                // 実際の検索実行は呼び出し元（ナビゲーションクリックなど）に任せるか、
-                // あるいはここでフラグをチェックして実行する。
 
-                // しかし、ナビゲーションクリック以外（例: 戻る操作）で来た場合、loadJobsが呼ばれない可能性がある。
-                // そのため、loadJobsがまだ呼ばれていない（リストが空など）場合に呼ぶのが安全だが、
-                // 簡易的には、UIにセットするだけで、ユーザーが「検索」ボタンを押せばよい状態にするだけでも「条件保存」の要件は満たせる。
-                // もし自動検索まで望むなら、呼び出し元を整理する必要がある。
-            }
-
-            // テンプレート管理ページが表示された場合
-            if (contentId === 'admin-templates-content') {
-                if (typeof loadEmailTemplates === 'function') {
-                    loadEmailTemplates();
-                }
-            }
-
-            // 遅延ロード: 初回アクセス時のみデータを読み込む
-            if (!loadedPages.has(contentId)) {
-                console.log(`Lazy loading data for: ${contentId}`);
-
-                try {
-                    switch (contentId) {
-                        case 'recommendations-content':
-                            // 推薦一覧は初回のみロード
-                            if (typeof loadRecommendations === 'function') {
-                                await loadRecommendations();
-                            }
-                            break;
-
-                        case 'admin-users-content':
-                            // ユーザー管理は初回のみロード
-                            if (typeof loadUsers === 'function') {
-                                await loadUsers();
-                            }
-                            break;
-
-                        case 'admin-companies-content':
-                            // 企業管理は初回のみロード
-                            if (typeof loadCompanies === 'function') {
-                                await loadCompanies();
-                            }
-                            break;
-
-                        case 'coach-students-content':
-                            if (typeof loadCoachStudents === 'function') {
-                                await loadCoachStudents();
-                            }
-                            break;
-
-                        // 他のページも必要に応じて追加
+                // テンプレート管理ページが表示された場合
+                if (contentId === 'admin-templates-content') {
+                    if (typeof loadEmailTemplates === 'function') {
+                        loadEmailTemplates();
                     }
-
-                    loadedPages.add(contentId);
-                } catch (error) {
-                    console.error(`Error lazy loading ${contentId}:`, error);
                 }
-            } else {
-                console.log(`Using cached data for: ${contentId}`);
+
+                // 遅延ロード: 初回アクセス時のみデータを読み込む
+                if (!loadedPages.has(contentId)) {
+                    console.log(`Lazy loading data for: ${contentId}`);
+
+                    try {
+                        switch (contentId) {
+                            case 'recommendations-content':
+                                // 推薦一覧は初回のみロード
+                                if (typeof loadRecommendations === 'function') {
+                                    await loadRecommendations();
+                                }
+                                break;
+
+                            case 'admin-users-content':
+                                // ユーザー管理は初回のみロード
+                                if (typeof loadUsers === 'function') {
+                                    await loadUsers();
+                                }
+                                break;
+
+                            case 'admin-companies-content':
+                                // 企業管理は初回のみロード
+                                if (typeof loadCompanies === 'function') {
+                                    await loadCompanies();
+                                }
+                                break;
+
+                            case 'coach-students-content':
+                                if (typeof loadCoachStudents === 'function') {
+                                    await loadCoachStudents();
+                                }
+                                break;
+
+                            // 他のページも必要に応じて追加
+                        }
+
+                        loadedPages.add(contentId);
+                    } catch (error) {
+                        console.error(`Error lazy loading ${contentId}:`, error);
+                    }
+                } else {
+                    console.log(`Using cached data for: ${contentId}`);
+                }
+            } finally {
+                isChangingContent = false;
             }
         }
 
@@ -11005,6 +10999,9 @@
                 currentCandidateFilters = { ...filters, aiPrompt };
                 allCandidatesCache = results;
 
+                const totalCount = results.length;
+                totalCandidatePages = Math.ceil(totalCount / CANDIDATES_PER_PAGE);
+
                 // AI検索ボックスの状態を更新
                 updateAISearchState('candidate', totalCount);
 
@@ -11040,17 +11037,11 @@
                     hideLoading();
                 }
 
-                const totalCount = results.length;
-                totalCandidatePages = Math.ceil(totalCount / CANDIDATES_PER_PAGE);
-
                 const from = (page - 1) * CANDIDATES_PER_PAGE;
                 const to = from + CANDIDATES_PER_PAGE;
                 const paginatedResults = results.slice(from, to);
 
                 console.log(`Loaded candidate page ${page}/${totalCandidatePages}, showing ${paginatedResults.length} candidates (total: ${totalCount})`);
-
-                // AI検索ボックスの状態を更新
-                updateAISearchState('candidate', totalCount);
 
                 renderCandidateResults(paginatedResults, totalCount);
 
