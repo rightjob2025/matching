@@ -852,6 +852,58 @@
             font-weight: 500;
         }
 
+        /* Advanced Filters Styles */
+        .advanced-filters-container {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .advanced-filters-container.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            pointer-events: none;
+        }
+
+        .advanced-filters-container:not(.collapsed) {
+            max-height: 3000px;
+            opacity: 1;
+            margin-top: 1.5rem;
+        }
+
+        .filter-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-toggle-btn:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .filter-toggle-btn.active {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #bfdbfe;
+        }
+
+        .filter-toggle-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .filter-toggle-btn.active i {
+            transform: rotate(180deg);
+        }
+
         .ai-search-box.disabled .disabled-message {
             display: flex;
         }
@@ -1805,210 +1857,228 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                        <!-- Col 1: Keyword & Salary -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="filter-group-label">キーワード</label>
-                                <div class="relative">
-                                    <input type="text" id="search-keyword" placeholder="営業、エンジニア、東京など..."
-                                        class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
-                                </div>
-                                <div id="tags-keyword" class="tag-container mt-2"></div>
-                                <div class="flex gap-4 text-[10px] sm:text-xs text-slate-500 mt-2 px-1">
-                                    <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
-                                        <input type="radio" name="search-keyword-mode" value="OR" checked
-                                            class="mr-1 accent-indigo-600"> OR検索
-                                    </label>
-                                    <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
-                                        <input type="radio" name="search-keyword-mode" value="AND"
-                                            class="mr-1 accent-indigo-600"> AND検索
-                                    </label>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="filter-group-label">希望年収</label>
-                                <div class="premium-slider-container">
-                                    <input type="range" id="search-salary-slider" min="0" max="2000" step="50" value="0"
-                                        class="premium-slider"
-                                        oninput="$('#salary-display').text(this.value === '0' ? '指定なし' : this.value + ' 万円以上')">
-                                    <div class="flex justify-between mt-2">
-                                        <span class="text-[10px] text-slate-400">0</span>
-                                        <span id="salary-display" class="text-sm font-bold text-indigo-600">指定なし</span>
-                                        <span class="text-[10px] text-slate-400">2000万</span>
-                                    </div>
-                                    <input type="hidden" id="search-salary-min" value="0">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Col 2: Industry & Occupation -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="filter-group-label">業種</label>
-                                <select id="search-industry-category" class="w-full select2"
-                                    multiple="multiple"></select>
-                                <div id="tags-industry" class="tag-container mt-1"></div>
-                            </div>
-                            <div>
-                                <label class="filter-group-label">職種</label>
-                                <select id="search-job-category" class="w-full select2" multiple="multiple"></select>
-                                <div id="tags-job" class="tag-container mt-1"></div>
-                            </div>
-                        </div>
-
-                        <!-- Col 3: Location & Employment -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="filter-group-label">勤務地</label>
-                                <select id="search-prefecture" class="w-full select2" multiple="multiple"></select>
-                                <div id="tags-prefecture" class="tag-container mt-1"></div>
-                            </div>
-                            <div>
-                                <label class="filter-group-label">雇用形態</label>
-                                <select id="search-employment-type" class="w-full select2" multiple="multiple"></select>
-                                <div id="tags-employment" class="tag-container mt-1"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 pt-6 border-t border-slate-50">
-                        <!-- Col 1: Freeword -->
-                        <div>
-                            <label class="filter-group-label">勤務地フリーワード(駅名、地名など)</label>
+                    <!-- Primary Search Row -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-4 mt-6">
+                        <div class="flex-1">
                             <div class="relative">
-                                <input type="text" id="search-location" placeholder="特定の地名、駅名など..."
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <i class="fas fa-map-marked-alt absolute right-3 top-3 text-slate-400"></i>
+                                <input type="text" id="search-keyword" placeholder="求人タイトル、企業名、スキルなど..."
+                                    class="w-full h-12 px-11 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition-all focus:border-indigo-500">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             </div>
-                            <div id="tags-freeword" class="tag-container mt-1"></div>
+                            <div id="tags-keyword" class="tag-container mt-2"></div>
                         </div>
-
-                        <!-- Col 2: Experience OK -->
-                        <div>
-                            <label class="filter-group-label">募集条件</label>
-                            <div class="flex flex-wrap gap-x-6 gap-y-3">
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="checkbox" id="search-job-experience-ok"
-                                        class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
-                                    <span class="text-sm text-slate-600 group-hover:text-slate-900">職種未経験OK</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="checkbox" id="search-industry-experience-ok"
-                                        class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
-                                    <span class="text-sm text-slate-600 group-hover:text-slate-900">業界未経験OK</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Col 3: Favorites & Display -->
-                        <div>
-                            <label class="filter-group-label">表示設定</label>
-                            <div class="flex flex-wrap gap-x-6 gap-y-3">
-                                <label class="flex items-center gap-2 cursor-pointer group"
-                                    id="exclude-matched-container" style="display: none;">
-                                    <input type="checkbox" id="search-exclude-matched"
-                                        class="w-5 h-5 accent-purple-600 border-slate-300 rounded">
-                                    <span
-                                        class="text-sm text-purple-700 font-medium group-hover:text-purple-900">AIマッチ済みを除く</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="checkbox" id="search-favorites-only"
-                                        class="w-5 h-5 accent-pink-500 border-slate-300 rounded">
-                                    <span
-                                        class="text-sm text-pink-600 font-medium group-hover:text-pink-900">お気に入りのみ</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Search Prompt -->
-                    <div id="job-ai-search-box"
-                        class="ai-search-box bg-white disabled collapsed mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i class="fas fa-robot text-6xl text-indigo-600"></i>
-                        </div>
-                        <div class="relative">
-                            <div class="ai-search-header flex justify-between items-center cursor-pointer select-none"
-                                onclick="toggleAISearch('job')">
-                                <div class="flex items-center gap-3">
-                                    <label class="flex items-center gap-2 m-0">
-                                        <span class="bg-white p-2 rounded-lg shadow-sm text-indigo-600">
-                                            <i class="fas fa-magic"></i>
-                                        </span>
-                                        <span class="text-sm font-bold text-indigo-900">AI Search Assistant
-                                            (プロンプト指示)</span>
-                                        <span
-                                            class="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full font-bold uppercase tracking-wider">PREMIUM</span>
-                                    </label>
-                                    <div class="disabled-message items-center gap-1">
-                                        <i class="fas fa-lock text-xs"></i>
-                                        <span>結果を500件未満に絞り込むと利用可能です</span>
-                                    </div>
-                                </div>
-                                <div class="ai-search-toggle-icon text-indigo-400">
-                                    <i class="fas fa-chevron-up"></i>
-                                </div>
-                            </div>
-
-                            <div class="ai-search-body transition-all duration-300">
-                                <div class="relative">
-                                    <textarea id="search-ai-prompt"
-                                        placeholder="例: 急成長中のスタートアップでマネジメント経験があり、Javaに強い方を優先して..."
-                                        class="w-full bg-white border border-indigo-100 rounded-xl p-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-inner hover:border-indigo-300 min-h-[80px]"
-                                        rows="2"></textarea>
-                                    <div class="mt-2 flex items-center gap-4 text-[10px] text-slate-500">
-                                        <span class="flex items-center gap-1">
-                                            <i class="fas fa-info-circle"></i>
-                                            通常のフィルタ条件に加えて、AIが指示内容に基づき順位付けと分析を行います。
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex flex-wrap gap-6 justify-between items-center pt-6 border-t border-slate-100">
-                        <div class="flex gap-4 items-center">
+                        <div class="flex gap-2 h-12">
                             <button onclick="searchJobsImmediate()"
-                                class="bg-indigo-600 text-white px-10 py-2.5 rounded-lg hover:bg-white hover:text-indigo-600 border border-transparent hover:border-indigo-600 font-bold transition shadow-md hover:shadow-lg flex items-center">
-                                <i class="fas fa-search mr-2"></i>検索
+                                class="flex-1 md:flex-none px-8 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold transition shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                                <i class="fas fa-search"></i> 検索
+                            </button>
+                            <button id="toggle-advanced-filters" onclick="toggleAdvancedFilters()"
+                                class="px-4 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium transition flex items-center gap-2 whitespace-nowrap">
+                                <i class="fas fa-sliders-h"></i> <span class="hidden sm:inline">詳細条件</span>
                             </button>
                             <button onclick="clearSearch()"
-                                class="px-8 py-2.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition">
-                                クリア
+                                class="px-4 border border-slate-200 text-slate-400 rounded-xl hover:text-red-500 hover:bg-red-50 transition"
+                                title="検索条件をクリア">
+                                <i class="fas fa-rotate-right"></i>
                             </button>
+                        </div>
+                    </div>
 
-                            <div id="job-count-display-premium" class="hidden count-badge-premium ml-4">
-                                <i class="fas fa-briefcase text-indigo-400 text-xl"></i>
-                                <div class="flex flex-col leading-none">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Matched
-                                        Jobs</span>
-                                    <div class="flex items-baseline gap-1">
-                                        <span id="job-count-number" class="count-number-premium">0</span>
-                                        <span class="text-xs text-slate-500 font-bold">件</span>
+                    <!-- Keyword Modes Summary (Small) -->
+                    <div class="flex gap-4 text-[10px] sm:text-xs text-slate-500 mb-6 px-1">
+                        <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
+                            <input type="radio" name="search-keyword-mode" value="OR" checked
+                                class="mr-1 accent-indigo-600"> OR検索
+                        </label>
+                        <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
+                            <input type="radio" name="search-keyword-mode" value="AND" class="mr-1 accent-indigo-600">
+                            AND検索
+                        </label>
+                    </div>
+
+                    <!-- Advanced Filters Container (Collapsible) -->
+                    <div id="advanced-filters-body"
+                        class="advanced-filters-container collapsed pt-6 border-t border-slate-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                            <!-- Col 1: Salary & remote -->
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="filter-group-label">希望年収</label>
+                                    <div class="premium-slider-container">
+                                        <input type="range" id="search-salary-slider" min="0" max="2000" step="50"
+                                            value="0" class="premium-slider"
+                                            oninput="$('#salary-display').text(this.value === '0' ? '指定なし' : this.value + ' 万円以上')">
+                                        <div class="flex justify-between mt-2">
+                                            <span class="text-[10px] text-slate-400">0</span>
+                                            <span id="salary-display"
+                                                class="text-sm font-bold text-indigo-600 font-mono">指定なし</span>
+                                            <span class="text-[10px] text-slate-400">2000万</span>
+                                        </div>
+                                        <input type="hidden" id="search-salary-min" value="0">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="filter-group-label">表示設定</label>
+                                    <div class="flex flex-col gap-3 mt-2">
+                                        <label class="flex items-center gap-2 cursor-pointer group"
+                                            id="exclude-matched-container" style="display: none;">
+                                            <input type="checkbox" id="search-exclude-matched"
+                                                class="w-5 h-5 accent-purple-600 border-slate-300 rounded">
+                                            <span
+                                                class="text-sm text-purple-700 font-medium group-hover:text-purple-900">AIマッチ済みを除く</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" id="search-favorites-only"
+                                                class="w-5 h-5 accent-pink-500 border-slate-300 rounded">
+                                            <span
+                                                class="text-sm text-pink-600 font-medium group-hover:text-pink-900">お気に入りのみ</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Col 2: Industry & Occupation -->
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="filter-group-label">業種</label>
+                                    <select id="search-industry-category" class="w-full select2"
+                                        multiple="multiple"></select>
+                                    <div id="tags-industry" class="tag-container mt-1"></div>
+                                </div>
+                                <div>
+                                    <label class="filter-group-label">職種</label>
+                                    <select id="search-job-category" class="w-full select2"
+                                        multiple="multiple"></select>
+                                    <div id="tags-job" class="tag-container mt-1"></div>
+                                </div>
+                            </div>
+
+                            <!-- Col 3: Location & Employment -->
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="filter-group-label">勤務地 (都道府県)</label>
+                                    <select id="search-prefecture" class="w-full select2" multiple="multiple"></select>
+                                    <div id="tags-prefecture" class="tag-container mt-1"></div>
+                                </div>
+                                <div>
+                                    <label class="filter-group-label">雇用形態</label>
+                                    <select id="search-employment-type" class="w-full select2"
+                                        multiple="multiple"></select>
+                                    <div id="tags-employment" class="tag-container mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 py-6 border-t border-slate-50">
+                            <!-- More filters -->
+                            <div>
+                                <label class="filter-group-label">エリア詳細(駅名・地名)</label>
+                                <div class="relative">
+                                    <input type="text" id="search-location" placeholder="特定の地名、駅名など..."
+                                        class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <i class="fas fa-map-marked-alt absolute right-3 top-3 text-slate-400"></i>
+                                </div>
+                                <div id="tags-freeword" class="tag-container mt-1"></div>
+                            </div>
+                            <div>
+                                <label class="filter-group-label">追加条件</label>
+                                <div class="flex flex-col gap-3 mt-2">
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" id="search-job-experience-ok"
+                                            class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
+                                        <span class="text-sm text-slate-600 group-hover:text-slate-900">職種未経験OK</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" id="search-industry-experience-ok"
+                                            class="w-5 h-5 accent-indigo-600 border-slate-300 rounded">
+                                        <span class="text-sm text-slate-600 group-hover:text-slate-900">業界未経験OK</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <!-- Extra space or count info -->
+                                <div id="job-count-display-premium" class="hidden count-badge-premium">
+                                    <i class="fas fa-briefcase text-indigo-400 text-xl"></i>
+                                    <div class="flex flex-col leading-none">
+                                        <span
+                                            class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Matched
+                                            Jobs</span>
+                                        <div class="flex items-baseline gap-1">
+                                            <span id="job-count-number" class="count-number-premium">0</span>
+                                            <span class="text-xs text-slate-500 font-bold">件</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex gap-6 items-center">
-                            <div class="flex flex-col items-end">
-                                <select id="saved-searches-select" onchange="loadSavedSearch(this.value)"
-                                    class="px-4 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50 hover:bg-white transition hidden">
-                                    <option value="">保存した検索条件</option>
-                                </select>
+                        <!-- AI Search Prompt (Inside Advanced Filters for cleanliness) -->
+                        <div id="job-ai-search-box"
+                            class="ai-search-box bg-white disabled collapsed mt-4 p-6 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+                            <div
+                                class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i class="fas fa-robot text-6xl text-indigo-600"></i>
+                            </div>
+                            <div class="relative">
+                                <div class="ai-search-header flex justify-between items-center cursor-pointer select-none"
+                                    onclick="toggleAISearch('job')">
+                                    <div class="flex items-center gap-3">
+                                        <label class="flex items-center gap-2 m-0">
+                                            <span class="bg-white p-2 rounded-lg shadow-sm text-indigo-600">
+                                                <i class="fas fa magic"></i>
+                                            </span>
+                                            <span class="text-sm font-bold text-indigo-900">AI指示・プロンプト解析</span>
+                                            <span
+                                                class="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full font-bold uppercase tracking-wider">PREMIUM</span>
+                                        </label>
+                                        <div class="disabled-message items-center gap-1">
+                                            <i class="fas fa-lock text-xs"></i>
+                                            <span>結果を500件未満に絞り込むと利用可能です</span>
+                                        </div>
+                                    </div>
+                                    <div class="ai-search-toggle-icon text-indigo-400">
+                                        <i class="fas fa-chevron-up"></i>
+                                    </div>
+                                </div>
+
+                                <div class="ai-search-body transition-all duration-300">
+                                    <div class="relative">
+                                        <textarea id="search-ai-prompt"
+                                            placeholder="例: 急成長中のスタートアップでマネジメント経験があり、Javaに強い方を優先して..."
+                                            class="w-full bg-white border border-indigo-100 rounded-xl p-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-inner hover:border-indigo-300 min-h-[80px]"
+                                            rows="2"></textarea>
+                                        <div class="mt-2 flex items-center gap-4 text-[10px] text-slate-500">
+                                            <span class="flex items-center gap-1">
+                                                <i class="fas fa-info-circle"></i>
+                                                通常のフィルタ条件に加えて、AIが指示内容に基づき順位付けと分析を行います。
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saved Searches & Extra Actions -->
+                        <div
+                            class="mt-6 pt-6 border-t border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                                    <i class="fas fa-bookmark text-indigo-500 text-xs"></i>
+                                    <select id="saved-searches-select" onchange="loadSavedSearch(this.value)"
+                                        class="text-xs bg-transparent outline-none focus:ring-0 min-w-[120px]">
+                                        <option value="">保存条件を表示</option>
+                                    </select>
+                                </div>
                                 <button onclick="saveSearchConditions()"
-                                    class="text-indigo-600 hover:text-indigo-800 text-sm font-bold flex items-center mt-1">
-                                    <i class="fas fa-bookmark mr-1.5"></i>この条件を保存
+                                    class="text-indigo-600 hover:text-indigo-800 text-xs font-bold flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> 条件を保存
                                 </button>
                             </div>
+
                             <button onclick="selectTop30Jobs()" id="select-top-30-btn"
                                 class="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 border border-purple-100 font-bold text-sm hidden transition">
-                                <i class="fas fa-check-double mr-1.5"></i>上位30件を選択
+                                <i class="fas fa-check-double mr-1.5"></i> 上位30件を一括選択
                             </button>
                         </div>
                     </div>
@@ -5950,6 +6020,22 @@
             } else {
                 $box.addClass('disabled');
                 $box.addClass('collapsed');
+            }
+        }
+
+        window.toggleAdvancedFilters = function () {
+            const $container = $('#advanced-filters-body');
+            const $btn = $('#toggle-advanced-filters');
+            const isCollapsed = $container.hasClass('collapsed');
+
+            if (isCollapsed) {
+                $container.removeClass('collapsed');
+                $btn.addClass('active');
+                $btn.find('span').text('閉じる');
+            } else {
+                $container.addClass('collapsed');
+                $btn.removeClass('active');
+                $btn.find('span').text('詳細条件');
             }
         }
 
@@ -12024,7 +12110,9 @@
             $('#tags-keyword').empty();
             $('#search-location').val('');
             $('#tags-freeword').empty();
-            $('#search-salary-min').val('');
+            $('#search-salary-min').val('0');
+            $('#search-salary-slider').val(0);
+            $('#salary-display').text('指定なし');
             $('#search-ai-prompt').val('');
 
             // ラジオボタンのリセット
@@ -12297,7 +12385,9 @@
             $('#search-employment-type').val(c.employmentType || []).trigger('change')
             $('#search-job-category').val(c.jobCategory || []).trigger('change')
             $('#search-industry-category').val(c.industryCategory || []).trigger('change')
-            $('#search-salary-min').val(c.salaryMin || '')
+            $('#search-salary-min').val(c.salaryMin || '0')
+            $('#search-salary-slider').val(c.salaryMin || 0)
+            $('#salary-display').text(!c.salaryMin || c.salaryMin === '0' ? '指定なし' : c.salaryMin + ' 万円以上')
             $('#search-job-experience-ok').prop('checked', !!c.jobExperienceOk)
             $('#search-industry-experience-ok').prop('checked', !!c.industryExperienceOk)
             $('#search-is-remote').prop('checked', !!c.isRemote)
