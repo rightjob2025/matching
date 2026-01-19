@@ -17681,7 +17681,7 @@
                     .from('companies')
                     .select('*')
                     .eq('organization_id', targetOrgId)
-                    .order('name', { ascending: true });
+                    .order('created_at', { ascending: false });
 
                 // deleted_at カラムによるフィルタ（論理削除対応）
                 // カラムが存在しない場合のエラーを避けるため、一旦全取得してフロントでフィルタするか、
