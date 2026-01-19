@@ -17768,11 +17768,19 @@
 
         window.handleCompanySubmit = async function (e) {
             e.preventDefault()
+            if (!currentUser) return;
+
             showLoading()
             try {
                 const id = $('#company-id').val()
+                const orgId = currentUser.organization_id || $('#admin-user-org').val(); // super_adminの場合のフォールバック
+
+                if (!orgId) {
+                    throw new Error('組織IDが見つかりません。管理者にお問い合わせください。');
+                }
+
                 const companyData = {
-                    organization_id: currentUser.organization_id,
+                    organization_id: orgId,
                     name: $('#company-name').val(),
                     industry: $('#company-industry').val(),
                     location: $('#company-location').val(),
@@ -17780,35 +17788,32 @@
                     description: $('#company-description').val()
                 }
 
-                console.log('Sending company data:', companyData, 'ID:', id);
+                console.log('--- Company registration attempt ---');
+                console.log('Data:', companyData);
+                console.log('Mode:', id ? 'Update' : 'Insert');
 
-                let error
+                let result;
                 if (id) {
-                    ({ error } = await supabase.from('companies').update(companyData).eq('id', id))
+                    result = await supabase.from('companies').update(companyData).eq('id', id);
                 } else {
-                    // Check user role before insert for better error messaging
-                    const allowedRoles = ['org_admin', 'admin', 'super_admin'];
-                    if (!allowedRoles.includes(currentUser.role)) {
-                        console.warn('Potential permission issue: Company registration might require admin/org_admin role based on RLS policies.');
-                    }
-                    ({ error } = await supabase.from('companies').insert(companyData))
+                    result = await supabase.from('companies').insert(companyData);
                 }
 
-                if (error) {
-                    console.error('Supabase error during company save:', error);
-                    // RLS error often contains "new row violates row-level security policy"
-                    if (error.message && error.message.includes('row-level security')) {
-                        throw new Error('権限が不足しているため企業を登録できません。管理者に権限の確認をしてください。(RLS Policy Error)');
+                if (result.error) {
+                    console.error('Supabase error:', result.error);
+                    let errMsg = result.error.message;
+                    if (result.error.code === '42501') {
+                        errMsg = '権限（RLS）エラーです。管理者ロールを持っていても、組織との紐付けが正しくない可能性があります。SQLポリシーの確認が必要です。';
                     }
-                    throw error
+                    throw new Error(errMsg);
                 }
 
                 closeCompanyModal()
-                loadCompanies()
-                alert('保存しました')
+                if (typeof loadCompanies === 'function') loadCompanies();
+                alert('企業の登録に成功しました');
             } catch (error) {
                 console.error('Save company error:', error)
-                alert('保存に失敗しました: ' + error.message)
+                alert('保存に失敗しました:\n' + error.message);
             } finally {
                 hideLoading()
             }
