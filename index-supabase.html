@@ -17794,25 +17794,28 @@
 
                 let result;
                 if (id) {
-                    result = await supabase.from('companies').update(companyData).eq('id', id);
+                    result = await supabase.from('companies').update(companyData).eq('id', id).select();
                 } else {
-                    result = await supabase.from('companies').insert(companyData);
+                    result = await supabase.from('companies').insert(companyData).select();
                 }
 
+                console.log('Supabase full response:', result);
+
                 if (result.error) {
-                    console.error('Supabase error:', result.error);
+                    console.error('Supabase error detail:', result.error);
                     let errMsg = result.error.message;
                     if (result.error.code === '42501') {
-                        errMsg = '権限（RLS）エラーです。管理者ロールを持っていても、組織との紐付けが正しくない可能性があります。SQLポリシーの確認が必要です。';
+                        errMsg = '権限（RLS）エラーです。管理者の組織ID設定またはSQLポリシーに問題があります。';
                     }
                     throw new Error(errMsg);
                 }
 
+                console.log('Success result:', result.data);
                 closeCompanyModal()
                 if (typeof loadCompanies === 'function') loadCompanies();
                 alert('企業の登録に成功しました');
             } catch (error) {
-                console.error('Save company error:', error)
+                console.error('Final caught error:', error)
                 alert('保存に失敗しました:\n' + error.message);
             } finally {
                 hideLoading()
