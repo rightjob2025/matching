@@ -17677,13 +17677,13 @@
         // Admin: Company Management
         // ========================
         let companiesCache = []; // キャッシュして検索に使用
-        async function loadCompanies() {
+        let searchTimeout = null;
+        async function loadCompanies(searchText = '') {
             if (!currentUser) return
             showLoading()
-            console.log('--- loadCompanies START ---');
+            console.log('--- loadCompanies START ---', searchText ? `(Search: ${searchText})` : '');
             try {
                 const targetOrgId = currentUser.organization_id;
-                console.log('Fetching companies for organization:', targetOrgId);
 
                 // 基本クエリ
                 let query = supabase
@@ -17692,10 +17692,15 @@
                     .eq('organization_id', targetOrgId)
                     .order('created_at', { ascending: false });
 
-                // deleted_at カラムによるフィルタ（論理削除対応）
-                // カラムが存在しない場合のエラーを避けるため、一旦全取得してフロントでフィルタするか、
-                // SQLを確実に実行している前提で .is('deleted_at', null) を残す
+                // 論理削除対応
                 query = query.or('deleted_at.is.null');
+
+                // サーバーサイド検索の適用
+                if (searchText) {
+                    // search_vectorカラムなどがない場合は、ilikeで個別にフィルタする
+                    // 注意: Supabaseの or 句内で ilike を使用する形式
+                    query = query.or(`name.ilike.%${searchText}%,industry.ilike.%${searchText}%,location.ilike.%${searchText}%`);
+                }
 
                 const { data: companies, error } = await query;
 
@@ -17704,9 +17709,14 @@
                     throw error;
                 }
 
-                console.log('Companies loaded successfully. Count:', companies ? companies.length : 0);
-                companiesCache = companies || [];
-                renderCompanies(companiesCache);
+                console.log('Companies loaded. Count:', companies ? companies.length : 0);
+
+                // 検索中でない場合はキャッシュを更新
+                if (!searchText) {
+                    companiesCache = companies || [];
+                }
+
+                renderCompanies(companies || []);
             } catch (error) {
                 console.error('Load companies error detail:', error)
                 alert('企業の読み込みに失敗しました:\n' + (error.message || JSON.stringify(error)))
@@ -17807,18 +17817,14 @@
         }
 
         window.filterCompanies = function () {
-            const searchText = $('#company-search').val().toLowerCase();
-            if (!searchText) {
-                renderCompanies(companiesCache);
-                return;
-            }
+            const searchText = $('#company-search').val().trim();
 
-            const filtered = companiesCache.filter(c =>
-                (c.name && c.name.toLowerCase().includes(searchText)) ||
-                (c.industry && c.industry.toLowerCase().includes(searchText)) ||
-                (c.location && c.location.toLowerCase().includes(searchText))
-            );
-            renderCompanies(filtered);
+            // 入力のたびにサーバーにリクエストが飛ばないようデバウンス処理
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(() => {
+                loadCompanies(searchText);
+            }, 500); // 500ms待機してから実行
         }
 
         window.showCompanyForm = function () {
