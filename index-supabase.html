@@ -15485,134 +15485,170 @@
             $('#job-form')[0].reset()
             $('#job-id').val('')
 
-            // 企業リストのロード
-            try {
-                // 原則、現在選択されている組織（currentUser.organization_id）のみを取得
-                const { data: companies } = await supabase
-                    .from('companies')
-                    .select('id, name')
-                    .eq('organization_id', currentUser.organization_id)
-                    .is('deleted_at', null)
-                    .order('name');
+            // 企業選択肢（Select2）の初期化
+            const select = $('#job-company-select');
 
-                const select = $('#job-company-select');
-
-                // Select2 を一度破棄
-                if (select.hasClass('select2-hidden-accessible')) {
-                    select.select2('destroy');
-                }
-
-                select.empty();
-                select.append('<option value="">企業を選択してください</option>');
-                select.append('<option value="new">+ 新規企業を作成</option>');
-
-                if (companies) {
-                    companies.forEach(c => {
-                        select.append(`<option value="${c.id}">${c.name}</option>`);
-                    });
-                }
-
-                // Select2 を再初期化
-                select.select2({
-                    placeholder: "企業を検索または選択",
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#job-modal')
-                });
-
-                // イベントハンドラの設定
-                select.off('change').on('change', function () {
-                    handleCompanySelect($(this).val());
-                });
-
-            } catch (e) {
-                console.error('Failed to load companies for select:', e);
+            // Select2 を一度破棄
+            if (select.hasClass('select2-hidden-accessible')) {
+                select.select2('destroy');
             }
+            select.empty();
 
-            // 担当者リストのロード (管理者・コーチ・CA)
-            try {
-                const { data: picUsers } = await supabase
-                    .from('users')
-                    .select('id, name')
-                    .eq('organization_id', currentUser.organization_id)
-                    .in('role', ['admin', 'super_admin', 'coach', 'ca', 'org_admin'])
-                    .neq('management_status', 'inactive')
-                    .order('name');
-
-                const picSelect1 = $('#job-pic-user-1');
-                const picSelect2 = $('#job-pic-user-2');
-
-                const defaultOption = '<option value="">選択してください</option>';
-                picSelect1.empty().append(defaultOption);
-                picSelect2.empty().append(defaultOption);
-
-                if (picUsers) {
-                    picUsers.forEach(u => {
-                        const option = `<option value="${u.id}">${u.name}</option>`;
-                        picSelect1.append(option);
-                        picSelect2.append(option);
-                    });
-                }
-            } catch (e) {
-                console.error('Failed to load users for PIC select:', e);
-            }
-
-            // マスタデータのプルダウン初期化（値なし）
-            populateSelectOptions('job-employment-type', ['正社員', '契約社員', '派遣社員', '業務委託']);
-
-            populateSelectOptions('job-category', masterJobCategories);
-            populateSelectOptions('job-industry-category', masterIndustries);
-
+            // 編集モードで特定の企業が選択されている場合、その企業情報を取得して選択肢に追加
             if (jobId) {
-                $('#job-modal-title').text('求人編集')
-                $('#job-id').val(jobId)
-
-                // 編集時はデータを取得してセット
-                const { data: job } = await supabase
-                    .from('jobs')
-                    .select('*')
-                    .eq('id', jobId)
-                    .single()
-
-                if (job) {
-                    $('#job-title').val(job.title)
-                    $('#job-company-id').val(job.company_id)
-                    // Select2 の値をセット
-                    $('#job-company-select').val(job.company_id).trigger('change');
-
-                    $('#job-location').val(job.location)
-                    if (job.salary_min) $('#job-salary-min').val(job.salary_min / 10000)
-                    if (job.salary_max) $('#job-salary-max').val(job.salary_max / 10000)
-                    $('#job-description').val(job.description)
-                    $('#job-work-hours').val(job.work_hours)
-                    $('#job-holidays').val(job.holidays)
-                    $('#job-benefits').val(job.benefits)
-                    $('#job-interview-process').val(job.interview_process)
-                    // Requirements and Welcome Requirements
-                    $('#job-requirements').val(job.requirements || '')
-                    $('#job-welcome-requirements').val(job.welcome_requirements || '')
-
-                    // 追加項目
-                    $('#job-url').val(job.url || '');
-                    $('#job-pic-user-1').val(job.pic_user_id_1 || '');
-                    $('#job-pic-user-2').val(job.pic_user_id_2 || '');
-
-                    $('#job-employment-type').val(job.employment_type)
-                    $('#job-is-remote').prop('checked', job.is_remote)
-                    $('#job-experience-ok').prop('checked', job.job_experience_ok === '可')
-                    $('#job-industry-experience-ok').prop('checked', job.industry_experience_ok === '可')
-
-                    // マスタデータ選択肢の再設定 (selected valueを反映)
-                    // populateSelectOptions はマスタにない値も追加してくれる
-                    populateSelectOptions('job-category', masterJobCategories, job.job_category);
-                    populateSelectOptions('job-industry-category', masterIndustries, job.industry_category);
+                try {
+                    // 求人情報を取得して会社IDを確認
+                    const { data: jobInfo } = await supabase.from('jobs').select('company_id').eq('id', jobId).single();
+                    if (jobInfo && jobInfo.company_id) {
+                        const { data: comp } = await supabase.from('companies').select('id, name').eq('id', jobInfo.company_id).single();
+                        if (comp) {
+                            select.append(new Option(comp.name, comp.id, true, true));
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to pre-fetch company for job edit:', e);
                 }
-            } else {
-                $('#job-modal-title').text('求人作成')
-                // 新規作成時は Select2 をリセット
-                $('#job-company-select').val('').trigger('change');
             }
-            $('#job-modal').removeClass('hidden')
+
+            // Select2 を AJAX モードで初期化
+            select.select2({
+                placeholder: "企業を検索または選択",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#job-modal'),
+                language: {
+                    searching: function () { return "検索中..."; },
+                    noResults: function () { return "見つかりませんでした"; },
+                    inputTooShort: function () { return "1文字以上入力してください"; }
+                },
+                ajax: {
+                    delay: 250,
+                    transport: async function (params, success, failure) {
+                        try {
+                            const searchText = params.data.q;
+                            let query = supabase
+                                .from('companies')
+                                .select('id, name')
+                                .eq('organization_id', currentUser.organization_id)
+                                .is('deleted_at', null)
+                                .order('name');
+
+                            if (searchText) {
+                                query = query.ilike('name', `%${searchText}%`);
+                            }
+
+                            const { data, error } = await query.limit(20);
+                            if (error) throw error;
+
+                            let results = data.map(c => ({ id: c.id, text: c.name }));
+
+                            // 「新規企業を作成」オプションを検索結果の先頭に追加
+                            if (!searchText || "+ 新規企業を作成".includes(searchText)) {
+                                results.unshift({ id: 'new', text: '+ 新規企業を作成' });
+                            }
+
+                            success({ results });
+                        } catch (e) {
+                            console.error('Select2 Fetch Error:', e);
+                            failure(e);
+                        }
+                    }
+                }
+            });
+
+            // イベントハンドラの設定
+            select.off('change').on('change', function () {
+                handleCompanySelect($(this).val());
+            });
+
+        } catch (e) {
+            console.error('Failed to load companies for select:', e);
+        }
+
+        // 担当者リストのロード (管理者・コーチ・CA)
+        try {
+            const { data: picUsers } = await supabase
+                .from('users')
+                .select('id, name')
+                .eq('organization_id', currentUser.organization_id)
+                .in('role', ['admin', 'super_admin', 'coach', 'ca', 'org_admin'])
+                .neq('management_status', 'inactive')
+                .order('name');
+
+            const picSelect1 = $('#job-pic-user-1');
+            const picSelect2 = $('#job-pic-user-2');
+
+            const defaultOption = '<option value="">選択してください</option>';
+            picSelect1.empty().append(defaultOption);
+            picSelect2.empty().append(defaultOption);
+
+            if (picUsers) {
+                picUsers.forEach(u => {
+                    const option = `<option value="${u.id}">${u.name}</option>`;
+                    picSelect1.append(option);
+                    picSelect2.append(option);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to load users for PIC select:', e);
+        }
+
+        // マスタデータのプルダウン初期化（値なし）
+        populateSelectOptions('job-employment-type', ['正社員', '契約社員', '派遣社員', '業務委託']);
+
+        populateSelectOptions('job-category', masterJobCategories);
+        populateSelectOptions('job-industry-category', masterIndustries);
+
+        if (jobId) {
+            $('#job-modal-title').text('求人編集')
+            $('#job-id').val(jobId)
+
+            // 編集時はデータを取得してセット
+            const { data: job } = await supabase
+                .from('jobs')
+                .select('*')
+                .eq('id', jobId)
+                .single()
+
+            if (job) {
+                $('#job-title').val(job.title)
+                $('#job-company-id').val(job.company_id)
+                // Select2 の値をセット
+                $('#job-company-select').val(job.company_id).trigger('change');
+
+                $('#job-location').val(job.location)
+                if (job.salary_min) $('#job-salary-min').val(job.salary_min / 10000)
+                if (job.salary_max) $('#job-salary-max').val(job.salary_max / 10000)
+                $('#job-description').val(job.description)
+                $('#job-work-hours').val(job.work_hours)
+                $('#job-holidays').val(job.holidays)
+                $('#job-benefits').val(job.benefits)
+                $('#job-interview-process').val(job.interview_process)
+                // Requirements and Welcome Requirements
+                $('#job-requirements').val(job.requirements || '')
+                $('#job-welcome-requirements').val(job.welcome_requirements || '')
+
+                // 追加項目
+                $('#job-url').val(job.url || '');
+                $('#job-pic-user-1').val(job.pic_user_id_1 || '');
+                $('#job-pic-user-2').val(job.pic_user_id_2 || '');
+
+                $('#job-employment-type').val(job.employment_type)
+                $('#job-is-remote').prop('checked', job.is_remote)
+                $('#job-experience-ok').prop('checked', job.job_experience_ok === '可')
+                $('#job-industry-experience-ok').prop('checked', job.industry_experience_ok === '可')
+
+                // マスタデータ選択肢の再設定 (selected valueを反映)
+                // populateSelectOptions はマスタにない値も追加してくれる
+                populateSelectOptions('job-category', masterJobCategories, job.job_category);
+                populateSelectOptions('job-industry-category', masterIndustries, job.industry_category);
+            }
+        } else {
+            $('#job-modal-title').text('求人作成')
+            // 新規作成時は Select2 をリセット
+            $('#job-company-select').val('').trigger('change');
+        }
+        $('#job-modal').removeClass('hidden')
         }
 
         window.handleCompanySelect = function (value) {
