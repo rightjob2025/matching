@@ -17671,25 +17671,38 @@
         async function loadCompanies() {
             if (!currentUser) return
             showLoading()
+            console.log('--- loadCompanies START ---');
             try {
                 const targetOrgId = currentUser.organization_id;
-                console.log('Loading companies for organization:', targetOrgId);
+                console.log('Fetching companies for organization:', targetOrgId);
 
-                const { data: companies, error } = await supabase
+                // 基本クエリ
+                let query = supabase
                     .from('companies')
                     .select('*')
                     .eq('organization_id', targetOrgId)
-                    .is('deleted_at', null)
                     .order('name', { ascending: true });
 
-                if (error) throw error
+                // deleted_at カラムによるフィルタ（論理削除対応）
+                // カラムが存在しない場合のエラーを避けるため、一旦全取得してフロントでフィルタするか、
+                // SQLを確実に実行している前提で .is('deleted_at', null) を残す
+                query = query.or('deleted_at.is.null');
 
+                const { data: companies, error } = await query;
+
+                if (error) {
+                    console.error('Supabase query error in loadCompanies:', error);
+                    throw error;
+                }
+
+                console.log('Companies loaded successfully. Count:', companies ? companies.length : 0);
                 companiesCache = companies || [];
                 renderCompanies(companiesCache);
             } catch (error) {
-                console.error('Load companies error:', error)
-                alert('企業の読み込みに失敗しました')
+                console.error('Load companies error detail:', error)
+                alert('企業の読み込みに失敗しました:\n' + (error.message || JSON.stringify(error)))
             } finally {
+                console.log('--- loadCompanies END ---');
                 hideLoading()
             }
         }
