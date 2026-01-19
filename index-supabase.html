@@ -15478,6 +15478,7 @@
 
             // 企業リストのロード
             try {
+                // 原則、現在選択されている組織（currentUser.organization_id）のみを取得
                 const { data: companies } = await supabase
                     .from('companies')
                     .select('id, name')
@@ -17671,6 +17672,7 @@
             if (!currentUser) return
             showLoading()
             try {
+                // 原則、現在選択されている組織（currentUser.organization_id）のみを参照する
                 const { data: companies, error } = await supabase
                     .from('companies')
                     .select('*')
