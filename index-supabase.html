@@ -1699,6 +1699,11 @@
                         <span class="ml-3">操作ログ</span>
                     </a>
                     <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
+                        data-page="admin-data-management">
+                        <i class="fas fa-broom w-5"></i>
+                        <span class="ml-3">重複データ管理</span>
+                    </a>
+                    <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
                         data-page="kpi-dashboard">
                         <i class="fas fa-chart-line w-5"></i>
                         <span class="ml-3">KPI管理</span>
@@ -3558,6 +3563,96 @@
                 <div id="audit-logs-container"></div>
             </div>
 
+            <!-- Admin: Data Management Page -->
+            <div id="admin-data-management-content" class="app-content p-6 hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-xl font-bold mb-4">重複データ管理</h2>
+                    <p class="text-gray-600 mb-6">
+                        重複している可能性のある企業や求人を検出し、情報を統合（マージ）します。
+                    </p>
+
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex space-x-8">
+                            <button onclick="switchDataManagementTab('companies')" id="data-mgmt-tab-companies"
+                                class="data-mgmt-tab border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <i class="fas fa-building mr-2"></i>企業の重複チェック
+                            </button>
+                            <button onclick="switchDataManagementTab('jobs')" id="data-mgmt-tab-jobs"
+                                class="data-mgmt-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                <i class="fas fa-briefcase mr-2"></i>求人の重複チェック
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Settings Section -->
+                    <div id="data-mgmt-settings-container" class="bg-gray-50 p-6 rounded-lg mb-8">
+                        <h3 class="font-bold text-gray-800 mb-4 flex justify-between items-center">
+                            <span>チェック項目の設定</span>
+                            <button onclick="saveDataCleanupSettings()"
+                                class="bg-white border border-indigo-600 text-indigo-600 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-50 transition">
+                                <i class="fas fa-save mr-2"></i>設定を保存
+                            </button>
+                        </h3>
+
+                        <div id="data-mgmt-criteria-companies" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-company-name" checked>
+                                <span class="text-sm">会社名の一致</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-company-phone">
+                                <span class="text-sm">電話番号の一致</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-company-domain">
+                                <span class="text-sm">ドメイン/URLの一致</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-company-address">
+                                <span class="text-sm">住所（市区町村まで）の一致</span>
+                            </label>
+                        </div>
+
+                        <div id="data-mgmt-criteria-jobs" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-job-title" checked>
+                                <span class="text-sm">求人タイトルの一致</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-job-company" checked>
+                                <span class="text-sm">同一企業の求人</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-job-location">
+                                <span class="text-sm">勤務地の一致</span>
+                            </label>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-200 text-right">
+                            <button onclick="detectDuplicates()"
+                                class="bg-indigo-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition shadow-md">
+                                <i class="fas fa-search mr-2"></i>重複チェックを開始
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="data-mgmt-results">
+                        <div class="text-center py-12 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                            <i class="fas fa-broom text-4xl mb-4"></i>
+                            <p>設定を確認して、「重複チェックを開始」をクリックしてください</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- KPI Dashboard Content -->
             <div id="kpi-dashboard-content" class="app-content p-6 hidden">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
@@ -4203,6 +4298,70 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Admin: Data Merge Modal -->
+                <div id="data-merge-modal"
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                    style="z-index: 40000;">
+                    <div class="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col">
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900">データの統合 (マージ)</h3>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    統合すると、選択されなかった方のレコードは削除されます。関連するデータ（求人、応募など）は統合先に引き継がれます。</p>
+                            </div>
+                            <button onclick="closeDataMergeModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto px-1">
+                            <table class="min-w-full border-collapse">
+                                <thead class="sticky top-0 bg-gray-50 z-10">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b">
+                                            項目</th>
+                                        <th
+                                            class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b w-[40%]">
+                                            <div class="flex items-center justify-between">
+                                                <span>レコード A (統合先)</span>
+                                                <button onclick="selectAllMerge('A')"
+                                                    class="text-[10px] text-indigo-600 hover:underline">全選択</button>
+                                            </div>
+                                        </th>
+                                        <th
+                                            class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b w-[40%]">
+                                            <div class="flex items-center justify-between">
+                                                <span>レコード B (統合元: 削除対象)</span>
+                                                <button onclick="selectAllMerge('B')"
+                                                    class="text-[10px] text-indigo-600 hover:underline">全選択</button>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="merge-fields-container" class="divide-y divide-gray-100">
+                                    <!-- Fields injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                            <div class="text-sm text-amber-700">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                統合実行後、Bのレコードは<strong>完全に削除</strong>されます。
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="closeDataMergeModal()"
+                                    class="px-4 py-2 border rounded-lg hover:bg-white transition">キャンセル</button>
+                                <button onclick="executeMerge()"
+                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-lg">
+                                    <i class="fas fa-compress-alt mr-2"></i>統合を実行する
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -6433,6 +6592,8 @@
                     'admin-log-content',
                     'admin-master-content',
                     'admin-settings-content',
+                    'admin-data-management-content',
+                    'kpi-dashboard-content',
                     'admin-templates-content',
                     'super-admin-organizations-content',
                     'coach-students-content'
@@ -6466,10 +6627,9 @@
                     }
                 }
 
-                // テンプレート管理ページが表示された場合
-                if (contentId === 'admin-templates-content') {
-                    if (typeof loadEmailTemplates === 'function') {
-                        loadEmailTemplates();
+                if (contentId === 'admin-data-management-content') {
+                    if (typeof loadDataCleanupSettings === 'function') {
+                        loadDataCleanupSettings();
                     }
                 }
 
@@ -23917,6 +24077,380 @@
                 }, 800);
             }
         }
+
+        // ========================
+        // Admin: Data Management (Duplicate Detection & Merge)
+        // ========================
+        let duplicateResultsCache = [];
+        let currentMergeData = { type: '', recordA: null, recordB: null };
+
+        window.loadDataCleanupSettings = async function () {
+            if (!currentUser) return;
+            try {
+                // Get fresh organization settings
+                const { data: org, error } = await supabase
+                    .from('organizations')
+                    .select('settings')
+                    .eq('id', currentUser.organization_id)
+                    .single();
+
+                if (error) throw error;
+
+                const settings = org.settings?.data_cleanup;
+                if (!settings) return;
+
+                // Restore company criteria
+                if (settings.company) {
+                    $('#criteria-company-name').prop('checked', settings.company.name);
+                    $('#criteria-company-phone').prop('checked', settings.company.phone);
+                    $('#criteria-company-domain').prop('checked', settings.company.domain);
+                    $('#criteria-company-address').prop('checked', settings.company.address);
+                }
+
+                // Restore job criteria
+                if (settings.job) {
+                    $('#criteria-job-title').prop('checked', settings.job.title);
+                    $('#criteria-job-company').prop('checked', settings.job.same_company);
+                    $('#criteria-job-location').prop('checked', settings.job.location);
+                }
+            } catch (err) {
+                console.error('Load settings error:', err);
+            }
+        };
+
+        window.saveDataCleanupSettings = async function () {
+            if (!currentUser) return;
+            showLoading();
+            try {
+                const settings = {
+                    company: {
+                        name: $('#criteria-company-name').is(':checked'),
+                        phone: $('#criteria-company-phone').is(':checked'),
+                        domain: $('#criteria-company-domain').is(':checked'),
+                        address: $('#criteria-company-address').is(':checked')
+                    },
+                    job: {
+                        title: $('#criteria-job-title').is(':checked'),
+                        same_company: $('#criteria-job-company').is(':checked'),
+                        location: $('#criteria-job-location').is(':checked')
+                    },
+                    updated_at: new Date().toISOString()
+                };
+
+                const { error } = await supabase
+                    .from('organizations')
+                    .update({ settings: { ...currentUser.org_settings, data_cleanup: settings } })
+                    .eq('id', currentUser.organization_id);
+
+                if (error) throw error;
+                alert('設定を保存しました');
+            } catch (err) {
+                console.error('Save settings error:', err);
+                alert('設定の保存に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        window.detectDuplicates = async function () {
+            const activeTab = $('.data-mgmt-tab.border-indigo-500').data('type');
+            showLoading(activeTab === 'company' ? '重複企業を検索中...' : '重複求人を検索中...');
+
+            try {
+                const resultsContainer = $('#data-mgmt-results');
+                resultsContainer.html('<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-indigo-600"></i></div>');
+
+                if (activeTab === 'company') {
+                    await runCompanyDuplicateCheck();
+                } else {
+                    await runJobDuplicateCheck();
+                }
+            } catch (err) {
+                console.error('Detection error:', err);
+                alert('検索中にエラーが発生しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        async function runCompanyDuplicateCheck() {
+            const checkName = $('#criteria-company-name').is(':checked');
+            const checkPhone = $('#criteria-company-phone').is(':checked');
+            const checkDomain = $('#criteria-company-domain').is(':checked');
+            const checkAddress = $('#criteria-company-address').is(':checked');
+
+            const { data: companies, error } = await supabase
+                .from('companies')
+                .select('*')
+                .eq('organization_id', currentUser.organization_id)
+                .order('name');
+
+            if (error) throw error;
+
+            const duplicates = [];
+            const seen = new Map();
+
+            companies.forEach(co => {
+                let key = '';
+                if (checkName) key += co.name.replace(/\s+/g, '').toLowerCase();
+                if (checkPhone && co.phone) key += '|' + co.phone.replace(/[-\s]/g, '');
+                if (checkDomain && co.website) {
+                    try {
+                        const url = new URL(co.website.startsWith('http') ? co.website : 'http://' + co.website);
+                        key += '|' + url.hostname.replace('www.', '');
+                    } catch (e) { }
+                }
+
+                if (key && seen.has(key)) {
+                    duplicates.push({ original: seen.get(key), duplicate: co });
+                } else if (key) {
+                    seen.set(key, co);
+                }
+            });
+
+            renderDuplicateResults('company', duplicates);
+        }
+
+        async function runJobDuplicateCheck() {
+            const checkTitle = $('#criteria-job-title').is(':checked');
+            const checkCo = $('#criteria-job-company').is(':checked');
+            const checkLoc = $('#criteria-job-location').is(':checked');
+
+            const { data: jobs, error } = await supabase
+                .from('jobs')
+                .select('*, companies(name)')
+                .eq('organization_id', currentUser.organization_id)
+                .is('deleted_at', null)
+                .order('title');
+
+            if (error) throw error;
+
+            const duplicates = [];
+            const seen = new Map();
+
+            jobs.forEach(job => {
+                let key = '';
+                if (checkTitle) key += job.title.replace(/\s+/g, '').toLowerCase();
+                if (checkCo) key += '|' + (job.company_id || job.company);
+                if (checkLoc && job.location) key += '|' + job.location.split(/[、\s]/)[0];
+
+                if (key && seen.has(key)) {
+                    duplicates.push({ original: seen.get(key), duplicate: job });
+                } else if (key) {
+                    seen.set(key, job);
+                }
+            });
+
+            renderDuplicateResults('job', duplicates);
+        }
+
+        function renderDuplicateResults(type, duplicates) {
+            const container = $('#data-mgmt-results');
+            duplicateResultsCache = duplicates;
+
+            if (duplicates.length === 0) {
+                container.html(`
+                    <div class="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                        <i class="fas fa-check-circle text-5xl text-green-400 mb-4"></i>
+                        <p class="text-gray-600 font-medium">重複は見つかりませんでした</p>
+                    </div>
+                `);
+                return;
+            }
+
+            let html = `
+                <div class="mb-4 flex justify-between items-center">
+                    <span class="text-sm font-bold text-gray-700">${duplicates.length} 組の重複候補が見つかりました</span>
+                </div>
+                <div class="space-y-4">
+            `;
+
+            duplicates.forEach((pair, idx) => {
+                const itemA = pair.original;
+                const itemB = pair.duplicate;
+
+                html += `
+                    <div class="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center p-4">
+                            <div class="flex-1 grid grid-cols-2 gap-8">
+                                <div class="p-3 bg-blue-50 rounded-lg">
+                                    <div class="text-[10px] font-bold text-blue-600 uppercase mb-1">レコード A</div>
+                                    <div class="font-bold text-gray-900">${type === 'company' ? itemA.name : itemA.title}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${type === 'company' ? (itemA.industry || '業種不明') : (itemA.companies?.name || itemA.company)}</div>
+                                </div>
+                                <div class="p-3 bg-amber-50 rounded-lg">
+                                    <div class="text-[10px] font-bold text-amber-600 uppercase mb-1">レコード B</div>
+                                    <div class="font-bold text-gray-900">${type === 'company' ? itemB.name : itemB.title}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${type === 'company' ? (itemB.industry || '業種不明') : (itemB.companies?.name || itemB.company)}</div>
+                                </div>
+                            </div>
+                            <div class="ml-6 flex flex-col gap-2">
+                                <button onclick="openMergeModal('${type}', ${idx})" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 whitespace-nowrap">
+                                    <i class="fas fa-compress-alt mr-1"></i> 統合
+                                </button>
+                                <button onclick="$(this).closest('.rounded-xl').fadeOut()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm transition">
+                                    無視
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.html(html);
+        }
+
+        window.openMergeModal = function (type, index) {
+            const pair = duplicateResultsCache[index];
+            currentMergeData = { type, recordA: pair.original, recordB: pair.duplicate };
+
+            const container = $('#merge-fields-container');
+            container.empty();
+
+            let fields = [];
+            if (type === 'company') {
+                fields = [
+                    { key: 'name', label: '企業名' },
+                    { key: 'industry', label: '業種' },
+                    { key: 'location', label: '所在地' },
+                    { key: 'website', label: 'ウェブサイト' },
+                    { key: 'phone', label: '電話番号' },
+                    { key: 'description', label: '企業説明' }
+                ];
+            } else {
+                fields = [
+                    { key: 'title', label: '求人タイトル' },
+                    { key: 'company', label: '企業名(Snap)' },
+                    { key: 'location', label: '勤務地' },
+                    { key: 'employment_type', label: '雇用形態' },
+                    { key: 'salary_min', label: '最低年収', format: v => v ? (v / 10000) + '万' : '-' },
+                    { key: 'salary_max', label: '最高年収', format: v => v ? (v / 10000) + '万' : '-' }
+                ];
+            }
+
+            fields.forEach(f => {
+                const valA = currentMergeData.recordA[f.key];
+                const valB = currentMergeData.recordB[f.key];
+                const displayA = f.format ? f.format(valA) : (valA || '-');
+                const displayB = f.format ? f.format(valB) : (valB || '-');
+
+                const row = `
+                    <tr>
+                        <td class="px-4 py-3 text-sm font-medium text-gray-500 bg-gray-50/50">${f.label}</td>
+                        <td class="px-4 py-3">
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="radio" name="merge_${f.key}" value="A" checked class="mt-1">
+                                <span class="text-sm text-gray-800 group-hover:text-indigo-600 transition">${displayA}</span>
+                            </label>
+                        </td>
+                        <td class="px-4 py-3">
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="radio" name="merge_${f.key}" value="B" class="mt-1">
+                                <span class="text-sm text-gray-800 group-hover:text-indigo-600 transition">${displayB}</span>
+                            </label>
+                        </td>
+                    </tr>
+                `;
+                container.append(row);
+            });
+
+            $('#data-merge-modal').removeClass('hidden');
+        };
+
+        window.selectAllMerge = function (side) {
+            $(`#merge-fields-container input[value="${side}"]`).prop('checked', true);
+        };
+
+        window.closeDataMergeModal = function () {
+            $('#data-merge-modal').addClass('hidden');
+        };
+
+        window.executeMerge = async function () {
+            if (!confirm('統合を実行しますか？この操作は取り消せません。')) return;
+
+            showLoading('統合処理を実行中...');
+            try {
+                const { type, recordA, recordB } = currentMergeData;
+                const updates = {};
+
+                // 選択された値の収集
+                $(`#merge-fields-container tr`).each(function () {
+                    const row = $(this);
+                    const radio = row.find('input[type="radio"]:checked');
+                    if (radio.length) {
+                        const fieldName = radio.attr('name').replace('merge_', '');
+                        const side = radio.val();
+                        updates[fieldName] = side === 'A' ? recordA[fieldName] : recordB[fieldName];
+                    }
+                });
+
+                const targetTable = type === 'company' ? 'companies' : 'jobs';
+
+                // 1. レコードAを更新
+                const { error: updateError } = await supabase
+                    .from(targetTable)
+                    .update(updates)
+                    .eq('id', recordA.id);
+
+                if (updateError) throw updateError;
+
+                // 2. 関連データの紐づけ替え
+                if (type === 'company') {
+                    // 求人の紐づけ替え
+                    await supabase.from('jobs').update({ company_id: recordA.id }).eq('company_id', recordB.id);
+                } else {
+                    // 応募、推薦、お気に入りの紐づけ替え
+                    await supabase.from('applications').update({ job_id: recordA.id }).eq('job_id', recordB.id);
+                    await supabase.from('recommendations').update({ job_id: recordA.id }).eq('job_id', recordB.id);
+                    await supabase.from('favorites').update({ job_id: recordA.id }).eq('job_id', recordB.id);
+                }
+
+                // 3. レコードBを削除 (論理削除可能な場合は論理削除)
+                if (type === 'job') {
+                    await supabase.from('jobs').update({ deleted_at: new Date().toISOString() }).eq('id', recordB.id);
+                } else {
+                    await supabase.from('companies').delete().eq('id', recordB.id);
+                }
+
+                alert('統合が完了しました');
+                closeDataMergeModal();
+                detectDuplicates(); // 再検索して更新
+
+            } catch (err) {
+                console.error('Merge execution error:', err);
+                alert('統合処理に失敗しました: ' + err.message);
+            } finally {
+                hideLoading();
+            }
+        };
+        window.switchDataManagementTab = function (type) {
+            $('.data-mgmt-tab').removeClass('border-indigo-500 text-indigo-600').addClass('border-transparent text-gray-500');
+            $(`#data-mgmt-tab-${type}`).addClass('border-indigo-500 text-indigo-600').removeClass('border-transparent text-gray-500');
+
+            if (type === 'companies') {
+                $('#data-mgmt-criteria-companies').removeClass('hidden');
+                $('#data-mgmt-criteria-jobs').addClass('hidden');
+                $('#data-mgmt-tab-companies').attr('data-type', 'company'); // Used by detectDuplicates
+            } else {
+                $('#data-mgmt-criteria-companies').addClass('hidden');
+                $('#data-mgmt-criteria-jobs').removeClass('hidden');
+                $('#data-mgmt-tab-jobs').attr('data-type', 'job'); // Used by detectDuplicates
+            }
+            // Clear results when switching
+            $('#data-mgmt-results').html(`
+                <div class="text-center py-12 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                    <i class="fas fa-broom text-4xl mb-4"></i>
+                    <p>設定を確認して、「重複チェックを開始」をクリックしてください</p>
+                </div>
+            `);
+        };
+
+        // Initialize default tab metadata
+        $(document).ready(() => {
+            $('#data-mgmt-tab-companies').attr('data-type', 'company');
+            $('#data-mgmt-tab-jobs').attr('data-type', 'job');
+        });
     </script>
     <!-- Job Detail Modal -->
     <div id="job-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
