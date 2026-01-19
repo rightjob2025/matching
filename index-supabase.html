@@ -4758,15 +4758,16 @@
                     class="w-full px-4 py-2 border rounded-lg" onkeyup="filterCompanies()">
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-white rounded-lg shadow overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200" id="companies-table">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left">
+                        <th class="px-6 py-3 text-left w-10">
                             <input type="checkbox" id="select-all-companies" onchange="toggleAllCompanies(this)"
                                 class="rounded text-indigo-600 focus:ring-indigo-500">
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
                             企業名</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             業界</th>
@@ -17733,14 +17734,14 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <input type="checkbox" class="company-checkbox rounded text-indigo-600 focus:ring-indigo-500" value="${c.id}" onchange="updateBulkDeleteButton()">
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${c.name}</div>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900 break-words">${c.name}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-600">${c.industry || '-'}</div>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-600 break-words">${c.industry || '-'}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-600">${c.location || '-'}</div>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-600 break-words">${c.location || '-'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         ${c.website ? `<a href="${c.website}" target="_blank" class="text-indigo-600 hover:underline text-sm"><i class="fas fa-external-link-alt mr-1"></i>リンク</a>` : '<span class="text-sm text-gray-400">-</span>'}
