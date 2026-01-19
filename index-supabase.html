@@ -4739,6 +4739,10 @@
                     <p class="text-gray-600 text-sm mt-1">登録されている企業の一覧と管理</p>
                 </div>
                 <div class="flex gap-2">
+                    <button id="bulk-delete-companies" onclick="bulkDeleteCompanies()"
+                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hidden">
+                        <i class="fas fa-trash-alt mr-2"></i>一括削除 (<span id="selected-companies-count">0</span>)
+                    </button>
                     <button onclick="showCompanyCsvImportModal()"
                         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                         <i class="fas fa-file-csv mr-2"></i>CSVインポート
@@ -4758,6 +4762,10 @@
             <table class="min-w-full divide-y divide-gray-200" id="companies-table">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-6 py-3 text-left">
+                            <input type="checkbox" id="select-all-companies" onchange="toggleAllCompanies(this)"
+                                class="rounded text-indigo-600 focus:ring-indigo-500">
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             企業名</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -17711,13 +17719,20 @@
             const container = $('#companies-container')
             container.empty()
 
+            // 全選択チェックボックスをリセット
+            $('#select-all-companies').prop('checked', false);
+            updateBulkDeleteButton();
+
             if (companies.length === 0) {
-                container.html('<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">登録されている企業はありません</td></tr>')
+                container.html('<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">登録されている企業はありません</td></tr>')
                 return
             }
 
             const html = companies.map(c => `
                 <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="company-checkbox rounded text-indigo-600 focus:ring-indigo-500" value="${c.id}" onchange="updateBulkDeleteButton()">
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${c.name}</div>
                     </td>
@@ -17731,7 +17746,7 @@
                         ${c.website ? `<a href="${c.website}" target="_blank" class="text-indigo-600 hover:underline text-sm"><i class="fas fa-external-link-alt mr-1"></i>リンク</a>` : '<span class="text-sm text-gray-400">-</span>'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick='editCompany(${JSON.stringify(c)})' class="text-indigo-600 hover:text-indigo-900 mr-3">
+                        <button onclick='editCompany(${JSON.stringify(c).replace(/'/g, "&#39;")})' class="text-indigo-600 hover:text-indigo-900 mr-3">
                             <i class="fas fa-edit"></i> 編集
                         </button>
                         <button onclick="deleteCompany('${c.id}')" class="text-red-600 hover:text-red-900">
@@ -17742,6 +17757,52 @@
             `).join('')
 
             container.html(html)
+        }
+
+        window.toggleAllCompanies = function (source) {
+            $('.company-checkbox').prop('checked', source.checked);
+            updateBulkDeleteButton();
+        }
+
+        window.updateBulkDeleteButton = function () {
+            const selectedCount = $('.company-checkbox:checked').length;
+            $('#selected-companies-count').text(selectedCount);
+            if (selectedCount > 0) {
+                $('#bulk-delete-companies').removeClass('hidden');
+            } else {
+                $('#bulk-delete-companies').addClass('hidden');
+            }
+        }
+
+        window.bulkDeleteCompanies = async function () {
+            const selectedIds = $('.company-checkbox:checked').map(function () {
+                return $(this).val();
+            }).get();
+
+            if (selectedIds.length === 0) return;
+
+            if (!confirm(`${selectedIds.length}件の企業を一括削除しますか？\nこの操作は取り消せません。`)) {
+                return;
+            }
+
+            showLoading('一括削除中...');
+            try {
+                // 論理削除 (deleted_at を更新)
+                const { error } = await supabase
+                    .from('companies')
+                    .update({ deleted_at: new Date().toISOString() })
+                    .in('id', selectedIds);
+
+                if (error) throw error;
+
+                alert(`${selectedIds.length}件の企業を削除しました。`);
+                loadCompanies();
+            } catch (error) {
+                console.error('Bulk delete error:', error);
+                alert('一括削除に失敗しました: ' + error.message);
+            } finally {
+                hideLoading();
+            }
         }
 
         window.filterCompanies = function () {
