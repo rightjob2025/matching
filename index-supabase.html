@@ -11165,6 +11165,8 @@
 
                 // AI Ranking if prompt exists and not initial load and box is active
                 const isAiBoxDisabled = $('#candidate-ai-search-box').hasClass('disabled');
+                console.log('AI Prompt Trigger Check (Candidates):', { isInitialLoad, isAiBoxDisabled, prompt: aiPrompt, resultCount: totalCount });
+
                 if (!isInitialLoad && !isAiBoxDisabled && aiPrompt && aiPrompt.trim().length > 0 && results.length > 0) {
                     showLoading('AIが指示内容に基づき精査中...');
                     try {
@@ -11178,6 +11180,7 @@
                         });
 
                         if (!aiError && aiRanked) {
+                            console.log('AI Match Results (Candidates):', aiRanked);
                             // スコアをマッピング
                             results.forEach(u => {
                                 const rank = aiRanked.find(r => r.id === u.id || r.user_id === u.id);
@@ -11186,11 +11189,15 @@
                                     u.ai_reason = rank.reason;
                                 }
                             });
-                            // スコア順に並び替え
+                            // スコア順にソート（上位50件のみプロンプト順、残りは元の順序）
                             results.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
+                        } else if (aiError) {
+                            console.error('AI Ranking Edge Function error (Candidates):', aiError);
+                            alert('AIによる精査に失敗しました。');
                         }
                     } catch (err) {
-                        console.error('AI Ranking error:', err);
+                        console.error('AI Ranking error (Candidates):', err);
+                        alert('AIへのリクエスト中にエラーが発生しました。');
                     }
                     hideLoading();
                 }
@@ -11764,6 +11771,8 @@
 
                 // --- AI Ranking Logic (Jobs) ---
                 const isAiBoxDisabled = $('#job-ai-search-box').hasClass('disabled');
+                console.log('AI Prompt Trigger Check (Jobs):', { isInitialLoad, isAiBoxDisabled, prompt: filters.aiPrompt, resultCount: count });
+
                 if (!isInitialLoad && !isAiBoxDisabled && filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
                     showLoading('AIが指示内容に基づき求人を精査中...');
                     try {
@@ -11776,6 +11785,7 @@
                                 }
                             });
 
+                            console.log('AI Ranking Results (Jobs):', aiRanked);
                             if (!aiError && aiRanked) {
                                 // AIのスコアを jobs にマッピング
                                 jobs.forEach(job => {
@@ -11787,10 +11797,14 @@
                                 });
                                 // AIスコア順にソート
                                 jobs.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
+                            } else if (aiError) {
+                                console.error('AI Ranking Edge Function error (Jobs):', aiError);
+                                alert('AIによる精査に失敗しました。');
                             }
                         }
                     } catch (err) {
                         console.error('AI Ranking error (Jobs):', err);
+                        alert('AIへのリクエスト中にエラーが発生しました。');
                     }
                     hideLoading();
                 }
@@ -21386,7 +21400,7 @@
                                 loadNotifications()
                                 initMasterDataDropdowns(); // マスタデータ読み込み
                                 showPage('app-page')
-                                // $('#ai-search-agent-trigger').attr('style', 'display: flex !important'); // Temporarily OFF
+                                isInitialLoad = false;
                             }
                         })
                 }
