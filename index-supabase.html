@@ -17672,13 +17672,15 @@
             if (!currentUser) return
             showLoading()
             try {
-                // 原則、現在選択されている組織（currentUser.organization_id）のみを参照する
+                const targetOrgId = currentUser.organization_id;
+                console.log('Loading companies for organization:', targetOrgId);
+
                 const { data: companies, error } = await supabase
                     .from('companies')
                     .select('*')
-                    .eq('organization_id', currentUser.organization_id)
+                    .eq('organization_id', targetOrgId)
                     .is('deleted_at', null)
-                    .order('name', { ascending: true })
+                    .order('name', { ascending: true });
 
                 if (error) throw error
 
