@@ -5179,6 +5179,73 @@
         </div>
     </div>
 
+    <!-- Suspected Duplicates Modal -->
+    <div id="suspected-duplicates-modal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-[60]">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-5xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">重複疑いのある求人の確認</h3>
+                <button onclick="closeSuspectedDuplicatesModal()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-amber-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-amber-700">
+                                以下の求人は、既に登録されている求人と重複している可能性があります（企業名・求人タイトル・勤務地が一致）。
+                                <br>
+                                インポート対象とする求人にチェックを入れてください。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto mb-6 border rounded-lg max-h-96 overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                                <input type="checkbox" id="duplicate-check-all" onchange="toggleDuplicateCheckAll(this)"
+                                    class="rounded text-indigo-600">
+                            </th>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                                CSV行</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                個別の理由/ステータス</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                企業名</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                求人タイトル</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                勤務地</th>
+                        </tr>
+                    </thead>
+                    <tbody id="suspected-duplicates-tbody" class="bg-white divide-y divide-gray-200 text-sm">
+                        <!-- JSで動的に追加 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeSuspectedDuplicatesModal()"
+                    class="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+                    取り込みをキャンセル
+                </button>
+                <button onclick="importSelectedDuplicates()"
+                    class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-sm">
+                    選択した求人をインポート実行
+                </button>
+            </div>
+        </div>
+    </div>
+
+
 
     <!-- Job Smart Import Modal (Text/Image) -->
 
@@ -15085,16 +15152,8 @@
             }
         }
 
-        window.executeCSVImport = async function () {
-            if (!currentCSVData || currentCSVData.length === 0) {
-                alert('インポートするデータがありません');
-                return;
-            }
+        // window.executeCSVImport is defined below in the main CSV processing section
 
-            if (!confirm(`${currentCSVData.length}件のデータをインポートしますか？`)) return;
-
-            showLoading('CSVデータをインポート中...');
-        }
 
         window.exportJobsCsv = function () {
             if (!adminJobsCache || adminJobsCache.length === 0) {
@@ -18322,8 +18381,61 @@
             }
         }
 
+        let suspectedDuplicates = [];
+        window.closeSuspectedDuplicatesModal = function () {
+            $('#suspected-duplicates-modal').addClass('hidden');
+            suspectedDuplicates = [];
+        };
+
+        window.toggleDuplicateCheckAll = function (el) {
+            $('.duplicate-row-check').prop('checked', $(el).is(':checked'));
+        };
+
+        window.importSelectedDuplicates = async function () {
+            const selectedIndices = [];
+            $('.duplicate-row-check:checked').each(function () {
+                selectedIndices.push(parseInt($(this).val()));
+            });
+
+            if (selectedIndices.length === 0) {
+                alert('インポートする求人を選択してください。');
+                return;
+            }
+
+            if (!confirm(`${selectedIndices.length}件の求人をインポートしますか？`)) return;
+
+            showLoading('選択した重複疑い求人をインポート中...');
+            let successCount = 0;
+            let failedCount = 0;
+            const errors = [];
+
+            try {
+                for (const index of selectedIndices) {
+                    const item = suspectedDuplicates[index];
+                    try {
+                        const { error } = await supabase.from('jobs').insert(item.data);
+                        if (error) throw error;
+                        successCount++;
+                    } catch (err) {
+                        console.error('Manual import error:', err);
+                        failedCount++;
+                        errors.push({ row: item.row, error: err.message });
+                    }
+                }
+
+                alert(`インポート完了\n成功: ${successCount}件\n失敗: ${failedCount}件${failedCount > 0 ? '\n\nエラー内容:\n' + errors.map(e => `${e.row}行目: ${e.error}`).join('\n') : ''}`);
+                closeSuspectedDuplicatesModal();
+                if (typeof loadAdminJobs === 'function') loadAdminJobs();
+            } catch (err) {
+                alert('処理中にエラーが発生しました: ' + err.message);
+            } finally {
+                hideLoading();
+            }
+        };
+
         window.executeCSVImport = async function () {
             showLoading();
+            suspectedDuplicates = [];
             try {
                 const mapping = {};
                 let missingRequired = [];
@@ -18367,12 +18479,19 @@
 
                 let successCount = 0;
                 let failedCount = 0;
+                let skipCount = 0;
                 const errors = [];
+                const skips = [];
 
                 const salaryUnit = $('input[name="csv-salary-unit"]:checked').val() || 'auto';
 
                 for (let i = 0; i < currentCSVData.length; i++) {
                     const row = currentCSVData[i];
+                    // データ行数（1始まり）
+                    const csvRowNumber = i + 1;
+                    // 表示用行数（ヘッダーがあるため +1）
+                    const displayRowNumber = i + 2;
+
                     try {
                         const importData = {};
                         // マッピングに基づいてデータ変換
@@ -18438,10 +18557,7 @@
                                         }
                                         if (!importData.industry) importData.industry = aiResult.industry || aiResult.industry_category;
 
-                                        // 必須要件と歓迎要件の精緻化
-                                        // CSV側にデータがあっても、AIが綺麗に分割してくれた内容で補完・上書きを試みる
                                         if (aiResult.requirements) {
-                                            // 10文字以下の短いデータ、またはAIがより詳細な場合はAIを優先
                                             if (!importData.requirements || importData.requirements.length < 10 || aiResult.requirements.length > importData.requirements.length) {
                                                 importData.requirements = aiResult.requirements;
                                             }
@@ -18452,7 +18568,6 @@
                                             }
                                         }
 
-                                        // その他情報の補完
                                         if (!importData.description && aiResult.description) importData.description = aiResult.description;
                                         if (!importData.work_hours && aiResult.work_hours) importData.work_hours = aiResult.work_hours;
                                         if (!importData.holidays && aiResult.holidays) importData.holidays = aiResult.holidays;
@@ -18473,7 +18588,7 @@
                                 .select('id')
                                 .eq('organization_id', currentUser.organization_id)
                                 .eq('name', importData.company)
-                                .single();
+                                .maybeSingle();
 
                             if (existingCompany) {
                                 companyId = existingCompany.id;
@@ -18510,6 +18625,32 @@
                                     if (match) val = match.value;
                                 }
                                 importData.job_category = val;
+                            }
+
+                            // 重複疑いのチェック (title, company_id, location が一致する場合)
+                            if (!isUpsert) {
+                                const { data: suspect, error: suspectError } = await supabase
+                                    .from('jobs')
+                                    .select('id')
+                                    .eq('organization_id', currentUser.organization_id)
+                                    .eq('company_id', companyId)
+                                    .eq('title', importData.title)
+                                    .eq('location', importData.location || '')
+                                    .is('deleted_at', null)
+                                    .maybeSingle();
+
+                                if (suspect) {
+                                    suspectedDuplicates.push({
+                                        row: displayRowNumber,
+                                        data: importData,
+                                        company: importData.company,
+                                        title: importData.title,
+                                        location: importData.location
+                                    });
+                                    skipCount++;
+                                    skips.push(displayRowNumber);
+                                    continue;
+                                }
                             }
 
                             // アップサート処理
@@ -18586,7 +18727,6 @@
                                     if (error) throw error;
                                 }
                             } else {
-                                // 重複チェック（emailのみデフォルトで）
                                 const { data: existingUser } = await supabase.from('users').select('id').eq('email', importData.email).maybeSingle();
                                 if (existingUser) throw new Error(`既に存在するメールアドレスです: ${importData.email}`);
 
@@ -18595,10 +18735,8 @@
                             }
 
                         } else if (currentImportType === 'candidates') {
-                            // 求職者(Edge Function)
                             importData.role = 'candidate';
 
-                            // 最新の組織設定を同期（ステール状態を防ぐ）
                             if (!currentUser.organizations || !currentUser.organizations.settings || currentUser.role === 'super_admin') {
                                 try {
                                     const { data: freshOrg } = await supabase.from('organizations').select('settings').eq('id', currentUser.organization_id).single();
@@ -18623,7 +18761,6 @@
                             }
                             if (!importData.name || importData.name.trim() === '') throw new Error('氏名は必須です');
 
-                            // Edge Function呼び出し
                             const { data, error } = await supabase.functions.invoke('create-user', {
                                 body: {
                                     email: importData.email,
@@ -18631,7 +18768,7 @@
                                     name: importData.name,
                                     role: 'candidate',
                                     organizationId: currentUser.organization_id,
-                                    upsert: isUpsert, // アップサートフラグを渡す
+                                    upsert: isUpsert,
                                     profileData: {
                                         age: importData.age || null,
                                         desired_job_type: importData.desired_job_type ?
@@ -18656,9 +18793,9 @@
 
                         successCount++;
                     } catch (err) {
-                        console.error(`Row ${i + 1} error:`, err);
+                        console.error(`Row ${displayRowNumber} error:`, err);
                         failedCount++;
-                        errors.push({ row: i + 1, data: row, error: err.message || JSON.stringify(err) });
+                        errors.push({ row: displayRowNumber, data: row, error: err.message || JSON.stringify(err) });
                     }
                 }
 
@@ -18674,13 +18811,44 @@
                 });
 
                 closeCSVMappingModal();
-                let message = `インポート完了\n成功: ${successCount}件\n失敗: ${failedCount}件`;
+                let message = `インポート完了\n成功: ${successCount}件\n失敗: ${failedCount}件\nスキップ: ${skipCount}件`;
+
                 if (failedCount > 0) {
-                    message += `\n\nエラー内容（最初の5件）:\n` + errors.slice(0, 5).map(e => `${e.row}行目: ${e.error}`).join('\n');
+                    message += `\n\nエラーとなったCSV行:\n` + errors.map(e => `${e.row}行目`).join(', ');
+                    if (errors.length > 5) {
+                        message += `\n(エラー内容 [最初の5件]: ` + errors.slice(0, 5).map(e => `${e.row}行目: ${e.error}`).join('\n') + `)`;
+                    } else {
+                        message += `\n(エラー内容: ` + errors.map(e => `${e.row}行目: ${e.error}`).join('\n') + `)`;
+                    }
                 }
+
+                if (skipCount > 0) {
+                    message += `\n\n重複疑いでスキップしたCSV行:\n` + skips.join(', ');
+                }
+
                 alert(message);
 
-                // 画面更新
+                if (suspectedDuplicates.length > 0) {
+                    const tbody = $('#suspected-duplicates-tbody');
+                    tbody.empty();
+                    suspectedDuplicates.forEach((item, index) => {
+                        const row = `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="duplicate-row-check rounded text-indigo-600" value="${index}">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500">${item.row}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-amber-600 font-medium">重複の疑い</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${item.company}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${item.title}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${item.location || '-'}</td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                    $('#suspected-duplicates-modal').removeClass('hidden');
+                }
+
                 if (currentImportType === 'jobs') { if (typeof loadAdminJobs === 'function') loadAdminJobs(); }
                 else if (currentImportType === 'companies') { if (typeof loadCompanies === 'function') loadCompanies(); }
                 else if (currentImportType === 'users' || currentImportType === 'candidates') { if (typeof loadAdminUsers === 'function') loadAdminUsers(); }
@@ -18692,7 +18860,8 @@
             } finally {
                 hideLoading();
             }
-        }
+        };
+
 
         async function loadCSVHistory() {
             try {
