@@ -7762,6 +7762,7 @@
                 const pic1Name = job.pic1?.name || (job.pic_user_id_1 ? '不明' : '');
                 const pic2Name = job.pic2?.name || (job.pic_user_id_2 ? '不明' : '');
                 const isAgent = user && ['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(user.role);
+                const canEditJob = user && ['super_admin', 'org_admin'].includes(user.role);
 
                 const content = `
                     <!-- 企業情報セクション -->
@@ -8003,6 +8004,11 @@
                         ${user && (user.role === 'candidate' || user.role === 'user') ? `
                         <button onclick="applyForJob('${job.id}')" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
                             <i class="fas fa-paper-plane"></i>応募する
+                        </button>
+                        ` : ''}
+                        ${canEditJob ? `
+                        <button onclick="closeJobDetailModal(); showJobForm('${job.id}')" class="flex-1 bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 font-medium transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <i class="fas fa-edit"></i>求人を編集
                         </button>
                         ` : ''}
                     </div>
@@ -12689,7 +12695,7 @@
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <h4 class="text-lg font-bold text-gray-900 hover:text-indigo-600 cursor-pointer"
-                            onclick="showJobDetail('${job.id}')">${job.title}</h4>
+                            onclick="showJobDetailModal('${job.id}')">${job.title}</h4>
                         <p class="text-sm text-gray-600">${job.companies?.name || job.company}</p>
                         <div class="flex items-center gap-3 mt-2 text-sm text-gray-500">
                             <span><i class="fas fa-map-marker-alt mr-1"></i>${job.location}</span>
@@ -12697,7 +12703,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="showJobDetail('${job.id}')" class="text-indigo-600 hover:text-indigo-800 p-2 text-sm">
+                        <button onclick="showJobDetailModal('${job.id}')" class="text-indigo-600 hover:text-indigo-800 p-2 text-sm">
                             詳細
                         </button>
                         <button onclick="toggleFavorite('${job.id}'); $(this).closest('.border-b').remove();"
