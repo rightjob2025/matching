@@ -1477,6 +1477,21 @@
                     </div>
                 </div>
 
+                <!-- 求人重複確認設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">求人インポート設定</h4>
+                    <div class="space-y-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="org-setting-bulk-duplicate-confirm"
+                                class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">複数PDF取り込み時に重複疑いを後で一括確認する</span>
+                        </label>
+                        <p class="text-[10px] text-gray-400 ml-6 mt-[-10px]">
+                            ※ONの場合、処理中に一つずつ確認せず、最後に一覧でチェックして登録できます。
+                        </p>
+                    </div>
+                </div>
+
                 <div class="flex justify-end pt-4 gap-3">
                     <button type="button" onclick="closeOrganizationModal()"
                         class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
@@ -5368,7 +5383,45 @@
         </div>
     </div>
 
-    <!-- Prompt Form Modal -->
+    <!-- Job Bulk Confirm Modal -->
+    <div id="job-bulk-confirm-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-indigo-50">
+                <div>
+                    <h2 class="text-xl font-bold text-indigo-900">重複の可能性がある求人の確認</h2>
+                    <p class="text-sm text-indigo-600 mt-1">以下の求人は既に登録されている可能性があります。登録するものを選択してください。</p>
+                </div>
+                <button onclick="closeJobBulkConfirmModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div class="mb-4 flex justify-between items-center">
+                    <label class="flex items-center cursor-pointer text-sm font-medium text-gray-700">
+                        <input type="checkbox" id="job-bulk-select-all"
+                            class="form-checkbox h-4 w-4 text-indigo-600 rounded mr-2"
+                            onchange="toggleAllBulkJobs(this.checked)">
+                        すべて選択
+                    </label>
+                    <span id="job-bulk-count" class="text-sm text-gray-500">0件選択中</span>
+                </div>
+                <div id="job-bulk-list" class="space-y-4">
+                    <!-- Dynamic List Items -->
+                </div>
+            </div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeJobBulkConfirmModal()"
+                    class="px-6 py-2 border rounded-lg hover:bg-gray-100 transition">
+                    キャンセル
+                </button>
+                <button onclick="executeBulkJobImport()" id="execute-bulk-import-btn"
+                    class="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition font-bold shadow-md">
+                    選択した求人を登録
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="prompt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b flex justify-between items-center">
@@ -5852,6 +5905,7 @@
         let isModalLoading = false;
         let isAImatchingResultView = false;
         let aiResultCache = {}; // userId_jobId -> details
+        let pendingBulkJobs = []; // 求人一括取り込み時の確認待ちリスト
         window.prefectures = [
             "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
             "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
@@ -19813,6 +19867,9 @@
                         $('#org-setting-drive-column').val(settings.drive_column || 'pdf_url');
                         $('#drive-transfer-settings-container').toggleClass('hidden', !driveEnabled);
 
+                        // 求人重複一括確認設定
+                        $('#org-setting-bulk-duplicate-confirm').prop('checked', settings.bulk_duplicate_confirm_enabled === true);
+
                         // ロール名称の読み込み
                         const roleLabels = settings.role_labels || {};
                         $('#org-role-label-org_admin').val(roleLabels.org_admin || '');
@@ -19900,6 +19957,7 @@
                 drive_transfer_enabled: $('#org-setting-drive-transfer-enabled').is(':checked'),
                 drive_gas_url: $('#org-setting-drive-gas-url').val().trim() || null,
                 drive_column: $('#org-setting-drive-column').val().trim() || 'pdf_url',
+                bulk_duplicate_confirm_enabled: $('#org-setting-bulk-duplicate-confirm').is(':checked'),
                 role_labels: {
                     org_admin: $('#org-role-label-org_admin').val().trim() || null,
                     admin: $('#org-role-label-admin').val().trim() || null,
@@ -20991,10 +21049,15 @@
 
                     if (duplicates && duplicates.length > 0) {
                         isDuplicate = true;
-                        const dupMsg = `⚠️ 重複の可能性があります（ファイル: ${file.name}）\n\n既存の求人:\n${duplicates.map(d => `・${d.company} / ${d.title}`).join('\n')}`;
-                        if (!confirm(`${dupMsg}\n\nそれでも登録しますか？`)) {
-                            skipCount++;
-                            continue;
+
+                        // 一括確認モードが無効な場合のみ即時警告
+                        const orgSettings = currentUser.organizations?.settings || {};
+                        if (!(isBulkMode && orgSettings.bulk_duplicate_confirm_enabled)) {
+                            const dupMsg = `⚠️ 重複の可能性があります（ファイル: ${file.name}）\n\n既存の求人:\n${duplicates.map(d => `・${d.company} / ${d.title}`).join('\n')}`;
+                            if (!confirm(`${dupMsg}\n\nそれでも登録しますか？`)) {
+                                skipCount++;
+                                continue;
+                            }
                         }
                     }
 
@@ -21035,34 +21098,44 @@
                         }
                     }
 
-                    if (isBulkMode) {
-                        // 一括モード：確認して保存
-                        const jobData = {
-                            organization_id: currentUser.organization_id,
-                            title: result.title,
-                            company_id: companyId, // IDで紐付け
-                            company: result.company, // Legacy
-                            location: result.location || '未定',
-                            salary_min: result.salary_min || null,
-                            salary_max: result.salary_max || null,
-                            description: result.description || '',
-                            requirements: result.requirements || '',
-                            welcome_requirements: result.welcome_requirements || '',
-                            work_hours: result.work_hours || null,
-                            holidays: result.holidays || null,
-                            benefits: result.benefits || null,
-                            interview_process: result.interview_process || null,
-                            employment_type: result.employment_type || '正社員',
-                            is_remote: result.is_remote || false,
-                            job_experience_ok: result.job_experience_ok ? '可' : '不可',
-                            industry_experience_ok: result.industry_experience_ok ? '可' : '不可',
-                            job_category: result.job_category || null,
-                            industry_category: result.industry_category || null,
-                            pdf_filename: file.name,
-                            status: 'active'
-                        };
+                    const jobData = {
+                        organization_id: currentUser.organization_id,
+                        title: result.title,
+                        company_id: companyId,
+                        company: result.company,
+                        location: result.location || '未定',
+                        salary_min: result.salary_min || null,
+                        salary_max: result.salary_max || null,
+                        description: result.description || '',
+                        requirements: result.requirements || '',
+                        welcome_requirements: result.welcome_requirements || '',
+                        work_hours: result.work_hours || null,
+                        holidays: result.holidays || null,
+                        benefits: result.benefits || null,
+                        interview_process: result.interview_process || null,
+                        employment_type: result.employment_type || '正社員',
+                        is_remote: result.is_remote || false,
+                        job_experience_ok: result.job_experience_ok ? '可' : '不可',
+                        industry_experience_ok: result.industry_experience_ok ? '可' : '不可',
+                        job_category: result.job_category || null,
+                        industry_category: result.industry_category || null,
+                        pdf_filename: file.name,
+                        status: 'active'
+                    };
 
-                        // 確認ダイアログ
+                    if (isBulkMode && currentUser.organizations?.settings?.bulk_duplicate_confirm_enabled) {
+                        // 全て後で一括確認リストへ
+                        pendingBulkJobs.push({
+                            file: file,
+                            result: result,
+                            jobData: jobData,
+                            duplicates: duplicates || []
+                        });
+                        continue;
+                    }
+
+                    if (isBulkMode) {
+                        // 一括モード（個別確認）
                         const confirmSave = confirm(`【${i + 1}/${fileCount}】以下の内容で登録しますか？\n\n会社名: ${result.company}\nタイトル: ${jobData.title}\n勤務地: ${jobData.location}\n年収: ${jobData.salary_min ? jobData.salary_min / 10000 + '万' : '-'} ~ ${jobData.salary_max ? jobData.salary_max / 10000 + '万' : '-'}\n職種: ${jobData.job_category || '-'}\n業界: ${jobData.industry_category || '-'}`);
 
                         if (confirmSave) {
@@ -21160,9 +21233,16 @@
                 }
 
                 if (isBulkMode) {
-                    alert(`処理完了\n登録: ${successCount}件\nスキップ: ${skipCount}件`);
-                    closeJobModal();
-                    loadJobs(); // リスト更新
+                    if (pendingBulkJobs.length > 0) {
+                        // 一括確認モーダルを表示
+                        hideLoading();
+                        renderBulkConfirmList();
+                        $('#job-bulk-confirm-modal').removeClass('hidden');
+                    } else {
+                        alert(`処理完了\n登録: ${successCount}件\nスキップ: ${skipCount}件`);
+                        closeJobModal();
+                        loadAdminJobs(); // リスト更新
+                    }
                 }
 
             } catch (error) {
@@ -21171,6 +21251,174 @@
             } finally {
                 hideLoading()
                 input.value = ''
+            }
+        }
+
+        // --- 求人一括インポート確認モーダル用関数 ---
+        window.closeJobBulkConfirmModal = function () {
+            if (pendingBulkJobs.length > 0 && !confirm('確認待ちの求人がありますが、解除しますか？')) {
+                return;
+            }
+            $('#job-bulk-confirm-modal').addClass('hidden');
+            pendingBulkJobs = [];
+        }
+
+        window.renderBulkConfirmList = function () {
+            const container = $('#job-bulk-list');
+            container.empty();
+
+            pendingBulkJobs.forEach((item, index) => {
+                const hasDuplicate = item.duplicates && item.duplicates.length > 0;
+                const dupHtml = hasDuplicate
+                    ? item.duplicates.map(d => `<div class="text-red-500 font-medium">${d.company} / ${d.title}</div>`).join('')
+                    : '';
+
+                const statusBadge = hasDuplicate
+                    ? '<span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] rounded font-bold">重複疑い</span>'
+                    : '<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">解析完了</span>';
+
+                const html = `
+                    <div class="bg-white border rounded-lg p-4 shadow-sm hover:border-indigo-300 transition ${hasDuplicate ? 'border-red-100 bg-red-50/10' : ''}">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" name="bulk-job-item" data-index="${index}" class="form-checkbox h-5 w-5 text-indigo-600 rounded mt-1 mr-4" onchange="updateBulkSelectCount()" ${!hasDuplicate ? 'checked' : ''}>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-bold text-gray-900 overflow-hidden text-ellipsis">${item.result.company} / ${item.result.title}</h4>
+                                        ${statusBadge}
+                                    </div>
+                                    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded truncate ml-2">📄 ${item.file.name}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 space-y-1">
+                                    <div><i class="fas fa-map-marker-alt mr-1"></i>${item.result.location || '-'}</div>
+                                    ${hasDuplicate ? `
+                                    <div class="mt-2 pt-2 border-t border-dashed border-red-200">
+                                        <p class="font-bold text-red-600 mb-1"><i class="fas fa-exclamation-triangle mr-1"></i>重複の可能性あり:</p>
+                                        <div class="pl-2 border-l-2 border-red-200 ml-1">
+                                            ${dupHtml}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                `;
+                container.append(html);
+            });
+            updateBulkSelectCount();
+        }
+
+        window.updateBulkSelectCount = function () {
+            const count = $('input[name="bulk-job-item"]:checked').length;
+            const total = pendingBulkJobs.length;
+            $('#job-bulk-count').text(`${total}件中 ${count}件選択`);
+            $('#job-bulk-select-all').prop('checked', count === total && total > 0);
+        }
+
+        window.toggleAllBulkJobs = function (checked) {
+            $('input[name="bulk-job-item"]').prop('checked', checked);
+            updateBulkSelectCount();
+        }
+
+        window.executeBulkJobImport = async function () {
+            const selectedIndexes = [];
+            $('input[name="bulk-job-item"]:checked').each(function () {
+                selectedIndexes.push(parseInt($(this).data('index')));
+            });
+
+            if (selectedIndexes.length === 0) {
+                alert('登録する求人を選択してください');
+                return;
+            }
+
+            if (!confirm(`${selectedIndexes.length}件の求人を登録しますか？`)) return;
+
+            showLoading('選択した求人を登録中...');
+            let successCount = 0;
+            let errorCount = 0;
+
+            try {
+                for (const idx of selectedIndexes) {
+                    const item = pendingBulkJobs[idx];
+                    const { result, file, jobData: precalcJobData } = item;
+
+                    let jobData = precalcJobData;
+                    if (!jobData) {
+                        // 後方互換性または安全策：再計算または以前のロジック
+                        let companyId = null;
+                        const { data: existingCompany } = await supabase
+                            .from('companies')
+                            .select('id')
+                            .eq('organization_id', currentUser.organization_id)
+                            .eq('name', result.company)
+                            .single();
+
+                        if (existingCompany) {
+                            companyId = existingCompany.id;
+                        } else {
+                            const { data: newCompany } = await supabase
+                                .from('companies')
+                                .insert({
+                                    organization_id: currentUser.organization_id,
+                                    name: result.company,
+                                    location: result.location
+                                })
+                                .select()
+                                .single();
+                            companyId = newCompany.id;
+                        }
+
+                        jobData = {
+                            organization_id: currentUser.organization_id,
+                            title: result.title,
+                            company_id: companyId,
+                            company: result.company,
+                            location: result.location || '未定',
+                            salary_min: result.salary_min || null,
+                            salary_max: result.salary_max || null,
+                            description: result.description || '',
+                            requirements: result.requirements || '',
+                            welcome_requirements: result.welcome_requirements || '',
+                            employment_type: result.employment_type || '正社員',
+                            is_remote: result.is_remote || false,
+                            pdf_filename: file.name,
+                            status: 'active'
+                        };
+                    }
+
+                    // Google Drive 転送（設定があれば）
+                    const orgSettings = currentUser.organizations?.settings || {};
+                    if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
+                        try {
+                            const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
+                            if (driveUrl) {
+                                const driveCol = orgSettings.drive_column || 'pdf_url';
+                                jobData[driveCol] = driveUrl;
+                            }
+                        } catch (e) {
+                            console.error('Drive transfer failed in bulk confirm:', e);
+                        }
+                    }
+
+                    const { error } = await supabase.from('jobs').insert(jobData);
+                    if (error) {
+                        console.error('Bulk import error for job:', result.title, error);
+                        errorCount++;
+                    } else {
+                        successCount++;
+                    }
+                }
+
+                alert(`登録完了\n成功: ${successCount}件\n失敗: ${errorCount}件`);
+                pendingBulkJobs = [];
+                $('#job-bulk-confirm-modal').addClass('hidden');
+                loadAdminJobs();
+            } catch (err) {
+                console.error('executeBulkJobImport error:', err);
+                alert('一括登録中にエラーが発生しました');
+            } finally {
+                hideLoading();
             }
         }
 
