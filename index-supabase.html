@@ -1457,7 +1457,7 @@
                             class="pl-6 space-y-4 hidden border-l-2 border-indigo-100 py-1">
                             <div>
                                 <label
-                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">GAS
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">転送用GAS
                                     WebアプリURL</label>
                                 <input type="url" id="org-setting-drive-gas-url"
                                     placeholder="https://script.google.com/macros/s/.../exec"
@@ -1477,7 +1477,37 @@
                     </div>
                 </div>
 
-                <!-- 求人重複確認設定 -->
+                <!-- Google Drive PDF インポート設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-bold text-gray-700">Googleドライブ求人PDFインポート設定</h4>
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">NEW</span>
+                    </div>
+                    <div class="space-y-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="org-setting-drive-import-enabled"
+                                class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                onchange="$('#drive-import-settings-container').toggleClass('hidden', !this.checked)">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">Googleドライブから求人PDFを一括インポート可能にする</span>
+                        </label>
+
+                        <div id="drive-import-settings-container"
+                            class="pl-6 space-y-4 hidden border-l-2 border-green-100 py-1">
+                            <div>
+                                <label
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">インポート用GAS
+                                    WebアプリURL</label>
+                                <input type="url" id="org-setting-drive-import-gas-url"
+                                    placeholder="https://script.google.com/macros/s/.../exec"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-gray-400 mt-1">※求人票PDFを取得・解析するためのGoogle Apps Script
+                                    WebアプリURLを入力してください</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 求人インポート設定 -->
                 <div class="border-t pt-4 mt-4">
                     <h4 class="text-sm font-bold text-gray-700 mb-2">求人インポート設定</h4>
                     <div class="space-y-4">
@@ -3586,6 +3616,27 @@
                                 ※ ロールは自動的に「求職者」に設定されます
                             </p>
                         </div>
+
+                        <!-- Google Drive インポート -->
+                        <div id="admin-drive-import-section" class="border rounded-lg p-6 hidden">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-semibold flex items-center">
+                                    <i class="fab fa-google-drive mr-2 text-blue-600"></i>Googleドライブ求人取得
+                                </h3>
+                                <span
+                                    class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded font-bold uppercase">GAS</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Googleドライブの所定フォルダから最新の求人PDFを取得して一括登録します。
+                            </p>
+                            <button onclick="openDriveImportModal()"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full transition flex items-center justify-center gap-2">
+                                <i class="fas fa-sync-alt"></i>Googleドライブから取得
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2">
+                                ※組織設定でインポート用GAS URLが設定されている必要があります。
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -4582,6 +4633,49 @@
                                 <button onclick="processCompanyCsvImport()"
                                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                                     インポート実行
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin: Drive Import Modal -->
+                <div id="drive-import-modal"
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
+                        <div class="p-6 border-b flex justify-between items-center bg-blue-600 text-white rounded-t-lg">
+                            <h3 class="text-xl font-bold flex items-center gap-2">
+                                <i class="fab fa-google-drive"></i> Googleドライブ求人取得
+                            </h3>
+                            <button onclick="$('#drive-import-modal').addClass('hidden')"
+                                class="text-white hover:text-blue-100">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
+                            <div id="drive-import-status"
+                                class="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-100">
+                                <i class="fas fa-info-circle"></i>
+                                <p class="text-sm">Googleドライブから最新のPDFファイルを取得しています...</p>
+                            </div>
+
+                            <div id="drive-file-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <!-- File list will be rendered here -->
+                            </div>
+                        </div>
+
+                        <div class="p-4 border-t bg-white flex justify-between items-center rounded-b-lg">
+                            <div id="drive-import-count"
+                                class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                0件選択
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="$('#drive-import-modal').addClass('hidden')"
+                                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">キャンセル</button>
+                                <button id="execute-drive-import-btn" onclick="executeDriveImport()" disabled
+                                    class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95">
+                                    <i class="fas fa-download"></i> インポートを開始
                                 </button>
                             </div>
                         </div>
@@ -19451,6 +19545,10 @@
 
         async function loadCSVHistory() {
             try {
+                const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+                const driveImportEnabled = orgSettings.drive_import_enabled === true;
+                $('#admin-drive-import-section').toggleClass('hidden', !driveImportEnabled);
+
                 const { data: history, error } = await supabase
                     .from('csv_imports')
                     .select('*')
@@ -19873,6 +19971,12 @@
                         $('#org-setting-drive-column').val(settings.drive_column || 'pdf_url');
                         $('#drive-transfer-settings-container').toggleClass('hidden', !driveEnabled);
 
+                        // Google Drive インポート設定の読み込み
+                        const driveImportEnabled = settings.drive_import_enabled === true;
+                        $('#org-setting-drive-import-enabled').prop('checked', driveImportEnabled);
+                        $('#org-setting-drive-import-gas-url').val(settings.drive_import_gas_url || '');
+                        $('#drive-import-settings-container').toggleClass('hidden', !driveImportEnabled);
+
                         // 求人重複一括確認設定
                         $('#org-setting-bulk-duplicate-confirm').prop('checked', settings.bulk_duplicate_confirm_enabled === true);
 
@@ -19963,6 +20067,8 @@
                 drive_transfer_enabled: $('#org-setting-drive-transfer-enabled').is(':checked'),
                 drive_gas_url: $('#org-setting-drive-gas-url').val().trim() || null,
                 drive_column: $('#org-setting-drive-column').val().trim() || 'pdf_url',
+                drive_import_enabled: $('#org-setting-drive-import-enabled').is(':checked'),
+                drive_import_gas_url: $('#org-setting-drive-import-gas-url').val().trim() || null,
                 bulk_duplicate_confirm_enabled: $('#org-setting-bulk-duplicate-confirm').is(':checked'),
                 role_labels: {
                     org_admin: $('#org-role-label-org_admin').val().trim() || null,
@@ -21001,15 +21107,12 @@
                 return
             }
 
-            // 複数ファイルの場合は、フォーム入力ではなく直接登録フローにする
             const isBulkMode = fileCount > 1;
-
             showLoading('PDFを解析中...')
             try {
                 let successCount = 0;
                 let skipCount = 0;
 
-                // マスタデータの準備
                 const options = {
                     job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
                     industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
@@ -21017,237 +21120,28 @@
 
                 for (let i = 0; i < fileCount; i++) {
                     const file = input.files[i];
-
-                    // 進捗表示
                     console.log(`Processing file ${i + 1}/${fileCount}: ${file.name}`);
 
                     const text = await extractTextFromPDF(file);
-                    console.log(`Extracted text length: ${text.length} characters`);
-
                     if (!text || text.trim().length === 0) {
-                        alert(`ファイル「${file.name}」からテキストを抽出できませんでした。スキャン画像PDFの可能性があります。`);
+                        alert(`ファイル「${file.name}」からテキストを抽出できませんでした。`);
                         skipCount++;
                         continue;
                     }
 
-                    let result = await analyzeDocumentWithAI(text, 'job_description', options);
-
-                    if (Array.isArray(result)) {
-                        result = result[0] || {};
-                    }
-
-                    // 必須項目のチェック
-                    if (!result.title || !result.company) {
-                        alert(`ファイル「${file.name}」から求人タイトルまたは会社名を取得できませんでした。スキップします。`);
-                        skipCount++;
-                        continue;
-                    }
-
-                    // 重複チェック
-                    let isDuplicate = false;
-                    const { data: duplicates } = await supabase
-                        .from('jobs')
-                        .select('id, title, company')
-                        .eq('organization_id', currentUser.organization_id)
-                        .ilike('company', `%${result.company}%`)
-                        .ilike('title', `%${result.title}%`)
-                        .neq('status', 'closed');
-
-                    if (duplicates && duplicates.length > 0) {
-                        isDuplicate = true;
-
-                        // 一括確認モードが無効な場合のみ即時警告
-                        const orgSettings = currentUser.organizations?.settings || {};
-                        if (!(isBulkMode && orgSettings.bulk_duplicate_confirm_enabled)) {
-                            const dupMsg = `⚠️ 重複の可能性があります（ファイル: ${file.name}）\n\n既存の求人:\n${duplicates.map(d => `・${d.company} / ${d.title}`).join('\n')}`;
-                            if (!confirm(`${dupMsg}\n\nそれでも登録しますか？`)) {
-                                skipCount++;
-                                continue;
-                            }
-                        }
-                    }
-
-                    // 会社名の解決（既存検索 or 新規作成）
-                    let companyId = null;
-                    const { data: existingCompany } = await supabase
-                        .from('companies')
-                        .select('id')
-                        .eq('organization_id', currentUser.organization_id)
-                        .eq('name', result.company)
-                        .single();
-
-                    if (existingCompany) {
-                        companyId = existingCompany.id;
-                    } else {
-                        // 新規作成
-                        if (isBulkMode || confirm(`企業「${result.company}」は未登録です。\n新規登録しますか？`)) {
-                            const { data: newCompany, error: createError } = await supabase
-                                .from('companies')
-                                .insert({
-                                    organization_id: currentUser.organization_id,
-                                    name: result.company,
-                                    location: result.location // 求人の場所を企業の場所として一旦登録
-                                })
-                                .select()
-                                .single();
-
-                            if (createError) {
-                                console.error('Company creation error:', createError);
-                                alert(`企業「${result.company}」の作成に失敗しました。スキップします。`);
-                                skipCount++;
-                                continue;
-                            }
-                            companyId = newCompany.id;
-                        } else {
-                            skipCount++;
-                            continue;
-                        }
-                    }
-
-                    const jobData = {
-                        organization_id: currentUser.organization_id,
-                        title: result.title,
-                        company_id: companyId,
-                        company: result.company,
-                        location: result.location || '未定',
-                        salary_min: result.salary_min || null,
-                        salary_max: result.salary_max || null,
-                        description: result.description || '',
-                        requirements: result.requirements || '',
-                        welcome_requirements: result.welcome_requirements || '',
-                        work_hours: result.work_hours || null,
-                        holidays: result.holidays || null,
-                        benefits: result.benefits || null,
-                        interview_process: result.interview_process || null,
-                        employment_type: result.employment_type || '正社員',
-                        is_remote: result.is_remote || false,
-                        job_experience_ok: result.job_experience_ok ? '可' : '不可',
-                        industry_experience_ok: result.industry_experience_ok ? '可' : '不可',
-                        job_category: result.job_category || null,
-                        industry_category: result.industry_category || null,
-                        pdf_filename: file.name,
-                        status: 'active'
-                    };
-
-                    if (isBulkMode && currentUser.organizations?.settings?.bulk_duplicate_confirm_enabled) {
-                        // 全て後で一括確認リストへ
-                        pendingBulkJobs.push({
-                            file: file,
-                            result: result,
-                            jobData: jobData,
-                            duplicates: duplicates || []
-                        });
-                        continue;
-                    }
-
-                    if (isBulkMode) {
-                        // 一括モード（個別確認）
-                        const confirmSave = confirm(`【${i + 1}/${fileCount}】以下の内容で登録しますか？\n\n会社名: ${result.company}\nタイトル: ${jobData.title}\n勤務地: ${jobData.location}\n年収: ${jobData.salary_min ? jobData.salary_min / 10000 + '万' : '-'} ~ ${jobData.salary_max ? jobData.salary_max / 10000 + '万' : '-'}\n職種: ${jobData.job_category || '-'}\n業界: ${jobData.industry_category || '-'}`);
-
-                        if (confirmSave) {
-                            // Google Drive 転送（一括モード）
-                            const orgSettings = currentUser.organizations?.settings || {};
-                            if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
-                                try {
-                                    console.log('Transferring to Google Drive (Bulk)...');
-                                    const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
-                                    if (driveUrl) {
-                                        const driveCol = orgSettings.drive_column || 'pdf_url';
-                                        jobData[driveCol] = driveUrl;
-                                        console.log('File transferred. Drive URL stored in:', driveCol);
-                                    }
-                                } catch (driveErr) {
-                                    console.error('Drive transfer failed:', driveErr);
-                                }
-                            }
-
-                            const { error } = await supabase.from('jobs').insert(jobData);
-                            if (error) throw error;
-                            successCount++;
-                        } else {
-                            skipCount++;
-                        }
-
-                    } else {
-                        // 単一ファイルモード：フォームに入力
-                        // フォームのセレクトボックスを更新して選択状態にする
-                        const select = $('#job-company-select');
-                        if (select.find(`option[value="${companyId}"]`).length === 0) {
-                            select.append(`<option value="${companyId}">${result.company}</option>`);
-                        }
-                        select.val(companyId);
-                        $('#job-company-id').val(companyId);
-
-                        if (isDuplicate) {
-                            alert(`⚠️ 重複の可能性があります！\n\n既存の求人:\n${duplicates.map(d => `・${d.company} / ${d.title}`).join('\n')}\n\n入力を続行しますが、内容を確認してください。`);
-                        }
-
-                        $('#job-title').val(result.title);
-                        $('#job-pdf-filename').val(file.name);
-
-                        // Google Drive 転送（単一ファイル）
-                        const orgSettings = currentUser.organizations?.settings || {};
-                        if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
-                            try {
-                                console.log('Transferring to Google Drive...');
-                                const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
-                                if (driveUrl) {
-                                    $('#job-drive-pdf-url').val(driveUrl);
-                                    console.log('File transferred. Drive URL:', driveUrl);
-                                }
-                            } catch (driveErr) {
-                                console.error('Drive transfer failed:', driveErr);
-                                // エラーでも解析は続行
-                            }
-                        }
-
-                        // $('#job-company').val(result.company); // 不要
-                        $('#job-location').val(result.location);
-                        if (result.salary_min) $('#job-salary-min').val(result.salary_min / 10000);
-                        if (result.salary_max) $('#job-salary-max').val(result.salary_max / 10000);
-                        $('#job-description').val(result.description);
-                        $('#job-requirements').val(result.requirements);
-                        $('#job-welcome-requirements').val(result.welcome_requirements);
-
-                        $('#job-work-hours').val(result.work_hours);
-                        $('#job-holidays').val(result.holidays);
-                        $('#job-benefits').val(result.benefits);
-                        $('#job-interview-process').val(result.interview_process);
-
-                        if (result.employment_type) $('#job-employment-type').val(result.employment_type);
-
-                        if (result.is_remote !== undefined) $('#job-is-remote').prop('checked', result.is_remote);
-                        if (result.job_experience_ok !== undefined) $('#job-experience-ok').prop('checked', result.job_experience_ok);
-                        if (result.industry_experience_ok !== undefined) $('#job-industry-experience-ok').prop('checked', result.industry_experience_ok);
-
-                        // カテゴリのセット（マスタ値から最も近い値を選択）
-                        if (result.job_category) {
-                            const closestJobCategory = findClosestMasterValue(result.job_category, masterJobCategories);
-                            if (closestJobCategory) {
-                                $('#job-category').val(closestJobCategory);
-                            }
-                        }
-                        if (result.industry_category) {
-                            const closestIndustryCategory = findClosestMasterValue(result.industry_category, masterIndustries);
-                            if (closestIndustryCategory) {
-                                $('#job-industry-category').val(closestIndustryCategory);
-                            }
-                        }
-
-                        alert('解析が完了しました。内容を確認してください。');
-                    }
+                    await processParsedJobText(text, file, options, isBulkMode);
+                    successCount++;
                 }
 
                 if (isBulkMode) {
                     if (pendingBulkJobs.length > 0) {
-                        // 一括確認モーダルを表示
                         hideLoading();
                         renderBulkConfirmList();
                         $('#job-bulk-confirm-modal').removeClass('hidden');
                     } else {
                         alert(`処理完了\n登録: ${successCount}件\nスキップ: ${skipCount}件`);
                         closeJobModal();
-                        loadAdminJobs(); // リスト更新
+                        loadAdminJobs();
                     }
                 }
 
@@ -21258,6 +21152,214 @@
                 hideLoading()
                 input.value = ''
             }
+        }
+
+        // Common logic for processing job text
+        async function processParsedJobText(text, file, options, isBulkMode) {
+            let result = await analyzeDocumentWithAI(text, 'job_description', options);
+            if (Array.isArray(result)) result = result[0] || {};
+
+            if (!result.title || !result.company) {
+                throw new Error(`ファイル「${file.name}」からタイトルまたは会社名を特定できませんでした。`);
+            }
+
+            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+            const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
+
+            // Check duplicates
+            const { data: duplicates } = await supabase
+                .from('jobs')
+                .select('id, title, company')
+                .eq('organization_id', currentUser.organization_id)
+                .or(`title.eq."${result.title}", company.eq."${result.company}"`)
+                .limit(3);
+
+            let companyId = null;
+            const { data: ec } = await supabase.from('companies').select('id').eq('organization_id', currentUser.organization_id).eq('name', result.company).single();
+            if (ec) {
+                companyId = ec.id;
+            } else {
+                const { data: nc } = await supabase.from('companies').insert({ organization_id: currentUser.organization_id, name: result.company, location: result.location }).select().single();
+                companyId = nc.id;
+            }
+
+            const jobData = {
+                organization_id: currentUser.organization_id,
+                title: result.title,
+                company_id: companyId,
+                company: result.company,
+                location: result.location || '未定',
+                salary_min: result.salary_min || null,
+                salary_max: result.salary_max || null,
+                description: result.description || '',
+                requirements: result.requirements || '',
+                welcome_requirements: result.welcome_requirements || '',
+                work_hours: result.work_hours || null,
+                holidays: result.holidays || null,
+                benefits: result.benefits || null,
+                interview_process: result.interview_process || null,
+                employment_type: result.employment_type || '正社員',
+                is_remote: result.is_remote || false,
+                job_experience_ok: result.job_experience_ok ? '可' : '不可',
+                industry_experience_ok: result.industry_experience_ok ? '可' : '不可',
+                job_category: findClosestMasterValue(result.job_category, masterJobCategories),
+                industry_category: findClosestMasterValue(result.industry_category, masterIndustries),
+                pdf_filename: file.name,
+                status: 'active'
+            };
+
+            if (isBulkMode && bulkConfirmEnabled) {
+                pendingBulkJobs.push({ file, result, jobData, duplicates: duplicates || [] });
+                return;
+            }
+
+            // Transfer to Drive if enabled
+            if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url && file.size) {
+                try {
+                    const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
+                    if (driveUrl) {
+                        const driveCol = orgSettings.drive_column || 'pdf_url';
+                        jobData[driveCol] = driveUrl;
+                    }
+                } catch (e) { console.error('Drive transfer failed:', e); }
+            }
+
+            if (!isBulkMode) {
+                // Fill form
+                $('#job-title').val(result.title);
+                $('#job-company-name').val(result.company);
+                $('#job-location').val(result.location || '');
+                $('#job-salary-min').val(result.salary_min / 10000 || '');
+                $('#job-salary-max').val(result.salary_max / 10000 || '');
+                $('#job-description').val(result.description || '');
+                $('#job-requirements').val(result.requirements || '');
+                $('#job-welcome-requirements').val(result.welcome_requirements || '');
+                $('#job-work-hours').val(result.work_hours || '');
+                $('#job-holidays').val(result.holidays || '');
+                $('#job-benefits').val(result.benefits || '');
+                $('#job-interview-process').val(result.interview_process || '');
+                $('#job-category').val(jobData.job_category);
+                $('#job-industry-category').val(jobData.industry_category);
+                $('#job-employment-type').val(result.employment_type || '正社員');
+                $('#job-is-remote').prop('checked', !!result.is_remote);
+                $('#job-experience-ok').prop('checked', !!result.job_experience_ok);
+                $('#job-industry-experience-ok').prop('checked', !!result.industry_experience_ok);
+
+                if (jobData[orgSettings.drive_column || 'pdf_url']) {
+                    $('#job-drive-pdf-url').val(jobData[orgSettings.drive_column || 'pdf_url']);
+                }
+
+                alert('PDFの解析が完了しました。内容を確認してください。');
+            } else {
+                const { error } = await supabase.from('jobs').insert(jobData);
+                if (error) throw error;
+            }
+        }
+
+        // Google Drive Import functions
+        window.openDriveImportModal = async function () {
+            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+            if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
+                alert('Googleドライブインポート設定が未完了です。');
+                return;
+            }
+
+            $('#drive-import-modal').removeClass('hidden');
+            $('#drive-file-list').empty();
+            $('#drive-import-count').text('0件選択');
+            $('#execute-drive-import-btn').prop('disabled', true);
+            $('#drive-import-status').attr('class', 'mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-100')
+                .html('<i class="fas fa-spinner fa-spin"></i><p class="text-sm">Googleドライブをスキャン中...</p>');
+
+            try {
+                const response = await fetch(orgSettings.drive_import_gas_url, {
+                    method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'list_files' }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+
+                const files = result.files || [];
+                if (files.length === 0) {
+                    $('#drive-import-status').attr('class', 'mb-4 p-4 bg-amber-50 text-amber-700 rounded-lg flex items-center gap-3 border border-amber-100')
+                        .html('<i class="fas fa-exclamation-triangle"></i><p class="text-sm">インポート可能な求人PDFが見つかりませんでした。</p>');
+                    return;
+                }
+
+                $('#drive-import-status').attr('class', 'mb-4 p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-3 border border-green-100')
+                    .html('<i class="fas fa-check-circle"></i><p class="text-sm">' + files.length + '件のファイルが見つかりました。</p>');
+
+                renderDriveFileList(files);
+            } catch (err) {
+                $('#drive-import-status').attr('class', 'mb-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3 border border-red-100').html(`<i class="fas fa-times-circle"></i><p class="text-sm">エラー: ${err.message}</p>`);
+            }
+        };
+
+        function renderDriveFileList(files) {
+            const container = $('#drive-file-list');
+            container.empty();
+            files.forEach(file => {
+                container.append(`
+                    <div class="bg-white border rounded-lg p-3 flex items-center gap-3 hover:border-blue-400 cursor-pointer transition">
+                        <input type="checkbox" name="drive-file-item" data-id="${file.id}" data-name="${file.name}" class="h-5 w-5 text-blue-600" onchange="updateDriveImportCount()">
+                        <div class="flex-1 min-w-0" onclick="$(this).siblings('input').click()">
+                            <div class="font-bold text-gray-900 truncate text-sm">${file.name}</div>
+                            <div class="text-[10px] text-gray-500 mt-0.5">${new Date(file.modified).toLocaleDateString()} / ${(file.size / 1024).toFixed(0)} KB</div>
+                        </div>
+                        <a href="${file.url}" target="_blank" class="text-gray-400 hover:text-blue-600"><i class="fas fa-external-link-alt text-xs"></i></a>
+                    </div>
+                `);
+            });
+        }
+
+        window.updateDriveImportCount = function () {
+            const count = $('input[name="drive-file-item"]:checked').length;
+            $('#drive-import-count').text(`${count}件選択`);
+            $('#execute-drive-import-btn').prop('disabled', count === 0);
+        };
+
+        window.executeDriveImport = async function () {
+            const selected = [];
+            $('input[name="drive-file-item"]:checked').each(function () { selected.push({ id: $(this).data('id'), name: $(this).data('name') }); });
+            if (selected.length === 0) return;
+            if (!confirm(`${selected.length}件のファイルをインポートしますか？`)) return;
+
+            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+            showLoading('Googleドライブからインポート中...');
+            let successCount = 0; let errorCount = 0;
+            pendingBulkJobs = [];
+
+            try {
+                const options = { job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [], industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : [] };
+                for (let i = 0; i < selected.length; i++) {
+                    const f = selected[i];
+                    $('#drive-import-status p').text(`【${i + 1}/${selected.length}】解析中: ${f.name}`);
+                    try {
+                        const res = await fetch(orgSettings.drive_import_gas_url, { method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'get_file', fileId: f.id }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+                        const data = await res.json();
+                        if (data.status !== 'success') throw new Error(data.message);
+
+                        const bin = atob(data.base64);
+                        const bytes = new Uint8Array(bin.length);
+                        for (let j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+                        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+                        let text = '';
+                        for (let p = 1; p <= pdf.numPages; p++) {
+                            const pg = await pdf.getPage(p);
+                            const tc = await pg.getTextContent();
+                            text += tc.items.map(it => it.str).join(' ') + '\n';
+                        }
+                        if (!text.trim()) throw new Error('Text empty');
+
+                        const fakeFile = { name: f.name, size: bytes.length, driveUrl: data.url };
+                        await processParsedJobText(text, fakeFile, options, true);
+                        successCount++;
+                    } catch (e) { console.error(e); errorCount++; }
+                }
+                $('#drive-import-modal').addClass('hidden');
+                if (pendingBulkJobs.length > 0) { renderBulkConfirmList(); $('#job-bulk-confirm-modal').removeClass('hidden'); }
+                else { alert(`完了\n成功: ${successCount}件\n失敗: ${errorCount}件`); loadAdminJobs(); }
+            } catch (err) { alert('エラー: ' + err.message); } finally { hideLoading(); }
         }
 
         // --- 求人一括インポート確認モーダル用関数 ---
