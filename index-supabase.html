@@ -11877,7 +11877,13 @@
                 if (['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role)) {
                     $('#admin-job-search-tools').removeClass('hidden')
                     $('#candidate-ai-matching-tools').addClass('hidden')
-                    $('#exclude-matched-container').hide();
+
+                    // 管理者/コーチの場合、ユーザーが選択されていれば除外フィルタを表示
+                    if (selectedTargetUserId) {
+                        $('#exclude-matched-container').show();
+                    } else {
+                        $('#exclude-matched-container').hide();
+                    }
 
                     // ユーザーリストのロード（未ロードの場合）
                     if (allCandidateUsers.length === 0) {
@@ -13170,6 +13176,18 @@
                                     <h3 class="text-xl font-bold text-gray-900">${app.jobs ? app.jobs.title : '不明な求人'}</h3>
                                 </div>
                                 <p class="text-gray-600">${app.jobs ? app.jobs.company : '-'}</p>
+                                ${app.jobs?.pdf_filename ? `
+                                <div class="flex items-center gap-2 mt-1 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded w-fit">
+                                    <i class="fas fa-file-pdf text-red-500"></i>
+                                    <span class="truncate max-w-[200px]" title="${app.jobs.pdf_filename}">${app.jobs.pdf_filename}</span>
+                                </div>
+                                ` : ''}
+                                ${app.jobs?.url ? `
+                                <div class="flex items-center gap-2 mt-1 text-xs">
+                                    <i class="fas fa-link text-indigo-400"></i>
+                                    <a href="${app.jobs.url}" target="_blank" class="text-indigo-600 hover:underline truncate max-w-[300px]">${app.jobs.url}</a>
+                                </div>
+                                ` : ''}
                                 ${app.users ? `<p class="text-sm text-indigo-600 mt-1"><i class="fas fa-user mr-1"></i>応募者: ${app.users.name}</p>` : ''}
                             </div>
                             <div class="flex flex-col items-end gap-2">
@@ -13826,7 +13844,22 @@
                             ` : ''}
 
                             <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition leading-tight">${rec.jobs.title}</h3>
-                            <p class="text-gray-600 font-medium mb-3">${rec.jobs.company}</p>
+                            <p class="text-gray-600 font-medium mb-1">${rec.jobs.company}</p>
+                            
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 mb-3">
+                                ${rec.jobs.pdf_filename ? `
+                                <div class="flex items-center gap-1 text-[10px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                                    <i class="fas fa-file-pdf text-red-400"></i>
+                                    <span class="truncate max-w-[150px]" title="${rec.jobs.pdf_filename}">${rec.jobs.pdf_filename}</span>
+                                </div>
+                                ` : ''}
+                                ${rec.jobs.url ? `
+                                <div class="flex items-center gap-1 text-[10px] text-gray-400">
+                                    <i class="fas fa-link"></i>
+                                    <span class="truncate max-w-[200px]" title="${rec.jobs.url}">${rec.jobs.url}</span>
+                                </div>
+                                ` : ''}
+                            </div>
                             
                             <!-- 求人概要（抜粋） -->
                             <p class="text-sm text-gray-500 mb-4 line-clamp-2">
