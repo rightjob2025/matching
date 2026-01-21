@@ -13767,17 +13767,24 @@
                 const groupLabel = s.metadata?.group_label;
                 if (group && groupLabel) {
                     if (!groups[group]) {
-                        groups[group] = { label: groupLabel, values: [] };
+                        groups[group] = { label: groupLabel, values: [], sort_order: s.sort_order };
                     }
                     groups[group].values.push(s.value);
+                    // グループ内の最小のsort_orderをグループの並び順とする
+                    if (s.sort_order < groups[group].sort_order) {
+                        groups[group].sort_order = s.sort_order;
+                    }
                 }
             });
+
+            // グループをsort_order順に並び替え
+            const sortedGroupKeys = Object.keys(groups).sort((a, b) => groups[a].sort_order - groups[b].sort_order);
 
             // 1. 管理者用フィルター
             const adminContainer = $('#admin-applicant-status-filters');
             if (adminContainer.length) {
                 let html = '';
-                Object.keys(groups).forEach(key => {
+                sortedGroupKeys.forEach(key => {
                     const isActive = adminApplicantStatusFilter === key;
                     html += `<button onclick="setAdminApplicantStatusFilter('${key}')" 
                         class="status-filter-btn ${isActive ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
@@ -13796,7 +13803,7 @@
                     class="candidate-status-filter ${currentCandidateStatusFilter === 'all' ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'} whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
                     data-status="all">すべて</button>`;
 
-                Object.keys(groups).forEach(key => {
+                sortedGroupKeys.forEach(key => {
                     const isActive = currentCandidateStatusFilter === key;
                     html += `<button onclick="setCandidateApplicationStatusFilter('${key}')" 
                         class="candidate-status-filter ${isActive ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'} whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
@@ -18419,7 +18426,7 @@
             }
         }
 
-        let adminApplicantStatusFilter = 'ongoing';
+        let adminApplicantStatusFilter = 'screening_docs';
         let selectedAdminApplicantIds = new Set();
 
         window.setAdminApplicantStatusFilter = function (status) {
