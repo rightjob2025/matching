@@ -4681,6 +4681,22 @@
                                 <p class="text-sm">Googleドライブから最新のPDFファイルを取得しています...</p>
                             </div>
 
+                            <!-- Select All & Count -->
+                            <div class="flex justify-between items-center mb-3 px-1">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" id="drive-file-select-all"
+                                        class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition"
+                                        onchange="toggleDriveAllCheckboxes(this.checked)">
+                                    <span
+                                        class="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition">すべて選択
+                                        / 解除</span>
+                                </label>
+                                <div id="drive-file-list-count"
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    0件のファイル
+                                </div>
+                            </div>
+
                             <div id="drive-file-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <!-- File list will be rendered here -->
                             </div>
@@ -21342,6 +21358,7 @@
                 $('#drive-import-status').attr('class', 'mb-4 p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-3 border border-green-100')
                     .html('<i class="fas fa-check-circle"></i><p class="text-sm">' + window.driveFilesCache.length + '件のファイルが見つかりました。</p>');
 
+                $('#drive-file-select-all').prop('checked', false);
                 applyDriveFileFilters();
             } catch (err) {
                 $('#drive-import-status').attr('class', 'mb-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3 border border-red-100').html(`<i class="fas fa-times-circle"></i><p class="text-sm">エラー: ${err.message}</p>`);
@@ -21377,11 +21394,20 @@
 
             renderDriveFileList(filtered);
             updateDriveImportCount();
+
+            // フィルタリング後の全選択状態をリセット
+            $('#drive-file-select-all').prop('checked', false);
+        };
+
+        window.toggleDriveAllCheckboxes = function (checked) {
+            $('input[name="drive-file-item"]:visible').prop('checked', checked);
+            updateDriveImportCount();
         };
 
         function renderDriveFileList(files) {
             const container = $('#drive-file-list');
             container.empty();
+            $('#drive-file-list-count').text(`${files.length}件のファイル`);
             files.forEach(file => {
                 container.append(`
                     <div class="bg-white border rounded-lg p-3 flex items-center gap-3 hover:border-blue-400 cursor-pointer transition">
