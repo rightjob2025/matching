@@ -3450,9 +3450,10 @@
                             <p class="text-gray-600 mb-2">求人の作成・編集・削除ができます。</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="showJobCsvImportModal()"
-                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                <i class="fas fa-file-csv mr-2"></i>CSVインポート
+                            <button id="admin-job-drive-import-btn" onclick="openDriveImportModal()"
+                                class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                                <i class="fab fa-google-drive"></i> Googleドライブ取得
+                                <span class="text-[10px] bg-white/20 px-1 rounded">GAS</span>
                             </button>
                             <button onclick="exportJobsCsv()"
                                 class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
@@ -3614,27 +3615,6 @@
                             </button>
                             <p class="text-xs text-gray-500 mt-2">
                                 ※ ロールは自動的に「求職者」に設定されます
-                            </p>
-                        </div>
-
-                        <!-- Google Drive インポート -->
-                        <div id="admin-drive-import-section" class="border rounded-lg p-6 hidden">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="font-semibold flex items-center">
-                                    <i class="fab fa-google-drive mr-2 text-blue-600"></i>Googleドライブ求人取得
-                                </h3>
-                                <span
-                                    class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded font-bold uppercase">GAS</span>
-                            </div>
-                            <p class="text-sm text-gray-600 mb-4">
-                                Googleドライブの所定フォルダから最新の求人PDFを取得して一括登録します。
-                            </p>
-                            <button onclick="openDriveImportModal()"
-                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full transition flex items-center justify-center gap-2">
-                                <i class="fas fa-sync-alt"></i>Googleドライブから取得
-                            </button>
-                            <p class="text-xs text-gray-500 mt-2">
-                                ※組織設定でインポート用GAS URLが設定されている必要があります。
                             </p>
                         </div>
                     </div>
@@ -19548,6 +19528,7 @@
                 const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
                 const driveImportEnabled = orgSettings.drive_import_enabled === true;
                 $('#admin-drive-import-section').toggleClass('hidden', !driveImportEnabled);
+                $('#admin-job-drive-import-btn').toggleClass('hidden', !driveImportEnabled);
 
                 const { data: history, error } = await supabase
                     .from('csv_imports')
