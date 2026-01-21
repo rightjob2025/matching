@@ -1789,7 +1789,12 @@
                     <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
                         data-page="kpi-dashboard">
                         <i class="fas fa-chart-line w-5"></i>
-                        <span class="ml-3">KPI管理</span>
+                        <span class="ml-3">KPIダッシュボード</span>
+                    </a>
+                    <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
+                        data-page="admin-yomi-management">
+                        <i class="fas fa-funnel-dollar w-5"></i>
+                        <span class="ml-3">ヨミ管理 (進捗・入金)</span>
                     </a>
                     <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
                         data-page="admin-templates">
@@ -3814,1166 +3819,1312 @@
                 </div>
             </div>
 
-            <!-- KPI Dashboard Content -->
-            <div id="kpi-dashboard-content" class="app-content p-6 hidden">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
-                    <h1 class="text-2xl font-semibold text-gray-900">KPIダッシュボード</h1>
-                    <p class="text-gray-500 text-sm mb-6">組織全体の進捗状況、歩留まり、売上予測を可視化します。</p>
+            <!-- Admin: Yomi Management (Progress & Forecasting) Page -->
+            <div id="admin-yomi-management-content" class="app-content p-6 hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">ヨミ管理・進捗モニタリング</h2>
+                        <p class="text-gray-500 text-sm">アクティブな求職者の進捗と売上予測を一括管理します。</p>
+                    </div>
+                    <div class="flex items-center bg-gray-100 p-1 rounded-lg">
+                        <button onclick="switchYomiView('board')" id="yomi-view-board-btn"
+                            class="yomi-view-btn px-4 py-2 text-sm font-bold rounded-md transition-all bg-white shadow-sm text-indigo-600">
+                            <i class="fas fa-columns mr-2"></i>カンバン
+                        </button>
+                        <button onclick="switchYomiView('list')" id="yomi-view-list-btn"
+                            class="yomi-view-btn px-4 py-2 text-sm font-bold rounded-md transition-all text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-list mr-2"></i>リスト
+                        </button>
+                        <button onclick="switchYomiView('forecast')" id="yomi-view-forecast-btn"
+                            class="yomi-view-btn px-4 py-2 text-sm font-bold rounded-md transition-all text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-chart-line mr-2"></i>入金予測
+                        </button>
+                    </div>
+                </div>
 
-                    <!-- Filter Bar -->
-                    <div
-                        class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">期間</label>
-                            <select id="kpi-filter-period" class="border border-gray-300 rounded px-3 py-1.5 text-sm">
-                                <option value="this_month">今月</option>
-                                <option value="last_month">先月</option>
-                                <option value="this_quarter" selected>今四半期</option>
-                                <option value="this_year">今年度</option>
+                <!-- Filters -->
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                        <div class="lg:col-span-1">
+                            <label
+                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">組織・チーム</label>
+                            <select id="yomi-filter-team"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="">全てのチーム</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">担当者</label>
-                            <select id="kpi-filter-user"
-                                class="border border-gray-300 rounded px-3 py-1.5 text-sm w-40">
+                        <div class="lg:col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">担当者
+                                (CA/RA)</label>
+                            <select id="yomi-filter-coach"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <option value="">全員</option>
                             </select>
                         </div>
-                        <div>
-                            <button onclick="loadKPIDashboard()"
-                                class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-indigo-700">
-                                <i class="fas fa-sync-alt mr-1"></i>更新
+                        <div class="lg:col-span-1">
+                            <label
+                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">期間</label>
+                            <select id="yomi-filter-period"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="this_month">今月</option>
+                                <option value="next_month">来月</option>
+                                <option value="this_quarter" selected>今四半期</option>
+                                <option value="all">全期間</option>
+                            </select>
+                        </div>
+                        <div class="lg:col-span-1">
+                            <label
+                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">ヨミ定義</label>
+                            <select id="yomi-filter-probability"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="">全てのヨミ</option>
+                                <option value="80">Aヨミ (80%↑)</option>
+                                <option value="60">Bヨミ (60%↑)</option>
+                                <option value="40">Cヨミ (40%↑)</option>
+                            </select>
+                        </div>
+                        <div class="lg:col-span-1 flex gap-2">
+                            <button onclick="loadYomiData()"
+                                class="flex-1 bg-indigo-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-indigo-700 transition shadow-sm">
+                                <i class="fas fa-search mr-2"></i>適用
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- KPI Cards (Feature B & D) -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase">売上予測 (ヨミ)</p>
-                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-revenue">¥0
-                            </h3>
-                            <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>前月比
-                                --%</p>
-                        </div>
-                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase">有効求人数</p>
-                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-jobs">0</h3>
-                        </div>
-                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase">選考中候補者</p>
-                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-candidates">0
-                            </h3>
-                        </div>
-                        <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase">成約数</p>
-                            <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-success">0</h3>
-                        </div>
-                    </div>
-
-                    <!-- Charts Row -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        <!-- Feature A: Funnel Analysis -->
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h4 class="font-bold text-gray-800 mb-4">選考歩留まり (ファネル)</h4>
-                            <div class="relative h-64">
-                                <canvas id="kpi-funnel-chart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Feature D: Activity Analysis -->
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h4 class="font-bold text-gray-800 mb-4">担当者別アクティビティ</h4>
-                            <div class="relative h-64">
-                                <canvas id="kpi-activity-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Feature C: Stagnant Cases -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                            <h4 class="font-bold text-gray-800"><i
-                                    class="fas fa-exclamation-circle text-amber-500 mr-2"></i>停滞案件アラート
-                                (5日以上変動なし)</h4>
-                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full"
-                                id="stagnant-cases-count">0件</span>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            候補者</th>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            求人</th>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            現在のフェーズ</th>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            最終更新日</th>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            担当者</th>
-                                        <th
-                                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            アクション</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="kpi-stagnant-table-body">
-                                    <tr>
-                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                                            データ読み込み中...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin: Organization Settings Page -->
-            <div id="admin-settings-content" class="app-content p-6 hidden">
-                <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h3 class="text-xl font-bold mb-4">AIスカウト設定</h3>
-                    <p class="text-gray-600 mb-6">AIスカウト機能の動作に関する設定を管理します。</p>
-
-                    <div class="space-y-6">
-                        <!-- 解析履歴の公開範囲設定 -->
-                        <div class="border-b border-gray-200 pb-6">
-                            <h4 class="text-lg font-semibold text-gray-800 mb-2">外部プロフィール解析履歴の公開範囲</h4>
-                            <p class="text-sm text-gray-500 mb-4">
-                                「外部プロフィール解析」で作成された履歴を、組織内の他のユーザーが閲覧できるかどうかを制御します。
-                            </p>
-
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <label class="flex items-start mb-3 cursor-pointer">
-                                    <input type="radio" name="setting-history-visibility" value="all"
-                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
-                                    <div>
-                                        <div class="font-bold text-gray-900">全員に公開 (標準)</div>
-                                        <div class="text-sm text-gray-600">
-                                            組織内のすべてのユーザーが、他のユーザーが作成した解析履歴・求人提案内容を閲覧できます。共有知としての活用に適しています。
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="flex items-start cursor-pointer">
-                                    <input type="radio" name="setting-history-visibility" value="personal"
-                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
-                                    <div>
-                                        <div class="font-bold text-gray-900">作成者のみ閲覧 (プライベート)</div>
-                                        <div class="text-sm text-gray-600">
-                                            ユーザーは自分が実行した解析履歴のみ閲覧できます。ただし、組織全体の集計数値などは表示される場合があります。</div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- スカウト履歴の公開範囲設定 -->
-                        <div class="border-b border-gray-200 pb-6">
-                            <h4 class="text-lg font-semibold text-gray-800 mb-2">スカウト履歴の公開範囲</h4>
-                            <p class="text-sm text-gray-500 mb-4">
-                                「スカウト管理」で表示される候補者および送信履歴を、組織内の他のユーザーが閲覧できるかどうかを制御します。
-                            </p>
-
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <label class="flex items-start mb-3 cursor-pointer">
-                                    <input type="radio" name="setting-scout-visibility" value="all"
-                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
-                                    <div>
-                                        <div class="font-bold text-gray-900">全員に公開 (標準)</div>
-                                        <div class="text-sm text-gray-600">
-                                            組織内のすべてのユーザーが、他のユーザーが送信したスカウト履歴・候補者ステータスを閲覧できます。重複スカウトの防止に適しています。
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="flex items-start cursor-pointer">
-                                    <input type="radio" name="setting-scout-visibility" value="personal"
-                                        class="mt-1 mr-3 h-4 w-4 text-indigo-600">
-                                    <div>
-                                        <div class="font-bold text-gray-900">作成者のみ閲覧 (プライベート)</div>
-                                        <div class="text-sm text-gray-600">
-                                            ユーザーは自分がスカウトを送った候補者およびその履歴のみ閲覧できます。</div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- 保存ボタン -->
-                        <div class="flex justify-end pt-4">
-                            <button onclick="saveAdminSettings()"
-                                class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
-                                <i class="fas fa-save mr-2"></i>設定を保存
+                            <button onclick="exportYomiData()"
+                                class="bg-gray-100 text-gray-600 rounded-lg px-3 py-2 hover:bg-gray-200 transition"
+                                title="エクスポート">
+                                <i class="fas fa-download"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- テンプレート管理 Page -->
-                <div id="admin-templates-content" class="app-content p-6 hidden">
-                    <div class="bg-white rounded-lg shadow p-6 mb-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <div>
-                                <h2 class="text-xl font-bold">推薦メール・メッセージテンプレート</h2>
-                                <p class="text-gray-600 mt-1">候補者へ送る推薦メッセージの定型文を管理します。</p>
-                            </div>
-                            <button onclick="openEmailTemplateModal()"
-                                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
-                                <i class="fas fa-plus"></i> 新規作成
-                            </button>
-                        </div>
-
-                        <div id="email-templates-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Templates will be rendered here -->
-                            <div class="animate-pulse bg-gray-100 h-32 rounded-lg"></div>
-                        </div>
+                <!-- Stats Summary Row -->
+                <div id="yomi-stats-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">売上見込み合計</p>
+                        <p class="text-xl font-bold text-gray-800" id="yomi-stat-total-revenue">¥0</p>
                     </div>
-
-                    <!-- メールテンプレート編集モーダル -->
-                    <div id="email-template-modal"
-                        class="fixed inset-0 bg-black bg-opacity-50 z-[110] hidden flex items-center justify-center p-4">
-                        <div
-                            class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-                            <div class="p-6 border-b bg-indigo-50 flex justify-between items-center">
-                                <h3 class="text-xl font-bold text-indigo-900" id="template-modal-title">
-                                    テンプレート編集</h3>
-                                <button onclick="closeEmailTemplateModal()" class="text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times text-2xl"></i>
-                                </button>
-                            </div>
-                            <div class="flex-1 overflow-y-auto p-6 space-y-4">
-                                <input type="hidden" id="template-id">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">テンプレート名</label>
-                                    <input type="text" id="template-name"
-                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                        placeholder="例: 標準推薦メール, LinkedIn用など">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">メール件名
-                                        (任意)</label>
-                                    <input type="text" id="template-subject"
-                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                        placeholder="候補者へ送信する際の標準件名">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">本文テンプレート</label>
-                                    <div class="bg-blue-50 p-3 rounded text-xs text-blue-700 mb-2 leading-relaxed">
-                                        <i class="fas fa-info-circle mr-1"></i>以下の変数を使用できます：<br>
-                                        <code>{{userName}}</code>：候補者名、
-                                        <code>{{agentName}}</code>：担当エージェント名、
-                                        <code>{{jobDetails}}</code>：求人情報の詳細リスト（おすすめ理由含む）、
-                                        <code>{{recommendationReason}}</code>：1件目のおすすめ理由
-                                    </div>
-                                    <textarea id="template-body" rows="12"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500"></textarea>
-                                </div>
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="template-is-default"
-                                        class="w-4 h-4 text-indigo-600 rounded">
-                                    <label for="template-is-default"
-                                        class="ml-2 text-sm text-gray-700">デフォルトに設定する</label>
-                                </div>
-                            </div>
-                            <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
-                                <button onclick="closeEmailTemplateModal()"
-                                    class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition font-medium">
-                                    キャンセル
-                                </button>
-                                <button onclick="saveEmailTemplate()"
-                                    class="px-8 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-lg transition">
-                                    保存する
-                                </button>
-                            </div>
-                        </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                        <p class="text-[10px] font-bold text-indigo-400 uppercase">ヨミ換算合計 (利益予測)</p>
+                        <p class="text-xl font-bold text-indigo-600" id="yomi-stat-weighted-revenue">¥0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">アクティブ件数</p>
+                        <p class="text-xl font-bold text-gray-800" id="yomi-stat-active-count">0件</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">成約確度 (AVG)</p>
+                        <p class="text-xl font-bold text-gray-800" id="yomi-stat-avg-probability">0%</p>
                     </div>
                 </div>
 
-                <!-- Super Admin: Prompt Settings Page -->
-                <!-- Super Admin: Organization Management Page -->
-                <div id="super-admin-organizations-content" class="app-content p-6 hidden">
-                    <div class="bg-white rounded-lg shadow p-6 mb-6">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-gray-600 mb-2">利用組織（テナント）の契約プランやステータスを管理します。</p>
-                            </div>
-                            <button onclick="showOrganizationModal()"
-                                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
-                                <i class="fas fa-plus mr-2"></i>新規組織作成
-                            </button>
-                        </div>
+                <!-- Board View (Kanban) -->
+                <div id="yomi-board-view" class="yomi-view-content hidden">
+                    <div id="yomi-kanban-container"
+                        class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar min-h-[600px]">
+                        <!-- Columns will be rendered here -->
                     </div>
+                </div>
 
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                <!-- List View (Table) -->
+                <div id="yomi-list-view" class="yomi-view-content hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        組織名
-                                    </th>
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        候補者 / 担当者</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        プラン
-                                    </th>
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        求人 / 企業</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ステータス
-                                    </th>
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        フェーズ</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ユーザー数
-                                    </th>
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        見込み金額</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        有効期限
-                                    </th>
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        決定ヨミ</th>
                                     <th
-                                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        操作
-                                    </th>
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        入社予定日</th>
+                                    <th
+                                        class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        操作</th>
                                 </tr>
                             </thead>
-                            <tbody id="super-admin-organizations-container" class="bg-white divide-y divide-gray-200">
-                                <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                                        データを読み込み中...
-                                    </td>
-                                </tr>
+                            <tbody id="yomi-list-container" class="bg-white divide-y divide-gray-200">
+                                <!-- List items populated by JS -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Admin: User Edit Modal -->
-                <div id="admin-user-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 30000;">
-                    <div class="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold" id="admin-user-modal-title">ユーザー編集</h3>
-                            <button onclick="closeAdminUserModal()"
-                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
+                <!-- Forecast View (Report) -->
+                <div id="yomi-forecast-view" class="yomi-view-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-full">
+                                <h3 class="font-bold text-gray-800 mb-6 flex items-center">
+                                    <i class="fas fa-chart-area mr-2 text-indigo-500"></i>月別入金予測推移
+                                </h3>
+                                <div class="h-64">
+                                    <canvas id="yomi-forecast-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-full">
+                                <h3 class="font-bold text-gray-800 mb-6 flex items-center">
+                                    <i class="fas fa-percentage mr-2 text-purple-500"></i>ヨミ別内訳
+                                </h3>
+                                <div class="h-64">
+                                    <canvas id="yomi-distribution-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </div>
+
+    <!-- KPI Dashboard Content -->
+    <div id="kpi-dashboard-content" class="app-content p-6 hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6">
+            <h1 class="text-2xl font-semibold text-gray-900">KPIダッシュボード</h1>
+            <p class="text-gray-500 text-sm mb-6">組織全体の進捗状況、歩留まり、売上予測を可視化します。</p>
+
+            <!-- Filter Bar -->
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">期間</label>
+                    <select id="kpi-filter-period" class="border border-gray-300 rounded px-3 py-1.5 text-sm">
+                        <option value="this_month">今月</option>
+                        <option value="last_month">先月</option>
+                        <option value="this_quarter" selected>今四半期</option>
+                        <option value="this_year">今年度</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">担当者</label>
+                    <select id="kpi-filter-user" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-40">
+                        <option value="">全員</option>
+                    </select>
+                </div>
+                <div>
+                    <button onclick="loadKPIDashboard()"
+                        class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-indigo-700">
+                        <i class="fas fa-sync-alt mr-1"></i>更新
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards (Feature B & D) -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                    <p class="text-xs font-bold text-gray-400 uppercase">売上予測 (ヨミ)</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-revenue">¥0
+                    </h3>
+                    <p class="text-xs text-green-600 mt-1"><i class="fas fa-arrow-up mr-1"></i>前月比
+                        --%</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                    <p class="text-xs font-bold text-gray-400 uppercase">有効求人数</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-jobs">0</h3>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                    <p class="text-xs font-bold text-gray-400 uppercase">選考中候補者</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-candidates">0
+                    </h3>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+                    <p class="text-xs font-bold text-gray-400 uppercase">成約数</p>
+                    <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-metric-success">0</h3>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Feature A: Funnel Analysis -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-4">選考歩留まり (ファネル)</h4>
+                    <div class="relative h-64">
+                        <canvas id="kpi-funnel-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Feature D: Activity Analysis -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-4">担当者別アクティビティ</h4>
+                    <div class="relative h-64">
+                        <canvas id="kpi-activity-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature C: Stagnant Cases -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                    <h4 class="font-bold text-gray-800"><i
+                            class="fas fa-exclamation-circle text-amber-500 mr-2"></i>停滞案件アラート
+                        (5日以上変動なし)</h4>
+                    <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full"
+                        id="stagnant-cases-count">0件</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    候補者</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    求人</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    現在のフェーズ</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    最終更新日</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    担当者</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="kpi-stagnant-table-body">
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    データ読み込み中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin: Organization Settings Page -->
+    <div id="admin-settings-content" class="app-content p-6 hidden">
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-xl font-bold mb-4">AIスカウト設定</h3>
+            <p class="text-gray-600 mb-6">AIスカウト機能の動作に関する設定を管理します。</p>
+
+            <div class="space-y-6">
+                <!-- 解析履歴の公開範囲設定 -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">外部プロフィール解析履歴の公開範囲</h4>
+                    <p class="text-sm text-gray-500 mb-4">
+                        「外部プロフィール解析」で作成された履歴を、組織内の他のユーザーが閲覧できるかどうかを制御します。
+                    </p>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="flex items-start mb-3 cursor-pointer">
+                            <input type="radio" name="setting-history-visibility" value="all"
+                                class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                            <div>
+                                <div class="font-bold text-gray-900">全員に公開 (標準)</div>
+                                <div class="text-sm text-gray-600">
+                                    組織内のすべてのユーザーが、他のユーザーが作成した解析履歴・求人提案内容を閲覧できます。共有知としての活用に適しています。
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start cursor-pointer">
+                            <input type="radio" name="setting-history-visibility" value="personal"
+                                class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                            <div>
+                                <div class="font-bold text-gray-900">作成者のみ閲覧 (プライベート)</div>
+                                <div class="text-sm text-gray-600">
+                                    ユーザーは自分が実行した解析履歴のみ閲覧できます。ただし、組織全体の集計数値などは表示される場合があります。</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- スカウト履歴の公開範囲設定 -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">スカウト履歴の公開範囲</h4>
+                    <p class="text-sm text-gray-500 mb-4">
+                        「スカウト管理」で表示される候補者および送信履歴を、組織内の他のユーザーが閲覧できるかどうかを制御します。
+                    </p>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="flex items-start mb-3 cursor-pointer">
+                            <input type="radio" name="setting-scout-visibility" value="all"
+                                class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                            <div>
+                                <div class="font-bold text-gray-900">全員に公開 (標準)</div>
+                                <div class="text-sm text-gray-600">
+                                    組織内のすべてのユーザーが、他のユーザーが送信したスカウト履歴・候補者ステータスを閲覧できます。重複スカウトの防止に適しています。
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start cursor-pointer">
+                            <input type="radio" name="setting-scout-visibility" value="personal"
+                                class="mt-1 mr-3 h-4 w-4 text-indigo-600">
+                            <div>
+                                <div class="font-bold text-gray-900">作成者のみ閲覧 (プライベート)</div>
+                                <div class="text-sm text-gray-600">
+                                    ユーザーは自分がスカウトを送った候補者およびその履歴のみ閲覧できます。</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 保存ボタン -->
+                <div class="flex justify-end pt-4">
+                    <button onclick="saveAdminSettings()"
+                        class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                        <i class="fas fa-save mr-2"></i>設定を保存
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- テンプレート管理 Page -->
+        <div id="admin-templates-content" class="app-content p-6 hidden">
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold">推薦メール・メッセージテンプレート</h2>
+                        <p class="text-gray-600 mt-1">候補者へ送る推薦メッセージの定型文を管理します。</p>
+                    </div>
+                    <button onclick="openEmailTemplateModal()"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+                        <i class="fas fa-plus"></i> 新規作成
+                    </button>
+                </div>
+
+                <div id="email-templates-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Templates will be rendered here -->
+                    <div class="animate-pulse bg-gray-100 h-32 rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- メールテンプレート編集モーダル -->
+            <div id="email-template-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 z-[110] hidden flex items-center justify-center p-4">
+                <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                    <div class="p-6 border-b bg-indigo-50 flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-indigo-900" id="template-modal-title">
+                            テンプレート編集</h3>
+                        <button onclick="closeEmailTemplateModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <input type="hidden" id="template-id">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">テンプレート名</label>
+                            <input type="text" id="template-name"
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                placeholder="例: 標準推薦メール, LinkedIn用など">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">メール件名
+                                (任意)</label>
+                            <input type="text" id="template-subject"
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                placeholder="候補者へ送信する際の標準件名">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">本文テンプレート</label>
+                            <div class="bg-blue-50 p-3 rounded text-xs text-blue-700 mb-2 leading-relaxed">
+                                <i class="fas fa-info-circle mr-1"></i>以下の変数を使用できます：<br>
+                                <code>{{userName}}</code>：候補者名、
+                                <code>{{agentName}}</code>：担当エージェント名、
+                                <code>{{jobDetails}}</code>：求人情報の詳細リスト（おすすめ理由含む）、
+                                <code>{{recommendationReason}}</code>：1件目のおすすめ理由
+                            </div>
+                            <textarea id="template-body" rows="12"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-indigo-500"></textarea>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="template-is-default" class="w-4 h-4 text-indigo-600 rounded">
+                            <label for="template-is-default" class="ml-2 text-sm text-gray-700">デフォルトに設定する</label>
+                        </div>
+                    </div>
+                    <div class="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                        <button onclick="closeEmailTemplateModal()"
+                            class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition font-medium">
+                            キャンセル
+                        </button>
+                        <button onclick="saveEmailTemplate()"
+                            class="px-8 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold shadow-lg transition">
+                            保存する
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Super Admin: Prompt Settings Page -->
+        <!-- Super Admin: Organization Management Page -->
+        <div id="super-admin-organizations-content" class="app-content p-6 hidden">
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-600 mb-2">利用組織（テナント）の契約プランやステータスを管理します。</p>
+                    </div>
+                    <button onclick="showOrganizationModal()"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        <i class="fas fa-plus mr-2"></i>新規組織作成
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                組織名
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                プラン
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ステータス
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ユーザー数
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                有効期限
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                操作
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="super-admin-organizations-container" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                データを読み込み中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin: User Edit Modal -->
+        <div id="admin-user-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 30000;">
+            <div class="bg-white rounded-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold" id="admin-user-modal-title">ユーザー編集</h3>
+                    <button onclick="closeAdminUserModal()"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <form id="admin-user-form">
+                    <!-- PDF Parsing Area -->
+                    <div class="mb-6 p-4 bg-indigo-50 border border-dashed border-indigo-300 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-bold text-indigo-900 mb-1">
+                                    <i class="fas fa-file-pdf mr-2"></i>履歴書/職務経歴書から自動入力
+                                </h4>
+                                <p class="text-xs text-indigo-700">
+                                    PDFをアップロードすると、AIが氏名・スキル・経歴などを解析してフォームに入力します。
+                                </p>
+                            </div>
+                            <div>
+                                <label for="admin-user-pdf-upload"
+                                    class="cursor-pointer bg-white text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-50 transition shadow-sm">
+                                    <i class="fas fa-upload mr-1"></i>PDFを選択
+                                </label>
+                                <input type="file" id="admin-user-pdf-upload" accept="application/pdf" class="hidden"
+                                    onchange="handleAdminUserPdfUpload(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="admin-user-id">
+
+                    <!-- 基本情報 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">名前 *</label>
+                        <input type="text" id="admin-user-name" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ふりがな</label>
+                        <input type="text" id="admin-user-furigana" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス
+                            *</label>
+                        <input type="email" id="admin-user-email" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+
+                    <!-- パスワード変更（新規追加） -->
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">パスワードの変更</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="admin-user-new-password" placeholder="新しいパスワード"
+                                class="flex-1 px-4 py-2 border rounded-lg text-sm">
+                            <button type="button" onclick="updateUserPassword()"
+                                class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition shadow-sm whitespace-nowrap">
+                                パスワード更新
                             </button>
                         </div>
-                        <form id="admin-user-form">
-                            <!-- PDF Parsing Area -->
-                            <div class="mb-6 p-4 bg-indigo-50 border border-dashed border-indigo-300 rounded-lg">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h4 class="text-sm font-bold text-indigo-900 mb-1">
-                                            <i class="fas fa-file-pdf mr-2"></i>履歴書/職務経歴書から自動入力
-                                        </h4>
-                                        <p class="text-xs text-indigo-700">
-                                            PDFをアップロードすると、AIが氏名・スキル・経歴などを解析してフォームに入力します。
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label for="admin-user-pdf-upload"
-                                            class="cursor-pointer bg-white text-indigo-600 border border-indigo-600 px-3 py-1.5 rounded text-sm font-medium hover:bg-indigo-50 transition shadow-sm">
-                                            <i class="fas fa-upload mr-1"></i>PDFを選択
-                                        </label>
-                                        <input type="file" id="admin-user-pdf-upload" accept="application/pdf"
-                                            class="hidden" onchange="handleAdminUserPdfUpload(this)">
-                                    </div>
-                                </div>
+                        <p class="text-[10px] text-gray-500 mt-1">※
+                            パスワードを上書きします。空のまま「更新」をクリックしても変更されません。</p>
+                    </div>
+
+                    <!-- 権限（管理者のみ変更可） -->
+                    <div id="admin-user-role-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">権限</label>
+                        <select id="admin-user-role" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="org_admin">組織管理者</option>
+                            <option value="admin">管理者</option>
+                            <option value="coach">CA・RA</option>
+                            <option value="candidate">求職者</option>
+                        </select>
+                    </div>
+
+                    <!-- ステータス -->
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">利用ステータス</label>
+                            <select id="admin-user-status" class="w-full px-4 py-2 border rounded-lg">
+                                <option value="active">利用中</option>
+                                <option value="suspended">停止</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">管理ステータス</label>
+                            <select id="admin-user-management-status" class="w-full px-4 py-2 border rounded-lg">
+                                <option value="active">活動中</option>
+                                <option value="inactive">活動終了</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 求職者用フィールド -->
+                    <div id="admin-candidate-fields" class="hidden space-y-4 border-t pt-4 mt-4">
+                        <h4 class="font-medium text-gray-900">求職者情報</h4>
+
+                        <!-- 担当コーチ（管理者のみ変更可） -->
+                        <div id="admin-user-coach-container">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">担当CA・RA</label>
+                            <select id="admin-user-coach" class="w-full px-4 py-2 border rounded-lg">
+                                <option value="">未設定</option>
+                                <!-- コーチ一覧をJSで挿入 -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">所属チーム</label>
+                            <select id="admin-user-team" class="w-full px-4 py-2 border rounded-lg">
+                                <option value="">未設定</option>
+                                <!-- チーム一覧をJSで挿入 -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">希望職種</label>
+                            <select id="admin-user-job-type" class="w-full px-4 py-2 border rounded-lg select2" multiple
+                                style="width: 100%">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">希望業界</label>
+                            <select id="admin-user-industry" class="w-full px-4 py-2 border rounded-lg select2" multiple
+                                style="width: 100%">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">希望勤務地</label>
+                            <div class="flex gap-2">
+                                <select id="admin-user-prefecture" class="w-1/3 px-2 py-2 border rounded-lg select2"
+                                    multiple="multiple" style="width: 40%">
+                                </select>
+                                <input type="text" id="admin-user-city" placeholder="市区町村"
+                                    class="w-2/3 px-4 py-2 border rounded-lg" style="width: 60%">
                             </div>
-
-                            <input type="hidden" id="admin-user-id">
-
-                            <!-- 基本情報 -->
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">希望雇用形態</label>
+                            <select id="admin-user-employment-type" class="w-full px-4 py-2 border rounded-lg select2"
+                                multiple style="width: 100%">
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">希望年収
+                                (万円)</label>
+                            <input type="number" id="admin-user-salary" class="w-full px-4 py-2 border rounded-lg"
+                                min="0">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">名前 *</label>
-                                <input type="text" id="admin-user-name" required
-                                    class="w-full px-4 py-2 border rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
+                                <input type="date" id="admin-user-birth-date"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    onchange="calculateAge(this.value, '#admin-user-age')">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">ふりがな</label>
-                                <input type="text" id="admin-user-furigana" class="w-full px-4 py-2 border rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">年齢</label>
+                                <input type="number" id="admin-user-age"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all font-mono"
+                                    min="0">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス
-                                    *</label>
-                                <input type="email" id="admin-user-email" required
-                                    class="w-full px-4 py-2 border rounded-lg">
-                            </div>
-
-                            <!-- パスワード変更（新規追加） -->
-                            <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">パスワードの変更</label>
-                                <div class="flex gap-2">
-                                    <input type="password" id="admin-user-new-password" placeholder="新しいパスワード"
-                                        class="flex-1 px-4 py-2 border rounded-lg text-sm">
-                                    <button type="button" onclick="updateUserPassword()"
-                                        class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition shadow-sm whitespace-nowrap">
-                                        パスワード更新
-                                    </button>
-                                </div>
-                                <p class="text-[10px] text-gray-500 mt-1">※
-                                    パスワードを上書きします。空のまま「更新」をクリックしても変更されません。</p>
-                            </div>
-
-                            <!-- 権限（管理者のみ変更可） -->
-                            <div id="admin-user-role-container">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">権限</label>
-                                <select id="admin-user-role" class="w-full px-4 py-2 border rounded-lg">
-                                    <option value="org_admin">組織管理者</option>
-                                    <option value="admin">管理者</option>
-                                    <option value="coach">CA・RA</option>
-                                    <option value="candidate">求職者</option>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">性別</label>
+                                <select id="admin-user-gender" class="w-full px-4 py-2 border rounded-lg">
+                                    <option value="">選択</option>
+                                    <option value="男性">男性</option>
+                                    <option value="女性">女性</option>
+                                    <option value="その他">その他</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <!-- ステータス -->
-                            <div class="grid grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">利用ステータス</label>
-                                    <select id="admin-user-status" class="w-full px-4 py-2 border rounded-lg">
-                                        <option value="active">利用中</option>
-                                        <option value="suspended">停止</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">管理ステータス</label>
-                                    <select id="admin-user-management-status"
-                                        class="w-full px-4 py-2 border rounded-lg">
-                                        <option value="active">活動中</option>
-                                        <option value="inactive">活動終了</option>
-                                    </select>
-                                </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">現住所（居住地）</label>
+                            <select id="admin-user-current-location" class="w-full px-4 py-2 border rounded-lg">
+                                <option value="">都道府県を選択</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">学歴</label>
+                            <textarea id="admin-user-education" rows="2" class="w-full px-4 py-2 border rounded-lg"
+                                placeholder="例: 〇〇大学 〇〇学部 卒業"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">スキル</label>
+                            <textarea id="admin-user-skills" rows="3"
+                                class="w-full px-4 py-2 border rounded-lg"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">職歴概要</label>
+                            <textarea id="admin-user-history" rows="3"
+                                class="w-full px-4 py-2 border rounded-lg"></textarea>
+                        </div>
+
+                        <!-- 追加詳細フィールド -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+                            <input type="tel" id="admin-user-phone" class="w-full px-4 py-2 border rounded-lg">
+                        </div>
+
+                        <div class="flex gap-6 py-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="admin-user-job-exp-ok"
+                                    class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-2">
+                                <span class="text-sm text-gray-700">職種未経験OK</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="admin-user-industry-exp-ok"
+                                    class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-2">
+                                <span class="text-sm text-gray-700">業界未経験OK</span>
+                            </label>
+                        </div>
+
+                        <!-- 構造化された職歴 (New) -->
+                        <div class="mb-6 border-t border-gray-200 pt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium text-gray-700">詳細職歴
+                                    (最大10社)</label>
+                                <button type="button" onclick="addWorkHistoryItem()"
+                                    class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center font-medium">
+                                    <i class="fas fa-plus-circle mr-1"></i>職歴を追加
+                                </button>
+                            </div>
+                            <div id="work-history-list" class="space-y-4 mb-2">
+                                <!-- JSで動的に追加 -->
                             </div>
 
-                            <!-- 求職者用フィールド -->
-                            <div id="admin-candidate-fields" class="hidden space-y-4 border-t pt-4 mt-4">
-                                <h4 class="font-medium text-gray-900">求職者情報</h4>
+                            <div class="flex items-center gap-4 mt-2 mb-4">
+                                <label class="text-xs text-gray-500">経験社数 (自動計算):</label>
+                                <input type="number" id="admin-user-job-change-count"
+                                    class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm" readonly>
+                            </div>
+                        </div>
 
-                                <!-- 担当コーチ（管理者のみ変更可） -->
-                                <div id="admin-user-coach-container">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">担当CA・RA</label>
-                                    <select id="admin-user-coach" class="w-full px-4 py-2 border rounded-lg">
-                                        <option value="">未設定</option>
-                                        <!-- コーチ一覧をJSで挿入 -->
-                                    </select>
-                                </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">職務経歴書
+                                (詳細テキスト)</label>
+                            <textarea id="admin-user-work-history-detail" rows="10"
+                                class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
+                                placeholder="職務経歴の詳細テキスト"></textarea>
+                        </div>
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">希望職種</label>
-                                    <select id="admin-user-job-type" class="w-full px-4 py-2 border rounded-lg select2"
-                                        multiple style="width: 100%">
-                                        <!-- Options will be loaded dynamically -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">希望業界</label>
-                                    <select id="admin-user-industry" class="w-full px-4 py-2 border rounded-lg select2"
-                                        multiple style="width: 100%">
-                                        <!-- Options will be loaded dynamically -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">希望勤務地</label>
-                                    <div class="flex gap-2">
-                                        <select id="admin-user-prefecture"
-                                            class="w-1/3 px-2 py-2 border rounded-lg select2" multiple="multiple"
-                                            style="width: 40%">
-                                        </select>
-                                        <input type="text" id="admin-user-city" placeholder="市区町村"
-                                            class="w-2/3 px-4 py-2 border rounded-lg" style="width: 60%">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">希望雇用形態</label>
-                                    <select id="admin-user-employment-type"
-                                        class="w-full px-4 py-2 border rounded-lg select2" multiple style="width: 100%">
-                                        <!-- Options will be loaded dynamically -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">希望年収
-                                        (万円)</label>
-                                    <input type="number" id="admin-user-salary"
-                                        class="w-full px-4 py-2 border rounded-lg" min="0">
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
-                                        <input type="date" id="admin-user-birth-date"
-                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
-                                            onchange="calculateAge(this.value, '#admin-user-age')">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">年齢</label>
-                                        <input type="number" id="admin-user-age"
-                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all font-mono"
-                                            min="0">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">性別</label>
-                                        <select id="admin-user-gender" class="w-full px-4 py-2 border rounded-lg">
-                                            <option value="">選択</option>
-                                            <option value="男性">男性</option>
-                                            <option value="女性">女性</option>
-                                            <option value="その他">その他</option>
-                                        </select>
-                                    </div>
-                                </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">履歴情報</label>
+                            <textarea id="admin-user-history-info" rows="6"
+                                class="w-full px-4 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white transition"
+                                placeholder="履歴情報の補足など"></textarea>
+                        </div>
 
+                        <!-- 外部連携URL -->
+                        <div class="border-t border-gray-200 pt-4 mt-4">
+                            <h5 class="text-sm font-bold text-gray-700 mb-3">外部連携URL</h5>
+                            <div class="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">現住所（居住地）</label>
-                                    <select id="admin-user-current-location" class="w-full px-4 py-2 border rounded-lg">
-                                        <option value="">都道府県を選択</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">学歴</label>
-                                    <textarea id="admin-user-education" rows="2"
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Google
+                                        Drive
+                                        URL</label>
+                                    <input type="url" id="admin-user-drive-url"
                                         class="w-full px-4 py-2 border rounded-lg"
-                                        placeholder="例: 〇〇大学 〇〇学部 卒業"></textarea>
+                                        placeholder="https://drive.google.com/...">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">スキル</label>
-                                    <textarea id="admin-user-skills" rows="3"
-                                        class="w-full px-4 py-2 border rounded-lg"></textarea>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">NotebookLM
+                                        URL</label>
+                                    <input type="url" id="admin-user-notebooklm-url"
+                                        class="w-full px-4 py-2 border rounded-lg"
+                                        placeholder="https://notebooklm.google.com/...">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">職歴概要</label>
-                                    <textarea id="admin-user-history" rows="3"
-                                        class="w-full px-4 py-2 border rounded-lg"></textarea>
-                                </div>
-
-                                <!-- 追加詳細フィールド -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
-                                    <input type="tel" id="admin-user-phone" class="w-full px-4 py-2 border rounded-lg">
-                                </div>
-
-                                <div class="flex gap-6 py-2">
-                                    <label class="flex items-center cursor-pointer">
-                                        <input type="checkbox" id="admin-user-job-exp-ok"
-                                            class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-2">
-                                        <span class="text-sm text-gray-700">職種未経験OK</span>
-                                    </label>
-                                    <label class="flex items-center cursor-pointer">
-                                        <input type="checkbox" id="admin-user-industry-exp-ok"
-                                            class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 mr-2">
-                                        <span class="text-sm text-gray-700">業界未経験OK</span>
-                                    </label>
-                                </div>
-
-                                <!-- 構造化された職歴 (New) -->
-                                <div class="mb-6 border-t border-gray-200 pt-4">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">詳細職歴
-                                            (最大10社)</label>
-                                        <button type="button" onclick="addWorkHistoryItem()"
-                                            class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center font-medium">
-                                            <i class="fas fa-plus-circle mr-1"></i>職歴を追加
-                                        </button>
-                                    </div>
-                                    <div id="work-history-list" class="space-y-4 mb-2">
-                                        <!-- JSで動的に追加 -->
-                                    </div>
-
-                                    <div class="flex items-center gap-4 mt-2 mb-4">
-                                        <label class="text-xs text-gray-500">経験社数 (自動計算):</label>
-                                        <input type="number" id="admin-user-job-change-count"
-                                            class="w-20 px-2 py-1 border rounded bg-gray-50 text-center text-sm"
-                                            readonly>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">職務経歴書
-                                        (詳細テキスト)</label>
-                                    <textarea id="admin-user-work-history-detail" rows="10"
-                                        class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
-                                        placeholder="職務経歴の詳細テキスト"></textarea>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">履歴情報</label>
-                                    <textarea id="admin-user-history-info" rows="6"
-                                        class="w-full px-4 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white transition"
-                                        placeholder="履歴情報の補足など"></textarea>
-                                </div>
-
-                                <!-- 外部連携URL -->
-                                <div class="border-t border-gray-200 pt-4 mt-4">
-                                    <h5 class="text-sm font-bold text-gray-700 mb-3">外部連携URL</h5>
-                                    <div class="grid grid-cols-1 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Google
-                                                Drive
-                                                URL</label>
-                                            <input type="url" id="admin-user-drive-url"
-                                                class="w-full px-4 py-2 border rounded-lg"
-                                                placeholder="https://drive.google.com/...">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">NotebookLM
-                                                URL</label>
-                                            <input type="url" id="admin-user-notebooklm-url"
-                                                class="w-full px-4 py-2 border rounded-lg"
-                                                placeholder="https://notebooklm.google.com/...">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">LINE
-                                                URL</label>
-                                            <input type="url" id="admin-user-line-url"
-                                                class="w-full px-4 py-2 border rounded-lg"
-                                                placeholder="https://line.me/...">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">社内マッチング情報</label>
-                                    <textarea id="admin-user-resume-detail" rows="6"
-                                        class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
-                                        placeholder="社内マッチング情報（スキル、経験、希望の補足など）"></textarea>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">社内メモ・共有事項</label>
-                                    <textarea id="admin-user-notes" rows="6"
-                                        class="w-full px-4 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white transition"
-                                        placeholder="社内メモ、面談記録、共有事項など"></textarea>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">LINE
+                                        URL</label>
+                                    <input type="url" id="admin-user-line-url"
+                                        class="w-full px-4 py-2 border rounded-lg" placeholder="https://line.me/...">
                                 </div>
                             </div>
-
-                            <div class="flex justify-end gap-3 pt-4 border-t">
-                                <button type="button" onclick="closeAdminUserModal()"
-                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    キャンセル
-                                </button>
-                                <button type="submit"
-                                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-                                    保存
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Admin: Data Merge Modal -->
-                <div id="data-merge-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 40000;">
-                    <div class="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col">
-                        <div class="flex justify-between items-center mb-4 pb-4 border-b">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900">データの統合 (マージ)</h3>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    統合すると、選択されなかった方のレコードは削除されます。関連するデータ（求人、応募など）は統合先に引き継がれます。</p>
-                            </div>
-                            <button onclick="closeDataMergeModal()" class="text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
                         </div>
 
-                        <div class="flex-1 overflow-y-auto px-1">
-                            <table class="min-w-full border-collapse">
-                                <thead class="sticky top-0 bg-gray-50 z-10">
-                                    <tr>
-                                        <th
-                                            class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b">
-                                            項目</th>
-                                        <th
-                                            class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b w-[40%]">
-                                            <div class="flex items-center justify-between">
-                                                <span>レコード A (統合先)</span>
-                                                <button onclick="selectAllMerge('A')"
-                                                    class="text-[10px] text-indigo-600 hover:underline">全選択</button>
-                                            </div>
-                                        </th>
-                                        <th
-                                            class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b w-[40%]">
-                                            <div class="flex items-center justify-between">
-                                                <span>レコード B (統合元: 削除対象)</span>
-                                                <button onclick="selectAllMerge('B')"
-                                                    class="text-[10px] text-indigo-600 hover:underline">全選択</button>
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="merge-fields-container" class="divide-y divide-gray-100">
-                                    <!-- Fields injected by JS -->
-                                </tbody>
-                            </table>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">社内マッチング情報</label>
+                            <textarea id="admin-user-resume-detail" rows="6"
+                                class="w-full px-4 py-2 border rounded-lg text-sm font-mono bg-gray-50 focus:bg-white transition"
+                                placeholder="社内マッチング情報（スキル、経験、希望の補足など）"></textarea>
                         </div>
 
-                        <div class="mt-6 pt-4 border-t flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                            <div class="text-sm text-amber-700">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>
-                                統合実行後、Bのレコードは<strong>完全に削除</strong>されます。
-                            </div>
-                            <div class="flex gap-3">
-                                <button onclick="closeDataMergeModal()"
-                                    class="px-4 py-2 border rounded-lg hover:bg-white transition">キャンセル</button>
-                                <button onclick="executeMerge()"
-                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-lg">
-                                    <i class="fas fa-compress-alt mr-2"></i>統合を実行する
-                                </button>
-                            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">社内メモ・共有事項</label>
+                            <textarea id="admin-user-notes" rows="6"
+                                class="w-full px-4 py-2 border rounded-lg text-sm bg-gray-50 focus:bg-white transition"
+                                placeholder="社内メモ、面談記録、共有事項など"></textarea>
                         </div>
                     </div>
-                </div>
 
-                <!-- Admin: User CSV Import Modal -->
-                <div id="admin-user-csv-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 100000;">
-                    <div class="bg-white rounded-lg w-full max-w-lg p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold">求職者CSVインポート</h3>
-                            <button onclick="closeUserCsvImportModal()"
-                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
-                                <p class="font-bold mb-2">CSVフォーマットについて</p>
-                                <p>以下のカラムを持つCSVファイルを作成してください：</p>
-                                <ul class="list-disc list-inside ml-2 mt-1">
-                                    <li>name (必須): 氏名</li>
-                                    <li>email (組織設定により必須/任意): メールアドレス</li>
-                                    <li>age (任意): 年齢</li>
-                                    <li>desired_job_type (任意): 希望職種</li>
-                                    <li>desired_location (任意): 希望勤務地</li>
-                                    <li>desired_salary (任意): 希望年収（万円）</li>
-                                    <li>skills (任意): スキル</li>
-                                </ul>
-                                <p class="mt-2 text-xs">※ ロールは自動的に「求職者」に設定されます</p>
-                                <div class="mt-3">
-                                    <a href="#" onclick="downloadCandidateCsvTemplate(event)"
-                                        class="text-blue-600 hover:underline">
-                                        <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
-                                <input type="file" id="user-csv-file" accept=".csv"
-                                    class="w-full border rounded-lg p-2">
-                            </div>
-
-                            <div id="user-csv-preview"
-                                class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
-                                <!-- プレビュー表示エリア -->
-                            </div>
-
-                            <div class="flex justify-end gap-3 pt-4 border-t">
-                                <button onclick="closeUserCsvImportModal()"
-                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    キャンセル
-                                </button>
-                                <button onclick="processUserCsvImport()"
-                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                    インポート実行
-                                </button>
-                            </div>
-                        </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button type="button" onclick="closeAdminUserModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                            保存
+                        </button>
                     </div>
-                </div>
-
-                <!-- Admin: Job CSV Import Modal -->
-                <div id="admin-job-csv-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 100000;">
-                    <div class="bg-white rounded-lg w-full max-w-lg p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold">求人CSVインポート</h3>
-                            <button onclick="closeJobCsvImportModal()"
-                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
-                                <p class="font-bold mb-2">CSVフォーマットについて</p>
-                                <p>以下のカラムを持つCSVファイルを作成してください：</p>
-                                <ul class="list-disc list-inside ml-2 mt-1">
-                                    <li>title (必須): 求人タイトル</li>
-                                    <li>company (必須): 会社名</li>
-                                    <li>salary_min (必須): 最低年収(数値)</li>
-                                    <li>salary_max (必須): 最高年収(数値)</li>
-                                    <li>location (必須): 勤務地</li>
-                                    <li>description: 仕事内容</li>
-                                </ul>
-                                <div class="mt-3">
-                                    <a href="#" onclick="downloadJobCsvTemplate(event)"
-                                        class="text-blue-600 hover:underline">
-                                        <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
-                                <input type="file" id="job-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
-                            </div>
-
-                            <div id="job-csv-preview"
-                                class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
-                                <!-- プレビュー表示エリア -->
-                            </div>
-
-                            <div class="flex justify-end gap-3 pt-4 border-t">
-                                <button onclick="closeJobCsvImportModal()"
-                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    キャンセル
-                                </button>
-                                <button onclick="processJobCsvImport()"
-                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                    インポート実行
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Admin: Company CSV Import Modal -->
-                <div id="admin-company-csv-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 100000;">
-                    <div class="bg-white rounded-lg w-full max-w-lg p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-bold">企業CSVインポート</h3>
-                            <button onclick="closeCompanyCsvImportModal()"
-                                class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
-                                <p class="font-bold mb-2">CSVフォーマットについて</p>
-                                <p>以下のカラムを持つCSVファイルを作成してください：</p>
-                                <ul class="list-disc list-inside ml-2 mt-1">
-                                    <li>name (必須): 企業名</li>
-                                    <li>industry (任意): 業界</li>
-                                    <li>location (任意): 所在地</li>
-                                    <li>website (任意): WebサイトURL</li>
-                                    <li>description (任意): 企業説明</li>
-                                </ul>
-                                <div class="mt-3">
-                                    <a href="#" onclick="downloadCompanyCsvTemplate(event)"
-                                        class="text-blue-600 hover:underline">
-                                        <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
-                                <input type="file" id="company-csv-file" accept=".csv"
-                                    class="w-full border rounded-lg p-2">
-                            </div>
-
-                            <div id="company-csv-preview"
-                                class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
-                                <!-- プレビュー表示エリア -->
-                            </div>
-
-                            <div class="flex justify-end gap-3 pt-4 border-t">
-                                <button onclick="closeCompanyCsvImportModal()"
-                                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                    キャンセル
-                                </button>
-                                <button onclick="processCompanyCsvImport()"
-                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                                    インポート実行
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Admin: Drive Import Modal -->
-                <div id="drive-import-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 100000;">
-                    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
-                        <div class="p-6 border-b flex justify-between items-center bg-blue-600 text-white rounded-t-lg">
-                            <h3 class="text-xl font-bold flex items-center gap-2">
-                                <i class="fab fa-google-drive"></i> Googleドライブ求人取得
-                            </h3>
-                            <button onclick="closeDriveImportModal()" class="text-white hover:text-blue-100">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-
-                        <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
-                            <!-- Filters -->
-                            <div class="bg-white p-4 rounded-lg shadow-sm mb-4 border border-gray-200">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-gray-500 uppercase mb-1">キーワード検索</label>
-                                        <div class="relative">
-                                            <input type="text" id="drive-filter-search" placeholder="ファイル名で検索..."
-                                                class="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                                oninput="applyDriveFileFilters()">
-                                            <i
-                                                class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-gray-500 uppercase mb-1">更新日（から）</label>
-                                        <input type="date" id="drive-filter-date-from"
-                                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none"
-                                            onchange="applyDriveFileFilters()">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">並び替え</label>
-                                        <select id="drive-filter-sort"
-                                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white"
-                                            onchange="applyDriveFileFilters()">
-                                            <option value="newest">更新日が新しい順</option>
-                                            <option value="oldest">更新日が古い順</option>
-                                            <option value="name">名前順</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="drive-import-status"
-                                class="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-100">
-                                <i class="fas fa-info-circle"></i>
-                                <p class="text-sm">Googleドライブから最新のPDFファイルを取得しています...</p>
-                            </div>
-
-                            <!-- Select All & Count -->
-                            <div class="flex justify-between items-center mb-3 px-1">
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="checkbox" id="drive-file-select-all"
-                                        class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition"
-                                        onchange="toggleDriveAllCheckboxes(this.checked)">
-                                    <span
-                                        class="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition">すべて選択
-                                        / 解除</span>
-                                </label>
-                                <div id="drive-file-list-count"
-                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                    0件のファイル
-                                </div>
-                            </div>
-
-                            <div id="drive-file-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <!-- File list will be rendered here -->
-                            </div>
-                        </div>
-
-                        <div class="p-4 border-t bg-white flex justify-between items-center rounded-b-lg">
-                            <div id="drive-import-count"
-                                class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                                0件選択
-                            </div>
-                            <div class="flex gap-3">
-                                <button onclick="closeDriveImportModal()"
-                                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">キャンセル</button>
-                                <button id="execute-drive-import-btn" onclick="executeDriveImport()" disabled
-                                    class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95">
-                                    <i class="fas fa-download"></i> インポートを開始
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Coach: My Students Page -->
-                <div id="coach-students-content" class="app-content p-6 hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <!-- Title removed -->
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ユーザー</th>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            登録日</th>
-                                        <th
-                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            進捗状況</th>
-                                        <th
-                                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="coach-students-container" class="bg-white divide-y divide-gray-200">
-                                    <!-- Users will be loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- 候補者プレビューモーダル -->
-                <div id="candidate-preview-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-                    style="z-index: 30000;">
-                    <div
-                        class="bg-white rounded-2xl w-full max-w-7xl mx-4 h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
-                        <!-- ヘッダー (固定) -->
-                        <div class="flex-none flex justify-between items-center px-8 py-5 border-b bg-white">
-                            <div class="flex items-center gap-4">
-                                <div id="candidate-avatar-header"
-                                    class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-inner">
-                                    ?
-                                </div>
-                                <div>
-                                    <h3 class="text-2xl font-bold text-gray-900 leading-tight flex items-center gap-3">
-                                        <span id="candidate-detail-title">候補者詳細</span>
-                                        <span id="candidate-header-meta"
-                                            class="text-sm font-normal text-gray-500 bg-gray-100 px-3 py-1 rounded-full"></span>
-                                    </h3>
-                                    <p id="candidate-email-header" class="text-sm text-gray-500"></p>
-                                </div>
-                                <div id="candidate-status-badge-header" class="ml-4">
-                                    <!-- Status badge will be injected here -->
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <button onclick="showAdminUserModal($('#interview-candidate-id').val())"
-                                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-bold flex items-center transition-all">
-                                    <i class="fas fa-edit mr-2 text-gray-400"></i>情報を編集
-                                </button>
-                                <button onclick="closeCandidatePreview()"
-                                    class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- メインコンテンツ (集約画面) -->
-                        <div class="flex-1 min-h-0 bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
-
-                            <!-- 左カラム: プロフィール詳細 (スクロール可) -->
-                            <div id="candidate-preview-content"
-                                class="w-full lg:w-[42%] h-full bg-white border-r overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
-                                <!-- Profile details will be loaded here -->
-                            </div>
-
-                            <!-- 右カラム: 管理情報 (スクロール可) -->
-                            <div
-                                class="w-full lg:w-[58%] h-full bg-gray-50 overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
-                                <!-- 選考進捗セクション -->
-                                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                    <div class="flex justify-between items-center mb-6">
-                                        <h4 class="font-bold text-lg text-gray-900 flex items-center">
-                                            <i
-                                                class="fas fa-tasks mr-2 text-indigo-600 bg-indigo-50 p-2 rounded-lg"></i>
-                                            エントリー中の案件 / 選考状況
-                                        </h4>
-                                    </div>
-                                    <div id="selection-progress-container" class="space-y-4">
-                                        <!-- Selection list will be rendered here -->
-                                    </div>
-                                </div>
-
-                                <!-- 面談履歴セクション -->
-                                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
-                                    <div class="flex justify-between items-center mb-6">
-                                        <h4 class="font-bold text-lg text-gray-900 flex items-center">
-                                            <i class="fas fa-comments mr-2 text-blue-600 bg-blue-50 p-2 rounded-lg"></i>
-                                            面談履歴・対応メモ
-                                        </h4>
-                                        <button onclick="openInterviewRecordModal()"
-                                            class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 text-sm font-bold flex items-center transition-all shadow-md transform hover:-translate-y-0.5">
-                                            <i class="fas fa-plus mr-2"></i>履歴を記録
-                                        </button>
-                                    </div>
-                                    <div id="interview-list-container" class="space-y-4">
-                                        <!-- Interviews will be rendered here -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- 面談履歴記録モーダル -->
-                <div id="interview-record-modal"
-                    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden"
-                    style="z-index: 31000;">
-                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 animate-fade-in-up">
-                        <div class="flex justify-between items-center mb-6 border-b pb-4">
-                            <h3 class="text-xl font-bold text-gray-900 flex items-center">
-                                <i class="fas fa-clipboard-list text-indigo-600 mr-2"></i>面談履歴を保存
-                            </h3>
-                            <button onclick="closeInterviewRecordModal()"
-                                class="text-gray-400 hover:text-gray-600 transition-colors">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
-                        </div>
-                        <form id="interview-record-form" class="space-y-5">
-                            <input type="hidden" id="interview-candidate-id">
-                            <input type="hidden" id="interview-id">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">実施日</label>
-                                    <input type="date" id="interview-date"
-                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
-                                        required>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">面談種別</label>
-                                    <select id="interview-type"
-                                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all">
-                                        <option value="初回面談">初回面談</option>
-                                        <option value="フォロー面談">フォロー面談</option>
-                                        <option value="カジュアル面談">カジュアル面談</option>
-                                        <option value="模擬面接">模擬面接</option>
-                                        <option value="電話連絡">電話連絡</option>
-                                        <option value="その他">その他</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">内容・メモ</label>
-                                <textarea id="interview-content" rows="8"
-                                    class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm leading-relaxed"
-                                    placeholder="話した内容、印象、懸念点などを入力してください" required></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">ネクストアクション</label>
-                                <input type="text" id="interview-next-action"
-                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
-                                    placeholder="例: 〇〇社の求人を案内する、来週月曜日に進捗確認など">
-                            </div>
-                            <div class="flex justify-end gap-3 pt-4 border-t">
-                                <button type="button" onclick="closeInterviewRecordModal()"
-                                    class="px-6 py-2 border rounded-lg hover:bg-gray-50 transition-all text-sm font-bold text-gray-600">
-                                    キャンセル
-                                </button>
-                                <button type="submit"
-                                    class="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition-all text-sm font-bold shadow-md transform hover:-translate-y-0.5">
-                                    履歴を保存する
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-
+                </form>
             </div>
+        </div>
+
+        <!-- Admin: Data Merge Modal -->
+        <div id="data-merge-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 40000;">
+            <div class="bg-white rounded-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-hidden flex flex-col">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">データの統合 (マージ)</h3>
+                        <p class="text-xs text-gray-500 mt-1">
+                            統合すると、選択されなかった方のレコードは削除されます。関連するデータ（求人、応募など）は統合先に引き継がれます。</p>
+                    </div>
+                    <button onclick="closeDataMergeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-1">
+                    <table class="min-w-full border-collapse">
+                        <thead class="sticky top-0 bg-gray-50 z-10">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b">
+                                    項目</th>
+                                <th
+                                    class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b w-[40%]">
+                                    <div class="flex items-center justify-between">
+                                        <span>レコード A (統合先)</span>
+                                        <button onclick="selectAllMerge('A')"
+                                            class="text-[10px] text-indigo-600 hover:underline">全選択</button>
+                                    </div>
+                                </th>
+                                <th
+                                    class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase border-b w-[40%]">
+                                    <div class="flex items-center justify-between">
+                                        <span>レコード B (統合元: 削除対象)</span>
+                                        <button onclick="selectAllMerge('B')"
+                                            class="text-[10px] text-indigo-600 hover:underline">全選択</button>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="merge-fields-container" class="divide-y divide-gray-100">
+                            <!-- Fields injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 pt-4 border-t flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                    <div class="text-sm text-amber-700">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        統合実行後、Bのレコードは<strong>完全に削除</strong>されます。
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="closeDataMergeModal()"
+                            class="px-4 py-2 border rounded-lg hover:bg-white transition">キャンセル</button>
+                        <button onclick="executeMerge()"
+                            class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-lg">
+                            <i class="fas fa-compress-alt mr-2"></i>統合を実行する
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin: User CSV Import Modal -->
+        <div id="admin-user-csv-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 100000;">
+            <div class="bg-white rounded-lg w-full max-w-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">求職者CSVインポート</h3>
+                    <button onclick="closeUserCsvImportModal()"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                        <p class="font-bold mb-2">CSVフォーマットについて</p>
+                        <p>以下のカラムを持つCSVファイルを作成してください：</p>
+                        <ul class="list-disc list-inside ml-2 mt-1">
+                            <li>name (必須): 氏名</li>
+                            <li>email (組織設定により必須/任意): メールアドレス</li>
+                            <li>age (任意): 年齢</li>
+                            <li>desired_job_type (任意): 希望職種</li>
+                            <li>desired_location (任意): 希望勤務地</li>
+                            <li>desired_salary (任意): 希望年収（万円）</li>
+                            <li>skills (任意): スキル</li>
+                        </ul>
+                        <p class="mt-2 text-xs">※ ロールは自動的に「求職者」に設定されます</p>
+                        <div class="mt-3">
+                            <a href="#" onclick="downloadCandidateCsvTemplate(event)"
+                                class="text-blue-600 hover:underline">
+                                <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
+                        <input type="file" id="user-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
+                    </div>
+
+                    <div id="user-csv-preview" class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
+                        <!-- プレビュー表示エリア -->
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button onclick="closeUserCsvImportModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button onclick="processUserCsvImport()"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            インポート実行
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin: Job CSV Import Modal -->
+        <div id="admin-job-csv-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 100000;">
+            <div class="bg-white rounded-lg w-full max-w-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">求人CSVインポート</h3>
+                    <button onclick="closeJobCsvImportModal()"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                        <p class="font-bold mb-2">CSVフォーマットについて</p>
+                        <p>以下のカラムを持つCSVファイルを作成してください：</p>
+                        <ul class="list-disc list-inside ml-2 mt-1">
+                            <li>title (必須): 求人タイトル</li>
+                            <li>company (必須): 会社名</li>
+                            <li>salary_min (必須): 最低年収(数値)</li>
+                            <li>salary_max (必須): 最高年収(数値)</li>
+                            <li>location (必須): 勤務地</li>
+                            <li>description: 仕事内容</li>
+                        </ul>
+                        <div class="mt-3">
+                            <a href="#" onclick="downloadJobCsvTemplate(event)" class="text-blue-600 hover:underline">
+                                <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
+                        <input type="file" id="job-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
+                    </div>
+
+                    <div id="job-csv-preview" class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
+                        <!-- プレビュー表示エリア -->
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button onclick="closeJobCsvImportModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button onclick="processJobCsvImport()"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            インポート実行
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin: Company CSV Import Modal -->
+        <div id="admin-company-csv-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 100000;">
+            <div class="bg-white rounded-lg w-full max-w-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">企業CSVインポート</h3>
+                    <button onclick="closeCompanyCsvImportModal()"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800">
+                        <p class="font-bold mb-2">CSVフォーマットについて</p>
+                        <p>以下のカラムを持つCSVファイルを作成してください：</p>
+                        <ul class="list-disc list-inside ml-2 mt-1">
+                            <li>name (必須): 企業名</li>
+                            <li>industry (任意): 業界</li>
+                            <li>location (任意): 所在地</li>
+                            <li>website (任意): WebサイトURL</li>
+                            <li>description (任意): 企業説明</li>
+                        </ul>
+                        <div class="mt-3">
+                            <a href="#" onclick="downloadCompanyCsvTemplate(event)"
+                                class="text-blue-600 hover:underline">
+                                <i class="fas fa-download mr-1"></i>テンプレートをダウンロード
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
+                        <input type="file" id="company-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
+                    </div>
+
+                    <div id="company-csv-preview" class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
+                        <!-- プレビュー表示エリア -->
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button onclick="closeCompanyCsvImportModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button onclick="processCompanyCsvImport()"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            インポート実行
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin: Drive Import Modal -->
+        <div id="drive-import-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 100000;">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
+                <div class="p-6 border-b flex justify-between items-center bg-blue-600 text-white rounded-t-lg">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <i class="fab fa-google-drive"></i> Googleドライブ求人取得
+                    </h3>
+                    <button onclick="closeDriveImportModal()" class="text-white hover:text-blue-100">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
+                    <!-- Filters -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm mb-4 border border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">キーワード検索</label>
+                                <div class="relative">
+                                    <input type="text" id="drive-filter-search" placeholder="ファイル名で検索..."
+                                        class="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        oninput="applyDriveFileFilters()">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">更新日（から）</label>
+                                <input type="date" id="drive-filter-date-from"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm outline-none"
+                                    onchange="applyDriveFileFilters()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">並び替え</label>
+                                <select id="drive-filter-sort"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white"
+                                    onchange="applyDriveFileFilters()">
+                                    <option value="newest">更新日が新しい順</option>
+                                    <option value="oldest">更新日が古い順</option>
+                                    <option value="name">名前順</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="drive-import-status"
+                        class="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-100">
+                        <i class="fas fa-info-circle"></i>
+                        <p class="text-sm">Googleドライブから最新のPDFファイルを取得しています...</p>
+                    </div>
+
+                    <!-- Select All & Count -->
+                    <div class="flex justify-between items-center mb-3 px-1">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" id="drive-file-select-all"
+                                class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition"
+                                onchange="toggleDriveAllCheckboxes(this.checked)">
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition">すべて選択
+                                / 解除</span>
+                        </label>
+                        <div id="drive-file-list-count"
+                            class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            0件のファイル
+                        </div>
+                    </div>
+
+                    <div id="drive-file-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- File list will be rendered here -->
+                    </div>
+                </div>
+
+                <div class="p-4 border-t bg-white flex justify-between items-center rounded-b-lg">
+                    <div id="drive-import-count"
+                        class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        0件選択
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="closeDriveImportModal()"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">キャンセル</button>
+                        <button id="execute-drive-import-btn" onclick="executeDriveImport()" disabled
+                            class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95">
+                            <i class="fas fa-download"></i> インポートを開始
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coach: My Students Page -->
+        <div id="coach-students-content" class="app-content p-6 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <!-- Title removed -->
+            </div>
+
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ユーザー</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    登録日</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    進捗状況</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coach-students-container" class="bg-white divide-y divide-gray-200">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 候補者プレビューモーダル -->
+        <div id="candidate-preview-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+            style="z-index: 30000;">
+            <div
+                class="bg-white rounded-2xl w-full max-w-7xl mx-4 h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+                <!-- ヘッダー (固定) -->
+                <div class="flex-none flex justify-between items-center px-8 py-5 border-b bg-white">
+                    <div class="flex items-center gap-4">
+                        <div id="candidate-avatar-header"
+                            class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-inner">
+                            ?
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900 leading-tight flex items-center gap-3">
+                                <span id="candidate-detail-title">候補者詳細</span>
+                                <span id="candidate-header-meta"
+                                    class="text-sm font-normal text-gray-500 bg-gray-100 px-3 py-1 rounded-full"></span>
+                            </h3>
+                            <p id="candidate-email-header" class="text-sm text-gray-500"></p>
+                        </div>
+                        <div id="candidate-status-badge-header" class="ml-4">
+                            <!-- Status badge will be injected here -->
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="showAdminUserModal($('#interview-candidate-id').val())"
+                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-bold flex items-center transition-all">
+                            <i class="fas fa-edit mr-2 text-gray-400"></i>情報を編集
+                        </button>
+                        <button onclick="closeCandidatePreview()"
+                            class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- メインコンテンツ (集約画面) -->
+                <div class="flex-1 min-h-0 bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
+
+                    <!-- 左カラム: プロフィール詳細 (スクロール可) -->
+                    <div id="candidate-preview-content"
+                        class="w-full lg:w-[42%] h-full bg-white border-r overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
+                        <!-- Profile details will be loaded here -->
+                    </div>
+
+                    <!-- 右カラム: 管理情報 (スクロール可) -->
+                    <div
+                        class="w-full lg:w-[58%] h-full bg-gray-50 overflow-y-scroll custom-scrollbar p-8 space-y-8 pb-32">
+                        <!-- 選考進捗セクション -->
+                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 class="font-bold text-lg text-gray-900 flex items-center">
+                                    <i class="fas fa-tasks mr-2 text-indigo-600 bg-indigo-50 p-2 rounded-lg"></i>
+                                    エントリー中の案件 / 選考状況
+                                </h4>
+                            </div>
+                            <div id="selection-progress-container" class="space-y-4">
+                                <!-- Selection list will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- 面談履歴セクション -->
+                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 class="font-bold text-lg text-gray-900 flex items-center">
+                                    <i class="fas fa-comments mr-2 text-blue-600 bg-blue-50 p-2 rounded-lg"></i>
+                                    面談履歴・対応メモ
+                                </h4>
+                                <button onclick="openInterviewRecordModal()"
+                                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 text-sm font-bold flex items-center transition-all shadow-md transform hover:-translate-y-0.5">
+                                    <i class="fas fa-plus mr-2"></i>履歴を記録
+                                </button>
+                            </div>
+                            <div id="interview-list-container" class="space-y-4">
+                                <!-- Interviews will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 面談履歴記録モーダル -->
+        <div id="interview-record-modal"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden"
+            style="z-index: 31000;">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 animate-fade-in-up">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-clipboard-list text-indigo-600 mr-2"></i>面談履歴を保存
+                    </h3>
+                    <button onclick="closeInterviewRecordModal()"
+                        class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <form id="interview-record-form" class="space-y-5">
+                    <input type="hidden" id="interview-candidate-id">
+                    <input type="hidden" id="interview-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">実施日</label>
+                            <input type="date" id="interview-date"
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all"
+                                required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">面談種別</label>
+                            <select id="interview-type"
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all">
+                                <option value="初回面談">初回面談</option>
+                                <option value="フォロー面談">フォロー面談</option>
+                                <option value="カジュアル面談">カジュアル面談</option>
+                                <option value="模擬面接">模擬面接</option>
+                                <option value="電話連絡">電話連絡</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">内容・メモ</label>
+                        <textarea id="interview-content" rows="8"
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm leading-relaxed"
+                            placeholder="話した内容、印象、懸念点などを入力してください" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">ネクストアクション</label>
+                        <input type="text" id="interview-next-action"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
+                            placeholder="例: 〇〇社の求人を案内する、来週月曜日に進捗確認など">
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button type="button" onclick="closeInterviewRecordModal()"
+                            class="px-6 py-2 border rounded-lg hover:bg-gray-50 transition-all text-sm font-bold text-gray-600">
+                            キャンセル
+                        </button>
+                        <button type="submit"
+                            class="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition-all text-sm font-bold shadow-md transform hover:-translate-y-0.5">
+                            履歴を保存する
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+    </div>
     </div>
 
     <!-- 求人選択モーダル -->
@@ -5400,15 +5551,51 @@
                                 </select>
                             </div>
                         </div>
+
+                        <!-- Yomi/Revenue Forecasting -->
+                        <div class="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100 space-y-4">
+                            <h5 class="text-xs font-bold text-indigo-800 uppercase tracking-wider">売上・ヨミ予測</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 mb-1">見込み売上 (円)</label>
+                                    <input type="number" id="progress-expected-revenue"
+                                        class="w-full px-4 py-2 border rounded-lg text-sm" placeholder="例: 1000000">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 mb-1">成約確度 (%)</label>
+                                    <select id="progress-probability-rate"
+                                        class="w-full px-4 py-2 border rounded-lg text-sm">
+                                        <option value="0">0% (Cヨミ)</option>
+                                        <option value="20">20% (Cヨミ)</option>
+                                        <option value="40">40% (Cヨミ)</option>
+                                        <option value="60">60% (Bヨミ)</option>
+                                        <option value="80">80% (Aヨミ)</option>
+                                        <option value="100">100% (確定)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 mb-1">入社予定日</label>
+                                    <input type="date" id="progress-expected-start-date"
+                                        class="w-full px-4 py-2 border rounded-lg text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1">ヨミ詳細メモ (特記事項)</label>
+                                <textarea id="progress-yomi-notes" rows="2"
+                                    class="w-full px-4 py-2 border rounded-lg text-sm"
+                                    placeholder="確度の根拠や懸念点など"></textarea>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">メモ・コメント</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">進捗メモ・コメント</label>
                             <textarea id="progress-notes" rows="3" class="w-full px-4 py-2 border rounded-lg"
                                 placeholder="ステータス変更の理由や詳細を記入してください"></textarea>
                         </div>
                         <div class="flex justify-end">
                             <button type="submit"
                                 class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
-                                <i class="fas fa-save mr-2"></i>ステータスを更新
+                                <i class="fas fa-save mr-2"></i>保存して更新
                             </button>
                         </div>
                     </form>
@@ -6927,6 +7114,7 @@
                     'admin-settings-content',
                     'admin-data-management-content',
                     'kpi-dashboard-content',
+                    'admin-yomi-management-content',
                     'admin-templates-content',
                     'super-admin-organizations-content',
                     'coach-students-content'
@@ -13693,6 +13881,12 @@
                 $('#progress-user-name').text(`応募者: ${application.users.name}`);
                 $('#progress-current-status').data('code', application.status || 'applied').val(getSelectionStatusLabel(application.status || 'applied'));
 
+                // ヨミ情報のセット
+                $('#progress-expected-revenue').val(application.expected_revenue || '');
+                $('#progress-probability-rate').val(application.probability_rate || '0');
+                $('#progress-expected-start-date').val(application.expected_start_date || '');
+                $('#progress-yomi-notes').val(application.yomi_notes || '');
+
                 // ステータスマスタデータを読み込み
                 await loadApplicationStatuses();
 
@@ -13879,6 +14073,10 @@
                     .from('applications')
                     .update({
                         status: newStatus,
+                        expected_revenue: $('#progress-expected-revenue').val() ? parseInt($('#progress-expected-revenue').val()) : null,
+                        probability_rate: parseInt($('#progress-probability-rate').val()) || 0,
+                        expected_start_date: $('#progress-expected-start-date').val() || null,
+                        yomi_notes: $('#progress-yomi-notes').val() || null,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', applicationId);
@@ -16650,9 +16848,27 @@
                 $('#admin-user-role-container').show();
                 $('#admin-user-coach-container').show();
                 $('#admin-user-coach').prop('disabled', false);
+
+                // チームリストのロード
+                const { data: teams } = await window.supabase
+                    .from('teams')
+                    .select('*')
+                    .eq('organization_id', currentUser.organization_id)
+                    .order('display_order');
+
+                if (teams) {
+                    const teamSelect = $('#admin-user-team');
+                    teamSelect.empty().append('<option value="">未設定</option>');
+                    teams.forEach(t => {
+                        const indent = '&nbsp;'.repeat((t.level - 1) * 4);
+                        teamSelect.append(`<option value="${t.id}">${indent}${t.name}</option>`);
+                    });
+                    if (user.team_id) teamSelect.val(user.team_id);
+                }
             } else {
                 $('#admin-user-role-container').hide();
                 $('#admin-user-coach-container').hide();
+                $('#admin-user-team').closest('div').hide();
             }
 
             // 求職者フィールドの表示制御
@@ -17037,6 +17253,7 @@
 
             if (['org_admin', 'admin', 'super_admin'].includes(currentUser.role)) {
                 updates.role = role;
+                updates.team_id = $('#admin-user-team').val() || null;
             }
 
             // candidate固有のUsersテーブル更新項目
@@ -22963,6 +23180,7 @@
                 $(this).addClass('bg-indigo-50 text-indigo-600')
 
                 showAppContent(`${page}-content`)
+                $(document).trigger('page-switched', [page])
 
                 if (page === 'jobs') {
                     // 保存された検索条件を適用
@@ -25632,6 +25850,335 @@
             $('#data-mgmt-tab-companies').attr('data-type', 'company');
             $('#data-mgmt-tab-jobs').attr('data-type', 'job');
         });
+        // ========================================
+        // ヨミ管理・進捗モニタリング機能
+        // ========================================
+
+        let yomiViewMode = 'board';
+        let yomiData = [];
+
+        window.switchYomiView = function (view) {
+            yomiViewMode = view;
+            $('.yomi-view-btn').removeClass('bg-white shadow-sm text-indigo-600').addClass('text-gray-600 hover:text-gray-900');
+            $(`#yomi-view-${view}-btn`).addClass('bg-white shadow-sm text-indigo-600').removeClass('text-gray-600 hover:text-gray-900');
+
+            $('.yomi-view-content').addClass('hidden');
+            $(`#yomi-${view}-view`).removeClass('hidden');
+
+            renderYomiContent();
+        };
+
+        window.loadYomiData = async function () {
+            showLoading('ヨミデータを更新中...');
+            try {
+                if (!window.supabase) return;
+
+                // 1. チームデータの取得
+                const { data: teams, error: teamError } = await window.supabase
+                    .from('teams')
+                    .select('*')
+                    .eq('organization_id', currentUser.organization_id)
+                    .order('display_order');
+
+                if (!teamError && teams) {
+                    const teamSelect = $('#yomi-filter-team');
+                    const currentValue = teamSelect.val();
+                    teamSelect.empty().append('<option value="">全てのチーム</option>');
+                    teams.forEach(t => {
+                        const indent = '&nbsp;'.repeat((t.level - 1) * 4);
+                        teamSelect.append(`<option value="${t.id}">${indent}${t.name}</option>`);
+                    });
+                    teamSelect.val(currentValue);
+                }
+
+                // 2. コーチ（担当者）データの取得
+                const { data: coaches, error: coachError } = await window.supabase
+                    .from('users')
+                    .select('id, name')
+                    .eq('organization_id', currentUser.organization_id)
+                    .in('role', ['coach', 'admin', 'org_admin']);
+
+                if (!coachError && coaches) {
+                    const coachSelect = $('#yomi-filter-coach');
+                    const currentCoach = coachSelect.val();
+                    coachSelect.empty().append('<option value="">全員</option>');
+                    coaches.forEach(c => {
+                        coachSelect.append(`<option value="${c.id}">${c.name}</option>`);
+                    });
+                    coachSelect.val(currentCoach);
+                }
+
+                // 3. 応募データの取得 (ヨミ情報含む)
+                let query = window.supabase
+                    .from('applications')
+                    .select(`
+                        *,
+                        users!applications_user_id_fkey (id, name, team_id),
+                        jobs!applications_job_id_fkey (id, title, company, company_id)
+                    `)
+                    .eq('organization_id', currentUser.organization_id)
+                    .is('deleted_at', null);
+
+                // フィルタ適用
+                const teamId = $('#yomi-filter-team').val();
+                if (teamId) {
+                    query = query.eq('users.team_id', teamId);
+                }
+
+                const coachId = $('#yomi-filter-coach').val();
+                if (coachId) {
+                    query = query.eq('user_id', coachId); // シンプルにuser_id（進捗作成者）でフィルタする場合
+                    // 実際にはRA/CAそれぞれの担当でフィルタする必要がある場合がある
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                yomiData = data || [];
+                updateYomiStats();
+                renderYomiContent();
+
+            } catch (err) {
+                console.error('Failed to load yomi data:', err);
+                alert('データの読み込みに失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        function updateYomiStats() {
+            let totalRevenue = 0;
+            let weightedRevenue = 0;
+            let activeCount = yomiData.length;
+            let totalProb = 0;
+
+            yomiData.forEach(item => {
+                const rev = item.expected_revenue || 0;
+                const prob = item.probability_rate || 0;
+                totalRevenue += rev;
+                weightedRevenue += (rev * prob / 100);
+                totalProb += prob;
+            });
+
+            $('#yomi-stat-total-revenue').text(new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(totalRevenue));
+            $('#yomi-stat-weighted-revenue').text(new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(weightedRevenue));
+            $('#yomi-stat-active-count').text(activeCount + '件');
+            $('#yomi-stat-avg-probability').text((activeCount > 0 ? Math.round(totalProb / activeCount) : 0) + '%');
+        }
+
+        function renderYomiContent() {
+            if (yomiViewMode === 'board') renderYomiBoard();
+            else if (yomiViewMode === 'list') renderYomiList();
+            else if (yomiViewMode === 'forecast') renderYomiForecast();
+        }
+
+        async function renderYomiBoard() {
+            const container = $('#yomi-kanban-container').empty();
+
+            // ステータステーブルからカラムを生成
+            const { data: statuses } = await window.supabase
+                .from('master_data')
+                .select('*')
+                .eq('type', 'application_status')
+                .order('display_order');
+
+            if (!statuses) return;
+
+            // 各ステータスのカラムを作成
+            statuses.forEach(status => {
+                const columnData = yomiData.filter(d => d.status === status.value);
+                const colHtml = `
+                    <div class="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-[70vh]">
+                        <div class="p-4 flex justify-between items-center border-b">
+                            <h3 class="font-bold text-gray-700">${status.value} <span class="ml-2 text-xs text-gray-400 font-normal">${columnData.length}</span></h3>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar" ondragover="event.preventDefault()" ondrop="handleYomiDrop(event, '${status.value}')">
+                            ${columnData.map(item => `
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow" 
+                                     draggable="true" ondragstart="handleYomiDragStart(event, '${item.id}')">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${item.probability_rate || 0}%</span>
+                                        <span class="text-[10px] text-gray-400 font-mono">¥${(item.expected_revenue || 0).toLocaleString()}</span>
+                                    </div>
+                                    <h4 class="font-bold text-gray-900 text-sm mb-1">${item.users?.name || '不明'}</h4>
+                                    <p class="text-[10px] text-gray-500 truncate mb-2">${item.jobs?.company || ''} / ${item.jobs?.title || ''}</p>
+                                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
+                                        <span class="text-[10px] text-gray-400"><i class="far fa-calendar-alt mr-1"></i>${item.expected_start_date || '-'}</span>
+                                        <button onclick="openApplicationDetail('${item.id}')" class="text-xs text-indigo-500 hover:text-indigo-700">詳細</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.append(colHtml);
+            });
+        }
+
+        function renderYomiList() {
+            const container = $('#yomi-list-container').empty();
+            yomiData.forEach(item => {
+                const row = `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-gray-900">${item.users?.name || '不明'}</div>
+                            <div class="text-[10px] text-gray-400">担当: ${item.users?.coach_name || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${item.jobs?.title || ''}</div>
+                            <div class="text-xs text-gray-500">${item.jobs?.company || ''}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-[10px] font-bold rounded-full bg-blue-100 text-blue-700">${item.status}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <input type="number" value="${item.expected_revenue || 0}" 
+                                   onchange="updateYomiField('${item.id}', 'expected_revenue', this.value)"
+                                   class="w-24 border-gray-300 rounded text-sm text-right focus:ring-indigo-500">
+                        </td>
+                        <td class="px-6 py-4">
+                            <select onchange="updateYomiField('${item.id}', 'probability_rate', this.value)"
+                                    class="w-20 border-gray-300 rounded text-sm focus:ring-indigo-500">
+                                ${[0, 20, 40, 60, 80, 100].map(v => `<option value="${v}" ${item.probability_rate == v ? 'selected' : ''}>${v}%</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="px-6 py-4">
+                            <input type="date" value="${item.expected_start_date || ''}" 
+                                   onchange="updateYomiField('${item.id}', 'expected_start_date', this.value)"
+                                   class="w-32 border-gray-300 rounded text-xs focus:ring-indigo-500">
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="openApplicationDetail('${item.id}')" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs">編集</button>
+                        </td>
+                    </tr>
+                `;
+                container.append(row);
+            });
+        }
+
+        let yomiForecastChart = null;
+        let yomiDistributionChart = null;
+
+        function renderYomiForecast() {
+            const ctx1 = document.getElementById('yomi-forecast-chart').getContext('2d');
+            const ctx2 = document.getElementById('yomi-distribution-chart').getContext('2d');
+
+            if (yomiForecastChart) yomiForecastChart.destroy();
+            if (yomiDistributionChart) yomiDistributionChart.destroy();
+
+            // 月別集計
+            const monthlyData = {};
+            yomiData.forEach(d => {
+                if (d.expected_start_date) {
+                    const month = d.expected_start_date.substring(0, 7);
+                    monthlyData[month] = (monthlyData[month] || 0) + (d.expected_revenue * (d.probability_rate || 0) / 100);
+                }
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+
+            yomiForecastChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: '予測利益 (ヨミ換算)',
+                        data: sortedMonths.map(m => monthlyData[m]),
+                        backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                        borderColor: 'rgb(79, 70, 229)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // ヨミ別内訳
+            const dist = { '80%+': 0, '60%+': 0, '40%+': 0, '20%+': 0, '0%+': 0 };
+            yomiData.forEach(d => {
+                const p = d.probability_rate || 0;
+                if (p >= 80) dist['80%+']++;
+                else if (p >= 60) dist['60%+']++;
+                else if (p >= 40) dist['40%+']++;
+                else if (p >= 20) dist['20%+']++;
+                else dist['0%+']++;
+            });
+
+            yomiDistributionChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dist),
+                    datasets: [{
+                        data: Object.values(dist),
+                        backgroundColor: ['#4f46e5', '#818cf8', '#c7d2fe', '#e0e7ff', '#f3f4f6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        window.updateYomiField = async function (id, field, value) {
+            try {
+                const { error } = await window.supabase
+                    .from('applications')
+                    .update({ [field]: value })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // キャッシュ更新
+                const idx = yomiData.findIndex(d => d.id === id);
+                if (idx !== -1) yomiData[idx][field] = value;
+
+                updateYomiStats();
+            } catch (err) {
+                console.error('Update failed:', err);
+            }
+        };
+
+        // ドラッグ＆ドロップ用
+        let draggedApplicationId = null;
+        window.handleYomiDragStart = function (e, id) {
+            draggedApplicationId = id;
+            e.dataTransfer.setData('text/plain', id);
+        };
+
+        window.handleYomiDrop = async function (e, newStatus) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            if (!id) return;
+
+            showLoading('ステータスを更新中...');
+            try {
+                const { error } = await window.supabase
+                    .from('applications')
+                    .update({ status: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // 再読み込み
+                await loadYomiData();
+            } catch (err) {
+                alert('更新に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // ページ切り替え時にデータ読み込み
+        $(document).on('page-switched', function (e, pageId) {
+            if (pageId === 'admin-yomi-management') {
+                loadYomiData();
+            }
+        });
+
+        $(document).ready(() => {
+            // Initial call if starting on yomi management
+            if ($('#admin-yomi-management-content').hasClass('active')) {
+                loadYomiData();
+            }
+        });
+
     </script>
     <!-- Job Detail Modal -->
     <div id="job-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
