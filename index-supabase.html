@@ -13452,16 +13452,22 @@
 
             // ステータスフィルター
             if (currentCandidateStatusFilter !== 'all') {
-                filtered = filtered.filter(app => {
-                    if (currentCandidateStatusFilter === 'ongoing') {
-                        return ['pending', 'screening', 'interview'].includes(app.status);
-                    } else if (currentCandidateStatusFilter === 'offered') {
-                        return app.status === 'offered';
-                    } else if (currentCandidateStatusFilter === 'closed') {
-                        return ['rejected', 'withdrawn'].includes(app.status);
-                    }
-                    return true;
-                });
+                const group = window.statusGroups ? window.statusGroups[currentCandidateStatusFilter] : null;
+                if (group) {
+                    filtered = filtered.filter(app => group.values.includes(app.status));
+                } else {
+                    // フォールバック
+                    filtered = filtered.filter(app => {
+                        if (currentCandidateStatusFilter === 'ongoing') {
+                            return ['pending', 'screening', 'interview'].includes(app.status) || !app.status;
+                        } else if (currentCandidateStatusFilter === 'offered') {
+                            return app.status === 'offered';
+                        } else if (currentCandidateStatusFilter === 'closed') {
+                            return ['rejected', 'withdrawn'].includes(app.status);
+                        }
+                        return true;
+                    });
+                }
             }
 
             // キーワード検索
@@ -13480,6 +13486,9 @@
 
             showLoading()
             try {
+                // ステータスマスタを先に読み込んでフィルターを構築
+                await loadApplicationStatuses();
+
                 let query = supabase
                     .from('applications')
                     .select('*, jobs(*), users!applications_user_id_fkey(name), recommendation_text, resume_document_url, recommendation_letter_url')
@@ -13708,13 +13717,11 @@
         };
 
         async function loadApplicationStatuses() {
-            if (applicationStatuses.length > 0) return;
-
             try {
                 const { data: masters, error } = await supabase
                     .from('master_data')
                     .select('*')
-                    .eq('type', 'selection_status')
+                    .eq('type', 'application_status')
                     .eq('is_active', true)
                     .order('sort_order');
 
@@ -13726,14 +13733,79 @@
 
                 applicationStatuses = validMasters;
 
+                // ステータス更新用セレクトボックス
                 const select = $('#progress-new-status');
-                select.html('<option value="">選択してください</option>');
-                validMasters.forEach(m => {
-                    select.append(`<option value="${m.value}">${m.label}</option>`);
-                });
+                if (select.length) {
+                    select.html('<option value="">選択してください</option>');
+                    validMasters.forEach(m => {
+                        select.append(`<option value="${m.value}">${m.label}</option>`);
+                    });
+                }
+
+                // 一括更新用セレクトボックス
+                const bulkSelect = $('#bulk-new-status');
+                if (bulkSelect.length) {
+                    bulkSelect.empty();
+                    validMasters.forEach(m => {
+                        bulkSelect.append($('<option>').val(m.value).text(m.label));
+                    });
+                }
+
+                // フィルターボタンの動的生成
+                renderStatusFilters(validMasters);
+
             } catch (error) {
                 console.error('Load application statuses error:', error);
             }
+        }
+
+        function renderStatusFilters(statuses) {
+            // グループ化 (metadata.group があるものを優先)
+            const groups = {};
+            statuses.forEach(s => {
+                const group = s.metadata?.group;
+                const groupLabel = s.metadata?.group_label;
+                if (group && groupLabel) {
+                    if (!groups[group]) {
+                        groups[group] = { label: groupLabel, values: [] };
+                    }
+                    groups[group].values.push(s.value);
+                }
+            });
+
+            // 1. 管理者用フィルター
+            const adminContainer = $('#admin-applicant-status-filters');
+            if (adminContainer.length) {
+                let html = '';
+                Object.keys(groups).forEach(key => {
+                    const isActive = adminApplicantStatusFilter === key;
+                    html += `<button onclick="setAdminApplicantStatusFilter('${key}')" 
+                        class="status-filter-btn ${isActive ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
+                        data-status="${key}">${groups[key].label}</button>`;
+                });
+                html += `<button onclick="setAdminApplicantStatusFilter('all')" 
+                    class="status-filter-btn ${adminApplicantStatusFilter === 'all' ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'} px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
+                    data-status="all">すべて</button>`;
+                adminContainer.html(html);
+            }
+
+            // 2. 候補者用フィルター
+            const candidateContainer = $('.candidate-status-filter').parent();
+            if (candidateContainer.length) {
+                let html = `<button onclick="setCandidateApplicationStatusFilter('all')" 
+                    class="candidate-status-filter ${currentCandidateStatusFilter === 'all' ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'} whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
+                    data-status="all">すべて</button>`;
+
+                Object.keys(groups).forEach(key => {
+                    const isActive = currentCandidateStatusFilter === key;
+                    html += `<button onclick="setCandidateApplicationStatusFilter('${key}')" 
+                        class="candidate-status-filter ${isActive ? 'active bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'} whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold border transition-all" 
+                        data-status="${key}">${groups[key].label}</button>`;
+                });
+                candidateContainer.html(html);
+            }
+
+            window.statusGroups = groups;
         }
 
         async function loadProgressHistory(applicationId) {
@@ -18326,6 +18398,9 @@
 
             showLoading()
             try {
+                // ステータスマスタを先に読み込んでフィルターを構築
+                await loadApplicationStatuses();
+
                 const { data: applications, error } = await supabase
                     .from('applications')
                     .select('*, jobs(*), users!applications_user_id_fkey(*)')
@@ -18335,7 +18410,7 @@
                 if (error) throw error
 
                 adminApplicantsCache = applications || [];
-                renderAdminApplicants(adminApplicantsCache);
+                filterAdminApplicants();
             } catch (error) {
                 console.error('Load admin applicants error:', error)
                 $('#admin-applicants-container').html('<p class="text-red-500">応募者の読み込みに失敗しました</p>')
@@ -18364,18 +18439,24 @@
 
             // ステータスフィルター
             if (adminApplicantStatusFilter !== 'all') {
-                filtered = filtered.filter(app => {
-                    if (adminApplicantStatusFilter === 'ongoing') {
-                        return ['pending', 'screening', 'interview'].includes(app.status);
-                    } else if (adminApplicantStatusFilter === 'offered') {
-                        return app.status === 'offered';
-                    } else if (adminApplicantStatusFilter === 'contracted') {
-                        return app.status === 'contracted';
-                    } else if (adminApplicantStatusFilter === 'closed') {
-                        return ['rejected', 'withdrawn'].includes(app.status);
-                    }
-                    return true;
-                });
+                const group = window.statusGroups ? window.statusGroups[adminApplicantStatusFilter] : null;
+                if (group) {
+                    filtered = filtered.filter(app => group.values.includes(app.status));
+                } else {
+                    // フォールバック
+                    filtered = filtered.filter(app => {
+                        if (adminApplicantStatusFilter === 'ongoing') {
+                            return ['pending', 'screening', 'interview'].includes(app.status) || !app.status;
+                        } else if (adminApplicantStatusFilter === 'offered') {
+                            return app.status === 'offered';
+                        } else if (adminApplicantStatusFilter === 'contracted') {
+                            return app.status === 'contracted';
+                        } else if (adminApplicantStatusFilter === 'closed') {
+                            return ['rejected', 'withdrawn'].includes(app.status);
+                        }
+                        return true;
+                    });
+                }
             }
 
             // キーワード検索
@@ -18425,8 +18506,8 @@
             const select = $('#bulk-new-status');
             select.empty();
 
-            const options = (typeof masterSelectionStatuses !== 'undefined' && masterSelectionStatuses.length > 0)
-                ? masterSelectionStatuses
+            const options = (typeof applicationStatuses !== 'undefined' && applicationStatuses.length > 0)
+                ? applicationStatuses
                 : [
                     { value: 'pending', label: '書類選考中' },
                     { value: 'interview', label: '面接予定' },
@@ -18437,7 +18518,7 @@
                 ];
 
             options.forEach(opt => {
-                select.append($('<option>').val(opt.value).text(opt.label));
+                select.append($('<option>').val(opt.value || opt.label).text(opt.label));
             });
 
             $('#bulk-status-modal').removeClass('hidden');
