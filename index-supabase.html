@@ -4635,8 +4635,7 @@
                             <h3 class="text-xl font-bold flex items-center gap-2">
                                 <i class="fab fa-google-drive"></i> Googleドライブ求人取得
                             </h3>
-                            <button onclick="$('#drive-import-modal').addClass('hidden')"
-                                class="text-white hover:text-blue-100">
+                            <button onclick="closeDriveImportModal()" class="text-white hover:text-blue-100">
                                 <i class="fas fa-times text-2xl"></i>
                             </button>
                         </div>
@@ -4659,7 +4658,7 @@
                                 0件選択
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="$('#drive-import-modal').addClass('hidden')"
+                                <button onclick="closeDriveImportModal()"
                                     class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">キャンセル</button>
                                 <button id="execute-drive-import-btn" onclick="executeDriveImport()" disabled
                                     class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95">
@@ -15490,7 +15489,7 @@
         }
 
         window.closeJobCsvImportModal = function () {
-            $('#admin-job-csv-modal').addClass('hidden');
+            $('#admin-job-csv-modal').addClass('hidden').attr('style', '');
         }
 
         window.downloadJobCsvTemplate = function (e) {
@@ -17333,7 +17332,7 @@
         window.openUserCsvImportModal = window.showUserCsvImportModal;
 
         window.closeUserCsvImportModal = function () {
-            $('#admin-user-csv-modal').addClass('hidden');
+            $('#admin-user-csv-modal').addClass('hidden').attr('style', '');
         }
 
         window.calculateAge = function (birthDateStr, targetSelector) {
@@ -18561,7 +18560,7 @@
         }
 
         window.closeCompanyCsvImportModal = function () {
-            $('#admin-company-csv-modal').addClass('hidden');
+            $('#admin-company-csv-modal').addClass('hidden').attr('style', '');
         }
 
         window.processCompanyCsvImport = function () {
@@ -21255,6 +21254,10 @@
                 const { error } = await supabase.from('jobs').insert(jobData);
                 if (error) throw error;
             }
+        }
+
+        window.closeDriveImportModal = function () {
+            $('#drive-import-modal').addClass('hidden').attr('style', '');
         }
 
         // Google Drive Import functions
@@ -24909,7 +24912,7 @@
         };
 
         window.closeDataMergeModal = function () {
-            $('#data-merge-modal').addClass('hidden');
+            $('#data-merge-modal').addClass('hidden').attr('style', '');
         };
 
         window.executeMerge = async function () {
