@@ -2554,6 +2554,32 @@
                         <i class="fas fa-download mr-2"></i>CSVエクスポート
                     </button>
                 </div>
+
+                <!-- Candidate Search/Filter -->
+                <div class="bg-white rounded-xl shadow-sm border p-4 mb-6">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="application-search-input" placeholder="企業名、職種で検索..."
+                                class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                onkeyup="filterCandidateApplications()">
+                        </div>
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                            <button onclick="setCandidateApplicationStatusFilter('all')"
+                                class="candidate-status-filter active whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white border border-indigo-600"
+                                data-status="all">すべて</button>
+                            <button onclick="setCandidateApplicationStatusFilter('ongoing')"
+                                class="candidate-status-filter whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                                data-status="ongoing">選考中</button>
+                            <button onclick="setCandidateApplicationStatusFilter('offered')"
+                                class="candidate-status-filter whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                                data-status="offered">内定</button>
+                            <button onclick="setCandidateApplicationStatusFilter('closed')"
+                                class="candidate-status-filter whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                                data-status="closed">終了</button>
+                        </div>
+                    </div>
+                </div>
                 <div id="applications-container">
                     <!-- Applications will be rendered here -->
                 </div>
@@ -3484,9 +3510,54 @@
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
                     <p class="text-gray-600 mb-2">応募者のステータスを管理できます。</p>
                 </div>
-                <div class="bg-white rounded-lg shadow p-4 mb-6">
-                    <input type="text" id="admin-applicant-search" placeholder="応募者名、求人名で検索..."
-                        class="w-full px-4 py-2 border rounded-lg" onkeyup="filterAdminApplicants()">
+                <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Keyword Search -->
+                        <div class="flex-1">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">キーワード検索</label>
+                            <input type="text" id="admin-applicant-search" placeholder="求職者名、企業名、求人名..."
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                onkeyup="filterAdminApplicants()">
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="md:w-auto">
+                            <label class="block text-sm font-bold text-gray-700 mb-2">ステータスで絞り込む</label>
+                            <div class="flex flex-wrap gap-2" id="admin-applicant-status-filters">
+                                <button onclick="setAdminApplicantStatusFilter('ongoing')"
+                                    class="status-filter-btn active px-4 py-2 rounded-lg text-sm font-bold border transition-all bg-indigo-600 text-white border-indigo-600"
+                                    data-status="ongoing">選考中</button>
+                                <button onclick="setAdminApplicantStatusFilter('offered')"
+                                    class="status-filter-btn px-4 py-2 rounded-lg text-sm font-bold border transition-all bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                                    data-status="offered">内定</button>
+                                <button onclick="setAdminApplicantStatusFilter('contracted')"
+                                    class="status-filter-btn px-4 py-2 rounded-lg text-sm font-bold border transition-all bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                                    data-status="contracted">入社決定</button>
+                                <button onclick="setAdminApplicantStatusFilter('closed')"
+                                    class="status-filter-btn px-4 py-2 rounded-lg text-sm font-bold border transition-all bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                                    data-status="closed">終了</button>
+                                <button onclick="setAdminApplicantStatusFilter('all')"
+                                    class="status-filter-btn px-4 py-2 rounded-lg text-sm font-bold border transition-all bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                                    data-status="all">すべて</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions Row -->
+                <div
+                    class="bg-indigo-50/50 border border-indigo-100 rounded-lg p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="admin-applicant-select-all"
+                            class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            onchange="toggleAllAdminApplicants(this.checked)">
+                        <span class="text-sm font-bold text-indigo-900"
+                            id="admin-applicant-selection-count">0件選択中</span>
+                    </div>
+                    <button id="admin-bulk-status-btn" onclick="openBulkStatusUpdateModal()" disabled
+                        class="bg-white text-indigo-300 border border-indigo-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm cursor-not-allowed transition-all flex items-center gap-2">
+                        <i class="fas fa-edit"></i> ステータスを一括変更
+                    </button>
                 </div>
                 <div id="admin-applicants-container">
                     <!-- Applicants will be rendered here -->
@@ -5258,6 +5329,36 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Bulk Status Update Modal -->
+    <div id="bulk-status-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            <div class="p-4 border-b bg-indigo-50 flex justify-between items-center">
+                <h3 class="font-bold text-indigo-900">ステータス一括変更</h3>
+                <button onclick="closeBulkStatusModal()" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4 font-bold" id="bulk-status-target-count">0件の応募を選択中</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">一括適用するステータス</label>
+                        <select id="bulk-new-status"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <!-- Options populated JS -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeBulkStatusModal()"
+                    class="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-300 rounded-lg hover:bg-white transition-all">キャンセル</button>
+                <button onclick="submitBulkStatusUpdate()"
+                    class="px-6 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md transition-all">一括更新を実行</button>
+            </div>
         </div>
     </div>
 
@@ -13329,6 +13430,51 @@
         // ========================
         // Applications History
         // ========================
+        // Applications History
+        // ========================
+        let applicationsCache = [];
+        let currentCandidateStatusFilter = 'all';
+
+        window.setCandidateApplicationStatusFilter = function (status) {
+            currentCandidateStatusFilter = status;
+
+            // UI更新
+            $('.candidate-status-filter').removeClass('active bg-indigo-600 text-white border-indigo-600').addClass('bg-white text-gray-600 border-gray-200 hover:bg-gray-50');
+            $(`.candidate-status-filter[data-status="${status}"]`).addClass('active bg-indigo-600 text-white border-indigo-600').removeClass('bg-white text-gray-600 border-gray-200 hover:bg-gray-50');
+
+            filterCandidateApplications();
+        };
+
+        window.filterCandidateApplications = function () {
+            const searchText = $('#application-search-input').val().toLowerCase();
+
+            let filtered = applicationsCache;
+
+            // ステータスフィルター
+            if (currentCandidateStatusFilter !== 'all') {
+                filtered = filtered.filter(app => {
+                    if (currentCandidateStatusFilter === 'ongoing') {
+                        return ['pending', 'screening', 'interview'].includes(app.status);
+                    } else if (currentCandidateStatusFilter === 'offered') {
+                        return app.status === 'offered';
+                    } else if (currentCandidateStatusFilter === 'closed') {
+                        return ['rejected', 'withdrawn'].includes(app.status);
+                    }
+                    return true;
+                });
+            }
+
+            // キーワード検索
+            if (searchText) {
+                filtered = filtered.filter(app =>
+                    (app.jobs && app.jobs.title && app.jobs.title.toLowerCase().includes(searchText)) ||
+                    (app.jobs && app.jobs.company && app.jobs.company.toLowerCase().includes(searchText))
+                );
+            }
+
+            renderApplications(filtered);
+        };
+
         async function loadApplications() {
             if (!currentUser) return
 
@@ -13366,10 +13512,10 @@
                 }
 
                 const { data: applications, error } = await query
-
                 if (error) throw error
 
-                renderApplications(applications)
+                applicationsCache = applications || [];
+                filterCandidateApplications();
             } catch (error) {
                 console.error('Load applications error:', error)
                 console.error('Error details:', JSON.stringify(error, null, 2))
@@ -18198,18 +18344,166 @@
             }
         }
 
+        let adminApplicantStatusFilter = 'ongoing';
+        let selectedAdminApplicantIds = new Set();
+
+        window.setAdminApplicantStatusFilter = function (status) {
+            adminApplicantStatusFilter = status;
+
+            // UI更新
+            $('.status-filter-btn').removeClass('active bg-indigo-600 text-white border-indigo-600').addClass('bg-white text-gray-600 border-gray-300 hover:bg-gray-50');
+            $(`.status-filter-btn[data-status="${status}"]`).addClass('active bg-indigo-600 text-white border-indigo-600').removeClass('bg-white text-gray-600 border-gray-300 hover:bg-gray-50');
+
+            filterAdminApplicants();
+        };
+
         window.filterAdminApplicants = function () {
             const searchText = $('#admin-applicant-search').val().toLowerCase();
-            if (!searchText) {
-                renderAdminApplicants(adminApplicantsCache);
-                return;
+
+            let filtered = adminApplicantsCache;
+
+            // ステータスフィルター
+            if (adminApplicantStatusFilter !== 'all') {
+                filtered = filtered.filter(app => {
+                    if (adminApplicantStatusFilter === 'ongoing') {
+                        return ['pending', 'screening', 'interview'].includes(app.status);
+                    } else if (adminApplicantStatusFilter === 'offered') {
+                        return app.status === 'offered';
+                    } else if (adminApplicantStatusFilter === 'contracted') {
+                        return app.status === 'contracted';
+                    } else if (adminApplicantStatusFilter === 'closed') {
+                        return ['rejected', 'withdrawn'].includes(app.status);
+                    }
+                    return true;
+                });
             }
 
-            const filtered = adminApplicantsCache.filter(app =>
-                (app.users && app.users.name && app.users.name.toLowerCase().includes(searchText)) ||
-                (app.jobs && app.jobs.title && app.jobs.title.toLowerCase().includes(searchText))
-            );
+            // キーワード検索
+            if (searchText) {
+                filtered = filtered.filter(app =>
+                    (app.users && app.users.name && app.users.name.toLowerCase().includes(searchText)) ||
+                    (app.jobs && app.jobs.title && app.jobs.title.toLowerCase().includes(searchText)) ||
+                    (app.jobs && app.jobs.company && app.jobs.company.toLowerCase().includes(searchText))
+                );
+            }
+
             renderAdminApplicants(filtered);
+        }
+
+        window.toggleAllAdminApplicants = function (checked) {
+            if (checked) {
+                const visibleCheckboxes = $('.admin-applicant-checkbox');
+                visibleCheckboxes.each(function () {
+                    $(this).prop('checked', true);
+                    selectedAdminApplicantIds.add($(this).val());
+                });
+            } else {
+                const visibleCheckboxes = $('.admin-applicant-checkbox');
+                visibleCheckboxes.each(function () {
+                    $(this).prop('checked', false);
+                    selectedAdminApplicantIds.delete($(this).val());
+                });
+            }
+            updateAdminApplicantSelectionUI();
+        };
+
+        window.toggleAdminApplicantSelection = function (id, checked) {
+            if (checked) {
+                selectedAdminApplicantIds.add(id);
+            } else {
+                selectedAdminApplicantIds.delete(id);
+            }
+            updateAdminApplicantSelectionUI();
+        };
+
+        window.openBulkStatusUpdateModal = function () {
+            if (selectedAdminApplicantIds.size === 0) return;
+
+            $('#bulk-status-target-count').text(`${selectedAdminApplicantIds.size}件の応募を選択中`);
+
+            // ステータスオプションをマスタから読み込み
+            const select = $('#bulk-new-status');
+            select.empty();
+
+            const options = (typeof masterSelectionStatuses !== 'undefined' && masterSelectionStatuses.length > 0)
+                ? masterSelectionStatuses
+                : [
+                    { value: 'pending', label: '書類選考中' },
+                    { value: 'interview', label: '面接予定' },
+                    { value: 'offered', label: '内定' },
+                    { value: 'contracted', label: '入社決定' },
+                    { value: 'rejected', label: '不合格' },
+                    { value: 'withdrawn', label: '辞退' }
+                ];
+
+            options.forEach(opt => {
+                select.append($('<option>').val(opt.value).text(opt.label));
+            });
+
+            $('#bulk-status-modal').removeClass('hidden');
+        };
+
+        window.closeBulkStatusModal = function () {
+            $('#bulk-status-modal').addClass('hidden');
+        };
+
+        window.submitBulkStatusUpdate = async function () {
+            const newStatus = $('#bulk-new-status').val();
+            if (!newStatus) return;
+
+            const count = selectedAdminApplicantIds.size;
+            if (!confirm(`${count}件の応募ステータスを「${$('#bulk-new-status option:selected').text()}」に変更しますか？`)) return;
+
+            showLoading();
+            try {
+                const ids = Array.from(selectedAdminApplicantIds);
+
+                // Supabaseで更新
+                const { error } = await supabase
+                    .from('applications')
+                    .update({ status: newStatus })
+                    .in('id', ids);
+
+                if (error) throw error;
+
+                // キャッシュ更新
+                ids.forEach(id => {
+                    const idx = adminApplicantsCache.findIndex(a => a.id === id);
+                    if (idx !== -1) adminApplicantsCache[idx].status = newStatus;
+                });
+
+                // ログ（全件分は重いので代表して1つ、または概要を記録。ここではシンプルに完了通知）
+                await logAction('bulk_update', 'application', ids[0], { count: ids.length, status: newStatus });
+
+                alert(`${count}件のステータスを一括更新しました`);
+                closeBulkStatusModal();
+
+                // 選択を全解除
+                selectedAdminApplicantIds.clear();
+                $('#admin-applicant-select-all').prop('checked', false);
+                updateAdminApplicantSelectionUI();
+
+                // 再描画
+                filterAdminApplicants();
+
+            } catch (error) {
+                console.error('Bulk update error:', error);
+                alert('一括更新に失敗しました: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        };
+
+        function updateAdminApplicantSelectionUI() {
+            const count = selectedAdminApplicantIds.size;
+            $('#admin-applicant-selection-count').text(`${count}件選択中`);
+
+            const btn = $('#admin-bulk-status-btn');
+            if (count > 0) {
+                btn.prop('disabled', false).removeClass('text-indigo-300 border-indigo-100 italic cursor-not-allowed').addClass('text-indigo-600 border-indigo-600 hover:bg-indigo-50');
+            } else {
+                btn.prop('disabled', true).addClass('text-indigo-300 border-indigo-100 italic cursor-not-allowed').removeClass('text-indigo-600 border-indigo-600 hover:bg-indigo-50');
+            }
         }
 
         function renderAdminApplicants(applications) {
@@ -18235,25 +18529,52 @@
                 // nullチェック
                 const userName = app.users?.name || '不明なユーザー';
                 const jobTitle = app.jobs?.title || '不明な求人';
+                const companyName = app.jobs?.company || '-';
                 const updatedDate = app.updated_at ? new Date(app.updated_at).toLocaleDateString('ja-JP') : '-';
+                const isSelected = selectedAdminApplicantIds.has(app.id);
 
                 return `
-                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-4">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1">
-                            <h3 class="text-lg font-bold text-gray-900 mb-1">${userName}</h3>
-                            <p class="text-gray-600 text-sm mb-2">${jobTitle}</p>
-                            <p class="text-gray-500 text-xs">応募日: ${updatedDate}</p>
+                <div class="bg-white border ${isSelected ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-gray-200'} rounded-lg p-6 mb-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="pt-1">
+                            <input type="checkbox" class="admin-applicant-checkbox w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" 
+                                value="${app.id}" ${isSelected ? 'checked' : ''} onchange="toggleAdminApplicantSelection('${app.id}', this.checked)">
                         </div>
-                        <div class="flex flex-col gap-2 items-end">
-                            <select onchange="updateApplicationStatus('${app.id}', this.value)" class="px-3 py-1 border rounded text-sm mb-2">
-                                ${statusOptions.map(s => `
-                                    <option value="${s}" ${app.status === s ? 'selected' : ''}>${statusLabels[s]}</option>
-                                `).join('')}
-                            </select>
-                            <button onclick="openRecommendationModal('${app.id}')" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center">
-                                <i class="fas fa-file-alt mr-1"></i>推薦文作成
-                            </button>
+                        <div class="flex-1">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h3 class="text-lg font-bold text-gray-900">${userName}</h3>
+                                        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">ID: ${app.id.substring(0, 8)}</span>
+                                    </div>
+                                    <div class="space-y-1 mb-2">
+                                        <p class="text-blue-600 font-bold"><i class="fas fa-building mr-1"></i>${companyName}</p>
+                                        <p class="text-gray-800 font-medium">${jobTitle}</p>
+                                    </div>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                                        <span><i class="far fa-calendar-alt mr-1"></i>${updatedDate}更新</span>
+                                        ${app.users?.email ? `<span><i class="far fa-envelope mr-1"></i>${app.users.email}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-3 items-end">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs font-bold text-gray-500">ステータス:</label>
+                                        <select onchange="updateApplicationStatus('${app.id}', this.value)" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                                            ${statusOptions.map(s => `
+                                                <option value="${s}" ${app.status === s ? 'selected' : ''}>${statusLabels[s] || s}</option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="openRecommendationModal('${app.id}')" class="px-3 py-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-sm font-bold transition flex items-center gap-1">
+                                            <i class="fas fa-file-alt"></i> 推薦
+                                        </button>
+                                        <button onclick="openProgressModal('${app.id}')" class="px-3 py-1.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold transition">
+                                            詳細
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -18277,6 +18598,20 @@
                 await logAction('update', 'application', applicationId, { status: newStatus })
 
                 alert('ステータスを更新しました')
+
+                // キャッシュ更新と再描画
+                if (typeof adminApplicantsCache !== 'undefined') {
+                    const idx = adminApplicantsCache.findIndex(a => a.id === applicationId);
+                    if (idx !== -1) adminApplicantsCache[idx].status = newStatus;
+                    filterAdminApplicants();
+                }
+
+                if (typeof applicationsCache !== 'undefined') {
+                    const idx = applicationsCache.findIndex(a => a.id === applicationId);
+                    if (idx !== -1) applicationsCache[idx].status = newStatus;
+                    filterCandidateApplications();
+                }
+
             } catch (error) {
                 console.error('Update status error:', error)
                 alert('更新に失敗しました: ' + error.message)
