@@ -3450,12 +3450,12 @@
                             <p class="text-gray-600 mb-2">求人の作成・編集・削除ができます。</p>
                         </div>
                         <div class="flex gap-2 flex-wrap">
-                            <button id="admin-job-drive-import-btn" onclick="openDriveImportModal()"
+                            <button id="admin-job-drive-import-btn"
                                 class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
                                 <i class="fab fa-google-drive"></i> Googleドライブ取得
                                 <span class="text-[10px] bg-white/20 px-1 rounded">GAS</span>
                             </button>
-                            <button onclick="showJobCsvImportModal()"
+                            <button id="admin-job-csv-import-btn"
                                 class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                                 <i class="fas fa-file-csv"></i> CSVインポート
                             </button>
@@ -15474,6 +15474,7 @@
         // Admin: Job CSV Import
         // ========================
         window.showJobCsvImportModal = function () {
+            console.log('showJobCsvImportModal called');
             $('#job-csv-file').val('');
             $('#job-csv-preview').addClass('hidden').empty();
             $('#admin-job-csv-modal').removeClass('hidden');
@@ -21249,8 +21250,10 @@
 
         // Google Drive Import functions
         window.openDriveImportModal = async function () {
-            const orgSettings = currentUser.organizations?.settings || {};
+            console.log('openDriveImportModal called');
+            const orgSettings = currentUser?.organizations?.settings || {};
             if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
+                console.warn('Drive import settings missing:', orgSettings);
                 alert('Googleドライブインポート設定が未完了です。管理者設定を確認してください。');
                 return;
             }
@@ -22435,6 +22438,16 @@
                     $('.sidebar').removeClass('open');
                     $('#sidebar-overlay').removeClass('active');
                 }
+            });
+
+            // 求人管理ページのインポートボタン
+            $(document).on('click', '#admin-job-drive-import-btn', function (e) {
+                e.preventDefault();
+                openDriveImportModal();
+            });
+            $(document).on('click', '#admin-job-csv-import-btn', function (e) {
+                e.preventDefault();
+                showJobCsvImportModal();
             });
 
             // URLパラメータから招待トークンを取得
