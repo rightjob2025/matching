@@ -8425,14 +8425,31 @@
                         score: 85,
                         recommended_by: currentUser.id
                     })
-                    .select();
+                    .select('*, jobs(title, company)')
+                    .single();
 
                 if (error) {
                     console.error('Supabase error details:', error);
                     throw error;
                 }
 
-                console.log('Recommendation created:', data);
+                // 通知作成 (候補者へ)
+                try {
+                    await supabase.from('notifications').insert({
+                        user_id: currentRecommendTargetUserId,
+                        title: '新しいおすすめ求人があります',
+                        message: `${currentUser.name} さんから「${data.jobs.company} / ${data.jobs.title}」のおすすめが届きました。`,
+                        read: false,
+                        metadata: {
+                            page: 'recommendations',
+                            recommendation_id: data.id
+                        },
+                        created_at: new Date().toISOString()
+                    });
+                } catch (notifyError) {
+                    console.error('Candidate recommendation notification error:', notifyError);
+                }
+
                 alert('求人を紹介しました');
                 closeRecommendJobModal();
                 searchJobs(); // 求人リストを更新
@@ -13268,9 +13285,14 @@
                     // 通知レコード作成
                     const notifications = Array.from(notifyUserIds).map(uid => ({
                         user_id: uid,
-                        title: '新規応募・選考登録がありました',
+                        title: '新規応募がありました',
                         message: message,
                         read: false,
+                        metadata: {
+                            page: 'admin-applicants',
+                            application_id: application.id,
+                            user_id: applicantId
+                        },
                         created_at: new Date().toISOString()
                     }))
 
@@ -13656,7 +13678,25 @@
 
                 if (historyError) throw historyError;
 
-                // 3. メール通知 (ステータス変更時)
+                // 3. 通知作成 (求職者へ)
+                try {
+                    const statusLabel = getSelectionStatusLabel(newStatus);
+                    await supabase.from('notifications').insert({
+                        user_id: currentApplicationData.user_id,
+                        title: '選考ステータスが更新されました',
+                        message: `「${currentApplicationData.jobs.company} / ${currentApplicationData.jobs.title}」の選考状況が「${statusLabel}」に更新されました。`,
+                        read: false,
+                        metadata: {
+                            page: 'applications',
+                            application_id: applicationId
+                        },
+                        created_at: new Date().toISOString()
+                    });
+                } catch (notifyError) {
+                    console.error('Candidate notification error:', notifyError);
+                }
+
+                // 4. メール通知 (ステータス変更時)
                 if (currentApplicationData && currentApplicationData.users && currentApplicationData.users.email) {
                     await sendEmail('status_changed', currentApplicationData.users.email, {
                         userName: currentApplicationData.users.name,
@@ -20858,7 +20898,7 @@
                     .select('*')
                     .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false })
-                    .limit(10)
+                    .limit(20)
 
                 if (error) throw error
 
@@ -20885,28 +20925,58 @@
                 return
             }
 
-            const html = notifications.map(notif => `
-                <div class="p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.read ? 'bg-white' : 'bg-blue-50'}" onclick="markAsRead('${notif.id}')">
+            const html = notifications.map(notif => {
+                const metadata = notif.metadata || {};
+                const hasLink = !!metadata.page;
+
+                return `
+                <div class="p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.read ? 'bg-white' : 'bg-blue-50'} transition-colors" 
+                     onclick="markAsRead('${notif.id}', ${JSON.stringify(metadata).replace(/"/g, '&quot;')})">
                     <div class="flex justify-between items-start mb-1">
-                        <h4 class="font-medium text-sm">${notif.title}</h4>
-                        ${!notif.read ? '<span class="w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
+                        <h4 class="font-bold text-sm text-gray-900">${notif.title}</h4>
+                        <div class="flex items-center gap-2">
+                             ${!notif.read ? '<span class="w-2.5 h-2.5 bg-indigo-600 rounded-full shadow-sm shadow-indigo-200"></span>' : ''}
+                        </div>
                     </div>
-                    <p class="text-xs text-gray-600">${notif.message}</p>
-                    <p class="text-xs text-gray-400 mt-1">${new Date(notif.created_at).toLocaleString('ja-JP')}</p>
+                    <p class="text-xs text-gray-600 leading-relaxed">${notif.message}</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <p class="text-[10px] text-gray-400 font-medium">${new Date(notif.created_at).toLocaleString('ja-JP')}</p>
+                        ${hasLink ? '<span class="text-[10px] font-bold text-indigo-600 flex items-center gap-1">詳細を見る <i class="fas fa-chevron-right text-[8px]"></i></span>' : ''}
+                    </div>
                 </div>
-            `).join('')
+            `;
+            }).join('')
 
             container.html(html)
         }
 
-        window.markAsRead = async function (notificationId) {
+        window.markAsRead = async function (notificationId, metadata = null) {
             try {
-                await supabase
+                // 先にステータスを更新（UI反映を優先）
+                const { error } = await supabase
                     .from('notifications')
                     .update({ read: true })
                     .eq('id', notificationId)
 
+                if (error) throw error;
+
+                // バッジの即時更新
                 loadNotifications()
+
+                // メタデータがあれば遷移
+                if (metadata && metadata.page) {
+                    console.log('Redirecting to:', metadata.page);
+                    showPage(metadata.page);
+
+                    // モーダルが関連している場合は開く（任意）
+                    if (metadata.application_id && metadata.page === 'admin-applicants') {
+                        // 検索フィルターを適用したり、特定の項目をハイライトするなどの処理も可能
+                    }
+                }
+
+                // ドロップダウンを閉じる
+                $('#notification-dropdown').addClass('hidden');
+
             } catch (error) {
                 console.error('Mark as read error:', error)
             }
