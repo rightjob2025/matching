@@ -13933,7 +13933,7 @@
                 alert('ステータスを更新しました');
 
                 // 4. 画面を更新
-                $('#progress-current-status').val(newStatus);
+                $('#progress-current-status').data('code', newStatus).val(getSelectionStatusLabel(newStatus));
                 $('#progress-notes').val('');
                 $('#progress-new-status').val('');
 
@@ -18683,19 +18683,44 @@
         window.updateApplicationStatus = async function (applicationId, newStatus) {
             showLoading()
             try {
-                const { error } = await supabase
+                // 1. 現在のステータスを取得（履歴用）
+                const { data: currentApp, error: fetchError } = await supabase
                     .from('applications')
-                    .update({ status: newStatus })
+                    .select('status, user_id, organization_id')
+                    .eq('id', applicationId)
+                    .single();
+
+                if (fetchError) throw fetchError;
+                const oldStatus = currentApp.status;
+
+                // 2. 応募ステータスを更新
+                const { error: updateError } = await supabase
+                    .from('applications')
+                    .update({
+                        status: newStatus,
+                        updated_at: new Date().toISOString()
+                    })
                     .eq('id', applicationId)
 
-                if (error) throw error
+                if (updateError) throw updateError
 
-                // ログ記録
+                // 3. 進捗履歴を記録
+                await supabase.from('progress_history').insert({
+                    organization_id: currentApp.organization_id || currentUser.organization_id,
+                    application_id: applicationId,
+                    user_id: currentApp.user_id,
+                    old_status: oldStatus,
+                    new_status: newStatus,
+                    changed_by: currentUser.id,
+                    changed_by_name: currentUser.name
+                });
+
+                // 4. ログ記録 (監査用)
                 await logAction('update', 'application', applicationId, { status: newStatus })
 
                 alert('ステータスを更新しました')
 
-                // キャッシュ更新と再描画
+                // 5. キャッシュ更新と再描画
                 if (typeof adminApplicantsCache !== 'undefined') {
                     const idx = adminApplicantsCache.findIndex(a => a.id === applicationId);
                     if (idx !== -1) adminApplicantsCache[idx].status = newStatus;
