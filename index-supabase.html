@@ -3450,12 +3450,12 @@
                             <p class="text-gray-600 mb-2">求人の作成・編集・削除ができます。</p>
                         </div>
                         <div class="flex gap-2 flex-wrap">
-                            <button id="admin-job-drive-import-btn"
+                            <button id="admin-job-drive-import-btn" onclick="openDriveImportModal()"
                                 class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
                                 <i class="fab fa-google-drive"></i> Googleドライブ取得
                                 <span class="text-[10px] bg-white/20 px-1 rounded">GAS</span>
                             </button>
-                            <button id="admin-job-csv-import-btn"
+                            <button id="admin-job-csv-import-btn" onclick="showJobCsvImportModal()"
                                 class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                                 <i class="fas fa-file-csv"></i> CSVインポート
                             </button>
@@ -4457,7 +4457,8 @@
 
                 <!-- Admin: User CSV Import Modal -->
                 <div id="admin-user-csv-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                    style="z-index: 100000;">
                     <div class="bg-white rounded-lg w-full max-w-lg p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold">求職者CSVインポート</h3>
@@ -4515,7 +4516,8 @@
 
                 <!-- Admin: Job CSV Import Modal -->
                 <div id="admin-job-csv-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                    style="z-index: 100000;">
                     <div class="bg-white rounded-lg w-full max-w-lg p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold">求人CSVインポート</h3>
@@ -4570,7 +4572,8 @@
 
                 <!-- Admin: Company CSV Import Modal -->
                 <div id="admin-company-csv-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                    style="z-index: 100000;">
                     <div class="bg-white rounded-lg w-full max-w-lg p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xl font-bold">企業CSVインポート</h3>
@@ -4625,7 +4628,8 @@
 
                 <!-- Admin: Drive Import Modal -->
                 <div id="drive-import-modal"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                    style="z-index: 100000;">
                     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
                         <div class="p-6 border-b flex justify-between items-center bg-blue-600 text-white rounded-t-lg">
                             <h3 class="text-xl font-bold flex items-center gap-2">
@@ -15474,10 +15478,12 @@
         // Admin: Job CSV Import
         // ========================
         window.showJobCsvImportModal = function () {
-            console.log('showJobCsvImportModal called');
+            console.log('DEBUG: showJobCsvImportModal called');
             $('#job-csv-file').val('');
             $('#job-csv-preview').addClass('hidden').empty();
-            $('#admin-job-csv-modal').removeClass('hidden');
+            const $modal = $('#admin-job-csv-modal');
+            $modal.removeClass('hidden').css('display', 'flex');
+            console.log('DEBUG: Modal visibility toggled', $modal.is(':visible'));
         }
 
         window.closeJobCsvImportModal = function () {
@@ -21250,15 +21256,18 @@
 
         // Google Drive Import functions
         window.openDriveImportModal = async function () {
-            console.log('openDriveImportModal called');
-            const orgSettings = currentUser?.organizations?.settings || {};
+            console.log('DEBUG: openDriveImportModal called');
+            const user = window.currentUser || currentUser;
+            const orgSettings = user?.organizations?.settings || {};
             if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
-                console.warn('Drive import settings missing:', orgSettings);
-                alert('Googleドライブインポート設定が未完了です。管理者設定を確認してください。');
+                console.warn('DEBUG: Drive import settings missing:', orgSettings);
+                alert('Googleドライブインポート設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。');
                 return;
             }
 
-            $('#drive-import-modal').removeClass('hidden');
+            const $modal = $('#drive-import-modal');
+            $modal.removeClass('hidden').css('display', 'flex');
+            console.log('DEBUG: Drive modal shown');
             $('#drive-file-list').empty();
             $('#drive-import-count').text('0件選択');
             $('#execute-drive-import-btn').prop('disabled', true);
@@ -22438,16 +22447,6 @@
                     $('.sidebar').removeClass('open');
                     $('#sidebar-overlay').removeClass('active');
                 }
-            });
-
-            // 求人管理ページのインポートボタン
-            $(document).on('click', '#admin-job-drive-import-btn', function (e) {
-                e.preventDefault();
-                openDriveImportModal();
-            });
-            $(document).on('click', '#admin-job-csv-import-btn', function (e) {
-                e.preventDefault();
-                showJobCsvImportModal();
             });
 
             // URLパラメータから招待トークンを取得
