@@ -13554,24 +13554,17 @@
                 'interview': { label: '面接予定', color: 'bg-blue-100 text-blue-800' },
                 'offered': { label: '内定', color: 'bg-green-100 text-green-800' },
                 'rejected': { label: '不合格', color: 'bg-red-100 text-red-800' },
-                'withdrawn': { label: '辞退', color: 'bg-gray-100 text-gray-800' }
+                'withdrawn': { label: '辞退', color: 'bg-gray-100 text-gray-800' },
+                'applied': { label: '応募完了', color: 'bg-indigo-100 text-indigo-800' },
+                '応募完了': { label: '応募完了', color: 'bg-indigo-100 text-indigo-800' }
             };
 
             // マスタデータがある場合は上書き
-            if (typeof masterSelectionStatuses !== 'undefined' && masterSelectionStatuses.length > 0) {
-                const statusColorMap = {
-                    'pending': 'bg-yellow-100 text-yellow-800',
-                    'screening': 'bg-yellow-100 text-yellow-800',
-                    'interview': 'bg-blue-100 text-blue-800',
-                    'offered': 'bg-green-100 text-green-800',
-                    'rejected': 'bg-red-100 text-red-800',
-                    'withdrawn': 'bg-gray-100 text-gray-800'
-                };
-
-                masterSelectionStatuses.forEach(s => {
+            if (typeof applicationStatuses !== 'undefined' && applicationStatuses.length > 0) {
+                applicationStatuses.forEach(s => {
                     statusConfig[s.value] = {
                         label: s.label,
-                        color: statusColorMap[s.value] || 'bg-gray-100 text-gray-800'
+                        color: s.metadata?.color || (s.value === '応募完了' ? 'bg-indigo-100 text-indigo-800' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
                     };
                 });
             }
@@ -13675,7 +13668,8 @@
                 'offered': '内定',
                 'rejected': '不合格',
                 'withdrawn': '辞退',
-                'applied': '応募完了'
+                'applied': '応募完了',
+                '応募完了': '応募完了'
             };
             return labels[value] || value;
         }
@@ -18611,15 +18605,21 @@
                 return
             }
 
-            const statusOptions = ['pending', 'screening', 'interview', 'offered', 'rejected', 'withdrawn']
-            const statusLabels = {
-                'pending': '書類選考中',
-                'screening': '書類選考中',
-                'interview': '面接予定',
-                'offered': '内定',
-                'rejected': '不合格',
-                'withdrawn': '辞退'
-            }
+            const statusOptions = (typeof applicationStatuses !== 'undefined' && applicationStatuses.length > 0)
+                ? applicationStatuses.map(s => s.value)
+                : ['pending', 'screening', 'interview', 'offered', 'rejected', 'withdrawn', '応募完了'];
+
+            const statusLabels = (typeof applicationStatuses !== 'undefined' && applicationStatuses.length > 0)
+                ? applicationStatuses.reduce((acc, s) => ({ ...acc, [s.value]: s.label }), {})
+                : {
+                    'pending': '書類選考中',
+                    'screening': '書類選考中',
+                    'interview': '面接予定',
+                    'offered': '内定',
+                    'rejected': '不合格',
+                    'withdrawn': '辞退',
+                    '応募完了': '応募完了'
+                };
 
             const html = applications.map(app => {
                 // nullチェック
