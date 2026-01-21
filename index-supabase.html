@@ -4641,6 +4641,40 @@
                         </div>
 
                         <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
+                            <!-- Filters -->
+                            <div class="bg-white p-4 rounded-lg shadow-sm mb-4 border border-gray-200">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-gray-500 uppercase mb-1">キーワード検索</label>
+                                        <div class="relative">
+                                            <input type="text" id="drive-filter-search" placeholder="ファイル名で検索..."
+                                                class="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                                oninput="applyDriveFileFilters()">
+                                            <i
+                                                class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-gray-500 uppercase mb-1">更新日（から）</label>
+                                        <input type="date" id="drive-filter-date-from"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none"
+                                            onchange="applyDriveFileFilters()">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">並び替え</label>
+                                        <select id="drive-filter-sort"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm outline-none bg-white"
+                                            onchange="applyDriveFileFilters()">
+                                            <option value="newest">更新日が新しい順</option>
+                                            <option value="oldest">更新日が古い順</option>
+                                            <option value="name">名前順</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div id="drive-import-status"
                                 class="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-100">
                                 <i class="fas fa-info-circle"></i>
@@ -21261,6 +21295,8 @@
         }
 
         // Google Drive Import functions
+        window.driveFilesCache = [];
+
         window.openDriveImportModal = async function () {
             console.log('DEBUG: openDriveImportModal called');
             const user = window.currentUser || currentUser;
@@ -21276,6 +21312,12 @@
             $modal.appendTo('body');
             $modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 100000 !important;');
             console.log('DEBUG: Drive modal shown/forced');
+
+            // フィルターのリセット
+            $('#drive-filter-search').val('');
+            $('#drive-filter-date-from').val('');
+            $('#drive-filter-sort').val('newest');
+
             $('#drive-file-list').empty();
             $('#drive-import-count').text('0件選択');
             $('#execute-drive-import-btn').prop('disabled', true);
@@ -21290,20 +21332,51 @@
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
 
-                const files = result.files || [];
-                if (files.length === 0) {
+                window.driveFilesCache = result.files || [];
+                if (window.driveFilesCache.length === 0) {
                     $('#drive-import-status').attr('class', 'mb-4 p-4 bg-amber-50 text-amber-700 rounded-lg flex items-center gap-3 border border-amber-100')
                         .html('<i class="fas fa-exclamation-triangle"></i><p class="text-sm">インポート可能な求人PDFが見つかりませんでした。</p>');
                     return;
                 }
 
                 $('#drive-import-status').attr('class', 'mb-4 p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-3 border border-green-100')
-                    .html('<i class="fas fa-check-circle"></i><p class="text-sm">' + files.length + '件のファイルが見つかりました。</p>');
+                    .html('<i class="fas fa-check-circle"></i><p class="text-sm">' + window.driveFilesCache.length + '件のファイルが見つかりました。</p>');
 
-                renderDriveFileList(files);
+                applyDriveFileFilters();
             } catch (err) {
                 $('#drive-import-status').attr('class', 'mb-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3 border border-red-100').html(`<i class="fas fa-times-circle"></i><p class="text-sm">エラー: ${err.message}</p>`);
             }
+        };
+
+        window.applyDriveFileFilters = function () {
+            const searchText = $('#drive-filter-search').val().toLowerCase();
+            const dateFrom = $('#drive-filter-date-from').val();
+            const sortType = $('#drive-filter-sort').val();
+
+            let filtered = [...window.driveFilesCache];
+
+            // 1. テキスト検索
+            if (searchText) {
+                filtered = filtered.filter(f => f.name.toLowerCase().includes(searchText));
+            }
+
+            // 2. 日付検索 (更新日が指定日以降のもの)
+            if (dateFrom) {
+                const fromTs = new Date(dateFrom).getTime();
+                filtered = filtered.filter(f => new Date(f.modified).getTime() >= fromTs);
+            }
+
+            // 3. ソート
+            if (sortType === 'newest') {
+                filtered.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+            } else if (sortType === 'oldest') {
+                filtered.sort((a, b) => new Date(a.modified) - new Date(b.modified));
+            } else if (sortType === 'name') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+            }
+
+            renderDriveFileList(filtered);
+            updateDriveImportCount();
         };
 
         function renderDriveFileList(files) {
@@ -21315,7 +21388,14 @@
                         <input type="checkbox" name="drive-file-item" data-id="${file.id}" data-name="${file.name}" class="h-5 w-5 text-blue-600" onchange="updateDriveImportCount()">
                         <div class="flex-1 min-w-0" onclick="$(this).siblings('input').click()">
                             <div class="font-bold text-gray-900 truncate text-sm">${file.name}</div>
-                            <div class="text-[10px] text-gray-500 mt-0.5">${new Date(file.modified).toLocaleDateString()} / ${(file.size / 1024).toFixed(0)} KB</div>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-[10px] text-blue-600 font-medium bg-blue-50 px-1.5 rounded border border-blue-100">
+                                    <i class="far fa-calendar-alt mr-1"></i>${new Date(file.modified).toLocaleDateString()}
+                                </span>
+                                <span class="text-[10px] text-gray-500">
+                                    <i class="far fa-file mr-1"></i>${(file.size / 1024).toFixed(0)} KB
+                                </span>
+                            </div>
                         </div>
                         <a href="${file.url}" target="_blank" class="text-gray-400 hover:text-blue-600"><i class="fas fa-external-link-alt text-xs"></i></a>
                     </div>
