@@ -15482,8 +15482,11 @@
             $('#job-csv-file').val('');
             $('#job-csv-preview').addClass('hidden').empty();
             const $modal = $('#admin-job-csv-modal');
-            $modal.removeClass('hidden').css('display', 'flex');
-            console.log('DEBUG: Modal visibility toggled', $modal.is(':visible'));
+            // 要素をbodyへ移動（二重対策）
+            $modal.appendTo('body');
+            // 強制的に表示状態にする
+            $modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 100000 !important;');
+            console.log('DEBUG: Modal visibility forced. visible check:', $modal.is(':visible'));
         }
 
         window.closeJobCsvImportModal = function () {
@@ -21266,8 +21269,10 @@
             }
 
             const $modal = $('#drive-import-modal');
-            $modal.removeClass('hidden').css('display', 'flex');
-            console.log('DEBUG: Drive modal shown');
+            // 要素をbodyへ移動
+            $modal.appendTo('body');
+            $modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 100000 !important;');
+            console.log('DEBUG: Drive modal shown/forced');
             $('#drive-file-list').empty();
             $('#drive-import-count').text('0件選択');
             $('#execute-drive-import-btn').prop('disabled', true);
@@ -22212,6 +22217,8 @@
         }
 
         $(document).ready(function () {
+            // モーダルが非表示の親要素内に閉じ込められるのを防ぐため、body直下へ移動
+            $('#admin-job-csv-modal, #admin-user-csv-modal, #admin-company-csv-modal, #drive-import-modal, #data-merge-modal').appendTo('body');
 
             // Organization Code Validation
             $('#check-org-code').on('click', async function () {
