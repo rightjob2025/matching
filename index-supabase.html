@@ -3449,11 +3449,15 @@
                         <div>
                             <p class="text-gray-600 mb-2">求人の作成・編集・削除ができます。</p>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap">
                             <button id="admin-job-drive-import-btn" onclick="openDriveImportModal()"
                                 class="hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
                                 <i class="fab fa-google-drive"></i> Googleドライブ取得
                                 <span class="text-[10px] bg-white/20 px-1 rounded">GAS</span>
+                            </button>
+                            <button onclick="showJobCsvImportModal()"
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                                <i class="fas fa-file-csv"></i> CSVインポート
                             </button>
                             <button onclick="exportJobsCsv()"
                                 class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
@@ -6961,7 +6965,7 @@
                 // ---------------------------------------------------------
                 const { data: memberships, error: memError } = await supabase
                     .from('organization_members')
-                    .select('organization_id, organizations(name, code, status)')
+                    .select('organization_id, organizations(name, code, status, settings)')
                     .eq('user_id', userId);
 
                 console.log('Login Debug: User ID', userId);
@@ -7049,11 +7053,13 @@
 
                 // currentUserオブジェクトを構築
                 // userDataには古い organization_id が入っている可能性があるため上書き
+                const selectedMembership = memberships.find(m => m.organization_id === targetOrgId);
                 currentUser = {
                     ...userData,
                     organization_id: targetOrgId,
-                    organizations: { // 擬似的に結合情報を更新
-                        name: targetOrgName || memberships.find(m => m.organization_id === targetOrgId)?.organizations?.name
+                    organizations: {
+                        name: targetOrgName || selectedMembership?.organizations?.name,
+                        settings: selectedMembership?.organizations?.settings || {}
                     }
                 };
                 window.currentUser = currentUser;
@@ -15632,6 +15638,10 @@
         window.loadAdminJobs = async function (page = 1, searchText = '') {
             if (!currentUser) return
 
+            // UI更新: Googleドライブインポートボタンの表示制御
+            const orgSettings = currentUser.organizations?.settings || {};
+            $('#admin-job-drive-import-btn').toggleClass('hidden', !orgSettings.drive_import_enabled);
+
             showLoading()
             try {
                 let query = supabase
@@ -21144,7 +21154,7 @@
                 throw new Error(`ファイル「${file.name}」からタイトルまたは会社名を特定できませんでした。`);
             }
 
-            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+            const orgSettings = currentUser.organizations?.settings || {};
             const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
 
             // Check duplicates
@@ -21239,9 +21249,9 @@
 
         // Google Drive Import functions
         window.openDriveImportModal = async function () {
-            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+            const orgSettings = currentUser.organizations?.settings || {};
             if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
-                alert('Googleドライブインポート設定が未完了です。');
+                alert('Googleドライブインポート設定が未完了です。管理者設定を確認してください。');
                 return;
             }
 
@@ -21305,7 +21315,7 @@
             if (selected.length === 0) return;
             if (!confirm(`${selected.length}件のファイルをインポートしますか？`)) return;
 
-            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+            const orgSettings = currentUser.organizations?.settings || {};
             showLoading('Googleドライブからインポート中...');
             let successCount = 0; let errorCount = 0;
             pendingBulkJobs = [];
