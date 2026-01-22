@@ -22340,8 +22340,26 @@
                 const updates = [];
                 let matchCount = 0;
 
+                console.log(`Matching start: ${targetJobs.length} jobs to scan against ${driveFiles.length} drive files.`);
+
                 for (const job of targetJobs) {
-                    const matchedFile = driveFiles.find(f => f.name === job.pdf_filename);
+                    const dbName = (job.pdf_filename || '').trim().toLowerCase().normalize('NFC');
+                    if (!dbName) continue;
+
+                    // 拡張子を除去した名前も用意
+                    const dbNameNoExt = dbName.replace(/\.pdf$/, '');
+
+                    const matchedFile = driveFiles.find(f => {
+                        const driveName = (f.name || '').trim().toLowerCase().normalize('NFC');
+                        const driveNameNoExt = driveName.replace(/\.pdf$/, '');
+
+                        // 完全一致、または拡張子を除いた名前での一致を確認
+                        return driveName === dbName ||
+                            driveNameNoExt === dbName ||
+                            driveName === dbNameNoExt ||
+                            driveNameNoExt === dbNameNoExt;
+                    });
+
                     if (matchedFile) {
                         const updateData = {
                             id: job.id,
@@ -22350,6 +22368,12 @@
                         updateData[driveCol] = matchedFile.url;
                         updates.push(updateData);
                         matchCount++;
+                        console.log(`Match Found: "${job.pdf_filename}" -> ${matchedFile.name}`);
+                    } else {
+                        // マッチしなかったものをログ出力（デバッグ用）
+                        if (matchCount < 5) { // ログが溢れないよう最初の方だけ
+                            console.log(`No match for DB: "${job.pdf_filename}"`);
+                        }
                     }
                 }
 
