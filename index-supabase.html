@@ -22105,12 +22105,12 @@
                 .limit(3);
 
             let companyId = null;
-            const { data: ec } = await supabase.from('companies').select('id').eq('organization_id', currentUser.organization_id).eq('name', result.company).single();
+            const { data: ec } = await supabase.from('companies').select('id').eq('organization_id', currentUser.organization_id).eq('name', result.company).maybeSingle();
             if (ec) {
                 companyId = ec.id;
             } else {
-                const { data: nc } = await supabase.from('companies').insert({ organization_id: currentUser.organization_id, name: result.company, location: result.location }).select().single();
-                companyId = nc.id;
+                const { data: nc } = await supabase.from('companies').insert({ organization_id: currentUser.organization_id, name: result.company, location: result.location }).select().maybeSingle();
+                if (nc) companyId = nc.id;
             }
 
             const jobData = {
@@ -22475,7 +22475,7 @@
                             .select('id')
                             .eq('organization_id', currentUser.organization_id)
                             .eq('name', result.company)
-                            .single();
+                            .maybeSingle();
 
                         if (existingCompany) {
                             companyId = existingCompany.id;
@@ -22488,8 +22488,8 @@
                                     location: result.location
                                 })
                                 .select()
-                                .single();
-                            companyId = newCompany.id;
+                                .maybeSingle();
+                            if (newCompany) companyId = newCompany.id;
                         }
 
                         jobData = {
@@ -22511,6 +22511,7 @@
                     }
 
                     // Google Drive 転送（設定があれば、既存URLがなければ）
+                    const orgSettings = currentUser.organizations?.settings || {};
                     const driveCol = orgSettings.drive_column || 'pdf_url';
                     if (file.driveUrl) {
                         jobData[driveCol] = file.driveUrl;
