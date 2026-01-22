@@ -1528,6 +1528,14 @@
                                 <p class="text-[10px] text-gray-400 mt-1">※求人票PDFを取得・解析するためのGoogle Apps Script
                                     WebアプリURLを入力してください</p>
                             </div>
+                            <div>
+                                <label
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">GoogleドライブURL保存用カラム
+                                    (jobsテーブル)</label>
+                                <input type="text" id="org-setting-drive-import-column" placeholder="pdf_url"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-gray-400 mt-1">※一括同期したURLの保存先を指定します（例: pdf_url または url）</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -20866,6 +20874,7 @@
                         const driveImportEnabled = settings.drive_import_enabled === true;
                         $('#org-setting-drive-import-enabled').prop('checked', driveImportEnabled);
                         $('#org-setting-drive-import-gas-url').val(settings.drive_import_gas_url || '');
+                        $('#org-setting-drive-import-column').val(settings.drive_import_column || 'pdf_url');
                         $('#drive-import-settings-container').toggleClass('hidden', !driveImportEnabled);
 
                         // 求人重複一括確認設定
@@ -20960,6 +20969,7 @@
                 drive_column: $('#org-setting-drive-column').val().trim() || 'pdf_url',
                 drive_import_enabled: $('#org-setting-drive-import-enabled').is(':checked'),
                 drive_import_gas_url: $('#org-setting-drive-import-gas-url').val().trim() || null,
+                drive_import_column: $('#org-setting-drive-import-column').val().trim() || 'pdf_url',
                 bulk_duplicate_confirm_enabled: $('#org-setting-bulk-duplicate-confirm').is(':checked'),
                 role_labels: {
                     org_admin: $('#org-role-label-org_admin').val().trim() || null,
@@ -22279,7 +22289,8 @@
             const orgSettings = (Array.isArray(targetUser?.organizations)
                 ? targetUser.organizations[0]?.settings
                 : targetUser?.organizations?.settings) || {};
-            const driveCol = (orgSettings.drive_column || 'pdf_url').toString().trim();
+            // インポート設定側の保存先カラムを優先
+            const driveCol = (orgSettings.drive_import_column || orgSettings.drive_column || 'pdf_url').toString().trim();
 
             // インポート用の設定を優先するが、なければ転送用の設定を予備(fallback)として使う
             const gasUrl = orgSettings.drive_import_gas_url || orgSettings.drive_gas_url;
