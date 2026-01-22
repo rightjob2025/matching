@@ -5841,6 +5841,49 @@
             </div>
         </div>
     </div>
+
+    <!-- Import Result Modal -->
+    <div id="import-result-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-xl font-bold text-gray-800">インポート処理結果</h2>
+                <button onclick="$('#import-result-modal').addClass('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div id="import-result-summary" class="mb-6">
+                    <!-- Summary info like "Success: X, Failed: Y" -->
+                </div>
+                <div class="space-y-6">
+                    <div id="import-result-success-section" class="hidden">
+                        <h3 class="text-sm font-bold text-green-700 mb-2 flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i> 成功したファイル
+                        </h3>
+                        <ul id="import-result-success-list"
+                            class="text-sm text-gray-600 list-disc list-inside bg-green-50 p-3 rounded-lg border border-green-100 space-y-1">
+                        </ul>
+                    </div>
+                    <div id="import-result-error-section" class="hidden">
+                        <h3 class="text-sm font-bold text-red-700 mb-2 flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle"></i> エラーが発生したファイル
+                        </h3>
+                        <ul id="import-result-error-list"
+                            class="text-sm text-gray-600 list-disc list-inside bg-red-50 p-3 rounded-lg border border-red-100 space-y-1">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex justify-end">
+                <button onclick="$('#import-result-modal').addClass('hidden')"
+                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-bold">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="prompt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b flex justify-between items-center">
@@ -6325,6 +6368,53 @@
         let isAImatchingResultView = false;
         let aiResultCache = {}; // userId_jobId -> details
         let pendingBulkJobs = []; // 求人一括取り込み時の確認待ちリスト
+        let importResultSuccessFiles = []; // インポート成功ファイルリスト
+        let importResultErrorFiles = [];   // インポートエラーファイルリスト
+
+        window.showImportResult = function (successFiles, errorFiles) {
+            const $modal = $('#import-result-modal');
+            const $summary = $('#import-result-summary');
+            const $successSection = $('#import-result-success-section');
+            const $successList = $('#import-result-success-list');
+            const $errorSection = $('#import-result-error-section');
+            const $errorList = $('#import-result-error-list');
+
+            $successList.empty();
+            $errorList.empty();
+
+            $summary.html(`
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-100 text-center">
+                        <div class="text-2xl font-bold text-green-600">${successFiles.length}</div>
+                        <div class="text-xs text-green-700 font-bold">登録成功</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
+                        <div class="text-2xl font-bold text-red-600">${errorFiles.length}</div>
+                        <div class="text-xs text-red-700 font-bold">エラー</div>
+                    </div>
+                </div>
+            `);
+
+            if (successFiles.length > 0) {
+                successFiles.forEach(f => $successList.append(`<li>${f}</li>`));
+                $successSection.removeClass('hidden');
+            } else {
+                $successSection.addClass('hidden');
+            }
+
+            if (errorFiles.length > 0) {
+                errorFiles.forEach(item => {
+                    const name = typeof item === 'string' ? item : item.name;
+                    const msg = typeof item === 'string' ? '' : ` (${item.message})`;
+                    $errorList.append(`<li>${name}${msg}</li>`);
+                });
+                $errorSection.removeClass('hidden');
+            } else {
+                $errorSection.addClass('hidden');
+            }
+
+            $modal.removeClass('hidden');
+        }
         window.prefectures = [
             "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
             "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
@@ -21902,40 +21992,54 @@
 
             const isBulkMode = fileCount > 1;
             showLoading('PDFを解析中...')
-            try {
-                let successCount = 0;
-                let skipCount = 0;
 
+            importResultSuccessFiles = [];
+            importResultErrorFiles = [];
+
+            try {
                 const options = {
                     job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
                     industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
                 };
 
+                const orgSettings = currentUser.organizations?.settings || {};
+                const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
+
                 for (let i = 0; i < fileCount; i++) {
                     const file = input.files[i];
                     console.log(`Processing file ${i + 1}/${fileCount}: ${file.name}`);
 
-                    const text = await extractTextFromPDF(file);
-                    if (!text || text.trim().length === 0) {
-                        alert(`ファイル「${file.name}」からテキストを抽出できませんでした。`);
-                        skipCount++;
-                        continue;
-                    }
+                    try {
+                        const text = await extractTextFromPDF(file);
+                        if (!text || text.trim().length === 0) {
+                            throw new Error('テキストを抽出できませんでした。');
+                        }
 
-                    await processParsedJobText(text, file, options, isBulkMode);
-                    successCount++;
+                        await processParsedJobText(text, file, options, isBulkMode);
+                        if (isBulkMode && !bulkConfirmEnabled) {
+                            importResultSuccessFiles.push(file.name);
+                        }
+                    } catch (err) {
+                        console.error(`Error processing ${file.name}:`, err);
+                        importResultErrorFiles.push({ name: file.name, message: err.message });
+                    }
                 }
 
                 if (isBulkMode) {
-                    if (pendingBulkJobs.length > 0) {
+                    if (bulkConfirmEnabled && pendingBulkJobs.length > 0) {
                         hideLoading();
                         renderBulkConfirmList();
+                        // 途中でエラーがあった場合も、後で見せたいが、まずは確認モーダルへ
                         $('#job-bulk-confirm-modal').removeClass('hidden');
                     } else {
-                        alert(`処理完了\n登録: ${successCount}件\nスキップ: ${skipCount}件`);
+                        hideLoading();
+                        showImportResult(importResultSuccessFiles, importResultErrorFiles);
                         closeJobModal();
                         loadAdminJobs();
                     }
+                } else if (importResultErrorFiles.length > 0) {
+                    hideLoading();
+                    showImportResult([], importResultErrorFiles);
                 }
 
             } catch (error) {
@@ -22186,11 +22290,15 @@
 
             const orgSettings = currentUser.organizations?.settings || {};
             showLoading('Googleドライブからインポート中...');
-            let successCount = 0; let errorCount = 0;
+
+            importResultSuccessFiles = [];
+            importResultErrorFiles = [];
             pendingBulkJobs = [];
 
             try {
                 const options = { job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [], industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : [] };
+                const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
+
                 for (let i = 0; i < selected.length; i++) {
                     const f = selected[i];
                     $('#drive-import-status p').text(`【${i + 1}/${selected.length}】解析中: ${f.name}`);
@@ -22209,16 +22317,28 @@
                             const tc = await pg.getTextContent();
                             text += tc.items.map(it => it.str).join(' ') + '\n';
                         }
-                        if (!text.trim()) throw new Error('Text empty');
+                        if (!text.trim()) throw new Error('PDFからテキストを抽出できませんでした（スキャン画像などの可能性）');
 
                         const fakeFile = { name: f.name, size: bytes.length, driveUrl: data.url };
                         await processParsedJobText(text, fakeFile, options, true);
-                        successCount++;
-                    } catch (e) { console.error(e); errorCount++; }
+
+                        if (!bulkConfirmEnabled) {
+                            importResultSuccessFiles.push(f.name);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        importResultErrorFiles.push({ name: f.name, message: e.message });
+                    }
                 }
                 $('#drive-import-modal').addClass('hidden');
-                if (pendingBulkJobs.length > 0) { renderBulkConfirmList(); $('#job-bulk-confirm-modal').removeClass('hidden'); }
-                else { alert(`完了\n成功: ${successCount}件\n失敗: ${errorCount}件`); loadAdminJobs(); }
+                if (bulkConfirmEnabled && pendingBulkJobs.length > 0) {
+                    renderBulkConfirmList();
+                    $('#job-bulk-confirm-modal').removeClass('hidden');
+                }
+                else {
+                    showImportResult(importResultSuccessFiles, importResultErrorFiles);
+                    loadAdminJobs();
+                }
             } catch (err) { alert('エラー: ' + err.message); } finally { hideLoading(); }
         }
 
@@ -22303,8 +22423,7 @@
             if (!confirm(`${selectedIndexes.length}件の求人を登録しますか？`)) return;
 
             showLoading('選択した求人を登録中...');
-            let successCount = 0;
-            let errorCount = 0;
+            // importResultSuccessFiles, importResultErrorFiles は既存のparsing時の結果（error）を引き継ぐため、クリアしない
 
             try {
                 for (const idx of selectedIndexes) {
@@ -22372,13 +22491,13 @@
                     const { error } = await supabase.from('jobs').insert(jobData);
                     if (error) {
                         console.error('Bulk import error for job:', result.title, error);
-                        errorCount++;
+                        importResultErrorFiles.push({ name: file.name, message: error.message });
                     } else {
-                        successCount++;
+                        importResultSuccessFiles.push(file.name);
                     }
                 }
 
-                alert(`登録完了\n成功: ${successCount}件\n失敗: ${errorCount}件`);
+                showImportResult(importResultSuccessFiles, importResultErrorFiles);
                 pendingBulkJobs = [];
                 $('#job-bulk-confirm-modal').addClass('hidden');
                 loadAdminJobs();
@@ -25913,8 +26032,8 @@
                     .from('applications')
                     .select(`
                         *,
-                        users!applications_user_id_fkey (id, name, team_id),
-                        jobs!applications_job_id_fkey (id, title, company, company_id)
+                        users(id, name, team_id),
+                        jobs(id, title, company, company_id)
                     `)
                     .eq('organization_id', currentUser.organization_id)
                     .is('deleted_at', null);
@@ -25980,7 +26099,7 @@
                 .from('master_data')
                 .select('*')
                 .eq('type', 'application_status')
-                .order('display_order');
+                .order('sort_order');
 
             if (!statuses) return;
 
