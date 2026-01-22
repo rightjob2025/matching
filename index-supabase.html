@@ -16587,6 +16587,8 @@
 
             $('#job-form')[0].reset()
             $('#job-id').val('')
+            $('#job-drive-pdf-url').val('') // Clear hidden field
+
 
             try {
                 // 企業選択肢（Select2）の初期化
@@ -16738,6 +16740,12 @@
                     $('#job-pic-user-2').val(job.pic_user_id_2 || '');
                     $('#job-pdf-filename').val(job.pdf_filename || '');
 
+                    // Google Drive URLの読み込み
+                    const orgSettings = currentUser.organizations?.settings || {};
+                    const driveCol = orgSettings.drive_column || 'pdf_url';
+                    $('#job-drive-pdf-url').val(job[driveCol] || '');
+
+
                     $('#job-employment-type').val(job.employment_type)
                     $('#job-is-remote').prop('checked', job.is_remote)
                     $('#job-experience-ok').prop('checked', job.job_experience_ok === '可')
@@ -16799,7 +16807,6 @@
                 industry_category: $('#job-industry-category').val() || null,
                 job_experience_ok: $('#job-experience-ok').is(':checked') ? '可' : '不可',
                 industry_experience_ok: $('#job-industry-experience-ok').is(':checked') ? '可' : '不可',
-                industry_experience_ok: $('#job-industry-experience-ok').is(':checked') ? '可' : '不可',
                 description: $('#job-description').val(),
                 requirements: $('#job-requirements').val(),
                 welcome_requirements: $('#job-welcome-requirements').val(),
@@ -16819,8 +16826,9 @@
             // Google Drive URLの動的カラム保存
             const orgSettings = currentUser.organizations?.settings || {};
             const drivePdfUrl = $('#job-drive-pdf-url').val();
-            if (drivePdfUrl && orgSettings.drive_column) {
-                jobData[orgSettings.drive_column] = drivePdfUrl;
+            if (drivePdfUrl) {
+                const driveCol = orgSettings.drive_column || 'pdf_url';
+                jobData[driveCol] = drivePdfUrl;
             }
 
             if (!jobData.company_id) {
@@ -22135,12 +22143,14 @@
                 return;
             }
 
-            // Transfer to Drive if enabled
-            if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url && file.size) {
+            // Transfer to Drive if enabled (or use existing driveUrl from Drive import)
+            const driveCol = orgSettings.drive_column || 'pdf_url';
+            if (file.driveUrl) {
+                jobData[driveCol] = file.driveUrl;
+            } else if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url && file.size) {
                 try {
                     const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
                     if (driveUrl) {
-                        const driveCol = orgSettings.drive_column || 'pdf_url';
                         jobData[driveCol] = driveUrl;
                     }
                 } catch (e) { console.error('Drive transfer failed:', e); }
@@ -22170,6 +22180,7 @@
                 if (jobData[orgSettings.drive_column || 'pdf_url']) {
                     $('#job-drive-pdf-url').val(jobData[orgSettings.drive_column || 'pdf_url']);
                 }
+                $('#job-pdf-filename').val(file.name);
 
                 alert('PDFの解析が完了しました。内容を確認してください。');
             } else {
@@ -22499,13 +22510,14 @@
                         };
                     }
 
-                    // Google Drive 転送（設定があれば）
-                    const orgSettings = currentUser.organizations?.settings || {};
-                    if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
+                    // Google Drive 転送（設定があれば、既存URLがなければ）
+                    const driveCol = orgSettings.drive_column || 'pdf_url';
+                    if (file.driveUrl) {
+                        jobData[driveCol] = file.driveUrl;
+                    } else if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
                         try {
                             const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
                             if (driveUrl) {
-                                const driveCol = orgSettings.drive_column || 'pdf_url';
                                 jobData[driveCol] = driveUrl;
                             }
                         } catch (e) {
