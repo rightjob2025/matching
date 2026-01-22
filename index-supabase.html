@@ -22276,8 +22276,7 @@
             }
 
             const user = window.currentUser || currentUser;
-            const orgSettings = user?.organizations?.settings || {};
-            const driveCol = orgSettings.drive_column || 'pdf_url';
+            const driveCol = (orgSettings.drive_column || 'pdf_url').trim();
 
             if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
                 alert('Googleドライブインポート設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。');
