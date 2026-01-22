@@ -22094,6 +22094,22 @@
                 throw new Error(`ファイル「${file.name}」からタイトルまたは会社名を特定できませんでした。`);
             }
 
+            // --- 年収の単位補正 (円単位に統一) ---
+            const normalizeSalary = (val) => {
+                if (val === null || val === undefined || val === '') return null;
+                let n = parseFloat(String(val).replace(/,/g, ''));
+                if (isNaN(n)) return null;
+                // AIが「400」などの万円単位で返してくることが多いため補正
+                // 日本の年収で10万未満(100,000円未満)は通常あり得ないため、万円単位と判定
+                if (n > 0 && n < 100000) {
+                    return Math.round(n * 10000);
+                }
+                return Math.round(n);
+            };
+
+            result.salary_min = normalizeSalary(result.salary_min);
+            result.salary_max = normalizeSalary(result.salary_max);
+
             const orgSettings = currentUser.organizations?.settings || {};
             const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
 
@@ -22162,8 +22178,8 @@
                 $('#job-title').val(result.title);
                 $('#job-company-name').val(result.company);
                 $('#job-location').val(result.location || '');
-                $('#job-salary-min').val(result.salary_min / 10000 || '');
-                $('#job-salary-max').val(result.salary_max / 10000 || '');
+                $('#job-salary-min').val(result.salary_min ? result.salary_min / 10000 : '');
+                $('#job-salary-max').val(result.salary_max ? result.salary_max / 10000 : '');
                 $('#job-description').val(result.description || '');
                 $('#job-requirements').val(result.requirements || '');
                 $('#job-welcome-requirements').val(result.welcome_requirements || '');
