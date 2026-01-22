@@ -22341,21 +22341,53 @@
                     return;
                 }
 
-                // 4. 一括更新
-                const { error: updateError } = await supabase
-                    .from('jobs')
-                    .upsert(updates);
+                // 4. 個別に更新
+                console.log(`DEBUG: Starting sync for ${updates.length} jobs using column: ${driveCol}`);
+                let successCount = 0;
+                let failCount = 0;
+                let lastError = null;
 
-                if (updateError) throw updateError;
+                for (const update of updates) {
+                    const { id, ...data } = update;
+                    // organization_idは更新対象から外す（RLSのUSING句には残るが、update対象に含めない方が安全な場合がある）
+                    delete data.organization_id;
 
-                alert(`${matchCount}件の求人にファイルURLを同期しました。`);
-                if (typeof loadAdminJobs === 'function') {
-                    loadAdminJobs(window.currentAdminJobPage || 1);
+                    const { error: updateError } = await supabase
+                        .from('jobs')
+                        .update(data)
+                        .eq('id', id);
+
+                    if (updateError) {
+                        console.error(`Update failed for job ${id}:`, updateError);
+                        lastError = updateError;
+                        failCount++;
+                    } else {
+                        successCount++;
+                    }
+                }
+
+                if (successCount > 0) {
+                    alert(`${successCount}件の求人にファイルURLを同期しました。${failCount > 0 ? `\n（${failCount}件はエラーにより更新できませんでした。コンソールを確認してください）` : ''}`);
+                    if (typeof loadAdminJobs === 'function') {
+                        loadAdminJobs(window.currentAdminJobPage || 1);
+                    }
+                } else if (failCount > 0) {
+                    const errorMsg = lastError?.message || '';
+                    if (errorMsg.includes('column') && errorMsg.includes('does not exist')) {
+                        alert(`エラー: データベースにカラム「${driveCol}」が見つかりません。\n\n理由: 組織設定の「保存先カラム名」が「${driveCol}」に設定されていますが、DBには存在しません。\n対策: 1.組織設定を「pdf_url」に変更する、または 2.DBに「${driveCol}」カラムを作成してください。`);
+                    } else {
+                        alert(`同期に失敗しました。以前のエラー: ${errorMsg}`);
+                    }
                 }
 
             } catch (err) {
                 console.error('Sync Drive URL Error:', err);
-                alert(`同期処理中にエラーが発生しました: ${err.message}`);
+                const msg = err.message || '不明なエラー';
+                if (msg.includes('column') && msg.includes('does not exist')) {
+                    alert(`エラー: データベースにカラム「${driveCol}」が見つかりません。組織設定で正しいカラム名が指定されているか確認してください。`);
+                } else {
+                    alert(`同期処理中にエラーが発生しました: ${msg}`);
+                }
             } finally {
                 hideLoading();
             }
