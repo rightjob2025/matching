@@ -21794,6 +21794,7 @@
             try {
                 const base64 = await fileToBase64(file);
                 const payload = {
+                    action: 'upload',
                     filename: file.name,
                     base64: base64,
                     mimeType: file.type || 'application/pdf'
