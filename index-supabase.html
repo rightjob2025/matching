@@ -22281,15 +22281,19 @@
                 : targetUser?.organizations?.settings) || {};
             const driveCol = (orgSettings.drive_column || 'pdf_url').toString().trim();
 
-            if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
-                alert('Googleドライブインポート設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。');
+            // インポート用の設定を優先するが、なければ転送用の設定を予備(fallback)として使う
+            const gasUrl = orgSettings.drive_import_gas_url || orgSettings.drive_gas_url;
+            const isImportEnabled = orgSettings.drive_import_enabled || orgSettings.drive_transfer_enabled;
+
+            if (!isImportEnabled || !gasUrl) {
+                alert('Googleドライブ設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。\n\n※「Googleドライブ求人PDFインポート設定」または「GoogleドライブPDF転送設定」のいずれかでURLの設定が必要です。');
                 return;
             }
 
             showLoading();
             try {
                 // 1. Google Driveからファイル一覧を取得
-                const response = await fetch(orgSettings.drive_import_gas_url, {
+                const response = await fetch(gasUrl, {
                     method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'list_files' }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
