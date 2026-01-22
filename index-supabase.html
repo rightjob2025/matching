@@ -3511,6 +3511,10 @@
                                 <i class="fab fa-google-drive"></i> Googleドライブ取得
                                 <span class="text-[10px] bg-white/20 px-1 rounded">GAS</span>
                             </button>
+                            <button id="admin-job-drive-sync-btn" onclick="syncDriveFileUrls()"
+                                class="hidden bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i> URL同期
+                            </button>
                             <button id="admin-job-csv-import-btn" onclick="showJobCsvImportModal()"
                                 class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                                 <i class="fas fa-file-csv"></i> CSVインポート
@@ -16276,6 +16280,7 @@
             // UI更新: Googleドライブインポートボタンの表示制御
             const orgSettings = currentUser.organizations?.settings || {};
             $('#admin-job-drive-import-btn').toggleClass('hidden', !orgSettings.drive_import_enabled);
+            $('#admin-job-drive-sync-btn').toggleClass('hidden', !orgSettings.drive_import_enabled);
 
             showLoading()
             try {
@@ -22262,6 +22267,94 @@
                 applyDriveFileFilters();
             } catch (err) {
                 $('#drive-import-status').attr('class', 'mb-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3 border border-red-100').html(`<i class="fas fa-times-circle"></i><p class="text-sm">エラー: ${err.message}</p>`);
+            }
+        };
+
+        window.syncDriveFileUrls = async function () {
+            if (!confirm('Googleドライブのファイル名と求人のファイル名を照合し、URLが未登録の求人にURLを自動反映します。実行しますか？')) {
+                return;
+            }
+
+            const user = window.currentUser || currentUser;
+            const orgSettings = user?.organizations?.settings || {};
+            const driveCol = orgSettings.drive_column || 'pdf_url';
+
+            if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
+                alert('Googleドライブインポート設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。');
+                return;
+            }
+
+            showLoading();
+            try {
+                // 1. Google Driveからファイル一覧を取得
+                const response = await fetch(orgSettings.drive_import_gas_url, {
+                    method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'list_files' }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+
+                const driveFiles = result.files || [];
+                if (driveFiles.length === 0) {
+                    alert('Googleドライブにファイルが見つかりませんでした。');
+                    return;
+                }
+
+                // 2. 求人をDBから取得 (ファイル名があるもの。URLが空かは後でフィルタ)
+                const { data: jobs, error } = await supabase
+                    .from('jobs')
+                    .select(`id, pdf_filename, ${driveCol}`)
+                    .eq('organization_id', user.organization_id)
+                    .is('deleted_at', null)
+                    .not('pdf_filename', 'is', null)
+                    .neq('pdf_filename', '');
+
+                if (error) throw error;
+
+                // URLが未登録（null または 空文字）のものに限定
+                const targetJobs = (jobs || []).filter(j => !j[driveCol]);
+
+                if (targetJobs.length === 0) {
+                    alert('ファイルURLの更新対象となる求人（ファイル名が登録済みでURLが未登録の求人）は見つかりませんでした。');
+                    return;
+                }
+
+                // 3. マッチング処理
+                const updates = [];
+                let matchCount = 0;
+
+                for (const job of targetJobs) {
+                    const matchedFile = driveFiles.find(f => f.name === job.pdf_filename);
+                    if (matchedFile) {
+                        const updateData = { id: job.id };
+                        updateData[driveCol] = matchedFile.url;
+                        updates.push(updateData);
+                        matchCount++;
+                    }
+                }
+
+                if (updates.length === 0) {
+                    alert('Googleドライブ内に一致するファイル名のPDFが見つかりませんでした。求人のファイル名とDrive上のファイル名が一致しているか確認してください。');
+                    return;
+                }
+
+                // 4. 一括更新
+                const { error: updateError } = await supabase
+                    .from('jobs')
+                    .upsert(updates);
+
+                if (updateError) throw updateError;
+
+                alert(`${matchCount}件の求人にファイルURLを同期しました。`);
+                if (typeof loadAdminJobs === 'function') {
+                    loadAdminJobs(window.currentAdminJobPage || 1);
+                }
+
+            } catch (err) {
+                console.error('Sync Drive URL Error:', err);
+                alert(`同期処理中にエラーが発生しました: ${err.message}`);
+            } finally {
+                hideLoading();
             }
         };
 
