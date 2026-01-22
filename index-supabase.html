@@ -22275,8 +22275,11 @@
                 return;
             }
 
-            const user = window.currentUser || currentUser;
-            const driveCol = (orgSettings.drive_column || 'pdf_url').trim();
+            const targetUser = window.currentUser || currentUser;
+            const orgSettings = (Array.isArray(targetUser?.organizations)
+                ? targetUser.organizations[0]?.settings
+                : targetUser?.organizations?.settings) || {};
+            const driveCol = (orgSettings.drive_column || 'pdf_url').toString().trim();
 
             if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
                 alert('Googleドライブインポート設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。');
@@ -22303,7 +22306,7 @@
                 const { data: jobs, error } = await supabase
                     .from('jobs')
                     .select(`id, pdf_filename, ${driveCol}`)
-                    .eq('organization_id', user.organization_id)
+                    .eq('organization_id', targetUser.organization_id)
                     .is('deleted_at', null)
                     .not('pdf_filename', 'is', null)
                     .neq('pdf_filename', '');
@@ -22327,7 +22330,7 @@
                     if (matchedFile) {
                         const updateData = {
                             id: job.id,
-                            organization_id: user.organization_id
+                            organization_id: targetUser.organization_id
                         };
                         updateData[driveCol] = matchedFile.url;
                         updates.push(updateData);
