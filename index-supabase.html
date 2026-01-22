@@ -22326,7 +22326,10 @@
                 for (const job of targetJobs) {
                     const matchedFile = driveFiles.find(f => f.name === job.pdf_filename);
                     if (matchedFile) {
-                        const updateData = { id: job.id };
+                        const updateData = {
+                            id: job.id,
+                            organization_id: user.organization_id
+                        };
                         updateData[driveCol] = matchedFile.url;
                         updates.push(updateData);
                         matchCount++;
