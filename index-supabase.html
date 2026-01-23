@@ -15921,8 +15921,41 @@
             }
         }
 
+        // 自動おすすめ求人の即時バリデーション
+        $(document).on('change', '#profile-enable-auto-recommendations', function () {
+            if ($(this).is(':checked')) {
+                const jobTypes = $('#profile-job-type').val();
+                const prefs = $('#profile-prefecture').val();
+                const city = $('#profile-city').val()?.trim();
+
+                if (!jobTypes || jobTypes.length === 0 || ((!prefs || prefs.length === 0) && !city)) {
+                    alert('自動おすすめ求人を有効にするには、「希望職種」と「希望勤務地」を先に入力してください。');
+                    $(this).prop('checked', false);
+                }
+            }
+        });
+
         $('#profile-form').on('submit', async function (e) {
             e.preventDefault()
+
+            // 自動おすすめ求人のバリデーション
+            if ($('#profile-enable-auto-recommendations').is(':checked')) {
+                const jobTypes = $('#profile-job-type').val();
+                const prefs = $('#profile-prefecture').val();
+                const city = $('#profile-city').val()?.trim();
+
+                if (!jobTypes || jobTypes.length === 0) {
+                    alert('AI自動おすすめ求人を有効にするには、「希望職種」を設定してください。');
+                    $('#profile-enable-auto-recommendations').focus();
+                    return;
+                }
+                if ((!prefs || prefs.length === 0) && !city) {
+                    alert('AI自動おすすめ求人を有効にするには、「希望勤務地」を設定してください。');
+                    $('#profile-enable-auto-recommendations').focus();
+                    return;
+                }
+            }
+
             showLoading()
 
             const salaryNum = $('#profile-salary').val() ? parseInt($('#profile-salary').val()) * 10000 : null;
@@ -17361,6 +17394,19 @@
         let isModalReady = false;
 
         // ユーザー保存処理
+        $(document).on('change', '#admin-user-enable-auto-reco', function () {
+            if ($(this).is(':checked') && $('#admin-user-role').val() === 'candidate') {
+                const jobTypes = $('#admin-user-job-type').val();
+                const prefs = $('#admin-user-prefecture').val();
+                const city = $('#admin-user-city').val()?.trim();
+
+                if (!jobTypes || jobTypes.length === 0 || ((!prefs || prefs.length === 0) && !city)) {
+                    alert('自動おすすめ求人を有効にするには、「希望職種」と「希望勤務地」を先に入力してください。');
+                    $(this).prop('checked', false);
+                }
+            }
+        });
+
         $('#admin-user-form').off('submit').on('submit', async function (e) {
             console.log('=== FORM SUBMIT TRIGGERED ===');
             console.log('isModalReady:', isModalReady);
@@ -17378,6 +17424,22 @@
             if (!isModalReady) {
                 console.warn('Modal not ready for submission yet - BLOCKING SUBMIT');
                 return false;
+            }
+
+            // 自動おすすめ求人のバリデーション (候補者の場合)
+            if ($('#admin-user-role').val() === 'candidate' && $('#admin-user-enable-auto-reco').is(':checked')) {
+                const jobTypes = $('#admin-user-job-type').val();
+                const prefs = $('#admin-user-prefecture').val();
+                const city = $('#admin-user-city').val()?.trim();
+
+                if (!jobTypes || jobTypes.length === 0) {
+                    alert('自動おすすめ求人を有効にするには、「希望職種」を設定してください。');
+                    return false;
+                }
+                if ((!prefs || prefs.length === 0) && !city) {
+                    alert('自動おすすめ求人を有効にするには、「希望勤務地」を設定してください。');
+                    return false;
+                }
             }
 
             const userId = $('#admin-user-id').val();
