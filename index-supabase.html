@@ -26332,7 +26332,7 @@
                     .from('applications')
                     .select(`
                         *,
-                        users(id, name, team_id),
+                        users!applications_user_id_fkey(id, name, team_id),
                         jobs(id, title, company, company_id)
                     `)
                     .eq('organization_id', currentUser.organization_id)
