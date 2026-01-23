@@ -15880,7 +15880,7 @@
                 $('#profile-freewords').val(user.desired_freewords || '')
                 $('#profile-job-experience-ok').prop('checked', user.desired_job_experience_ok)
                 $('#profile-industry-experience-ok').prop('checked', user.desired_industry_experience_ok)
-                $('#profile-enable-auto-recommendations').prop('checked', user.enable_auto_recommendations !== false); // Default true
+                $('#profile-enable-auto-recommendations').prop('checked', !!user.enable_auto_recommendations); // Default false
 
                 $('#profile-skills').val(user.skills || '')
                 $('#profile-history').val(user.work_history || '')
@@ -17070,7 +17070,7 @@
                 $('#admin-user-drive-url').val(user.drive_folder_url || '');
                 $('#admin-user-notebooklm-url').val(user.notebooklm_url || '');
                 $('#admin-user-line-url').val(user.line_url || '');
-                $('#admin-user-enable-auto-reco').prop('checked', user.enable_auto_recommendations !== false);
+                $('#admin-user-enable-auto-reco').prop('checked', !!user.enable_auto_recommendations);
 
                 // 詳細職歴
                 console.log('Rendering work history list...');
