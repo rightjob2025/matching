@@ -13627,7 +13627,7 @@
         // ========================
         // Email Notification Utility
         // ========================
-        async function sendEmail(type, to, data) {
+        window.sendEmail = async function (type, to, data) {
             try {
                 const { data: result, error } = await supabase.functions.invoke('send-email', {
                     body: { type, to, data }
