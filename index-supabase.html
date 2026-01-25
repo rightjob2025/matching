@@ -778,17 +778,14 @@
             }
 
             .sticky-search-footer {
-                position: sticky;
-                bottom: -1px;
+                position: relative;
                 background: white;
-                padding: 12px 0;
                 margin: 0 -1rem -1rem -1rem;
                 padding: 1rem;
                 border-top: 1px solid #f1f5f9;
                 border-bottom-left-radius: 16px;
                 border-bottom-right-radius: 16px;
-                z-index: 40;
-                box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+                z-index: 10;
             }
         }
 
@@ -2091,11 +2088,32 @@
                         <!-- Row 1: Search Box & Count -->
                         <div class="flex flex-col md:flex-row items-stretch gap-4">
                             <div class="flex-1">
-                                <div class="relative group">
-                                    <input type="text" id="search-keyword" placeholder="求人タイトル、企業名、スキルなど..."
-                                        class="w-full h-14 px-12 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none shadow-sm transition-all focus:border-indigo-500 text-base">
-                                    <i
-                                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                                <div class="flex flex-col sm:flex-row items-stretch gap-3">
+                                    <div class="relative group flex-1">
+                                        <input type="text" id="search-keyword" placeholder="求人タイトル、企業名、スキルなど..."
+                                            class="w-full h-14 px-12 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none shadow-sm transition-all focus:border-indigo-500 text-base">
+                                        <i
+                                            class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                                    </div>
+
+                                    <!-- Mode Switch (Always Visible) -->
+                                    <div
+                                        class="flex p-1 bg-slate-100/50 rounded-2xl border border-slate-200 h-14 items-center">
+                                        <label class="relative flex items-center cursor-pointer h-full">
+                                            <input type="radio" name="search-keyword-mode" value="OR" checked
+                                                class="sr-only peer">
+                                            <div
+                                                class="px-5 py-2 rounded-xl text-xs font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all whitespace-nowrap">
+                                                OR検索</div>
+                                        </label>
+                                        <label class="relative flex items-center cursor-pointer h-full">
+                                            <input type="radio" name="search-keyword-mode" value="AND"
+                                                class="sr-only peer">
+                                            <div
+                                                class="px-5 py-2 rounded-xl text-xs font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all whitespace-nowrap">
+                                                AND検索</div>
+                                        </label>
+                                    </div>
                                 </div>
                                 <div id="tags-keyword" class="tag-container mt-2 px-1"></div>
                             </div>
@@ -2157,22 +2175,6 @@
                             </div>
 
                             <div class="flex flex-wrap lg:flex-nowrap items-center gap-3">
-                                <!-- Mode Switch -->
-                                <div class="flex p-1 bg-slate-100/80 rounded-2xl border border-slate-200">
-                                    <label class="relative flex items-center cursor-pointer">
-                                        <input type="radio" name="search-keyword-mode" value="OR" checked
-                                            class="sr-only peer">
-                                        <div
-                                            class="px-5 py-2 rounded-xl text-xs font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">
-                                            OR検索</div>
-                                    </label>
-                                    <label class="relative flex items-center cursor-pointer">
-                                        <input type="radio" name="search-keyword-mode" value="AND" class="sr-only peer">
-                                        <div
-                                            class="px-5 py-2 rounded-xl text-xs font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">
-                                            AND検索</div>
-                                    </label>
-                                </div>
 
                                 <!-- Exclude Matched Checkbox -->
                                 <label id="exclude-matched-container"
@@ -2446,22 +2448,51 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="filter-group-label">キーワード</label>
-                                <div class="relative">
+                                <div class="relative group">
                                     <input type="text" id="c-search-keyword" placeholder="スキル、経歴、資格など..."
                                         class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                                     <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
+
+                                    <!-- Moved Mode Switch here -->
+                                    <div
+                                        class="absolute right-10 top-1/2 -translate-y-1/2 hidden sm:flex p-1 bg-slate-100/50 rounded-lg border border-slate-200/50 scale-75 origin-right">
+                                        <label class="relative flex items-center cursor-pointer">
+                                            <input type="radio" name="c-search-keyword-mode" value="OR" checked
+                                                class="sr-only peer">
+                                            <div
+                                                class="px-2 py-1 rounded text-[10px] font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">
+                                                OR</div>
+                                        </label>
+                                        <label class="relative flex items-center cursor-pointer">
+                                            <input type="radio" name="c-search-keyword-mode" value="AND"
+                                                class="sr-only peer">
+                                            <div
+                                                class="px-2 py-1 rounded text-[10px] font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">
+                                                AND</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <!-- Mobile Mode Switch below input -->
+                                <div
+                                    class="flex sm:hidden mt-2 p-1 bg-slate-100/50 rounded-xl border border-slate-200/50 w-fit">
+                                    <label class="relative flex items-center cursor-pointer">
+                                        <input type="radio" name="c-search-keyword-mode-mobile" value="OR" checked
+                                            class="sr-only peer"
+                                            onchange="$('input[name=c-search-keyword-mode][value=OR]').prop('checked', true)">
+                                        <div
+                                            class="px-4 py-1 rounded-lg text-xs font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">
+                                            OR検索</div>
+                                    </label>
+                                    <label class="relative flex items-center cursor-pointer">
+                                        <input type="radio" name="c-search-keyword-mode-mobile" value="AND"
+                                            class="sr-only peer"
+                                            onchange="$('input[name=c-search-keyword-mode][value=AND]').prop('checked', true)">
+                                        <div
+                                            class="px-4 py-1 rounded-lg text-xs font-bold text-slate-500 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">
+                                            AND検索</div>
+                                    </label>
                                 </div>
                                 <div id="c-tags-keyword" class="tag-container mt-2"></div>
-                                <div class="flex gap-4 text-[10px] sm:text-xs text-slate-500 mt-2 px-1">
-                                    <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
-                                        <input type="radio" name="c-search-keyword-mode" value="OR" checked
-                                            class="mr-1 accent-indigo-600"> OR検索
-                                    </label>
-                                    <label class="flex items-center cursor-pointer hover:text-indigo-600 transition">
-                                        <input type="radio" name="c-search-keyword-mode" value="AND"
-                                            class="mr-1 accent-indigo-600"> AND検索
-                                    </label>
-                                </div>
                             </div>
                             <div>
                                 <label class="filter-group-label">希望最低年収</label>
@@ -7078,12 +7109,23 @@
                 $container.removeClass('collapsed');
                 $btn.addClass('active');
                 $btn.find('span').text('閉じる');
+                localStorage.setItem('search_filters_expanded', 'true');
             } else {
                 $container.addClass('collapsed');
                 $btn.removeClass('active');
                 $btn.find('span').text('詳細条件');
+                localStorage.setItem('search_filters_expanded', 'false');
             }
         }
+
+        // Initialize filter state from localStorage
+        $(document).ready(function () {
+            const expanded = localStorage.getItem('search_filters_expanded');
+            if (expanded === 'true') {
+                $('#advanced-filters-body').removeClass('collapsed');
+                $('#toggle-advanced-filters').addClass('active').find('span').text('閉じる');
+            }
+        });
 
 
 
