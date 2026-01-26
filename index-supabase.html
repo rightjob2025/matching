@@ -2893,17 +2893,26 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">希望最低年収（万円）</label>
-                                <input type="number" id="profile-salary" placeholder="例: 400" min="0"
-                                    class="w-full px-4 py-2 border rounded-lg">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">希望条件フリーワード / AND・OR</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="profile-freewords" placeholder="例: リモート, フレックス, 副業"
+                                    class="flex-1 px-4 py-2 border rounded-lg">
+                                <div class="flex items-center gap-2 bg-gray-50 px-3 border rounded-lg">
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="radio" name="profile-freewords-condition" value="and" checked
+                                            class="w-4 h-4 text-indigo-600">
+                                        <span class="text-xs font-bold text-gray-600">AND</span>
+                                    </label>
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="radio" name="profile-freewords-condition" value="or"
+                                            class="w-4 h-4 text-indigo-600">
+                                        <span class="text-xs font-bold text-gray-600">OR</span>
+                                    </label>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">フリーワード</label>
-                                <input type="text" id="profile-freewords" placeholder="検索用キーワード"
-                                    class="w-full px-4 py-2 border rounded-lg">
-                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1">
+                                ※カンマ(,)区切りで複数指定可能です。AND検索はすべての単語を含む求人、OR検索はいずれかの単語を含む求人を優先します。</p>
                         </div>
 
                         <div class="flex flex-wrap gap-6 p-4 bg-indigo-50 rounded-lg">
@@ -4626,10 +4635,33 @@
                                 class="w-full px-4 py-2 border rounded-lg"></textarea>
                         </div>
 
-                        <!-- 追加詳細フィールド -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
-                            <input type="tel" id="admin-user-phone" class="w-full px-4 py-2 border rounded-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
+                                <input type="tel" id="admin-user-phone" class="w-full px-4 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700 mb-1 text-indigo-700 font-bold">希望フリーワード
+                                    / AND・OR</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="admin-user-freewords" placeholder="例: リモート, 英語"
+                                        class="flex-1 px-4 py-2 border border-indigo-200 bg-indigo-50/30 rounded-lg">
+                                    <div
+                                        class="flex items-center gap-2 bg-indigo-50 px-3 border border-indigo-100 rounded-lg">
+                                        <label class="flex items-center gap-1 cursor-pointer">
+                                            <input type="radio" name="admin-user-freewords-condition" value="and"
+                                                checked class="w-4 h-4 text-indigo-600">
+                                            <span class="text-xs font-bold text-indigo-800">AND</span>
+                                        </label>
+                                        <label class="flex items-center gap-1 cursor-pointer">
+                                            <input type="radio" name="admin-user-freewords-condition" value="or"
+                                                class="w-4 h-4 text-indigo-600">
+                                            <span class="text-xs font-bold text-indigo-800">OR</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex flex-wrap gap-4 py-3 px-4 bg-gray-50 rounded-lg border border-gray-100">
@@ -9280,6 +9312,13 @@
                 // プロフィールデータのフラット化 (AI-Matching関数へ渡すため)
                 const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
                 const user = { ...userData, ...profile };
+
+                // フリーワード条件を明示的にセット (もしフラット化で漏れても確実に渡るように)
+                if (profile) {
+                    user.desired_freewords = profile.desired_freewords;
+                    user.desired_freewords_condition = profile.desired_freewords_condition || 'and';
+                }
+
                 console.log('Sending User to AI-Matching:', user);
 
                 // 各求人に対して推薦を作成
@@ -16080,8 +16119,7 @@
 
                 $('#profile-salary').val(user.desired_salary ? Math.floor(user.desired_salary / 10000) : '')
                 $('#profile-freewords').val(user.desired_freewords || '')
-                $('#profile-job-experience-ok').prop('checked', user.desired_job_experience_ok)
-                $('#profile-industry-experience-ok').prop('checked', user.desired_industry_experience_ok)
+                $(`input[name="profile-freewords-condition"][value="${user.desired_freewords_condition || 'and'}"]`).prop('checked', true)
                 $('#profile-enable-auto-recommendations').prop('checked', !!user.enable_auto_recommendations); // Default false
 
                 $('#profile-skills').val(user.skills || '')
@@ -16195,6 +16233,7 @@
                 desired_employment_type: $('#profile-employment-type').val() ? $('#profile-employment-type').val().join(',') : null,
                 desired_salary: salaryNum,
                 desired_freewords: $('#profile-freewords').val().trim(),
+                desired_freewords_condition: $('input[name="profile-freewords-condition"]:checked').val() || 'and',
                 desired_job_experience_ok: $('#profile-job-experience-ok').is(':checked'),
                 desired_industry_experience_ok: $('#profile-industry-experience-ok').is(':checked'),
                 skills: $('#profile-skills').val().trim(),
@@ -17297,6 +17336,9 @@
 
                 // 追加詳細項目のセット
                 $('#admin-user-phone').val(user.phone || '');
+                $('#admin-user-salary').val(user.desired_salary ? Math.floor(user.desired_salary / 10000) : '');
+                $('#admin-user-freewords').val(user.desired_freewords || '');
+                $(`input[name="admin-user-freewords-condition"][value="${user.desired_freewords_condition || 'and'}"]`).prop('checked', true);
                 $('#admin-user-job-exp-ok').prop('checked', user.desired_job_experience_ok);
                 $('#admin-user-industry-exp-ok').prop('checked', user.desired_industry_experience_ok);
                 $('#admin-user-work-history-detail').val(user.work_history || '');
@@ -17756,6 +17798,8 @@
                         desired_location: locationStr,
                         desired_employment_type: empType ? empType.join(',') : null,
                         desired_salary: $('#admin-user-salary').val() ? parseInt($('#admin-user-salary').val()) * 10000 : null,
+                        desired_freewords: $('#admin-user-freewords').val().trim(),
+                        desired_freewords_condition: $('input[name="admin-user-freewords-condition"]:checked').val() || 'and',
                         skills: $('#admin-user-skills').val().trim(),
 
                         // work_historyとdetailを別々に保存
