@@ -20581,7 +20581,8 @@
                                         company: importData.company,
                                         title: importData.title,
                                         location: importData.location,
-                                        reasons: duplicate._duplicateReasons
+                                        reasons: duplicate._duplicateReasons,
+                                        score: duplicate._duplicateScore
                                     });
                                     skipCount++;
                                     skips.push(displayRowNumber);
@@ -20776,7 +20777,13 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500">${item.row}</td>
                                 <td class="px-6 py-4">
-                                    <div class="text-amber-600 font-bold text-sm">重複の疑い</div>
+                                    ${(item.score === 4) ? `
+                                        <div class="text-red-700 font-bold text-sm bg-red-100 px-2 py-0.5 rounded border border-red-200 inline-block">スキップ推奨</div>
+                                    ` : (item.score === 3) ? `
+                                        <div class="text-red-600 font-bold text-sm bg-orange-100 px-2 py-0.5 rounded border border-orange-200 inline-block">要確認</div>
+                                    ` : `
+                                        <div class="text-teal-600 font-bold text-sm bg-teal-100 px-2 py-0.5 rounded border border-teal-200 inline-block">登録対象</div>
+                                    `}
                                     ${formatDuplicateReasons(item.reasons)}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${item.company}</td>
@@ -22321,19 +22328,18 @@
             let score = 0;
             const reasons = [];
 
-            // 1. ポジション名
-            if (newJob.title && oldJob.title && newJob.title.trim() === oldJob.title.trim()) {
+            // 1. 企業名 (一致必須)
+            const newCompany = (newJob.company || '').trim();
+            const oldCompany = (oldJob.company || '').trim();
+            if (newCompany && oldCompany && newCompany === oldCompany) {
                 score++;
-                reasons.push({ label: 'タイトル', value: newJob.title });
+                reasons.push({ label: '企業名', value: newCompany });
+            } else {
+                // 企業名が一致しない場合は重複とみなさない
+                return false;
             }
 
-            // 2. 企業名
-            if (newJob.company && oldJob.company && newJob.company.trim() === oldJob.company.trim()) {
-                score++;
-                reasons.push({ label: '企業名', value: newJob.company });
-            }
-
-            // 3. 職種分類
+            // 2. 職種分類
             if (newJob.job_category && oldJob.job_category && newJob.job_category === oldJob.job_category) {
                 score++;
                 let catLabel = newJob.job_category;
@@ -22344,7 +22350,7 @@
                 reasons.push({ label: '職種', value: catLabel });
             }
 
-            // 4. 勤務地 (同都道府県)
+            // 3. 勤務地 (同都道府県)
             const newPref = getPrefecture(newJob.location);
             const oldPref = getPrefecture(oldJob.location);
             if (newPref && oldPref && newPref === oldPref) {
@@ -22352,7 +22358,7 @@
                 reasons.push({ label: '勤務地', value: newPref });
             }
 
-            // 5. 年収 (上限と下限が+-50万以内)
+            // 4. 年収 (上限と下限が+-50万以内)
             const isMatchSalary = (v1, v2) => {
                 if (v1 === null || v1 === undefined || v2 === null || v2 === undefined) return false;
                 const n1 = parseFloat(v1);
@@ -22367,9 +22373,10 @@
                 reasons.push({ label: '給与', value: `${sMin}～${sMax}` });
             }
 
-            if (score >= 3) {
-                // Attach reasons to the oldJob object so the caller can use them
+            // 判定: 企業名(1点) + その他1つ以上(1点〜) = 2点以上で重複候補
+            if (score >= 2) {
                 oldJob._duplicateReasons = reasons;
+                oldJob._duplicateScore = score;
                 return true;
             }
             return false;
@@ -23061,29 +23068,42 @@
             container.empty();
 
             pendingBulkJobs.forEach((item, index) => {
-                const hasDuplicate = item.duplicates && item.duplicates.length > 0;
+                const duplicates = item.duplicates || [];
+                const maxScore = duplicates.length > 0 ? Math.max(...duplicates.map(d => d._duplicateScore || 0)) : 0;
+                const hasDuplicate = maxScore >= 3;
+
+                let cardClass = "bg-white border rounded-lg p-4 shadow-sm hover:border-indigo-300 transition";
+                let badgeHtml = '<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">解析完了</span>';
+
+                if (maxScore === 4) {
+                    cardClass = "border-red-300 bg-red-50 p-4 rounded-lg shadow-sm transition";
+                    badgeHtml = '<span class="px-2 py-0.5 bg-red-600 text-white text-[10px] rounded font-bold">スキップ推奨</span>';
+                } else if (maxScore === 3) {
+                    cardClass = "border-orange-300 bg-orange-50 p-4 rounded-lg shadow-sm transition";
+                    badgeHtml = '<span class="px-2 py-0.5 bg-red-500 text-white text-[10px] rounded font-bold">要確認</span>';
+                } else if (maxScore === 2) {
+                    cardClass = "border-teal-300 bg-teal-50 p-4 rounded-lg shadow-sm transition";
+                    badgeHtml = '<span class="px-2 py-0.5 bg-teal-600 text-white text-[10px] rounded font-bold">登録対象</span>';
+                }
+
                 const dupHtml = hasDuplicate
                     ? item.duplicates.map(d => `
                         <div class="mb-2 last:mb-0">
-                            <div class="text-red-500 font-medium text-xs">${d.company} / ${d.title}</div>
+                            <div class="text-red-600 font-bold text-xs">${d.company} / ${d.title}</div>
                             ${formatDuplicateReasons(d._duplicateReasons)}
                         </div>
                     `).join('')
                     : '';
 
-                const statusBadge = hasDuplicate
-                    ? '<span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] rounded font-bold">重複疑い</span>'
-                    : '<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">解析完了</span>';
-
                 const html = `
-                    <div class="bg-white border rounded-lg p-4 shadow-sm hover:border-indigo-300 transition ${hasDuplicate ? 'border-red-100 bg-red-50/10' : ''}">
+                    <div class="${cardClass}">
                         <label class="flex items-start cursor-pointer">
                             <input type="checkbox" name="bulk-job-item" data-index="${index}" class="form-checkbox h-5 w-5 text-indigo-600 rounded mt-1 mr-4" onchange="updateBulkSelectCount()" ${!hasDuplicate ? 'checked' : ''}>
                             <div class="flex-1">
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="flex items-center gap-2">
                                         <h4 class="font-bold text-gray-900 overflow-hidden text-ellipsis">${item.result.company} / ${item.result.title}</h4>
-                                        ${statusBadge}
+                                        ${badgeHtml}
                                     </div>
                                     <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded truncate ml-2">📄 ${item.file.name}</span>
                                 </div>
@@ -23091,7 +23111,7 @@
                                     <div><i class="fas fa-map-marker-alt mr-1"></i>${item.result.location || '-'}</div>
                                     ${hasDuplicate ? `
                                     <div class="mt-2 pt-2 border-t border-dashed border-red-200">
-                                        <p class="font-bold text-red-600 mb-1"><i class="fas fa-exclamation-triangle mr-1"></i>重複の可能性あり:</p>
+                                        <p class="font-bold text-red-600 mb-1"><i class="fas fa-exclamation-triangle mr-1"></i>一致した項目:</p>
                                         <div class="pl-2 border-l-2 border-red-200 ml-1">
                                             ${dupHtml}
                                         </div>
