@@ -10720,6 +10720,60 @@
                     console.warn('Failed to record progress history:', histErr);
                 }
 
+                // 通知とメール送信
+                try {
+                    const { data: appData } = await supabase
+                        .from('applications')
+                        .select('*, jobs(title, company), users!user_id(name, email, coach_id)')
+                        .eq('id', applicationId)
+                        .single();
+
+                    if (appData) {
+                        const statusLabel = getSelectionStatusLabel(newStatus);
+
+                        // 求職者へ通知レコード
+                        await supabase.from('notifications').insert({
+                            user_id: candidateId,
+                            title: '選考ステータスが更新されました',
+                            message: `「${appData.jobs.company} / ${appData.jobs.title}」の選考状況が「${statusLabel}」に更新されました。`,
+                            read: false,
+                            metadata: { page: 'applications', application_id: applicationId },
+                            created_at: new Date().toISOString()
+                        });
+
+                        // 求職者へメール
+                        if (appData.users && appData.users.email) {
+                            await sendEmail('status_changed', appData.users.email, {
+                                userName: appData.users.name,
+                                jobTitle: appData.jobs.title,
+                                companyName: appData.jobs.company,
+                                newStatus: statusLabel
+                            });
+                        }
+
+                        // 担当コーチへメール
+                        if (appData.users.coach_id) {
+                            const { data: coachData } = await supabase
+                                .from('users')
+                                .select('name, email')
+                                .eq('id', appData.users.coach_id)
+                                .single();
+
+                            if (coachData && coachData.email) {
+                                await sendEmail('ca_notification', coachData.email, {
+                                    userName: coachData.name,
+                                    candidateName: appData.users.name,
+                                    jobTitle: appData.jobs.title,
+                                    companyName: appData.jobs.company,
+                                    body: `担当求職者の ${appData.users.name} 様の選考ステータスが「${statusLabel}」に更新されました。`
+                                });
+                            }
+                        }
+                    }
+                } catch (notifyErr) {
+                    console.error('Update notification failed:', notifyErr);
+                }
+
                 alert('選考ステータスを更新しました');
                 loadSelectionProgress(candidateId);
             } catch (err) {
@@ -13778,6 +13832,20 @@
 
                     // 2. 担当コーチを取得
                     let coachId = applicant.coach_id
+                    let coachEmail = null
+                    let coachName = null
+
+                    if (coachId) {
+                        const { data: coachData } = await supabase
+                            .from('users')
+                            .select('name, email')
+                            .eq('id', coachId)
+                            .single()
+                        if (coachData) {
+                            coachEmail = coachData.email
+                            coachName = coachData.name
+                        }
+                    }
 
                     // 通知対象者のリスト作成（重複排除）
                     const notifyUserIds = new Set(admins?.map(a => a.id) || [])
@@ -13815,6 +13883,17 @@
                         jobTitle: jobTitle,
                         companyName: companyName
                     })
+
+                    // メール送信 (担当コーチへ)
+                    if (coachEmail) {
+                        await sendEmail('ca_notification', coachEmail, {
+                            userName: coachName,
+                            candidateName: applicant.name,
+                            jobTitle: jobTitle,
+                            companyName: companyName,
+                            body: `担当求職者の ${applicant.name} 様が「${companyName} / ${jobTitle}」に応募しました。`
+                        })
+                    }
 
                 } catch (notifyError) {
                     console.error('Notification/Email error:', notifyError)
@@ -14088,7 +14167,7 @@
                 // 応募情報を取得 (emailも取得)
                 const { data: application, error: appError } = await supabase
                     .from('applications')
-                    .select('*, jobs(title, company), users!applications_user_id_fkey(name, email)')
+                    .select('*, jobs(title, company), users!applications_user_id_fkey(name, email, coach_id)')
                     .eq('id', applicationId)
                     .single();
 
@@ -14339,13 +14418,39 @@
 
                 // 4. メール通知 (ステータス変更時)
                 if (currentApplicationData && currentApplicationData.users && currentApplicationData.users.email) {
+                    const statusLabel = getSelectionStatusLabel(newStatus);
+
+                    // 応募者へ
                     await sendEmail('status_changed', currentApplicationData.users.email, {
                         userName: currentApplicationData.users.name,
                         jobTitle: currentApplicationData.jobs.title,
                         companyName: currentApplicationData.jobs.company,
                         oldStatus: oldStatus,
-                        newStatus: newStatus
+                        newStatus: statusLabel
                     });
+
+                    // 担当コーチへ
+                    if (currentApplicationData.users.coach_id) {
+                        try {
+                            const { data: coachData } = await supabase
+                                .from('users')
+                                .select('name, email')
+                                .eq('id', currentApplicationData.users.coach_id)
+                                .single();
+
+                            if (coachData && coachData.email) {
+                                await sendEmail('ca_notification', coachData.email, {
+                                    userName: coachData.name,
+                                    candidateName: currentApplicationData.users.name,
+                                    jobTitle: currentApplicationData.jobs.title,
+                                    companyName: currentApplicationData.jobs.company,
+                                    body: `担当求職者の ${currentApplicationData.users.name} 様の選考ステータスが「${statusLabel}」に更新されました。`
+                                });
+                            }
+                        } catch (coachNotifyError) {
+                            console.error('Coach notification error:', coachNotifyError);
+                        }
+                    }
                 }
 
                 alert('ステータスを更新しました');
@@ -19063,19 +19168,72 @@
                 // Supabaseで更新
                 const { error } = await supabase
                     .from('applications')
-                    .update({ status: newStatus })
+                    .update({
+                        status: newStatus,
+                        updated_at: new Date().toISOString()
+                    })
                     .in('id', ids);
 
                 if (error) throw error;
 
-                // キャッシュ更新
-                ids.forEach(id => {
-                    const idx = adminApplicantsCache.findIndex(a => a.id === id);
-                    if (idx !== -1) adminApplicantsCache[idx].status = newStatus;
-                });
+                // 2. 通知とメール送信（非同期で実行し、UIを止めない）
+                const statusLabel = getSelectionStatusLabel(newStatus);
+                (async () => {
+                    try {
+                        const { data: apps } = await supabase
+                            .from('applications')
+                            .select('*, jobs(title, company), users!user_id(name, email, coach_id)')
+                            .in('id', ids);
 
-                // ログ（全件分は重いので代表して1つ、または概要を記録。ここではシンプルに完了通知）
-                await logAction('bulk_update', 'application', ids[0], { count: ids.length, status: newStatus });
+                        if (apps) {
+                            for (const app of apps) {
+                                // 求職者へ通知とメール
+                                try {
+                                    await supabase.from('notifications').insert({
+                                        user_id: app.user_id,
+                                        title: '選考ステータスが更新されました',
+                                        message: `「${app.jobs.company} / ${app.jobs.title}」の選考状況が「${statusLabel}」に更新されました。`,
+                                        read: false,
+                                        metadata: { page: 'applications', application_id: app.id },
+                                        created_at: new Date().toISOString()
+                                    });
+
+                                    if (app.users && app.users.email) {
+                                        await sendEmail('status_changed', app.users.email, {
+                                            userName: app.users.name,
+                                            jobTitle: app.jobs.title,
+                                            companyName: app.jobs.company,
+                                            newStatus: statusLabel
+                                        });
+                                    }
+
+                                    // 担当コーチへメール
+                                    if (app.users.coach_id) {
+                                        const { data: coachData } = await supabase
+                                            .from('users')
+                                            .select('name, email')
+                                            .eq('id', app.users.coach_id)
+                                            .single();
+
+                                        if (coachData && coachData.email) {
+                                            await sendEmail('ca_notification', coachData.email, {
+                                                userName: coachData.name,
+                                                candidateName: app.users.name,
+                                                jobTitle: app.jobs.title,
+                                                companyName: app.jobs.company,
+                                                body: `担当求職者の ${app.users.name} 様の選考ステータスが「${statusLabel}」に一括更新されました。`
+                                            });
+                                        }
+                                    }
+                                } catch (innerError) {
+                                    console.error(`Notification failed for app ${app.id}:`, innerError);
+                                }
+                            }
+                        }
+                    } catch (notifyErr) {
+                        console.error('Bulk notification summary fetch failed:', notifyErr);
+                    }
+                })();
 
                 alert(`${count}件のステータスを一括更新しました`);
                 closeBulkStatusModal();
@@ -19084,6 +19242,12 @@
                 selectedAdminApplicantIds.clear();
                 $('#admin-applicant-select-all').prop('checked', false);
                 updateAdminApplicantSelectionUI();
+
+                // キャッシュ更新
+                ids.forEach(id => {
+                    const idx = adminApplicantsCache.findIndex(a => a.id === id);
+                    if (idx !== -1) adminApplicantsCache[idx].status = newStatus;
+                });
 
                 // 再描画
                 filterAdminApplicants();
@@ -26789,12 +26953,87 @@
 
             showLoading('ステータスを更新中...');
             try {
+                // 更新前に現在のステータスを取得（履歴用）
+                const { data: currentApp } = await window.supabase
+                    .from('applications')
+                    .select('status, user_id')
+                    .eq('id', id)
+                    .single();
+
                 const { error } = await window.supabase
                     .from('applications')
-                    .update({ status: newStatus })
+                    .update({
+                        status: newStatus,
+                        updated_at: new Date().toISOString()
+                    })
                     .eq('id', id);
 
                 if (error) throw error;
+
+                // 履歴、通知、メール送信
+                try {
+                    const { data: appData } = await window.supabase
+                        .from('applications')
+                        .select('*, jobs(title, company), users!user_id(name, email, coach_id)')
+                        .eq('id', id)
+                        .single();
+
+                    if (appData) {
+                        const statusLabel = getSelectionStatusLabel(newStatus);
+
+                        // 1. 履歴記録
+                        await window.supabase.from('progress_history').insert({
+                            organization_id: appData.organization_id || currentUser.organization_id,
+                            application_id: id,
+                            user_id: appData.user_id,
+                            old_status: currentApp?.status,
+                            new_status: newStatus,
+                            changed_by: currentUser.id,
+                            changed_by_name: currentUser.name
+                        });
+
+                        // 2. 求職者へ通知レコード
+                        await window.supabase.from('notifications').insert({
+                            user_id: appData.user_id,
+                            title: '選考ステータスが更新されました',
+                            message: `「${appData.jobs.company} / ${appData.jobs.title}」の選考状況が「${statusLabel}」に更新されました。`,
+                            read: false,
+                            metadata: { page: 'applications', application_id: id },
+                            created_at: new Date().toISOString()
+                        });
+
+                        // 3. 求職者へメール
+                        if (appData.users && appData.users.email) {
+                            await sendEmail('status_changed', appData.users.email, {
+                                userName: appData.users.name,
+                                jobTitle: appData.jobs.title,
+                                companyName: appData.jobs.company,
+                                newStatus: statusLabel
+                            });
+                        }
+
+                        // 4. 担当コーチへメール
+                        if (appData.users.coach_id) {
+                            const { data: coachData } = await window.supabase
+                                .from('users')
+                                .select('name, email')
+                                .eq('id', appData.users.coach_id)
+                                .single();
+
+                            if (coachData && coachData.email) {
+                                await sendEmail('ca_notification', coachData.email, {
+                                    userName: coachData.name,
+                                    candidateName: appData.users.name,
+                                    jobTitle: appData.jobs.title,
+                                    companyName: appData.jobs.company,
+                                    body: `担当求職者の ${appData.users.name} 様の選考ステータスが「${statusLabel}」に更新（移動）されました。`
+                                });
+                            }
+                        }
+                    }
+                } catch (notifyErr) {
+                    console.error('Yomi update notification failed:', notifyErr);
+                }
 
                 // 再読み込み
                 await loadYomiData();
