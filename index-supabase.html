@@ -8104,6 +8104,7 @@
 
             showLoading();
             try {
+                // データベースから最新のプロフィール情報を取得
                 const { data: userData, error } = await supabase
                     .from('users')
                     .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
@@ -8115,7 +8116,9 @@
                 const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
                 const user = { ...userData, ...profile };
 
-                // フォームのリセット
+                console.log('Reflecting target user to search form:', user);
+
+                // --- 1. フォームのリセット ---
                 $('#search-keyword').val('');
                 $('#search-location').val('');
                 $('#search-prefecture').val([]).trigger('change');
@@ -8128,26 +8131,43 @@
                 $('#search-is-remote').prop('checked', false);
                 $('#search-exclude-matched').prop('checked', false);
                 $('#search-favorites-only').prop('checked', false);
+                // キーワードタグ(プレミアムUI)もクリア
+                $('#tags-keyword').empty();
 
-                // 希望条件のセット
-                if (user.desired_freewords) $('#search-keyword').val(user.desired_freewords);
-                if (user.desired_freewords_condition) {
-                    const cond = user.desired_freewords_condition.toUpperCase();
-                    $(`input[name="search-keyword-mode"][value="${cond}"]`).prop('checked', true);
+                // --- 2. ユーザーの希望条件をセット ---
+
+                // フリーワード（キーワード）
+                if (user.desired_freewords) {
+                    $('#search-keyword').val(user.desired_freewords).trigger('input');
                 }
 
+                // AND/OR検索モード
+                if (user.desired_freewords_condition) {
+                    const cond = user.desired_freewords_condition.toUpperCase(); // 'AND' or 'OR'
+                    const $radio = $(`input[name="search-keyword-mode"][value="${cond}"]`);
+                    if ($radio.length) {
+                        $radio.prop('checked', true).trigger('change');
+                        // ラジオボタンを囲むラベル等のUI更新を促すため、クリックをシミュレート
+                        $radio.closest('label').click();
+                    }
+                }
+
+                // その他の条件
                 if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
                 if (user.desired_location && Array.isArray(user.desired_location)) {
                     $('#search-prefecture').val(user.desired_location).trigger('change');
-                    $('#search-location').val('');
                 }
                 if (user.desired_employment_type) $('#search-employment-type').val(user.desired_employment_type).trigger('change');
                 if (user.desired_salary) $('#search-salary-min').val(Math.floor(user.desired_salary / 10000));
 
-                $('#search-job-experience-ok').prop('checked', user.desired_job_experience_ok);
-                $('#search-industry-experience-ok').prop('checked', user.desired_industry_experience_ok);
+                $('#search-job-experience-ok').prop('checked', !!user.desired_job_experience_ok);
+                $('#search-industry-experience-ok').prop('checked', !!user.desired_industry_experience_ok);
 
-                await searchJobs();
+                // 少し待機してから検索実行（Select2などの非同期反映を待つ）
+                setTimeout(() => {
+                    executeSearch();
+                }, 100);
+
             } catch (err) {
                 console.error('Error onTargetUserChange:', err);
             } finally {
