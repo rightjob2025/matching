@@ -7767,13 +7767,37 @@
                         emailRedirectTo: 'https://rightjob2025.github.io/matching/index-supabase.html',
                         data: {
                             name: name,
-                            // メタデータとして保存しておくが、実際の所属はusers/organization_membersテーブルで管理
                             organization_id: organizationId
                         }
                     }
                 });
 
-                if (authError) throw authError;
+                if (authError) {
+                    // すでに登録済みのユーザーの場合
+                    if (authError.message.includes("already registered")) {
+                        if (invitationToken) {
+                            console.log('User already exists, attempting to link via invitation token...');
+                            // 既存ユーザーを組織に紐付けるRPCを呼び出し
+                            const { data: rpcRes, error: rpcError } = await supabase.rpc('join_organization_by_invite', {
+                                target_email: email,
+                                invite_token: invitationToken
+                            });
+
+                            if (rpcError) throw rpcError;
+
+                            if (rpcRes && rpcRes.success) {
+                                alert('すでにアカウントをお持ちのため、この組織への登録を完了しました。ログインしてください。');
+                                showPage('login-page');
+                                return;
+                            } else {
+                                throw new Error(rpcRes?.message || '組織への参加に失敗しました');
+                            }
+                        } else {
+                            throw new Error('このメールアドレスは既に登録されています。ログインするか、招待リンクから再度登録してください。');
+                        }
+                    }
+                    throw authError;
+                }
 
                 if (authData.user) {
                     console.log('Auth user created:', authData.user.id);
