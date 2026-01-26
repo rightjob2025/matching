@@ -6098,6 +6098,8 @@
                                 求人タイトル</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 勤務地</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                処理方法</th>
                         </tr>
                     </thead>
                     <tbody id="suspected-duplicates-tbody" class="bg-white divide-y divide-gray-200 text-sm">
@@ -20137,9 +20139,9 @@
                 return;
             }
 
-            if (!confirm(`${selectedIndices.length}件の求人をインポートしますか？`)) return;
+            if (!confirm(`${selectedIndices.length}件の求人をインポート（重複疑いがある場合は更新）しますか？`)) return;
 
-            showLoading('選択した重複疑い求人をインポート中...');
+            showLoading('選択した求人を処理中...');
             let successCount = 0;
             let failedCount = 0;
             const errors = [];
@@ -20147,18 +20149,27 @@
             try {
                 for (const index of selectedIndices) {
                     const item = suspectedDuplicates[index];
+                    const action = $(`input[name="duplicate-action-${index}"]:checked`).val();
                     try {
-                        const { error } = await supabase.from('jobs').insert(item.data);
-                        if (error) throw error;
+                        if (item.duplicate_id && action === 'update') {
+                            // アップサート(更新)処理
+                            const updatePayload = mergeJobData(item.data, {});
+                            const { error: updateError } = await supabase.from('jobs').update(updatePayload).eq('id', item.duplicate_id);
+                            if (updateError) throw updateError;
+                        } else {
+                            // 新規登録
+                            const { error: insertError } = await supabase.from('jobs').insert(item.data);
+                            if (insertError) throw insertError;
+                        }
                         successCount++;
                     } catch (err) {
-                        console.error('Manual import error:', err);
+                        console.error('Duplicate import error:', err);
                         failedCount++;
                         errors.push({ row: item.row, error: err.message });
                     }
                 }
 
-                alert(`インポート完了\n成功: ${successCount}件\n失敗: ${failedCount}件${failedCount > 0 ? '\n\nエラー内容:\n' + errors.map(e => `${e.row}行目: ${e.error}`).join('\n') : ''}`);
+                alert(`処理完了\n成功: ${successCount}件\n失敗: ${failedCount}件${failedCount > 0 ? '\n\nエラー内容:\n' + errors.map(e => `${e.row}行目: ${e.error}`).join('\n') : ''}`);
                 closeSuspectedDuplicatesModal();
                 if (typeof loadAdminJobs === 'function') loadAdminJobs();
             } catch (err) {
@@ -20362,22 +20373,23 @@
                                 importData.job_category = val;
                             }
 
-                            // 重複疑いのチェック (title, company_id, location が一致する場合)
+                            // 重複疑いのチェック
                             if (!isUpsert) {
-                                const { data: suspect, error: suspectError } = await supabase
+                                // 組織の求人を一部取得して判定（判定を強固にするため多めに取得）
+                                const { data: existingJobs } = await supabase
                                     .from('jobs')
-                                    .select('id')
+                                    .select('id, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pdf_filename, status')
                                     .eq('organization_id', currentUser.organization_id)
-                                    .eq('company_id', companyId)
-                                    .eq('title', importData.title)
-                                    .eq('location', importData.location || '')
                                     .is('deleted_at', null)
-                                    .maybeSingle();
+                                    .limit(500); // 簡易化のため一旦500件程度を対象とする
 
-                                if (suspect) {
+                                const duplicate = existingJobs?.find(j => isJobDuplicate(importData, j));
+
+                                if (duplicate) {
                                     suspectedDuplicates.push({
                                         row: displayRowNumber,
                                         data: importData,
+                                        duplicate_id: duplicate.id, // 更新用に保存
                                         company: importData.company,
                                         title: importData.title,
                                         location: importData.location
@@ -20392,14 +20404,15 @@
                             if (isUpsert && upsertKey && importData[upsertKey]) {
                                 const { data: existingRecord } = await supabase
                                     .from('jobs')
-                                    .select('id')
+                                    .select('*')
                                     .eq('organization_id', currentUser.organization_id)
                                     .eq(upsertKey, importData[upsertKey])
                                     .is('deleted_at', null)
                                     .maybeSingle();
 
                                 if (existingRecord) {
-                                    const { error } = await supabase.from('jobs').update(importData).eq('id', existingRecord.id);
+                                    const updatePayload = mergeJobData(importData, existingRecord);
+                                    const { error } = await supabase.from('jobs').update(updatePayload).eq('id', existingRecord.id);
                                     if (error) throw error;
                                 } else {
                                     const { error } = await supabase.from('jobs').insert(importData);
@@ -20577,6 +20590,18 @@
                                 <td class="px-6 py-4 whitespace-nowrap">${item.company}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">${item.title}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">${item.location || '-'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col gap-1">
+                                        <label class="inline-flex items-center text-xs">
+                                            <input type="radio" name="duplicate-action-${index}" value="update" checked class="form-radio h-3 w-3 text-indigo-600">
+                                            <span class="ml-1">既存を更新</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-xs">
+                                            <input type="radio" name="duplicate-action-${index}" value="insert" class="form-radio h-3 w-3 text-indigo-600">
+                                            <span class="ml-1">新規登録</span>
+                                        </label>
+                                    </div>
+                                </td>
                             </tr>
                         `;
                         tbody.append(row);
@@ -22083,6 +22108,68 @@
             return bestScore >= 0.3 ? bestMatch : null;
         }
 
+        // --- 重複判定・一括更新ユーティリティ ---
+
+        const PREFECTURES = ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県", "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県", "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県", "三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県", "鳥取県", "島根県", "岡山県", "広島県", "山口県", "徳島県", "香川県", "愛媛県", "高知県", "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"];
+
+        function getPrefecture(loc) {
+            if (!loc) return null;
+            for (const pref of PREFECTURES) {
+                if (loc.includes(pref)) return pref;
+            }
+            // 短縮形 (東京, 大阪)
+            const shortPrefs = PREFECTURES.map(p => p.replace(/[都府県]$/, ''));
+            for (let i = 0; i < shortPrefs.length; i++) {
+                if (loc.includes(shortPrefs[i])) return PREFECTURES[i];
+            }
+            return null;
+        }
+
+        function isJobDuplicate(newJob, oldJob) {
+            let score = 0;
+
+            // 1. ポジション名
+            if (newJob.title && oldJob.title && newJob.title.trim() === oldJob.title.trim()) score++;
+
+            // 2. 企業名
+            if (newJob.company && oldJob.company && newJob.company.trim() === oldJob.company.trim()) score++;
+
+            // 3. 職種分類
+            if (newJob.job_category && oldJob.job_category && newJob.job_category === oldJob.job_category) score++;
+
+            // 4. 勤務地 (同都道府県)
+            const newPref = getPrefecture(newJob.location);
+            const oldPref = getPrefecture(oldJob.location);
+            if (newPref && oldPref && newPref === oldPref) score++;
+
+            // 5. 年収 (上限と下限が+-50万以内)
+            const isMatchSalary = (v1, v2) => {
+                if (v1 === null || v1 === undefined || v2 === null || v2 === undefined) return false;
+                return Math.abs(v1 - v2) <= 500000;
+            };
+            if (isMatchSalary(newJob.salary_min, oldJob.salary_min) && isMatchSalary(newJob.salary_max, oldJob.salary_max)) {
+                score++;
+            }
+
+            return score >= 3;
+        }
+
+        function mergeJobData(newJob, oldJob) {
+            const updatePayload = {};
+            // 更新対象外とするキー
+            const skipKeys = ['id', 'created_at', 'organization_id', 'deleted_at'];
+
+            for (const key in newJob) {
+                if (skipKeys.includes(key)) continue;
+                // 新の方に値が含まれている場合のみ更新対象に含める
+                // null, undefined, 空文字でない場合に更新
+                if (newJob[key] !== null && newJob[key] !== undefined && newJob[key] !== '') {
+                    updatePayload[key] = newJob[key];
+                }
+            }
+            return updatePayload;
+        }
+
         window.handleResumeUpload = async function (input) {
             if (input.files.length === 0) return
 
@@ -22286,12 +22373,17 @@
             const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
 
             // Check duplicates
-            const { data: duplicates } = await supabase
+            const { data: existingJobs } = await supabase
                 .from('jobs')
-                .select('id, title, company')
+                .select('id, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pdf_filename, status')
                 .eq('organization_id', currentUser.organization_id)
-                .or(`title.eq."${result.title}", company.eq."${result.company}"`)
-                .limit(3);
+                .is('deleted_at', null)
+                .or(`title.eq."${result.title}", company.eq."${result.company}"`) // 絞り込みのためにtitleまたはcompany一致を一旦取得
+                .limit(20);
+
+            // 強化された重複判定を実行
+            const duplicateJob = existingJobs?.find(j => isJobDuplicate(result, j));
+            const duplicates = duplicateJob ? [duplicateJob] : [];
 
             let companyId = null;
             const { data: ec } = await supabase.from('companies').select('id').eq('organization_id', currentUser.organization_id).eq('name', result.company).maybeSingle();
@@ -22767,6 +22859,21 @@
                                     </div>
                                     ` : ''}
                                 </div>
+                                ${hasDuplicate ? `
+                                <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-700">登録方法を選択:</span>
+                                    <div class="flex gap-4">
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="bulk-job-action-${index}" value="update" checked class="form-radio h-4 w-4 text-indigo-600">
+                                            <span class="text-xs font-medium text-gray-600">既存を更新</span>
+                                        </label>
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="bulk-job-action-${index}" value="insert" class="form-radio h-4 w-4 text-indigo-600">
+                                            <span class="text-xs font-medium text-gray-600">新規登録</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                ` : ''}
                             </div>
                         </label>
                     </div>
@@ -22869,12 +22976,46 @@
                         }
                     }
 
-                    const { error } = await supabase.from('jobs').insert(jobData);
-                    if (error) {
-                        console.error('Bulk import error for job:', result.title, error);
-                        importResultErrorFiles.push({ name: file.name, message: error.message });
+                    // 重複疑いがある場合のアップサート判定
+                    const action = $(`input[name="bulk-job-action-${idx}"]:checked`).val() || 'insert';
+                    const duplicateId = (item.duplicates && item.duplicates.length > 0 && action === 'update') ? item.duplicates[0].id : null;
+
+                    if (duplicateId) {
+                        // 既存求人の取得
+                        const { data: existingJob, error: fetchError } = await supabase
+                            .from('jobs')
+                            .select('*')
+                            .eq('id', duplicateId)
+                            .single();
+
+                        if (fetchError) {
+                            console.error('Failed to fetch existing job for update:', fetchError);
+                            importResultErrorFiles.push({ name: file.name, message: `既存求人の取得に失敗: ${fetchError.message}` });
+                            continue;
+                        }
+
+                        // マージ処理 (更新用ペイロードの作成)
+                        const updatePayload = mergeJobData(jobData, existingJob);
+                        const { error: updateError } = await supabase
+                            .from('jobs')
+                            .update(updatePayload)
+                            .eq('id', duplicateId);
+
+                        if (updateError) {
+                            console.error('Update error for job:', result.title, updateError);
+                            importResultErrorFiles.push({ name: file.name, message: updateError.message });
+                        } else {
+                            importResultSuccessFiles.push(file.name);
+                        }
                     } else {
-                        importResultSuccessFiles.push(file.name);
+                        // 新規登録
+                        const { error } = await supabase.from('jobs').insert(jobData);
+                        if (error) {
+                            console.error('Bulk import error for job:', result.title, error);
+                            importResultErrorFiles.push({ name: file.name, message: error.message });
+                        } else {
+                            importResultSuccessFiles.push(file.name);
+                        }
                     }
                 }
 
