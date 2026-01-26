@@ -2893,27 +2893,37 @@
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">希望条件フリーワード / AND・OR</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="profile-freewords" placeholder="例: リモート, フレックス, 副業"
-                                    class="flex-1 px-4 py-2 border rounded-lg">
-                                <div class="flex items-center gap-2 bg-gray-50 px-3 border rounded-lg">
-                                    <label class="flex items-center gap-1 cursor-pointer">
-                                        <input type="radio" name="profile-freewords-condition" value="and" checked
-                                            class="w-4 h-4 text-indigo-600">
-                                        <span class="text-xs font-bold text-gray-600">AND</span>
-                                    </label>
-                                    <label class="flex items-center gap-1 cursor-pointer">
-                                        <input type="radio" name="profile-freewords-condition" value="or"
-                                            class="w-4 h-4 text-indigo-600">
-                                        <span class="text-xs font-bold text-gray-600">OR</span>
-                                    </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">希望最低年収（万円）</label>
+                                <input type="number" id="profile-salary" placeholder="例: 400" min="0"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">希望条件フリーワード / AND・OR</label>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1">
+                                        <input type="text" id="profile-freewords" placeholder="例: リモート, フレックス"
+                                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                    <div
+                                        class="flex shrink-0 items-center justify-around gap-2 bg-gray-50 px-2 py-1.5 border rounded-lg w-[115px]">
+                                        <label class="flex items-center gap-1 cursor-pointer">
+                                            <input type="radio" name="profile-freewords-condition" value="and" checked
+                                                class="w-4 h-4 text-indigo-600">
+                                            <span class="text-[10px] font-black text-gray-600">AND</span>
+                                        </label>
+                                        <label class="flex items-center gap-1 cursor-pointer">
+                                            <input type="radio" name="profile-freewords-condition" value="or"
+                                                class="w-4 h-4 text-indigo-600">
+                                            <span class="text-[10px] font-black text-gray-600">OR</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-gray-400 mt-1">
-                                ※カンマ(,)区切りで複数指定可能です。AND検索はすべての単語を含む求人、OR検索はいずれかの単語を含む求人を優先します。</p>
                         </div>
+                        <p class="text-[10px] text-gray-400 mt-1 mb-4">※カンマ(,)区切りで複数指定。ANDはすべて含む、ORはいずれかを含む求人を優先表示します。
+                        </p>
 
                         <div class="flex flex-wrap gap-6 p-4 bg-indigo-50 rounded-lg">
                             <label class="flex items-center gap-2 cursor-pointer">
@@ -4641,23 +4651,24 @@
                                 <input type="tel" id="admin-user-phone" class="w-full px-4 py-2 border rounded-lg">
                             </div>
                             <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700 mb-1 text-indigo-700 font-bold">希望フリーワード
-                                    / AND・OR</label>
-                                <div class="flex gap-2">
-                                    <input type="text" id="admin-user-freewords" placeholder="例: リモート, 英語"
-                                        class="flex-1 px-4 py-2 border border-indigo-200 bg-indigo-50/30 rounded-lg">
+                                <label class="block text-sm font-medium text-indigo-700 font-bold mb-1">希望フリーワード /
+                                    AND・OR</label>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1">
+                                        <input type="text" id="admin-user-freewords" placeholder="例: リモート, 英語"
+                                            class="w-full px-4 py-2 border border-indigo-200 bg-indigo-50/30 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    </div>
                                     <div
-                                        class="flex items-center gap-2 bg-indigo-50 px-3 border border-indigo-100 rounded-lg">
+                                        class="flex shrink-0 items-center justify-around gap-2 bg-indigo-50 px-2 py-1.5 border border-indigo-100 rounded-lg w-[115px]">
                                         <label class="flex items-center gap-1 cursor-pointer">
                                             <input type="radio" name="admin-user-freewords-condition" value="and"
                                                 checked class="w-4 h-4 text-indigo-600">
-                                            <span class="text-xs font-bold text-indigo-800">AND</span>
+                                            <span class="text-[10px] font-black text-indigo-800">AND</span>
                                         </label>
                                         <label class="flex items-center gap-1 cursor-pointer">
                                             <input type="radio" name="admin-user-freewords-condition" value="or"
                                                 class="w-4 h-4 text-indigo-600">
-                                            <span class="text-xs font-bold text-indigo-800">OR</span>
+                                            <span class="text-[10px] font-black text-indigo-800">OR</span>
                                         </label>
                                     </div>
                                 </div>
@@ -8085,57 +8096,63 @@
             }
         }
 
-        window.onTargetUserChange = function () {
+        window.onTargetUserChange = async function () {
             const userId = $('#target-user-select').val();
-            updateBatchAiButton(); // ボタン状態更新
+            updateBatchAiButton();
 
             if (!userId) return;
 
-            const user = targetUsersCache.find(u => u.id === userId);
-            if (!user) return;
+            showLoading();
+            try {
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
+                    .eq('id', userId)
+                    .single();
 
-            // フォームをリセット (以前の値をクリア)
-            $('#search-keyword').val('');
-            $('#search-location').val(''); // 詳細エリアを確実にクリア
-            $('#search-prefecture').val([]).trigger('change');
-            $('#search-employment-type').val([]).trigger('change');
-            $('#search-job-category').val([]).trigger('change');
-            $('#search-industry-category').val([]).trigger('change');
-            $('#search-salary-min').val('');
-            $('#search-job-experience-ok').prop('checked', false);
-            $('#search-industry-experience-ok').prop('checked', false);
-            $('#search-is-remote').prop('checked', false);
-            $('#search-exclude-matched').prop('checked', false);
-            $('#search-favorites-only').prop('checked', false);
+                if (error || !userData) throw error || new Error('User not found');
 
-            // ユーザーの希望条件を検索フォームにセット
-            if (user.desired_freewords) {
-                $('#search-keyword').val(user.desired_freewords);
-            }
-            if (user.desired_freewords_condition) {
-                const condition = user.desired_freewords_condition.toUpperCase();
-                $(`input[name="search-keyword-mode"][value="${condition}"]`).prop('checked', true);
-            }
+                const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
+                const user = { ...userData, ...profile };
 
-            if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
-            if (user.desired_location) {
-                // 配列なら都道府県プルダウンへセット。文字列（詳細）の場合はセットしない
-                // ユーザー要望: 勤務地(詳細)の項目はセットしない
-                if (Array.isArray(user.desired_location)) {
+                // フォームのリセット
+                $('#search-keyword').val('');
+                $('#search-location').val('');
+                $('#search-prefecture').val([]).trigger('change');
+                $('#search-employment-type').val([]).trigger('change');
+                $('#search-job-category').val([]).trigger('change');
+                $('#search-industry-category').val([]).trigger('change');
+                $('#search-salary-min').val('');
+                $('#search-job-experience-ok').prop('checked', false);
+                $('#search-industry-experience-ok').prop('checked', false);
+                $('#search-is-remote').prop('checked', false);
+                $('#search-exclude-matched').prop('checked', false);
+                $('#search-favorites-only').prop('checked', false);
+
+                // 希望条件のセット
+                if (user.desired_freewords) $('#search-keyword').val(user.desired_freewords);
+                if (user.desired_freewords_condition) {
+                    const cond = user.desired_freewords_condition.toUpperCase();
+                    $(`input[name="search-keyword-mode"][value="${cond}"]`).prop('checked', true);
+                }
+
+                if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
+                if (user.desired_location && Array.isArray(user.desired_location)) {
                     $('#search-prefecture').val(user.desired_location).trigger('change');
-                    // 副作用対策: トリガーによってセットされてしまった場合は即座にクリア
                     $('#search-location').val('');
                 }
+                if (user.desired_employment_type) $('#search-employment-type').val(user.desired_employment_type).trigger('change');
+                if (user.desired_salary) $('#search-salary-min').val(Math.floor(user.desired_salary / 10000));
+
+                $('#search-job-experience-ok').prop('checked', user.desired_job_experience_ok);
+                $('#search-industry-experience-ok').prop('checked', user.desired_industry_experience_ok);
+
+                await searchJobs();
+            } catch (err) {
+                console.error('Error onTargetUserChange:', err);
+            } finally {
+                hideLoading();
             }
-            if (user.desired_employment_type) $('#search-employment-type').val(user.desired_employment_type).trigger('change');
-            if (user.desired_salary) $('#search-salary-min').val(Math.floor(user.desired_salary / 10000)); // 万円単位
-
-            // チェックボックス系
-            $('#search-job-experience-ok').prop('checked', user.desired_job_experience_ok);
-            $('#search-industry-experience-ok').prop('checked', user.desired_industry_experience_ok);
-
-            // 自動的に検索を実行
-            searchJobs();
         }
 
         window.toggleJobSelection = function (jobId) {
