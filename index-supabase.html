@@ -20580,7 +20580,8 @@
                                         duplicate_id: duplicate.id, // 更新用に保存
                                         company: importData.company,
                                         title: importData.title,
-                                        location: importData.location
+                                        location: importData.location,
+                                        reasons: duplicate._duplicateReasons
                                     });
                                     skipCount++;
                                     skips.push(displayRowNumber);
@@ -20774,10 +20775,13 @@
                                     <input type="checkbox" class="duplicate-row-check rounded text-indigo-600" value="${index}">
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500">${item.row}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-amber-600 font-medium">重複の疑い</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${item.company}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${item.title}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${item.location || '-'}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-amber-600 font-bold text-sm">重複の疑い</div>
+                                    ${formatDuplicateReasons(item.reasons)}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${item.company}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.title}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.location || '-'}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col gap-1">
                                         <label class="inline-flex items-center text-xs">
@@ -22315,31 +22319,73 @@
 
         function isJobDuplicate(newJob, oldJob) {
             let score = 0;
+            const reasons = [];
 
             // 1. ポジション名
-            if (newJob.title && oldJob.title && newJob.title.trim() === oldJob.title.trim()) score++;
+            if (newJob.title && oldJob.title && newJob.title.trim() === oldJob.title.trim()) {
+                score++;
+                reasons.push({ label: 'タイトル', value: newJob.title });
+            }
 
             // 2. 企業名
-            if (newJob.company && oldJob.company && newJob.company.trim() === oldJob.company.trim()) score++;
+            if (newJob.company && oldJob.company && newJob.company.trim() === oldJob.company.trim()) {
+                score++;
+                reasons.push({ label: '企業名', value: newJob.company });
+            }
 
             // 3. 職種分類
-            if (newJob.job_category && oldJob.job_category && newJob.job_category === oldJob.job_category) score++;
+            if (newJob.job_category && oldJob.job_category && newJob.job_category === oldJob.job_category) {
+                score++;
+                let catLabel = newJob.job_category;
+                if (typeof masterJobCategories !== 'undefined') {
+                    const match = masterJobCategories.find(m => m.value === newJob.job_category || m.label === newJob.job_category);
+                    if (match) catLabel = match.label;
+                }
+                reasons.push({ label: '職種', value: catLabel });
+            }
 
             // 4. 勤務地 (同都道府県)
             const newPref = getPrefecture(newJob.location);
             const oldPref = getPrefecture(oldJob.location);
-            if (newPref && oldPref && newPref === oldPref) score++;
+            if (newPref && oldPref && newPref === oldPref) {
+                score++;
+                reasons.push({ label: '勤務地', value: newPref });
+            }
 
             // 5. 年収 (上限と下限が+-50万以内)
             const isMatchSalary = (v1, v2) => {
                 if (v1 === null || v1 === undefined || v2 === null || v2 === undefined) return false;
-                return Math.abs(v1 - v2) <= 500000;
+                const n1 = parseFloat(v1);
+                const n2 = parseFloat(v2);
+                if (isNaN(n1) || isNaN(n2)) return false;
+                return Math.abs(n1 - n2) <= 500000;
             };
             if (isMatchSalary(newJob.salary_min, oldJob.salary_min) && isMatchSalary(newJob.salary_max, oldJob.salary_max)) {
                 score++;
+                const sMin = newJob.salary_min ? (newJob.salary_min / 10000) + '万' : '';
+                const sMax = newJob.salary_max ? (newJob.salary_max / 10000) + '万' : '';
+                reasons.push({ label: '給与', value: `${sMin}～${sMax}` });
             }
 
-            return score >= 3;
+            if (score >= 3) {
+                // Attach reasons to the oldJob object so the caller can use them
+                oldJob._duplicateReasons = reasons;
+                return true;
+            }
+            return false;
+        }
+
+        function formatDuplicateReasons(reasons) {
+            if (!reasons || reasons.length === 0) return '';
+            return `<div class="mt-2 text-[10px] space-y-0.5 border-t border-red-100 pt-1.5">` +
+                reasons.map(r => {
+                    let val = String(r.value || '-');
+                    if (val.length > 30) val = val.substring(0, 27) + '...';
+                    return `<div class="flex items-start">
+                        <span class="font-bold text-red-700 w-[55px] shrink-0 opacity-70">${r.label}:</span>
+                        <span class="text-red-600 truncate">${val}</span>
+                    </div>`;
+                }).join('') + `</div>`;
         }
 
         function mergeJobData(newJob, oldJob) {
@@ -23017,7 +23063,12 @@
             pendingBulkJobs.forEach((item, index) => {
                 const hasDuplicate = item.duplicates && item.duplicates.length > 0;
                 const dupHtml = hasDuplicate
-                    ? item.duplicates.map(d => `<div class="text-red-500 font-medium">${d.company} / ${d.title}</div>`).join('')
+                    ? item.duplicates.map(d => `
+                        <div class="mb-2 last:mb-0">
+                            <div class="text-red-500 font-medium text-xs">${d.company} / ${d.title}</div>
+                            ${formatDuplicateReasons(d._duplicateReasons)}
+                        </div>
+                    `).join('')
                     : '';
 
                 const statusBadge = hasDuplicate
