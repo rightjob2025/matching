@@ -2905,6 +2905,7 @@
                                     <div class="flex-1">
                                         <input type="text" id="profile-freewords" placeholder="例: リモート, フレックス"
                                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                        <div id="profile-freewords-tags" class="tag-container mt-2"></div>
                                     </div>
                                     <div
                                         class="flex shrink-0 items-center justify-around gap-2 bg-gray-50 px-2 py-1.5 border rounded-lg w-[115px]">
@@ -4657,6 +4658,7 @@
                                     <div class="flex-1">
                                         <input type="text" id="admin-user-freewords" placeholder="例: リモート, 英語"
                                             class="w-full px-4 py-2 border border-indigo-200 bg-indigo-50/30 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                        <div id="admin-user-freewords-tags" class="tag-container mt-2"></div>
                                     </div>
                                     <div
                                         class="flex shrink-0 items-center justify-around gap-2 bg-indigo-50 px-2 py-1.5 border border-indigo-100 rounded-lg w-[115px]">
@@ -13298,13 +13300,39 @@
                 addFreewordTag(val, $('#tags-keyword'), null, 'tag-indigo');
             };
 
-            // Keyword tagging
+            window.populateFreewordTags = function (text, containerId, colorClass = 'tag-indigo') {
+                const $container = $('#' + containerId);
+                $container.empty();
+                if (!text) return;
+                const words = text.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
+                words.forEach(word => {
+                    addFreewordTag(word, $container, null, colorClass);
+                });
+            };
+
+            window.getFreewordTagsText = function (containerId) {
+                const tags = [];
+                $('#' + containerId + ' .premium-tag').each(function () {
+                    // Remove the 'X' button text if present
+                    const text = $(this).contents().filter(function () {
+                        return this.nodeType === 3;
+                    }).text().trim();
+                    if (text) tags.push(text);
+                });
+                return tags.join(', ');
+            };
+
+            // Search Keyword tagging
             setupFreeword('search-keyword', 'tags-keyword', null, 'tag-indigo');
             setupFreeword('c-search-keyword', 'c-tags-keyword', null, 'tag-indigo');
 
             // Location tagging
             setupFreeword('search-location', 'tags-freeword', null, 'tag-amber');
             setupFreeword('c-search-location', 'c-tags-location', null, 'tag-amber');
+
+            // Profile tagging
+            setupFreeword('profile-freewords', 'profile-freewords-tags', null, 'tag-indigo');
+            setupFreeword('admin-user-freewords', 'admin-user-freewords-tags', null, 'tag-indigo');
         }
 
         // デバウンス関数
@@ -16177,7 +16205,10 @@
                 // 職種、業界、雇用形態、勤務地は loadMasterDataForProfile でセット済み
 
                 $('#profile-salary').val(user.desired_salary ? Math.floor(user.desired_salary / 10000) : '')
-                $('#profile-freewords').val(user.desired_freewords || '')
+                $('#profile-freewords').val('');
+                if (window.populateFreewordTags) {
+                    window.populateFreewordTags(user.desired_freewords || '', 'profile-freewords-tags');
+                }
                 $(`input[name="profile-freewords-condition"][value="${user.desired_freewords_condition || 'and'}"]`).prop('checked', true)
                 $('#profile-enable-auto-recommendations').prop('checked', !!user.enable_auto_recommendations); // Default false
 
@@ -16291,7 +16322,7 @@
                 })(),
                 desired_employment_type: $('#profile-employment-type').val() ? $('#profile-employment-type').val().join(',') : null,
                 desired_salary: salaryNum,
-                desired_freewords: $('#profile-freewords').val().trim(),
+                desired_freewords: window.getFreewordTagsText ? window.getFreewordTagsText('profile-freewords-tags') : $('#profile-freewords').val().trim(),
                 desired_freewords_condition: $('input[name="profile-freewords-condition"]:checked').val() || 'and',
                 desired_job_experience_ok: $('#profile-job-experience-ok').is(':checked'),
                 desired_industry_experience_ok: $('#profile-industry-experience-ok').is(':checked'),
@@ -17396,7 +17427,10 @@
                 // 追加詳細項目のセット
                 $('#admin-user-phone').val(user.phone || '');
                 $('#admin-user-salary').val(user.desired_salary ? Math.floor(user.desired_salary / 10000) : '');
-                $('#admin-user-freewords').val(user.desired_freewords || '');
+                $('#admin-user-freewords').val('');
+                if (window.populateFreewordTags) {
+                    window.populateFreewordTags(user.desired_freewords || '', 'admin-user-freewords-tags');
+                }
                 $(`input[name="admin-user-freewords-condition"][value="${user.desired_freewords_condition || 'and'}"]`).prop('checked', true);
                 $('#admin-user-job-exp-ok').prop('checked', user.desired_job_experience_ok);
                 $('#admin-user-industry-exp-ok').prop('checked', user.desired_industry_experience_ok);
@@ -17857,7 +17891,7 @@
                         desired_location: locationStr,
                         desired_employment_type: empType ? empType.join(',') : null,
                         desired_salary: $('#admin-user-salary').val() ? parseInt($('#admin-user-salary').val()) * 10000 : null,
-                        desired_freewords: $('#admin-user-freewords').val().trim(),
+                        desired_freewords: window.getFreewordTagsText ? window.getFreewordTagsText('admin-user-freewords-tags') : $('#admin-user-freewords').val().trim(),
                         desired_freewords_condition: $('input[name="admin-user-freewords-condition"]:checked').val() || 'and',
                         skills: $('#admin-user-skills').val().trim(),
 
