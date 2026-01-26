@@ -6081,26 +6081,16 @@
             <div class="overflow-x-auto mb-6 border rounded-lg max-h-96 overflow-y-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 sticky top-0">
-                        <tr>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                                <input type="checkbox" id="duplicate-check-all" onchange="toggleDuplicateCheckAll(this)"
-                                    class="rounded text-indigo-600">
-                            </th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                                CSV行</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                個別の理由/ステータス</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                企業名</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                求人タイトル</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                勤務地</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                処理方法</th>
-                        </tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                            <input type="checkbox" id="duplicate-check-all" onchange="toggleDuplicateCheckAll(this)"
+                                class="rounded text-indigo-600">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                            CSV行</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            登録データと既存データの比較</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            処理方法</th>
                     </thead>
                     <tbody id="suspected-duplicates-tbody" class="bg-white divide-y divide-gray-200 text-sm">
                         <!-- JSで動的に追加 -->
@@ -20576,7 +20566,8 @@
                                 if (duplicate) {
                                     suspectedDuplicates.push({
                                         row: displayRowNumber,
-                                        data: importData,
+                                        importData: importData,
+                                        existingJob: duplicate,
                                         duplicate_id: duplicate.id, // 更新用に保存
                                         company: importData.company,
                                         title: importData.title,
@@ -20775,29 +20766,31 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <input type="checkbox" class="duplicate-row-check rounded text-indigo-600" value="${index}">
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500">${item.row}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-medium">${item.row}</td>
                                 <td class="px-6 py-4">
-                                    ${(item.score === 4) ? `
-                                        <div class="text-red-700 font-bold text-sm bg-red-100 px-2 py-0.5 rounded border border-red-200 inline-block">スキップ推奨</div>
-                                    ` : (item.score === 3) ? `
-                                        <div class="text-red-600 font-bold text-sm bg-orange-100 px-2 py-0.5 rounded border border-orange-200 inline-block">要確認</div>
-                                    ` : `
-                                        <div class="text-teal-600 font-bold text-sm bg-teal-100 px-2 py-0.5 rounded border border-teal-200 inline-block">登録対象</div>
-                                    `}
-                                    ${formatDuplicateReasons(item.reasons)}
+                                    <div class="flex items-center gap-3 mb-2">
+                                        ${(item.score === 4) ? `
+                                            <div class="text-red-700 font-bold text-xs bg-red-100 px-2 py-0.5 rounded border border-red-200">スキップ推奨</div>
+                                        ` : (item.score === 3) ? `
+                                            <div class="text-red-600 font-bold text-xs bg-orange-100 px-2 py-0.5 rounded border border-orange-200">要確認</div>
+                                        ` : `
+                                            <div class="text-teal-600 font-bold text-xs bg-teal-100 px-2 py-0.5 rounded border border-teal-200">登録対象</div>
+                                        `}
+                                        <div class="text-[10px] text-gray-500 font-medium truncate">
+                                            <i class="fas fa-database mr-1"></i>重複候補: ${item.existingJob.company} / ${item.existingJob.title}
+                                        </div>
+                                    </div>
+                                    ${renderJobComparisonTable(item.importData, item.existingJob)}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${item.company}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.title}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.location || '-'}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex flex-col gap-1">
-                                        <label class="inline-flex items-center text-xs">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="inline-flex items-center text-xs cursor-pointer">
                                             <input type="radio" name="duplicate-action-${index}" value="update" checked class="form-radio h-3 w-3 text-indigo-600">
-                                            <span class="ml-1">既存を更新</span>
+                                            <span class="ml-1.5 font-medium text-gray-700">既存を更新</span>
                                         </label>
-                                        <label class="inline-flex items-center text-xs">
+                                        <label class="inline-flex items-center text-xs cursor-pointer">
                                             <input type="radio" name="duplicate-action-${index}" value="insert" class="form-radio h-3 w-3 text-indigo-600">
-                                            <span class="ml-1">新規登録</span>
+                                            <span class="ml-1.5 font-medium text-gray-700">新規登録</span>
                                         </label>
                                     </div>
                                 </td>
@@ -22395,6 +22388,73 @@
                 }).join('') + `</div>`;
         }
 
+        function renderJobComparisonTable(newJob, oldJob) {
+            const getCatLabel = (val) => {
+                if (!val) return '-';
+                if (typeof masterJobCategories !== 'undefined') {
+                    const match = masterJobCategories.find(m => m.value === val || m.label === val);
+                    if (match) return match.label;
+                }
+                return val;
+            };
+
+            const formatSal = (min, max) => {
+                if (!min && !max) return '-';
+                const sMin = min ? (min / 10000).toFixed(0) + '万' : '';
+                const sMax = max ? (max / 10000).toFixed(0) + '万' : '';
+                return `${sMin}～${sMax}`;
+            };
+
+            const rows = [
+                { label: '企業名', new: newJob.company, old: oldJob.company },
+                { label: '職種', new: getCatLabel(newJob.job_category), old: getCatLabel(oldJob.job_category) },
+                { label: '勤務地', new: newJob.location, old: oldJob.location },
+                { label: '給与', new: formatSal(newJob.salary_min, newJob.salary_max), old: formatSal(oldJob.salary_min, oldJob.salary_max) }
+            ];
+
+            return `
+                <div class="mt-2 overflow-hidden border border-gray-200 rounded-md bg-white shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 text-[10px] leading-tight">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-1 text-left font-bold text-gray-500 w-12">項目</th>
+                                <th class="px-2 py-1 text-left font-bold text-indigo-600">登録データ側</th>
+                                <th class="px-2 py-1 text-left font-bold text-red-600">システム内データ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            ${rows.map(row => {
+                let isMatch = false;
+                if (row.label === '企業名') {
+                    isMatch = (row.new || '').trim() === (row.old || '').trim();
+                } else if (row.label === '職種') {
+                    isMatch = (newJob.job_category === oldJob.job_category);
+                } else if (row.label === '勤務地') {
+                    const p1 = typeof getPrefecture === 'function' ? getPrefecture(row.new) : null;
+                    const p2 = typeof getPrefecture === 'function' ? getPrefecture(row.old) : null;
+                    isMatch = (p1 && p2 && p1 === p2);
+                } else if (row.label === '給与') {
+                    const isMatchSalary = (v1, v2) => {
+                        if (v1 == null || v2 == null) return false;
+                        return Math.abs(parseFloat(v1) - parseFloat(v2)) <= 500000;
+                    };
+                    isMatch = isMatchSalary(newJob.salary_min, oldJob.salary_min) && isMatchSalary(newJob.salary_max, oldJob.salary_max);
+                }
+
+                return `
+                                <tr class="${isMatch ? 'bg-red-50/50' : ''}">
+                                    <td class="px-2 py-1 font-medium text-gray-500 whitespace-nowrap">${row.label}</td>
+                                    <td class="px-2 py-1 text-gray-700">${row.new || '-'}</td>
+                                    <td class="px-2 py-1 ${isMatch ? 'text-red-700 font-bold' : 'text-gray-700'}">${row.old || '-'}</td>
+                                </tr>
+                                `;
+            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
         function mergeJobData(newJob, oldJob) {
             const updatePayload = {};
             // 更新対象外とするキー
@@ -23088,9 +23148,12 @@
 
                 const dupHtml = hasDuplicate
                     ? item.duplicates.map(d => `
-                        <div class="mb-2 last:mb-0">
-                            <div class="text-red-600 font-bold text-xs">${d.company} / ${d.title}</div>
-                            ${formatDuplicateReasons(d._duplicateReasons)}
+                        <div class="mb-4 last:mb-0">
+                            <div class="text-red-600 font-bold text-xs flex items-center gap-1">
+                                <i class="fas fa-database opacity-70"></i>
+                                重複候補: ${d.company} / ${d.title}
+                            </div>
+                            ${renderJobComparisonTable(item.result, d)}
                         </div>
                     `).join('')
                     : '';
@@ -23110,9 +23173,11 @@
                                 <div class="text-xs text-gray-500 space-y-1">
                                     <div><i class="fas fa-map-marker-alt mr-1"></i>${item.result.location || '-'}</div>
                                     ${hasDuplicate ? `
-                                    <div class="mt-2 pt-2 border-t border-dashed border-red-200">
-                                        <p class="font-bold text-red-600 mb-1"><i class="fas fa-exclamation-triangle mr-1"></i>一致した項目:</p>
-                                        <div class="pl-2 border-l-2 border-red-200 ml-1">
+                                    <div class="mt-3 pt-3 border-t border-dashed border-red-200">
+                                        <p class="font-bold text-red-600 text-[10px] mb-2">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>システム内に類似した求人が見つかりました:
+                                        </p>
+                                        <div class="mt-1">
                                             ${dupHtml}
                                         </div>
                                     </div>
