@@ -8062,14 +8062,17 @@
             try {
                 const { data: users, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
                     .eq('organization_id', currentUser.organization_id)
                     .neq('role', 'super_admin') // スーパー管理者は除外
                     .order('name', { ascending: true })
 
                 if (error) throw error
 
-                targetUsersCache = users || [];
+                targetUsersCache = (users || []).map(u => {
+                    const profile = Array.isArray(u.candidate_profiles) ? u.candidate_profiles[0] : u.candidate_profiles;
+                    return { ...u, ...profile };
+                });
                 const select = $('#target-user-select');
                 select.html('<option value="">ユーザーを選択してください</option>');
 
@@ -8106,7 +8109,14 @@
             $('#search-favorites-only').prop('checked', false);
 
             // ユーザーの希望条件を検索フォームにセット
-            // ユーザーの希望条件を検索フォームにセット
+            if (user.desired_freewords) {
+                $('#search-keyword').val(user.desired_freewords);
+            }
+            if (user.desired_freewords_condition) {
+                const condition = user.desired_freewords_condition.toUpperCase();
+                $(`input[name="search-keyword-mode"][value="${condition}"]`).prop('checked', true);
+            }
+
             if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
             if (user.desired_location) {
                 // 配列なら都道府県プルダウンへセット。文字列（詳細）の場合はセットしない
