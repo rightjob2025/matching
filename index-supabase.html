@@ -8136,9 +8136,15 @@
 
                 // --- 2. ユーザーの希望条件をセット ---
 
-                // フリーワード（キーワード）
+                // フリーワード（キーワード）をタグとして展開
                 if (user.desired_freewords) {
-                    $('#search-keyword').val(user.desired_freewords).trigger('input');
+                    const words = user.desired_freewords.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
+                    words.forEach(word => {
+                        if (window.addKeywordTag) {
+                            window.addKeywordTag(word);
+                        }
+                    });
+                    $('#search-keyword').val(''); // 入力欄は空にする
                 }
 
                 // AND/OR検索モード
@@ -13281,10 +13287,16 @@
                 $tag.find('.tag-remove').on('click', function () {
                     $tag.remove();
                     if (syncFunc) syncFunc();
+                    else if (typeof executeSearch === 'function') executeSearch();
                 });
                 $container.append($tag);
                 if (syncFunc) syncFunc();
             }
+
+            // グローバルに公開
+            window.addKeywordTag = function (val) {
+                addFreewordTag(val, $('#tags-keyword'), null, 'tag-indigo');
+            };
 
             // Keyword tagging
             setupFreeword('search-keyword', 'tags-keyword', null, 'tag-indigo');
@@ -23971,10 +23983,13 @@
 
                     // --- ユーザーの希望条件をセット ---
 
-                    // フリーワード（キーワード）
+                    // フリーワード（キーワード）をタグとして展開
                     if (user.desired_freewords) {
-                        $('#search-keyword').val(user.desired_freewords).trigger('input');
-                        console.log('Set search-keyword to:', user.desired_freewords);
+                        const words = user.desired_freewords.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
+                        words.forEach(word => {
+                            if (window.addKeywordTag) window.addKeywordTag(word);
+                        });
+                        $('#search-keyword').val(''); // 入力欄は空にする
                     }
 
                     // AND/OR検索モード反映
