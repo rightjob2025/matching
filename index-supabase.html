@@ -23921,7 +23921,7 @@
         }
 
         // 対象ユーザーを選択
-        function selectTargetUser(userId, userName, userEmail) {
+        async function selectTargetUser(userId, userName, userEmail) {
             selectedTargetUserId = userId;
             selectedTargetUserName = userName;
             selectedTargetUserEmail = userEmail;
@@ -23942,106 +23942,129 @@
             $('#exclude-matched-container').removeClass('hidden');
             $('#select-top-30-btn').removeClass('hidden');
 
-            // ユーザー情報を取得して検索条件にセット
-            const user = allCandidateUsers.find(u => u.id === userId);
-            if (user) {
-                console.log('Setting search filters from user profile:', user);
+            // 最新のユーザー情報を取得して検索条件にセット
+            showLoading();
+            try {
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
+                    .eq('id', userId)
+                    .single();
 
-                // フォームを一旦リセット
-                $('#search-keyword').val('');
-                $('#search-location').val('');
-                $('#search-salary-min').val('');
-                $('#search-job-category').val(null).trigger('change');
-                $('#search-industry-category').val(null).trigger('change');
-                $('#search-employment-type').val(null).trigger('change');
-                $('#search-prefecture').val(null).trigger('change');
-                $('#search-job-experience-ok').prop('checked', false);
-                $('#search-industry-experience-ok').prop('checked', false);
-                // $('#search-is-remote').prop('checked', false); // リモート可は保持してもいいかもしれないがリセット推奨
+                if (userData) {
+                    const profile = Array.isArray(userData.candidate_profiles) ? userData.candidate_profiles[0] : userData.candidate_profiles;
+                    const user = { ...userData, ...profile };
 
-                // ヘルパー: 配列かカンマ区切り文字列を配列に正規化
-                // ヘルパー: 配列かカンマ区切り文字列を配列に正規化
-                const normalizeToArray = (val) => {
-                    if (!val) return [];
-                    if (Array.isArray(val)) return val;
-                    // JSON文字列っぽい場合はパースを試みる
-                    if (typeof val === 'string') {
-                        const trimmed = val.trim();
-                        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-                            try {
-                                return JSON.parse(trimmed);
-                            } catch (e) {
-                                console.warn('JSON Parse failed for profile data:', val);
-                            }
+                    console.log('Setting search filters from fresh user profile:', user);
+
+                    // フォームを一旦リセット
+                    $('#search-keyword').val('').trigger('input');
+                    $('#tags-keyword').empty();
+                    $('#search-location').val('');
+                    $('#search-salary-min').val('');
+                    $('#search-job-category').val(null).trigger('change');
+                    $('#search-industry-category').val(null).trigger('change');
+                    $('#search-employment-type').val(null).trigger('change');
+                    $('#search-prefecture').val(null).trigger('change');
+                    $('#search-job-experience-ok').prop('checked', false);
+                    $('#search-industry-experience-ok').prop('checked', false);
+
+                    // --- ユーザーの希望条件をセット ---
+
+                    // フリーワード（キーワード）
+                    if (user.desired_freewords) {
+                        $('#search-keyword').val(user.desired_freewords).trigger('input');
+                        console.log('Set search-keyword to:', user.desired_freewords);
+                    }
+
+                    // AND/OR検索モード反映
+                    if (user.desired_freewords_condition) {
+                        const cond = user.desired_freewords_condition.toUpperCase();
+                        const $radio = $(`input[name="search-keyword-mode"][value="${cond}"]`);
+                        if ($radio.length) {
+                            $radio.prop('checked', true).trigger('change');
+                            $radio.closest('label').click(); // 見た目更新
                         }
-                        // カンマ区切りなど
-                        return filteredSplit(val); // filteredSplitがあれば使うが、なければsplit
                     }
-                    return val.toString().split(',').map(s => s.trim());
-                };
 
-                const filteredSplit = (val) => {
-                    return val.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
-                }
+                    const normalizeToArray = (val) => {
+                        if (!val) return [];
+                        if (Array.isArray(val)) return val;
+                        if (typeof val === 'string') {
+                            const trimmed = val.trim();
+                            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                                try { return JSON.parse(trimmed); } catch (e) { }
+                            }
+                            return val.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
+                        }
+                        return val.toString().split(',').map(s => s.trim());
+                    };
 
-                // 職種
-                if (user.desired_job_type) {
-                    const vals = normalizeToArray(user.desired_job_type);
-                    $('#search-job-category').val(vals).trigger('change');
-                }
-
-                // 業界
-                if (user.desired_industry) {
-                    const vals = normalizeToArray(user.desired_industry);
-                    $('#search-industry-category').val(vals).trigger('change');
-                }
-
-                // 雇用形態
-                if (user.desired_employment_type) {
-                    const vals = normalizeToArray(user.desired_employment_type);
-                    $('#search-employment-type').val(vals).trigger('change');
-                }
-
-                // 勤務地
-                if (user.desired_location) {
-                    const locs = normalizeToArray(user.desired_location);
-
-                    // 詳細テキストボックスへのセットは除外 (ユーザー要望)
-                    // $('#search-location').val(locs.join(', '));
-
-                    // 都道府県をセット
-                    const foundPrefs = [];
-                    locs.forEach(loc => {
-                        const pref = window.prefectures.find(p => loc.startsWith(p));
-                        if (pref) foundPrefs.push(pref);
-                    });
-
-                    if (foundPrefs.length > 0) {
-                        $('#search-prefecture').val(foundPrefs).trigger('change');
-                        // 副作用対策: トリガーによってセットされてしまった場合は即座にクリア
-                        $('#search-location').val('');
+                    // 職種
+                    if (user.desired_job_type) {
+                        const vals = normalizeToArray(user.desired_job_type);
+                        $('#search-job-category').val(vals).trigger('change');
                     }
+
+                    // 業界
+                    if (user.desired_industry) {
+                        const vals = normalizeToArray(user.desired_industry);
+                        $('#search-industry-category').val(vals).trigger('change');
+                    }
+
+                    // 雇用形態
+                    if (user.desired_employment_type) {
+                        const vals = normalizeToArray(user.desired_employment_type);
+                        $('#search-employment-type').val(vals).trigger('change');
+                    }
+
+                    // 勤務地
+                    if (user.desired_location) {
+                        const locs = normalizeToArray(user.desired_location);
+                        const foundPrefs = [];
+                        locs.forEach(loc => {
+                            const pref = (window.prefectures || []).find(p => loc.startsWith(p));
+                            if (pref) foundPrefs.push(pref);
+                        });
+
+                        if (foundPrefs.length > 0) {
+                            $('#search-prefecture').val(foundPrefs).trigger('change');
+                            $('#search-location').val('');
+                        }
+                    }
+
+                    // 最低年収
+                    if (user.desired_salary) {
+                        $('#search-salary-min').val(Math.floor(user.desired_salary / 10000));
+                    }
+
+                    // 未経験OK条件
+                    $('#search-job-experience-ok').prop('checked', !!user.desired_job_experience_ok);
+                    $('#search-industry-experience-ok').prop('checked', !!user.desired_industry_experience_ok);
                 }
 
-                // 最低年収
-                if (user.desired_salary) {
-                    $('#search-salary-min').val(user.desired_salary / 10000);
-                }
+                // 少し待機してから検索実行
+                setTimeout(() => {
+                    if (typeof executeSearch === 'function') {
+                        executeSearch();
+                    } else {
+                        searchJobs();
+                    }
+                }, 100);
 
-                // 未経験OK条件
-                if (user.desired_job_experience_ok) {
-                    $('#search-job-experience-ok').prop('checked', true);
-                }
-                if (user.desired_industry_experience_ok) {
-                    $('#search-industry-experience-ok').prop('checked', true);
-                }
+            } catch (err) {
+                console.error('Error fetching fresh user profile:', err);
+                searchJobs();
+            } finally {
+                hideLoading();
             }
-
-            // 検索を再実行して除外フィルタを適用
-            searchJobs();
 
             console.log('Selected target user:', userName, userId);
             updateBulkRecommendBar(); // ボタン状態更新
+        }
+
+        console.log('Selected target user:', userName, userId);
+        updateBulkRecommendBar(); // ボタン状態更新
         }
 
         // 対象ユーザー選択をクリア
