@@ -12988,8 +12988,9 @@
                     $('#admin-job-search-tools').removeClass('hidden')
                     $('#candidate-ai-matching-tools').addClass('hidden')
 
-                    // 除外フィルタを常に表示（Admin/Coachはターゲット選択時のみ機能するが、UIとしては表示）
+                    // 除外フィルタを常に表示
                     $('#exclude-matched-container').removeClass('hidden');
+                    $('#exclude-applied-container').removeClass('hidden');
 
                     // ユーザーリストのロード（未ロードの場合）
                     if (allCandidateUsers.length === 0) {
@@ -13000,10 +13001,12 @@
                     $('#admin-job-search-tools').addClass('hidden')
                     $('#candidate-ai-matching-tools').addClass('hidden')
                     $('#exclude-matched-container').removeClass('hidden');
+                    $('#exclude-applied-container').removeClass('hidden');
                 } else {
                     $('#admin-job-search-tools').addClass('hidden')
                     $('#candidate-ai-matching-tools').addClass('hidden')
                     $('#exclude-matched-container').addClass('hidden');
+                    $('#exclude-applied-container').addClass('hidden');
                 }
 
                 // お気に入りと保存された検索条件をロード
@@ -13129,6 +13132,21 @@
                             if (matchedJobIds.length > 0) {
                                 query = query.not('id', 'in', `(${matchedJobIds.join(',')})`);
                             }
+                        }
+                    }
+                }
+
+                // 応募済み除外
+                if (filters.excludeApplied) {
+                    const targetUserId = selectedTargetUserId || (currentUser.role === 'candidate' ? currentUser.id : null);
+                    if (targetUserId) {
+                        const { data: applications } = await supabase
+                            .from('applications')
+                            .select('job_id')
+                            .eq('user_id', targetUserId);
+                        if (applications && applications.length > 0) {
+                            const appliedJobIds = applications.map(a => a.job_id);
+                            query = query.not('id', 'in', `(${appliedJobIds.join(',')})`);
                         }
                     }
                 }
@@ -13323,6 +13341,7 @@
             $('#search-industry-experience-ok').prop('checked', !!filters.industryExperienceOk);
             $('#search-is-remote').prop('checked', !!filters.isRemote);
             $('#search-exclude-matched').prop('checked', !!filters.excludeMatched);
+            $('#search-exclude-applied').prop('checked', !!filters.excludeApplied);
             $('#search-favorites-only').prop('checked', !!filters.favoritesOnly);
         }
 
@@ -13568,6 +13587,7 @@
                 industryExperienceOk: $('#search-industry-experience-ok').is(':checked'),
                 isRemote: $('#search-is-remote').is(':checked'),
                 excludeMatched: $('#search-exclude-matched').is(':checked'),
+                excludeApplied: $('#search-exclude-applied').is(':checked'),
                 favoritesOnly: $('#search-favorites-only').is(':checked'),
                 sort: $('#search-sort').val(),
                 aiPrompt: $('#search-ai-prompt').val()
@@ -13600,6 +13620,7 @@
                 '#search-industry-experience-ok',
                 '#search-is-remote',
                 '#search-exclude-matched',
+                '#search-exclude-applied',
                 '#search-favorites-only'
             ];
 
@@ -13633,6 +13654,7 @@
             $('#search-industry-experience-ok').prop('checked', false);
             $('#search-is-remote').prop('checked', false);
             $('#search-exclude-matched').prop('checked', false);
+            $('#search-exclude-applied').prop('checked', false);
             $('#search-favorites-only').prop('checked', false);
 
             // ソートのリセット
@@ -13953,14 +13975,14 @@
                     // AI推薦済み求人とスコアを取得
                     const { data: recommendations, error: recError } = await supabase
                         .from('recommendations')
-                        .select('job_id, score')
+                        .select('job_id, score, match_type')
                         .eq('user_id', targetUserId);
 
                     console.log('renderJobs - recommendations:', recommendations, 'error:', recError);
 
                     if (!recError && recommendations) {
                         recommendations.forEach(r => {
-                            recommendedJobsMap.set(r.job_id, r.score);
+                            recommendedJobsMap.set(r.job_id, { score: r.score, match_type: r.match_type });
                         });
                         recommendedJobIds = new Set(recommendations.map(r => r.job_id));
                     }
@@ -13985,7 +14007,9 @@
             const html = jobs.map(job => {
                 const isSelected = selectedJobIds.has(job.id)
                 const isRecommended = recommendedJobIds.has(job.id)
-                const recommendationScore = recommendedJobsMap.get(job.id)
+                const recommendation = recommendedJobsMap.get(job.id);
+                const recommendationScore = recommendation ? recommendation.score : null;
+                const matchType = recommendation ? recommendation.match_type : null;
                 const isApplied = appliedJobIds.has(job.id)
                 const showCheckbox = isAdminOrCoach || isCandidate
 
@@ -14005,9 +14029,18 @@
                                     ${isRecommended ? 'disabled' : ''}>
                             ` : ''}
                          </div>
-                         <div class="flex items-center gap-2 z-10">
-                            ${isRecommended ? `<span class="text-xs font-bold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-1 rounded-full shadow-sm"><i class="fas fa-robot mr-1"></i>${recommendationScore}%</span>` : ''}
-                            ${isApplied ? `<span class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full"><i class="fas fa-check mr-1"></i>応募済</span>` : ''}
+                         <div class="flex items-center gap-1.5 z-10">
+                            ${isRecommended ? `
+                                <span class="text-[10px] font-bold text-white bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
+                                    <i class="fas ${matchType === 'auto' ? 'fa-robot' : 'fa-brain'}"></i>
+                                    AIマッチ ${recommendationScore}%
+                                </span>
+                            ` : ''}
+                            ${isApplied ? `
+                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-md flex items-center gap-1">
+                                    <i class="fas fa-check-circle"></i>応募済
+                                </span>
+                            ` : ''}
                             <button id="fav-btn-${job.id}" onclick="event.stopPropagation(); toggleFavorite('${job.id}')" class="text-gray-400 hover:text-pink-500 transition p-1">
                                 <i class="${favoriteJobIds.has(job.id) ? 'fas text-pink-500' : 'far'} fa-heart text-xl"></i>
                             </button>
@@ -24292,7 +24325,7 @@
             $('#target-user-input-wrapper').addClass('hidden'); // 入力欄を隠す
 
             // 追加UIを表示
-            $('#exclude-matched-container').removeClass('hidden');
+            $('#exclude-filters-container label').removeClass('hidden');
             $('#select-top-30-btn').removeClass('hidden');
 
             // 最新のユーザー情報を取得して検索条件にセット
