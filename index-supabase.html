@@ -9218,7 +9218,8 @@
                         job_id: currentRecommendJobId,
                         reason: reason,
                         score: 85,
-                        recommended_by: currentUser.id
+                        recommended_by: currentUser.id,
+                        match_type: 'manual'
                     })
                     .select('*, jobs(title, company)')
                     .single();
@@ -15195,20 +15196,16 @@
                     <div class="flex flex-col md:flex-row gap-6">
                         <!-- メインコンテンツ (左側) -->
                         <div class="flex-1">
-                            ${isAdminOrCoach ? `
-                            <div class="flex items-center gap-2 mb-3">
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                ${isAdminOrCoach ? `
                                 <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
-                                    ${rec.users.name || '求職者'} 様
+                                    ${rec.users ? rec.users.name : '求職者'} 様
                                 </span>
+                                ` : ''}
+                                ${rec.match_type === 'auto' ? `<span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs font-bold border border-indigo-100"><i class="fas fa-robot mr-1"></i>AI自動推薦</span>` : ''}
                                 ${isApplied ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-check-circle mr-1"></i>応募済み</span>` : ''}
-                                ${isDismissed ? `<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-eye-slash mr-1"></i>見送り</span>` : ''}
+                                ${isAdminOrCoach && isDismissed ? `<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-eye-slash mr-1"></i>見送り</span>` : ''}
                             </div>
-                            ` : ''}
-                            ${!isAdminOrCoach && isApplied ? `
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-check-circle mr-1"></i>応募済み</span>
-                            </div>
-                            ` : ''}
 
                             <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition leading-tight">${rec.jobs.title}</h3>
                             <p class="text-gray-600 font-medium mb-1">${rec.jobs.company}</p>
@@ -15510,7 +15507,8 @@
                             job_id: res.job_id,
                             score: res.match_score,
                             reason: res.recommendation_reason || res.reason,
-                            details: res.details
+                            details: res.details,
+                            match_type: 'manual'
                         };
                     });
 
@@ -15614,7 +15612,8 @@
                     .from('recommendations')
                     .update({
                         reason: newReason,
-                        recommended_by: user.id
+                        recommended_by: user.id,
+                        match_type: 'manual'
                     })
                     .eq('id', recId);
 
@@ -15705,6 +15704,7 @@
                             .update({
                                 score: rec.score,
                                 reason: rec.reason,
+                                match_type: 'manual', // 手動実行なのでmanualに
                                 updated_at: new Date().toISOString()
                             })
                             .eq('id', existing.id);
@@ -15715,7 +15715,8 @@
                             user_id: currentUser.id,
                             job_id: rec.job_id,
                             score: rec.score,
-                            reason: rec.reason
+                            reason: rec.reason,
+                            match_type: 'manual' // 手動実行
                         });
                     }
                 }
