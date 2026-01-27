@@ -4016,6 +4016,21 @@
                                 <input type="checkbox" id="criteria-job-location">
                                 <span class="text-sm">勤務地の一致</span>
                             </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-job-salary">
+                                <span class="text-sm">年収の一致</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-job-category">
+                                <span class="text-sm">職種カテゴリの一致</span>
+                            </label>
+                            <label
+                                class="flex items-center space-x-2 cursor-pointer p-3 bg-white rounded border border-gray-200 hover:border-indigo-300">
+                                <input type="checkbox" id="criteria-job-employment">
+                                <span class="text-sm">勤務形態の一致</span>
+                            </label>
                         </div>
 
                         <div class="mt-6 pt-4 border-t border-gray-200 text-right">
@@ -26949,6 +26964,9 @@
                     $('#criteria-job-title').prop('checked', settings.job.title);
                     $('#criteria-job-company').prop('checked', settings.job.same_company);
                     $('#criteria-job-location').prop('checked', settings.job.location);
+                    $('#criteria-job-salary').prop('checked', settings.job.salary);
+                    $('#criteria-job-category').prop('checked', settings.job.category);
+                    $('#criteria-job-employment').prop('checked', settings.job.employment);
                 }
             } catch (err) {
                 console.error('Load settings error:', err);
@@ -26969,7 +26987,10 @@
                     job: {
                         title: $('#criteria-job-title').is(':checked'),
                         same_company: $('#criteria-job-company').is(':checked'),
-                        location: $('#criteria-job-location').is(':checked')
+                        location: $('#criteria-job-location').is(':checked'),
+                        salary: $('#criteria-job-salary').is(':checked'),
+                        category: $('#criteria-job-category').is(':checked'),
+                        employment: $('#criteria-job-employment').is(':checked')
                     },
                     updated_at: new Date().toISOString()
                 };
@@ -27052,6 +27073,9 @@
             const checkTitle = $('#criteria-job-title').is(':checked');
             const checkCo = $('#criteria-job-company').is(':checked');
             const checkLoc = $('#criteria-job-location').is(':checked');
+            const checkSalary = $('#criteria-job-salary').is(':checked');
+            const checkCategory = $('#criteria-job-category').is(':checked');
+            const checkEmployment = $('#criteria-job-employment').is(':checked');
 
             const { data: jobs, error } = await supabase
                 .from('jobs')
@@ -27070,6 +27094,9 @@
                 if (checkTitle) key += job.title.replace(/\s+/g, '').toLowerCase();
                 if (checkCo) key += '|' + (job.company_id || job.company);
                 if (checkLoc && job.location) key += '|' + job.location.split(/[、\s]/)[0];
+                if (checkSalary) key += '|' + (job.salary_min || 0) + '-' + (job.salary_max || 0);
+                if (checkCategory) key += '|' + (job.job_category || '');
+                if (checkEmployment) key += '|' + (job.employment_type || '');
 
                 if (key && seen.has(key)) {
                     duplicates.push({ original: seen.get(key), duplicate: job });
