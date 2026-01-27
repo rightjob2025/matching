@@ -15013,6 +15013,70 @@
             renderRecommendations(allRecommendations, isAdminOrCoachView, allCandidatesList, appliedJobIdsCache);
         }
 
+        // 一括選択
+        window.toggleAllRecommendations = function (checked) {
+            $('.rec-checkbox').prop('checked', checked);
+        };
+
+        // 一括見送り
+        window.dismissSelectedRecommendations = async function () {
+            const selectedItems = $('.rec-checkbox:checked').map((i, el) => {
+                return { recId: $(el).val(), jobId: $(el).data('job-id') };
+            }).get();
+
+            if (selectedItems.length === 0) {
+                alert('操作する求人を選択してください。');
+                return;
+            }
+
+            if (!confirm(`${selectedItems.length}件の求人を一括で見送りにしますか？\n（アンマッチタブへ移動します）`)) return;
+
+            const dismissedKey = (window.currentUser ? `dismissed_recs_${window.currentUser.id}` : 'dismissed_recs_temp');
+            const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]'));
+
+            selectedItems.forEach(item => {
+                dismissed.add(item.jobId);
+            });
+
+            localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
+            alert('見送り処理が完了しました。');
+            renderRecommendations();
+        };
+
+        // 一括応募代理
+        window.applySelectedRecommendations = async function () {
+            const selectedItems = $('.rec-checkbox:checked').map((i, el) => {
+                return { jobId: $(el).data('job-id'), userId: $(el).data('user-id') };
+            }).get();
+
+            if (selectedItems.length === 0) {
+                alert('操作する求人を選択してください。');
+                return;
+            }
+
+            if (!confirm(`${selectedItems.length}件の求人に一括で応募代理を実行しますか？`)) return;
+
+            showLoading();
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const item of selectedItems) {
+                try {
+                    // applyForJob は内部でアラートを出す可能性があるため、静かに実行できるか要確認
+                    // ここでは個別に応募処理を走らせる
+                    await applyForJob(item.jobId, item.userId);
+                    successCount++;
+                } catch (e) {
+                    console.error('Bulk apply error:', e);
+                    failCount++;
+                }
+            }
+
+            hideLoading();
+            alert(`一括応募が完了しました。\n成功: ${successCount}件${failCount > 0 ? `\n失敗: ${failCount}件` : ''}`);
+            renderRecommendations();
+        };
+
         window.renderRecommendations = function (recs, isAdminOrCoach, candidates, appliedJobIds) {
             // 引数省略時のフォールバック
             if (recs === undefined) recs = allRecommendations;
@@ -15027,6 +15091,8 @@
             appliedJobIdsCache = appliedJobIds;
 
             const container = $('#recommendations-container');
+            // 全選択チェックボックスをリセット
+            $('#select-all-recs').prop('checked', false);
 
             // 見送り済みデータの取得
             const dismissedKey = (window.currentUser ? `dismissed_recs_${window.currentUser.id}` : 'dismissed_recs_temp');
@@ -15157,10 +15223,25 @@
             `;
             controlsHtml += '</div>';
 
-            // 件数表示を追加
+            // 件数表示と一括操作エリア
             if (totalCount > 0) {
-                controlsHtml += `<div class="mb-4 text-sm text-gray-600">
-                    検索結果: ${totalCount}件 (${currentRecommendationPage}ページ目を表示中)
+                controlsHtml += `
+                <div class="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div class="flex items-center gap-4 text-sm text-gray-600">
+                        <label class="flex items-center gap-2 cursor-pointer font-medium text-gray-700">
+                            <input type="checkbox" id="select-all-recs" onchange="toggleAllRecommendations(this.checked)" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            全て選択
+                        </label>
+                        <span>表示中: ${paginatedRecs.length}件 / 全体: ${totalCount}件</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="dismissSelectedRecommendations()" class="text-xs bg-white text-gray-600 border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 transition font-bold">
+                            <i class="fas fa-eye-slash mr-1"></i>選択を一括見送り
+                        </button>
+                        <button onclick="applySelectedRecommendations()" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded hover:bg-indigo-100 transition font-bold">
+                            <i class="fas fa-paper-plane mr-1"></i>選択を一括応募代理
+                        </button>
+                    </div>
                 </div>`;
             }
 
