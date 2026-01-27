@@ -10174,7 +10174,7 @@
                                 userName: candidate.name || '求職者',
                                 subject: subject,
                                 body: body,
-                                scoutUrl: window.location.origin // ログインページなどのURL
+                                scoutUrl: 'https://rightjob2025.github.io/matching/index-supabase.html' // 統一リダイレクトURL
                             }
                         }
                     });
@@ -15738,7 +15738,7 @@
                     userName: user.name,
                     subject: template.subject || '【求人のご紹介】',
                     body: body,
-                    scoutUrl: `${window.location.origin}/#recommendations`
+                    scoutUrl: 'https://rightjob2025.github.io/matching/index-supabase.html'
                 });
 
                 if (success) {
@@ -19081,7 +19081,7 @@
                 // 招待メール送信
                 if (email) {
                     const orgName = currentUser.organizations ? currentUser.organizations.name : 'RightJob';
-                    const loginUrl = window.location.origin;
+                    const loginUrl = 'https://rightjob2025.github.io/matching/index-supabase.html';
 
                     // 非同期でメール送信（エラーでもフローは止めない）
                     sendEmail('invitation', email, {
@@ -21551,7 +21551,7 @@
                         console.error('Invitation error:', inviteError);
                         alert('組織は作成されましたが、招待状の作成に失敗しました: ' + inviteError.message);
                     } else {
-                        const inviteUrl = `${window.location.origin}${window.location.pathname}?token=${token}`;
+                        const inviteUrl = `https://rightjob2025.github.io/matching/index-supabase.html?token=${token}`;
 
                         // メール送信 (Client Side Mock/Impl)
                         await sendEmail('invitation', adminEmail, {
@@ -21676,7 +21676,7 @@
 
                 if (inviteError) throw inviteError;
 
-                const inviteUrl = `${window.location.origin}${window.location.pathname}?token=${token}`;
+                const inviteUrl = `https://rightjob2025.github.io/matching/index-supabase.html?token=${token}`;
 
                 // メール送信
                 await sendEmail('invitation', adminEmail.trim(), {
