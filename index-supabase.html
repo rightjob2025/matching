@@ -1518,6 +1518,72 @@
                     <p class="text-xs text-gray-500 mt-2">※未入力の場合はデフォルト名称が使用されます</p>
                 </div>
 
+                <!-- メール通知設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="text-sm font-bold text-indigo-700 mb-2 flex items-center">
+                        <i class="fas fa-envelope-open-text mr-2"></i>メール通知設定
+                    </h4>
+                    <div class="space-y-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                        <label class="flex items-center cursor-pointer group">
+                            <div class="relative inline-flex items-center">
+                                <input type="checkbox" id="org-setting-email-all-off" class="sr-only peer"
+                                    onchange="$('#email-detailed-settings-container').toggleClass('opacity-50 pointer-events-none', this.checked)">
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500">
+                                </div>
+                            </div>
+                            <span
+                                class="ml-3 text-sm font-bold text-gray-700 group-hover:text-red-600 transition-colors">求職者へのメール通知をすべて停止する</span>
+                        </label>
+
+                        <div id="email-detailed-settings-container" class="pl-2 space-y-4 border-l-2 border-indigo-200">
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="org-setting-email-application"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked>
+                                    <span class="ml-2 text-sm text-gray-700">応募完了通知</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="org-setting-email-scout"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked>
+                                    <span class="ml-2 text-sm text-gray-700">スカウト通知</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="org-setting-email-recommendation"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked>
+                                    <span class="ml-2 text-sm text-gray-700">案件紹介通知</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="org-setting-email-status-enabled"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked
+                                        onchange="$('#email-status-filter-container').toggleClass('hidden', !this.checked)">
+                                    <span class="ml-2 text-sm text-gray-700">選考ステータス変更通知</span>
+                                </label>
+                            </div>
+
+                            <div id="email-status-filter-container"
+                                class="mt-2 p-3 bg-white rounded-lg border border-indigo-100 shadow-sm">
+                                <p
+                                    class="text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-wider flex items-center">
+                                    <i class="fas fa-filter mr-1 text-indigo-400"></i>通知を<span
+                                        class="text-red-500 mx-1">除外する</span>ステータスを選択
+                                </p>
+                                <div id="email-status-exclude-list"
+                                    class="grid grid-cols-1 sm:grid-cols-2 gap-1 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                    <!-- Dynamic statuses populated by JS -->
+                                    <div class="text-xs text-gray-400 py-2 text-center col-span-2">ステータスマスタを読み込み中...
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-2">※チェックを入れたステータスに更新された際は、メール通知が送信されません。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Google Drive PDF 転送設定 -->
                 <div class="border-t pt-4 mt-4">
                     <div class="flex items-center justify-between mb-2">
@@ -4330,7 +4396,91 @@
                     </div>
                 </div>
 
-                <!-- 保存ボタン -->
+                <!-- メール通知設定 -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">メール通知設定</h4>
+                    <p class="text-sm text-gray-500 mb-4">
+                        求職者へ自動送信されるメール通知の有効/無効を管理します。
+                    </p>
+
+                    <div class="space-y-4 bg-indigo-50/50 p-6 rounded-xl border border-indigo-100">
+                        <label class="flex items-center cursor-pointer group">
+                            <div class="relative inline-flex items-center">
+                                <input type="checkbox" id="admin-setting-email-all-off" class="sr-only peer"
+                                    onchange="$('#admin-email-detailed-settings-container').toggleClass('opacity-50 pointer-events-none', this.checked)">
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500">
+                                </div>
+                            </div>
+                            <span
+                                class="ml-3 text-sm font-bold text-gray-700 group-hover:text-red-600 transition-colors">求職者へのメール通知をすべて停止する</span>
+                        </label>
+
+                        <div id="admin-email-detailed-settings-container"
+                            class="pl-4 space-y-6 border-l-2 border-indigo-200">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label
+                                    class="flex items-center cursor-pointer p-2 hover:bg-white/50 rounded transition">
+                                    <input type="checkbox" id="admin-setting-email-application"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-700">応募完了通知</p>
+                                        <p class="text-[10px] text-gray-400">求職者が自身、または代理で応募した際に送信されます</p>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center cursor-pointer p-2 hover:bg-white/50 rounded transition">
+                                    <input type="checkbox" id="admin-setting-email-scout"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-700">スカウト通知</p>
+                                        <p class="text-[10px] text-gray-400">作成したスカウトメッセージが送信された際に通知されます</p>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center cursor-pointer p-2 hover:bg-white/50 rounded transition">
+                                    <input type="checkbox" id="admin-setting-email-recommendation"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-700">案件紹介通知</p>
+                                        <p class="text-[10px] text-gray-400">おすすめの案件を紹介（推薦）した際に通知されます</p>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-center cursor-pointer p-2 hover:bg-white/50 rounded transition">
+                                    <input type="checkbox" id="admin-setting-email-status-enabled"
+                                        class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        checked
+                                        onchange="$('#admin-email-status-filter-container').toggleClass('hidden', !this.checked)">
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-700">選考ステータス変更通知</p>
+                                        <p class="text-[10px] text-gray-400">選考状況が更新された際に通知されます</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div id="admin-email-status-filter-container"
+                                class="mt-2 p-4 bg-white rounded-lg border border-indigo-100 shadow-sm transition-all">
+                                <p
+                                    class="text-[11px] font-bold text-gray-500 mb-3 uppercase tracking-wider flex items-center">
+                                    <i class="fas fa-filter mr-1 text-indigo-400"></i>通知を<span
+                                        class="text-red-500 mx-1">除外する</span>ステータスを選択
+                                </p>
+                                <div id="admin-email-status-exclude-list"
+                                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    <!-- Dynamic statuses populated by JS -->
+                                    <div class="text-xs text-gray-400 py-2 text-center col-span-full">ステータスマスタを読み込み中...
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-3 bg-gray-50 p-2 rounded">
+                                    ※チェックを入れたステータスに更新された際は、求職者へメール通知が送信されません。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="flex justify-end pt-4">
                     <button onclick="saveAdminSettings()"
                         class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
@@ -10875,7 +11025,8 @@
                                 userName: appData.users.name,
                                 jobTitle: appData.jobs.title,
                                 companyName: appData.jobs.company,
-                                newStatus: statusLabel
+                                newStatus: statusLabel,
+                                status: newStatus
                             });
                         }
 
@@ -13924,10 +14075,11 @@
         // ========================
         // Email Notification Utility
         // ========================
-        window.sendEmail = async function (type, to, data) {
+        window.sendEmail = async function (type, to, data, organizationId = null) {
             try {
+                const targetOrgId = organizationId || (window.currentUser ? window.currentUser.organization_id : null);
                 const { data: result, error } = await supabase.functions.invoke('send-email', {
-                    body: { type, to, data }
+                    body: { type, to, data, organizationId: targetOrgId }
                 })
 
                 if (error) throw error
@@ -14586,7 +14738,8 @@
                         jobTitle: currentApplicationData.jobs.title,
                         companyName: currentApplicationData.jobs.company,
                         oldStatus: oldStatus,
-                        newStatus: statusLabel
+                        newStatus: statusLabel,
+                        status: newStatus
                     });
 
                     // 担当コーチへ
@@ -19396,7 +19549,8 @@
                                             userName: app.users.name,
                                             jobTitle: app.jobs.title,
                                             companyName: app.jobs.company,
-                                            newStatus: statusLabel
+                                            newStatus: statusLabel,
+                                            status: newStatus
                                         });
                                     }
 
@@ -21382,6 +21536,71 @@
             container.html(html);
         }
 
+        // メール通知除外用ステータスリストの生成
+        async function populateEmailStatusList(excludedStatuses = []) {
+            const $list = $('#email-status-exclude-list');
+            try {
+                // master_dataからステータスを取得
+                const { data: masters, error } = await supabase
+                    .from('master_data')
+                    .select('label, value')
+                    .eq('type', 'application_status')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+
+                if (!masters || masters.length === 0) {
+                    $list.html('<div class="text-xs text-gray-400 py-2 text-center col-span-2">ステータスが見つかりません</div>');
+                    return;
+                }
+
+                const html = masters.map(m => `
+                    <label class="flex items-center p-1.5 hover:bg-gray-50 rounded transition-colors cursor-pointer border border-transparent hover:border-indigo-100">
+                        <input type="checkbox" class="email-status-exclude-checkbox form-checkbox h-3 w-3 text-red-500 rounded border-gray-300" 
+                            value="${m.value}" ${excludedStatuses.includes(m.value) ? 'checked' : ''}>
+                        <span class="ml-2 text-[11px] text-gray-600 truncate">${m.label}</span>
+                    </label>
+                `).join('');
+                $list.html(html);
+            } catch (e) {
+                console.error('Failed to populate email status list:', e);
+                $list.html('<div class="text-xs text-red-400 py-2 text-center col-span-2">読み込み失敗</div>');
+            }
+        }
+
+        // 管理画面用：メール通知除外用ステータスリストの生成
+        async function populateAdminEmailStatusList(excludedStatuses = []) {
+            const $list = $('#admin-email-status-exclude-list');
+            try {
+                const { data: masters, error } = await supabase
+                    .from('master_data')
+                    .select('label, value')
+                    .eq('type', 'application_status')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+
+                if (error) throw error;
+
+                if (!masters || masters.length === 0) {
+                    $list.html('<div class="text-xs text-gray-400 py-2 text-center col-span-full">ステータスが見つかりません</div>');
+                    return;
+                }
+
+                const html = masters.map(m => `
+                    <label class="flex items-center p-2 hover:bg-indigo-50 rounded transition-colors cursor-pointer border border-gray-100 hover:border-indigo-200 bg-white">
+                        <input type="checkbox" class="admin-email-status-exclude-checkbox form-checkbox h-3.5 w-3.5 text-red-500 rounded border-gray-300" 
+                            value="${m.value}" ${excludedStatuses.includes(m.value) ? 'checked' : ''}>
+                        <span class="ml-2 text-xs text-gray-700 truncate font-medium">${m.label}</span>
+                    </label>
+                `).join('');
+                $list.html(html);
+            } catch (e) {
+                console.error('Failed to populate admin email status list:', e);
+                $list.html('<div class="text-xs text-red-400 py-2 text-center col-span-full">読み込み失敗</div>');
+            }
+        }
+
         window.showOrganizationModal = function (orgId = null) {
             console.log('showOrganizationModal called with ID:', orgId);
             try {
@@ -21433,6 +21652,18 @@
                         // 求人重複一括確認設定
                         $('#org-setting-bulk-duplicate-confirm').prop('checked', settings.bulk_duplicate_confirm_enabled === true);
 
+                        // 求職者へのメール通知設定の読み込み
+                        const emailSettings = settings.email_notification_settings || { candidate_notifications: {} };
+                        const candNotifs = emailSettings.candidate_notifications || {};
+
+                        $('#org-setting-email-all-off').prop('checked', candNotifs.all_off === true).trigger('change');
+                        $('#org-setting-email-application').prop('checked', candNotifs.application_submitted !== false);
+                        $('#org-setting-email-scout').prop('checked', candNotifs.scout !== false);
+                        $('#org-setting-email-recommendation').prop('checked', candNotifs.recommendation !== false);
+                        $('#org-setting-email-status-enabled').prop('checked', candNotifs.status_changed_enabled !== false).trigger('change');
+
+                        populateEmailStatusList(candNotifs.status_changed_excluded_statuses || []);
+
                         // ロール名称の読み込み
                         const roleLabels = settings.role_labels || {};
                         $('#org-role-label-org_admin').val(roleLabels.org_admin || '');
@@ -21455,6 +21686,14 @@
                     // デフォルト設定
                     $('#org-setting-email-required').prop('checked', true);
                     $('#org-setting-password-required').prop('checked', true);
+
+                    // メール通知設定のデフォルト
+                    $('#org-setting-email-all-off').prop('checked', false).trigger('change');
+                    $('#org-setting-email-application').prop('checked', true);
+                    $('#org-setting-email-scout').prop('checked', true);
+                    $('#org-setting-email-recommendation').prop('checked', true);
+                    $('#org-setting-email-status-enabled').prop('checked', true).trigger('change');
+                    populateEmailStatusList([]);
                 }
 
                 console.log('Toggling modal visibility...');
@@ -21524,6 +21763,16 @@
                 drive_import_gas_url: $('#org-setting-drive-import-gas-url').val().trim() || null,
                 drive_import_column: $('#org-setting-drive-import-column').val().trim() || 'pdf_url',
                 bulk_duplicate_confirm_enabled: $('#org-setting-bulk-duplicate-confirm').is(':checked'),
+                email_notification_settings: {
+                    candidate_notifications: {
+                        all_off: $('#org-setting-email-all-off').is(':checked'),
+                        application_submitted: $('#org-setting-email-application').is(':checked'),
+                        scout: $('#org-setting-email-scout').is(':checked'),
+                        recommendation: $('#org-setting-email-recommendation').is(':checked'),
+                        status_changed_enabled: $('#org-setting-email-status-enabled').is(':checked'),
+                        status_changed_excluded_statuses: $('.email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get()
+                    }
+                },
                 role_labels: {
                     org_admin: $('#org-role-label-org_admin').val().trim() || null,
                     admin: $('#org-role-label-admin').val().trim() || null,
@@ -26182,6 +26431,18 @@
                 $('input[name="setting-history-visibility"][value="' + visibility + '"]').prop('checked', true);
                 $('input[name="setting-scout-visibility"][value="' + scoutVisibility + '"]').prop('checked', true);
 
+                // メール通知設定の読み込み
+                const emailSettings = settings.email_notification_settings || { candidate_notifications: {} };
+                const candNotifs = emailSettings.candidate_notifications || {};
+
+                $('#admin-setting-email-all-off').prop('checked', candNotifs.all_off === true).trigger('change');
+                $('#admin-setting-email-application').prop('checked', candNotifs.application_submitted !== false);
+                $('#admin-setting-email-scout').prop('checked', candNotifs.scout !== false);
+                $('#admin-setting-email-recommendation').prop('checked', candNotifs.recommendation !== false);
+                $('#admin-setting-email-status-enabled').prop('checked', candNotifs.status_changed_enabled !== false).trigger('change');
+
+                populateAdminEmailStatusList(candNotifs.status_changed_excluded_statuses || []);
+
             } catch (error) {
                 console.error('Load admin settings error:', error);
                 alert('設定の読み込みに失敗しました');
@@ -26211,6 +26472,17 @@
 
                 newSettings.analysis_history_visibility = visibility;
                 newSettings.scout_history_visibility = scoutVisibility;
+
+                newSettings.email_notification_settings = {
+                    candidate_notifications: {
+                        all_off: $('#admin-setting-email-all-off').is(':checked'),
+                        application_submitted: $('#admin-setting-email-application').is(':checked'),
+                        scout: $('#admin-setting-email-scout').is(':checked'),
+                        recommendation: $('#admin-setting-email-recommendation').is(':checked'),
+                        status_changed_enabled: $('#admin-setting-email-status-enabled').is(':checked'),
+                        status_changed_excluded_statuses: $('.admin-email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get()
+                    }
+                };
 
                 // 3. 保存 (RPCを使用)
                 const { error: updateError } = await supabase
@@ -27369,7 +27641,8 @@
                                 userName: appData.users.name,
                                 jobTitle: appData.jobs.title,
                                 companyName: appData.jobs.company,
-                                newStatus: statusLabel
+                                newStatus: statusLabel,
+                                status: newStatus
                             });
                         }
 
