@@ -27020,7 +27020,7 @@
                 .from('companies')
                 .select('*')
                 .eq('organization_id', currentUser.organization_id)
-                .order('name');
+                .order('created_at', { ascending: false }); // 新しい順に取得して判定しやすくする
 
             if (error) throw error;
 
@@ -27058,7 +27058,7 @@
                 .select('*, companies(name)')
                 .eq('organization_id', currentUser.organization_id)
                 .is('deleted_at', null)
-                .order('title');
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
 
@@ -27096,36 +27096,68 @@
             }
 
             let html = `
-                <div class="mb-4 flex justify-between items-center">
-                    <span class="text-sm font-bold text-gray-700">${duplicates.length} 組の重複候補が見つかりました</span>
+                <div class="mb-6 flex justify-between items-center bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" id="bulk-select-all" class="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" onchange="$('.duplicate-checkbox').prop('checked', this.checked)">
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-indigo-600">全選択 (${duplicates.length} 組)</span>
+                        </label>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="executeBulkMerge('${type}')" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <i class="fas fa-layer-group mr-1.5"></i> 選択した項目を一括統合
+                        </button>
+                        <button onclick="ignoreSelectedDuplicates()" class="px-5 py-2.5 bg-white text-gray-600 border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-50 transition shadow-sm">
+                            一括無視
+                        </button>
+                    </div>
                 </div>
                 <div class="space-y-4">
             `;
 
             duplicates.forEach((pair, idx) => {
-                const itemA = pair.original;
-                const itemB = pair.duplicate;
+                // 作成日時で新旧を判定
+                const timeA = new Date(pair.original.created_at || 0).getTime();
+                const timeB = new Date(pair.duplicate.created_at || 0).getTime();
+
+                // 新しい方が「新」、古い方が「旧」
+                const isANewer = timeA >= timeB;
+                const labelA = `レコードA ${isANewer ? '<span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded ml-1">新</span>' : '<span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded ml-1">旧</span>'}`;
+                const labelB = `レコードB ${!isANewer ? '<span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded ml-1">新</span>' : '<span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded ml-1">旧</span>'}`;
+                const bgA = isANewer ? 'bg-blue-50/50' : 'bg-gray-50/50';
+                const bgB = !isANewer ? 'bg-blue-50/50' : 'bg-gray-50/50';
+                const borderA = isANewer ? 'border-blue-100' : 'border-gray-100';
+                const borderB = !isANewer ? 'border-blue-100' : 'border-gray-100';
 
                 html += `
-                    <div class="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div class="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
                         <div class="flex items-center p-4">
-                            <div class="flex-1 grid grid-cols-2 gap-8">
-                                <div class="p-3 bg-blue-50 rounded-lg">
-                                    <div class="text-[10px] font-bold text-blue-600 uppercase mb-1">レコード A</div>
-                                    <div class="font-bold text-gray-900">${type === 'company' ? itemA.name : itemA.title}</div>
-                                    <div class="text-xs text-gray-500 mt-1">${type === 'company' ? (itemA.industry || '業種不明') : (itemA.companies?.name || itemA.company)}</div>
+                            <div class="mr-4">
+                                <input type="checkbox" class="duplicate-checkbox w-5 h-5 rounded text-indigo-600 border-gray-300" data-index="${idx}">
+                            </div>
+                            <div class="flex-1 grid grid-cols-2 gap-6">
+                                <div class="p-3 ${bgA} rounded-lg border ${borderA}">
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <div class="text-[10px] font-black text-gray-500 uppercase flex items-center">${labelA}</div>
+                                        <div class="text-[9px] text-gray-400 font-mono">${new Date(pair.original.created_at).toLocaleDateString()}</div>
+                                    </div>
+                                    <div class="font-bold text-gray-900">${type === 'company' ? pair.original.name : pair.original.title}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${type === 'company' ? (pair.original.industry || '業種不明') : (pair.original.companies?.name || pair.original.company)}</div>
                                 </div>
-                                <div class="p-3 bg-amber-50 rounded-lg">
-                                    <div class="text-[10px] font-bold text-amber-600 uppercase mb-1">レコード B</div>
-                                    <div class="font-bold text-gray-900">${type === 'company' ? itemB.name : itemB.title}</div>
-                                    <div class="text-xs text-gray-500 mt-1">${type === 'company' ? (itemB.industry || '業種不明') : (itemB.companies?.name || itemB.company)}</div>
+                                <div class="p-3 ${bgB} rounded-lg border ${borderB}">
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <div class="text-[10px] font-black text-gray-500 uppercase flex items-center">${labelB}</div>
+                                        <div class="text-[9px] text-gray-400 font-mono">${new Date(pair.duplicate.created_at).toLocaleDateString()}</div>
+                                    </div>
+                                    <div class="font-bold text-gray-900">${type === 'company' ? pair.duplicate.name : pair.duplicate.title}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${type === 'company' ? (pair.duplicate.industry || '業種不明') : (pair.duplicate.companies?.name || pair.duplicate.company)}</div>
                                 </div>
                             </div>
                             <div class="ml-6 flex flex-col gap-2">
-                                <button onclick="openMergeModal('${type}', ${idx})" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 whitespace-nowrap">
-                                    <i class="fas fa-compress-alt mr-1"></i> 統合
+                                <button onclick="openMergeModal('${type}', ${idx})" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-bold hover:bg-indigo-100 transition whitespace-nowrap">
+                                    詳細・手動統合
                                 </button>
-                                <button onclick="$(this).closest('.rounded-xl').fadeOut()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm transition">
+                                <button onclick="$(this).closest('.rounded-xl').fadeOut()" class="px-4 py-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg text-sm transition">
                                     無視
                                 </button>
                             </div>
@@ -27137,6 +27169,83 @@
             html += `</div>`;
             container.html(html);
         }
+
+        window.ignoreSelectedDuplicates = function () {
+            const count = $('.duplicate-checkbox:checked').length;
+            if (count === 0) return;
+            $('.duplicate-checkbox:checked').closest('.rounded-xl').fadeOut();
+        };
+
+        window.executeBulkMerge = async function (type) {
+            const selectedIndices = $('.duplicate-checkbox:checked').map(function () { return $(this).data('index'); }).get();
+            if (selectedIndices.length === 0) {
+                alert('統合する項目を選択してください');
+                return;
+            }
+
+            if (!confirm(`${selectedIndices.length} 組のデータを一括統合しますか？\n\n【統合ルール】\n・古い方のレコードを残し、関連データを引き継ぎます\n・新しい方にのみ存在する項目は、残すレコードに補完されます\n・統合後、新しい方のレコードは削除されます。`)) return;
+
+            showLoading(`${selectedIndices.length} 組の統合を処理中...`);
+            let successContent = 0;
+            let errors = 0;
+
+            try {
+                for (const idx of selectedIndices) {
+                    const pair = duplicateResultsCache[idx];
+                    const recordA = pair.original;
+                    const recordB = pair.duplicate;
+
+                    // 作成日時で実際の新旧を特定
+                    const timeA = new Date(recordA.created_at || 0).getTime();
+                    const timeB = new Date(recordB.created_at || 0).getTime();
+
+                    const older = timeA <= timeB ? recordA : recordB;
+                    const newer = timeA <= timeB ? recordB : recordA;
+
+                    // 更新用データの作成 (新しい方の値を優先して補完)
+                    const updates = {};
+                    const fields = type === 'company'
+                        ? ['name', 'industry', 'location', 'website', 'phone', 'description']
+                        : ['title', 'company', 'location', 'employment_type', 'salary_min', 'salary_max'];
+
+                    fields.forEach(f => {
+                        // 古い方が空で新しい方にある場合、または両方あるが新しい方が優先的に扱われるべき場合
+                        updates[f] = newer[f] || older[f];
+                    });
+
+                    const targetTable = type === 'company' ? 'companies' : 'jobs';
+
+                    // 1. 古い方（ベース）を更新
+                    const { error: updateError } = await supabase.from(targetTable).update(updates).eq('id', older.id);
+                    if (updateError) { console.error('Update error:', updateError); errors++; continue; }
+
+                    // 2. 関連データの紐づけ替え (新しい方への紐づけを、残す古い方へ移動)
+                    if (type === 'company') {
+                        await supabase.from('jobs').update({ company_id: older.id }).eq('company_id', newer.id);
+                    } else {
+                        await supabase.from('applications').update({ job_id: older.id }).eq('job_id', newer.id);
+                        await supabase.from('recommendations').update({ job_id: older.id }).eq('job_id', newer.id);
+                        await supabase.from('favorites').update({ job_id: older.id }).eq('job_id', newer.id);
+                    }
+
+                    // 3. 重複側の削除
+                    if (type === 'job') {
+                        await supabase.from('jobs').update({ deleted_at: new Date().toISOString() }).eq('id', newer.id);
+                    } else {
+                        await supabase.from('companies').delete().eq('id', newer.id);
+                    }
+                    successContent++;
+                }
+
+                alert(`${successContent} 組の統合が完了しました${errors > 0 ? ` (${errors}件の処理で問題が発生しました)` : ''}`);
+                detectDuplicates();
+            } catch (err) {
+                console.error('Bulk merge error:', err);
+                alert('一括統合中に予期せぬエラーが発生しました');
+            } finally {
+                hideLoading();
+            }
+        };
 
         window.openMergeModal = function (type, index) {
             const pair = duplicateResultsCache[index];
