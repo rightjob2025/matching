@@ -2698,6 +2698,26 @@
                     <h2 class="text-xl font-semibold mb-2">おすすめ求人</h2>
                     <p class="text-gray-600">あなたのプロフィールに基づいて、AIが最適な求人を提案します。</p>
                 </div>
+                <!-- フリーワード検索 -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-grow">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" id="rec-search-keyword"
+                                    onkeyup="if(event.key === 'Enter') renderRecommendations()"
+                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    placeholder="企業名、ポジション名、キーワードで検索...">
+                            </div>
+                        </div>
+                        <button onclick="renderRecommendations()"
+                            class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium flex items-center justify-center">
+                            <i class="fas fa-search mr-2"></i>検索
+                        </button>
+                    </div>
+                </div>
 
                 <!-- タブナビゲーション -->
                 <div class="bg-white rounded-lg shadow mb-6">
@@ -14811,10 +14831,32 @@
             const dismissedKey = (window.currentUser ? `dismissed_recs_${window.currentUser.id}` : 'dismissed_recs_temp');
             const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]'));
 
+            // キーワード検索
+            const keyword = $('#rec-search-keyword').val()?.toLowerCase().trim();
+
             // ユーザーフィルタリング
             let displayRecs = recs;
             if (currentSelectedUserId) {
                 displayRecs = recs.filter(r => r.user_id === currentSelectedUserId);
+            }
+
+            // キーワードフィルタリング
+            if (keyword) {
+                displayRecs = displayRecs.filter(r => {
+                    const job = r.jobs || {};
+                    const searchTargets = [
+                        job.company,
+                        job.title,
+                        job.description,
+                        job.qualifications,
+                        job.location,
+                        job.employment_type,
+                        job.job_category,
+                        job.industry_category
+                    ].filter(Boolean).map(s => String(s).toLowerCase());
+
+                    return searchTargets.some(target => target.includes(keyword));
+                });
             }
 
             // タブに応じてフィルタリング
