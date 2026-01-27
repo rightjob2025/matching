@@ -9590,15 +9590,13 @@
 
                     recommendations = aiResults.map(result => {
                         const job = jobs.find(j => j.id === result.job_id);
-                        // ルールベースのスコアを計算（AIスコアが取得できなかった場合のフォールバック用）
                         const ruleBased = calculateClientSideMatchScores(job, user);
-
                         return {
                             organization_id: currentUser.organization_id,
                             user_id: targetUserId,
                             job_id: result.job_id,
                             reason: result.recommendation_reason || result.reason || 'AIマッチング',
-                            score: result.match_score || ruleBased.match_score || 0,
+                            score: result.ineligible ? 10 : (result.match_score || ruleBased.match_score || 0),
                             recommended_by: currentUser.id,
                             job_title: job ? job.title : '',
                             company: job ? (job.companies?.name || job.company) : '',
@@ -12795,7 +12793,7 @@
                     }
                 });
 
-                const aiResults = await Promise.all(aiPromises);
+                const aiResults = (await Promise.all(aiPromises));
 
                 // 再ソート（AIスコアで順位が変わる可能性あり）
                 aiResults.sort((a, b) => b.match_score - a.match_score);
@@ -15530,7 +15528,7 @@
 
                     if (error) throw error;
 
-                    // 結果の保存
+                    // 手動実行時は不一致でも全て保存
                     const upsertData = results.map(res => {
                         // 型変換の不一致を防ぐため == を使用
                         const original = items.find(i => i.jobId == res.job_id);
@@ -15539,7 +15537,7 @@
                             organization_id: userDataForAI.organization_id || currentUser.organization_id, // フォールバックを追加
                             user_id: userId,
                             job_id: res.job_id,
-                            score: res.match_score,
+                            score: res.ineligible ? 10 : res.match_score,
                             reason: res.recommendation_reason || res.reason,
                             details: res.details,
                             match_type: 'manual'
