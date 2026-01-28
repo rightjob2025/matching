@@ -14425,9 +14425,17 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <h3 class="text-xl font-bold text-gray-900">${app.jobs ? app.jobs.title : '不明な求人'}</h3>
+                                    <h3 class="text-xl font-bold text-gray-900 hover:text-indigo-600 cursor-pointer transition-colors" onclick="showJobDetailModal('${app.jobs?.id || app.job_id}')">
+                                        <i class="fas fa-external-link-alt text-sm mr-1 text-gray-400"></i>
+                                        ${app.jobs ? app.jobs.title : '不明な求人'}
+                                    </h3>
                                 </div>
-                                <p class="text-gray-600">${app.jobs ? app.jobs.company : '-'}</p>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                                    <p class="text-gray-600">${app.jobs ? app.jobs.company : '-'}</p>
+                                    <button onclick="showJobDetailModal('${app.jobs?.id || app.job_id}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded transition-colors">
+                                        <i class="fas fa-file-alt"></i> 求人詳細を確認する
+                                    </button>
+                                </div>
                                 ${app.jobs?.pdf_filename ? `
                                 <div class="flex items-center gap-2 mt-1 text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded w-fit">
                                     <i class="fas fa-file-pdf text-red-500"></i>
