@@ -1582,133 +1582,105 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 共通通知先設定 -->
-                    <div class="border-t pt-4 mt-4">
-                        <h4 class="text-sm font-bold text-gray-700 mb-2">共通通知先設定 (CC送信先)</h4>
-                        <p class="text-[10px] text-gray-500 mb-3">
-                            社内担当者（CA/コーチ）宛の通知メールを、追加で送信する宛先を最大2件まで設定できます。
+                </div>
+
+                <!-- Google Drive PDF 転送設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-bold text-gray-700">GoogleドライブPDF転送設定</h4>
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded font-bold">BETA</span>
+                    </div>
+                    <div class="space-y-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="org-setting-drive-transfer-enabled"
+                                class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                onchange="$('#drive-transfer-settings-container').toggleClass('hidden', !this.checked)">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">求人PDFインポート時にGoogleドライブへ保存する</span>
+                        </label>
+
+                        <div id="drive-transfer-settings-container"
+                            class="pl-6 space-y-4 hidden border-l-2 border-indigo-100 py-1">
+                            <div>
+                                <label
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">転送用GAS
+                                    WebアプリURL</label>
+                                <input type="url" id="org-setting-drive-gas-url"
+                                    placeholder="https://script.google.com/macros/s/.../exec"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-gray-400 mt-1">※ファイルを保存するためのGoogle Apps Script
+                                    WebアプリURLを入力してください</p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">保存先カラム
+                                    (jobsテーブル)</label>
+                                <input type="text" id="org-setting-drive-column" placeholder="pdf_url"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-gray-400 mt-1">※DBに事前にカラムを追加しておく必要があります（例: pdf_url）</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Google Drive PDF インポート設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-bold text-gray-700">Googleドライブ求人PDFインポート設定</h4>
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">NEW</span>
+                    </div>
+                    <div class="space-y-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="org-setting-drive-import-enabled"
+                                class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                onchange="$('#drive-import-settings-container').toggleClass('hidden', !this.checked)">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">Googleドライブから求人PDFを一括インポート可能にする</span>
+                        </label>
+
+                        <div id="drive-import-settings-container"
+                            class="pl-6 space-y-4 hidden border-l-2 border-green-100 py-1">
+                            <div>
+                                <label
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">インポート用GAS
+                                    WebアプリURL</label>
+                                <input type="url" id="org-setting-drive-import-gas-url"
+                                    placeholder="https://script.google.com/macros/s/.../exec"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-gray-400 mt-1">※求人票PDFを取得・解析するためのGoogle Apps Script
+                                    WebアプリURLを入力してください</p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">GoogleドライブURL保存用カラム
+                                    (jobsテーブル)</label>
+                                <input type="text" id="org-setting-drive-import-column" placeholder="pdf_url"
+                                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-gray-400 mt-1">※一括同期したURLの保存先を指定します（例: pdf_url または url）</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 求人インポート設定 -->
+                <div class="border-t pt-4 mt-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">求人インポート設定</h4>
+                    <div class="space-y-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="org-setting-bulk-duplicate-confirm"
+                                class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">複数PDF取り込み時に重複疑いを後で一括確認する</span>
+                        </label>
+                        <p class="text-[10px] text-gray-400 ml-6 mt-[-10px]">
+                            ※ONの場合、処理中に一つずつ確認せず、最後に一覧でチェックして登録できます。
                         </p>
-                        <div class="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                            <div>
-                                <label
-                                    class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">共通通知先
-                                    1</label>
-                                <input type="email" id="org-setting-common-email-1"
-                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
-                                    placeholder="example1@company.com">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">共通通知先
-                                    2</label>
-                                <input type="email" id="org-setting-common-email-2"
-                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
-                                    placeholder="example2@company.com">
-                            </div>
-                        </div>
                     </div>
+                </div>
 
-                    <!-- Google Drive PDF 転送設定 -->
-                    <div class="border-t pt-4 mt-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="text-sm font-bold text-gray-700">GoogleドライブPDF転送設定</h4>
-                            <span
-                                class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded font-bold">BETA</span>
-                        </div>
-                        <div class="space-y-4">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" id="org-setting-drive-transfer-enabled"
-                                    class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                                    onchange="$('#drive-transfer-settings-container').toggleClass('hidden', !this.checked)">
-                                <span class="ml-2 text-sm text-gray-700 font-medium">求人PDFインポート時にGoogleドライブへ保存する</span>
-                            </label>
-
-                            <div id="drive-transfer-settings-container"
-                                class="pl-6 space-y-4 hidden border-l-2 border-indigo-100 py-1">
-                                <div>
-                                    <label
-                                        class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">転送用GAS
-                                        WebアプリURL</label>
-                                    <input type="url" id="org-setting-drive-gas-url"
-                                        placeholder="https://script.google.com/macros/s/.../exec"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <p class="text-[10px] text-gray-400 mt-1">※ファイルを保存するためのGoogle Apps Script
-                                        WebアプリURLを入力してください</p>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">保存先カラム
-                                        (jobsテーブル)</label>
-                                    <input type="text" id="org-setting-drive-column" placeholder="pdf_url"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <p class="text-[10px] text-gray-400 mt-1">※DBに事前にカラムを追加しておく必要があります（例: pdf_url）</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Google Drive PDF インポート設定 -->
-                    <div class="border-t pt-4 mt-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="text-sm font-bold text-gray-700">Googleドライブ求人PDFインポート設定</h4>
-                            <span
-                                class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded font-bold">NEW</span>
-                        </div>
-                        <div class="space-y-4">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" id="org-setting-drive-import-enabled"
-                                    class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                                    onchange="$('#drive-import-settings-container').toggleClass('hidden', !this.checked)">
-                                <span
-                                    class="ml-2 text-sm text-gray-700 font-medium">Googleドライブから求人PDFを一括インポート可能にする</span>
-                            </label>
-
-                            <div id="drive-import-settings-container"
-                                class="pl-6 space-y-4 hidden border-l-2 border-green-100 py-1">
-                                <div>
-                                    <label
-                                        class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">インポート用GAS
-                                        WebアプリURL</label>
-                                    <input type="url" id="org-setting-drive-import-gas-url"
-                                        placeholder="https://script.google.com/macros/s/.../exec"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <p class="text-[10px] text-gray-400 mt-1">※求人票PDFを取得・解析するためのGoogle Apps Script
-                                        WebアプリURLを入力してください</p>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">GoogleドライブURL保存用カラム
-                                        (jobsテーブル)</label>
-                                    <input type="text" id="org-setting-drive-import-column" placeholder="pdf_url"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <p class="text-[10px] text-gray-400 mt-1">※一括同期したURLの保存先を指定します（例: pdf_url または url）
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 求人インポート設定 -->
-                    <div class="border-t pt-4 mt-4">
-                        <h4 class="text-sm font-bold text-gray-700 mb-2">求人インポート設定</h4>
-                        <div class="space-y-4">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" id="org-setting-bulk-duplicate-confirm"
-                                    class="form-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
-                                <span class="ml-2 text-sm text-gray-700 font-medium">複数PDF取り込み時に重複疑いを後で一括確認する</span>
-                            </label>
-                            <p class="text-[10px] text-gray-400 ml-6 mt-[-10px]">
-                                ※ONの場合、処理中に一つずつ確認せず、最後に一覧でチェックして登録できます。
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end pt-4 gap-3">
-                        <button type="button" onclick="closeOrganizationModal()"
-                            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
-                        <button type="submit"
-                            class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm">保存する</button>
-                    </div>
+                <div class="flex justify-end pt-4 gap-3">
+                    <button type="button" onclick="closeOrganizationModal()"
+                        class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">キャンセル</button>
+                    <button type="submit"
+                        class="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm">保存する</button>
+                </div>
             </form>
         </div>
     </div>
@@ -4534,38 +4506,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 共通通知先設定 -->
-                <div class="border-b border-gray-200 pb-6">
-                    <div class="flex items-center gap-2 mb-2">
-                        <h4 class="text-lg font-semibold text-gray-800">共通通知先設定 (CC送信先)</h4>
-                        <span
-                            class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">社内向け</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4">
-                        社内担当者（CA/コーチ）宛の通知メールを、常にコピー送信する宛先を最大2件まで設定できます。
-                    </p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-6 rounded-xl border border-gray-100">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">共通通知先
-                                1</label>
-                            <input type="email" id="admin-setting-common-email-1"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                placeholder="example1@company.com">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">共通通知先
-                                2</label>
-                            <input type="email" id="admin-setting-common-email-2"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                                placeholder="example2@company.com">
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-400 mt-2">
-                        ※これらは、担当者へのシステム通知（応募通知、ステータス変更通知等）の際に同報として送信されます。
-                    </p>
-                </div>
-
                 <div class="flex justify-end pt-4">
                     <button onclick="saveAdminSettings()"
                         class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
@@ -21861,11 +21801,6 @@
 
                         populateEmailStatusList(candNotifs.status_changed_excluded_statuses || []);
 
-                        // 共通通知先の設定読み込み
-                        const commonEmails = emailSettings.common_notifications || [];
-                        $('#org-setting-common-email-1').val(commonEmails[0] || '');
-                        $('#org-setting-common-email-2').val(commonEmails[1] || '');
-
                         // ロール名称の読み込み
                         const roleLabels = settings.role_labels || {};
                         $('#org-role-label-org_admin').val(roleLabels.org_admin || '');
@@ -21896,10 +21831,6 @@
                     $('#org-setting-email-recommendation').prop('checked', true);
                     $('#org-setting-email-status-enabled').prop('checked', true).trigger('change');
                     populateEmailStatusList([]);
-
-                    // 共通通知先の初期化
-                    $('#org-setting-common-email-1').val('');
-                    $('#org-setting-common-email-2').val('');
                 }
 
                 console.log('Toggling modal visibility...');
@@ -21976,11 +21907,7 @@
                         scout: $('#org-setting-email-scout').is(':checked'),
                         recommendation: $('#org-setting-email-recommendation').is(':checked'),
                         status_changed_enabled: $('#org-setting-email-status-enabled').is(':checked'),
-                        status_changed_excluded_statuses: $('.email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get(),
-                        common_notifications: [
-                            $('#org-setting-common-email-1').val().trim(),
-                            $('#org-setting-common-email-2').val().trim()
-                        ].filter(email => email !== '')
+                        status_changed_excluded_statuses: $('.email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get()
                     }
                 },
                 role_labels: {
@@ -26655,11 +26582,6 @@
 
                 populateAdminEmailStatusList(candNotifs.status_changed_excluded_statuses || []);
 
-                // 共通通知先設定の読み込み
-                const commonEmails = emailSettings.common_notifications || [];
-                $('#admin-setting-common-email-1').val(commonEmails[0] || '');
-                $('#admin-setting-common-email-2').val(commonEmails[1] || '');
-
             } catch (error) {
                 console.error('Load admin settings error:', error);
                 alert('設定の読み込みに失敗しました');
@@ -26697,11 +26619,7 @@
                         scout: $('#admin-setting-email-scout').is(':checked'),
                         recommendation: $('#admin-setting-email-recommendation').is(':checked'),
                         status_changed_enabled: $('#admin-setting-email-status-enabled').is(':checked'),
-                        status_changed_excluded_statuses: $('.admin-email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get(),
-                        common_notifications: [
-                            $('#admin-setting-common-email-1').val().trim(),
-                            $('#admin-setting-common-email-2').val().trim()
-                        ].filter(email => email !== '')
+                        status_changed_excluded_statuses: $('.admin-email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get()
                     }
                 };
 
