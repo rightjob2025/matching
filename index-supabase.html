@@ -4506,6 +4506,38 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 共通通知先設定 -->
+                <div class="border-b border-gray-200 pb-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h4 class="text-lg font-semibold text-gray-800">共通通知先設定 (CC送信先)</h4>
+                        <span
+                            class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full">社内向け</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">
+                        社内担当者（CA/コーチ）宛の通知メールを、常にコピー送信する宛先を最大2件まで設定できます。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">共通通知先
+                                1</label>
+                            <input type="email" id="admin-setting-common-email-1"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                placeholder="example1@company.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">共通通知先
+                                2</label>
+                            <input type="email" id="admin-setting-common-email-2"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                placeholder="example2@company.com">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2">
+                        ※これらは、担当者へのシステム通知（応募通知、ステータス変更通知等）の際に同報として送信されます。
+                    </p>
+                </div>
+
                 <div class="flex justify-end pt-4">
                     <button onclick="saveAdminSettings()"
                         class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm">
@@ -26582,6 +26614,11 @@
 
                 populateAdminEmailStatusList(candNotifs.status_changed_excluded_statuses || []);
 
+                // 共通通知先設定の読み込み
+                const commonEmails = emailSettings.common_notifications || [];
+                $('#admin-setting-common-email-1').val(commonEmails[0] || '');
+                $('#admin-setting-common-email-2').val(commonEmails[1] || '');
+
             } catch (error) {
                 console.error('Load admin settings error:', error);
                 alert('設定の読み込みに失敗しました');
@@ -26619,7 +26656,11 @@
                         scout: $('#admin-setting-email-scout').is(':checked'),
                         recommendation: $('#admin-setting-email-recommendation').is(':checked'),
                         status_changed_enabled: $('#admin-setting-email-status-enabled').is(':checked'),
-                        status_changed_excluded_statuses: $('.admin-email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get()
+                        status_changed_excluded_statuses: $('.admin-email-status-exclude-checkbox:checked').map(function () { return $(this).val(); }).get(),
+                        common_notifications: [
+                            $('#admin-setting-common-email-1').val().trim(),
+                            $('#admin-setting-common-email-2').val().trim()
+                        ].filter(email => email !== '')
                     }
                 };
 
