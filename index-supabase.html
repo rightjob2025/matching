@@ -21689,7 +21689,7 @@
         }
 
         // メール通知除外用ステータスリストの生成
-        async function populateEmailStatusList(excludedStatuses = []) {
+        window.populateEmailStatusList = async function (excludedStatuses = []) {
             const $list = $('#email-status-exclude-list');
             try {
                 // master_dataからステータスを取得
@@ -21722,7 +21722,7 @@
         }
 
         // 管理画面用：メール通知除外用ステータスリストの生成
-        async function populateAdminEmailStatusList(excludedStatuses = []) {
+        window.populateAdminEmailStatusList = async function (excludedStatuses = []) {
             const $list = $('#admin-email-status-exclude-list');
             try {
                 const { data: masters, error } = await supabase
