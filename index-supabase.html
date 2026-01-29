@@ -13041,6 +13041,7 @@
                     .from('jobs')
                     .select('*, companies(name)', { count: 'exact' })
                     .eq('organization_id', currentUser.organization_id)
+                    .is('deleted_at', null) // 論理削除された求人を除外
                 // .eq('status', 'active') // 一時的にステータスフィルタを解除（インポートデータが表示されない問題対応）
 
                 // ソート順の適用は最後に移動しました
