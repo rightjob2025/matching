@@ -22912,8 +22912,11 @@
                 return false;
             }
 
-            // 2. 職種分類
-            if (newJob.job_category && oldJob.job_category && newJob.job_category === oldJob.job_category) {
+            // 2. 職種分類 (同一企業でも職能が異なれば別求人として扱う)
+            if (newJob.job_category && oldJob.job_category) {
+                if (newJob.job_category !== oldJob.job_category) {
+                    return false; // 職種カテゴリが明確に異なる場合は重複とみなさない
+                }
                 score++;
                 let catLabel = newJob.job_category;
                 if (typeof masterJobCategories !== 'undefined') {
