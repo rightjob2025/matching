@@ -15631,7 +15631,28 @@
                         }
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        console.error('AI Matching Error:', error);
+                        // Edge Functionからの詳細エラーを取得
+                        if (error.context && error.context.body) {
+                            console.error('Error Details:', error.context.body);
+                        }
+                        throw error;
+                    }
+
+                    // resultsがnullまたはundefinedの場合のチェック
+                    if (!results) {
+                        console.error('AI Matching returned null/undefined results');
+                        totalErrors += jobIds.length;
+                        continue;
+                    }
+
+                    // resultsがエラーオブジェクトの場合のチェック
+                    if (results.error) {
+                        console.error('AI Matching returned error in results:', results);
+                        totalErrors += jobIds.length;
+                        continue;
+                    }
 
                     // 手動実行時は不一致でも全て保存
                     const upsertData = results.map(res => {
@@ -15670,7 +15691,19 @@
 
             } catch (error) {
                 console.error('Re-run error:', error);
-                alert('再判定中にエラーが発生しました: ' + error.message);
+                // エラーの詳細情報を表示
+                let errorMessage = '再判定中にエラーが発生しました: ' + (error.message || 'Unknown error');
+                if (error.context && error.context.body) {
+                    const errorBody = error.context.body;
+                    if (errorBody.error) {
+                        errorMessage += '\n詳細: ' + errorBody.error;
+                    }
+                    if (errorBody.errorType) {
+                        errorMessage += '\nエラータイプ: ' + errorBody.errorType;
+                    }
+                    console.error('Full error context:', errorBody);
+                }
+                alert(errorMessage);
             } finally {
                 hideLoading();
             }
