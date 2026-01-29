@@ -15635,7 +15635,30 @@
                         console.error('AI Matching Error:', error);
                         // Edge Functionからの詳細エラーを取得
                         if (error.context && error.context.body) {
-                            console.error('Error Details:', error.context.body);
+                            try {
+                                // ReadableStreamの場合は読み取る
+                                if (error.context.body instanceof ReadableStream) {
+                                    const reader = error.context.body.getReader();
+                                    const decoder = new TextDecoder();
+                                    let errorText = '';
+                                    while (true) {
+                                        const { done, value } = await reader.read();
+                                        if (done) break;
+                                        errorText += decoder.decode(value, { stream: true });
+                                    }
+                                    console.error('Error Details (from stream):', errorText);
+                                    try {
+                                        const errorJson = JSON.parse(errorText);
+                                        console.error('Parsed Error:', errorJson);
+                                    } catch (e) {
+                                        console.error('Could not parse error as JSON:', errorText);
+                                    }
+                                } else {
+                                    console.error('Error Details:', error.context.body);
+                                }
+                            } catch (streamError) {
+                                console.error('Error reading stream:', streamError);
+                            }
                         }
                         throw error;
                     }
@@ -15693,15 +15716,47 @@
                 console.error('Re-run error:', error);
                 // エラーの詳細情報を表示
                 let errorMessage = '再判定中にエラーが発生しました: ' + (error.message || 'Unknown error');
+
+                // ReadableStreamからエラー詳細を読み取る
                 if (error.context && error.context.body) {
-                    const errorBody = error.context.body;
-                    if (errorBody.error) {
-                        errorMessage += '\n詳細: ' + errorBody.error;
+                    try {
+                        if (error.context.body instanceof ReadableStream) {
+                            const reader = error.context.body.getReader();
+                            const decoder = new TextDecoder();
+                            let errorText = '';
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+                                errorText += decoder.decode(value, { stream: true });
+                            }
+                            console.error('Full error context (from stream):', errorText);
+                            try {
+                                const errorBody = JSON.parse(errorText);
+                                if (errorBody.error) {
+                                    errorMessage += '\n詳細: ' + errorBody.error;
+                                }
+                                if (errorBody.errorType) {
+                                    errorMessage += '\nエラータイプ: ' + errorBody.errorType;
+                                }
+                                if (errorBody.details) {
+                                    console.error('Stack trace:', errorBody.details);
+                                }
+                            } catch (parseError) {
+                                errorMessage += '\n詳細: ' + errorText;
+                            }
+                        } else {
+                            const errorBody = error.context.body;
+                            if (errorBody.error) {
+                                errorMessage += '\n詳細: ' + errorBody.error;
+                            }
+                            if (errorBody.errorType) {
+                                errorMessage += '\nエラータイプ: ' + errorBody.errorType;
+                            }
+                            console.error('Full error context:', errorBody);
+                        }
+                    } catch (streamError) {
+                        console.error('Error reading error details:', streamError);
                     }
-                    if (errorBody.errorType) {
-                        errorMessage += '\nエラータイプ: ' + errorBody.errorType;
-                    }
-                    console.error('Full error context:', errorBody);
                 }
                 alert(errorMessage);
             } finally {
