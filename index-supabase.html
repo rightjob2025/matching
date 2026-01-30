@@ -26735,6 +26735,7 @@
                 const visibility = $('input[name="setting-history-visibility"]:checked').val();
                 const scoutVisibility = $('input[name="setting-scout-visibility"]:checked').val();
 
+                // 変更されたトップレベルキーのみを確実にセット
                 newSettings.analysis_history_visibility = visibility;
                 newSettings.scout_history_visibility = scoutVisibility;
 
@@ -26742,8 +26743,16 @@
                 const commonEmailsRaw = $('#admin-setting-email-common').val();
                 const commonEmails = commonEmailsRaw ? commonEmailsRaw.split(/[\n,]+/).map(e => e.trim()).filter(e => e && e.includes('@')) : [];
 
+                // 深い階層 (email_notification_settings) もマージするように修正
+                if (!newSettings.email_notification_settings) {
+                    newSettings.email_notification_settings = {};
+                }
+
+                // 既存の email_notification_settings を破壊しないようにマージ
                 newSettings.email_notification_settings = {
+                    ...newSettings.email_notification_settings,
                     candidate_notifications: {
+                        ...(newSettings.email_notification_settings.candidate_notifications || {}),
                         all_off: $('#admin-setting-email-all-off').is(':checked'),
                         application_submitted: $('#admin-setting-email-application').is(':checked'),
                         scout: $('#admin-setting-email-scout').is(':checked'),
