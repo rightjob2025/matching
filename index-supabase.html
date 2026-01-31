@@ -23806,6 +23806,17 @@
             }
         };
 
+        // 検索や同期のための頑健な正規化（全角半角・スペース・カタカナ等）
+        function robustNormalize(str) {
+            if (!str) return '';
+            return str.toString()
+                .trim()
+                .toLowerCase()
+                .replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)) // 全角英数→半角
+                .replace(/[\u3000\s]+/g, '') // 全ての空白を除去
+                .normalize('NFC');
+        }
+
         window.syncDriveFileUrls = async function () {
             if (!confirm('Googleドライブのファイル名と求人のファイル名を照合し、URLが未登録の求人にURLを自動反映します。実行しますか？')) {
                 return;
@@ -23862,53 +23873,58 @@
                 const targetJobs = (jobs || []).filter(j => !j[driveCol]);
 
                 if (targetJobs.length === 0) {
-                    alert('ファイルURLの更新対象となる求人（ファイル名が登録済みでURLが未登録の求人）は見つかりませんでした。');
+                    alert('URLを同期できる対象の求人が見つかりませんでした。\n\n確認ポイント:\n・「ファイル名」が入力されていますか？\n・「求人URL（pdf_url）」が既に登録されていませんか？（空欄のもののみが対象です）');
                     return;
                 }
 
                 // 3. マッチング処理
                 const updates = [];
                 let matchCount = 0;
+                const driveFilesMapped = driveFiles.map(f => ({
+                    ...f,
+                    normName: robustNormalize(f.name),
+                    normNameNoExt: robustNormalize(f.name.replace(/\.pdf$/i, ''))
+                }));
 
                 console.log(`Matching start: ${targetJobs.length} jobs to scan against ${driveFiles.length} drive files.`);
 
                 for (const job of targetJobs) {
-                    const dbName = (job.pdf_filename || '').trim().toLowerCase().normalize('NFC');
+                    const dbName = robustNormalize(job.pdf_filename);
                     if (!dbName) continue;
+                    const dbNameNoExt = robustNormalize(job.pdf_filename.replace(/\.pdf$/i, ''));
 
-                    // 拡張子を除去した名前も用意
-                    const dbNameNoExt = dbName.replace(/\.pdf$/, '');
-
-                    const matchedFile = driveFiles.find(f => {
-                        const driveName = (f.name || '').trim().toLowerCase().normalize('NFC');
-                        const driveNameNoExt = driveName.replace(/\.pdf$/, '');
-
-                        // 完全一致、または拡張子を除いた名前での一致を確認
-                        return driveName === dbName ||
-                            driveNameNoExt === dbName ||
-                            driveName === dbNameNoExt ||
-                            driveNameNoExt === dbNameNoExt;
+                    const matchedFile = driveFilesMapped.find(f => {
+                        return f.normName === dbName ||
+                            f.normNameNoExt === dbName ||
+                            f.normName === dbNameNoExt ||
+                            f.normNameNoExt === dbNameNoExt;
                     });
 
                     if (matchedFile) {
                         const updateData = {
-                            id: job.id,
-                            organization_id: targetUser.organization_id
+                            id: job.id
                         };
                         updateData[driveCol] = matchedFile.url;
+                        // urlカラムが空なら、そちらにも同期（利便性のため）
+                        if (!job.url) {
+                            updateData.url = matchedFile.url;
+                        }
                         updates.push(updateData);
                         matchCount++;
-                        console.log(`Match Found: "${job.pdf_filename}" -> ${matchedFile.name}`);
+                        console.log(`Match Found: "${job.pdf_filename}" -> "${matchedFile.name}"`);
                     } else {
-                        // マッチしなかったものをログ出力（デバッグ用）
-                        if (matchCount < 5) { // ログが溢れないよう最初の方だけ
-                            console.log(`No match for DB: "${job.pdf_filename}"`);
+                        if (matchCount < 10) {
+                            console.log(`No match: DB="${dbName}" (original: "${job.pdf_filename}")`);
                         }
                     }
                 }
 
                 if (updates.length === 0) {
-                    alert('Googleドライブ内に一致するファイル名のPDFが見つかりませんでした。求人のファイル名とDrive上のファイル名が一致しているか確認してください。');
+                    console.warn('Sync aborted: No files matched.', {
+                        db_samples: targetJobs.slice(0, 5).map(j => j.pdf_filename),
+                        drive_samples: driveFiles.slice(0, 5).map(f => f.name)
+                    });
+                    alert('Googleドライブ内に一致するファイル名のPDFが見つかりませんでした。\n\n確認ポイント:\n1. 求人に登録された「ファイル名」とDriveのファイル名が完全に一致しているか（拡張子.pdfの有無は自動補完されます）。\n2. 該当する求人の「求人URL」が既に埋まっていないか（URLが空のもののみ同期されます）。\n\n詳細は開発者ツールのコンソールを確認してください。');
                     return;
                 }
 
