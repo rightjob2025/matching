@@ -6272,6 +6272,43 @@
             </div>
         </div>
     </div>
+
+    <!-- Import Progress Modal -->
+    <div id="import-progress-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[200] hidden">
+        <div
+            class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 overflow-hidden relative border border-slate-100">
+            <!-- Decoration -->
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+                <i class="fas fa-rocket text-8xl text-indigo-600"></i>
+            </div>
+
+            <div class="relative">
+                <h3 class="text-xl font-bold text-gray-900 mb-2" id="import-progress-title">処理を実行中...</h3>
+                <p class="text-sm text-gray-500 mb-6" id="import-progress-subtitle">しばらくお待ちください。ブラウザを閉じないでください。</p>
+
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-sm font-bold text-indigo-600" id="import-progress-percent">0%</span>
+                        <span class="text-xs text-slate-400 font-medium" id="import-progress-eta">残り約 -- 分</span>
+                    </div>
+                    <div
+                        class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200 shadow-inner">
+                        <div id="import-progress-bar"
+                            class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-300 ease-out"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Steps List -->
+                <div class="space-y-4" id="import-progress-steps">
+                    <!-- Steps will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="prompt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6 border-b flex justify-between items-center">
@@ -7498,10 +7535,73 @@
         }
 
         function showLoading(message = '読み込み中...') {
-            $('#loading-message').text(message);
-            $('#loading-overlay').removeClass('hidden')
+            $('#loading-screen').removeClass('hidden').find('p').text(message)
         }
         window.showLoading = showLoading;
+
+        // --- Import Progress Helpers ---
+        let importStartTime = 0;
+        function showImportProgress(title, subtitle) {
+            importStartTime = Date.now();
+            $('#import-progress-title').text(title);
+            $('#import-progress-subtitle').text(subtitle || 'しばらくお待ちください。ブラウザを閉じないでください。');
+            $('#import-progress-modal').removeClass('hidden');
+            $('#import-progress-bar').css('width', '0%');
+            $('#import-progress-percent').text('0%');
+            $('#import-progress-eta').text('残り約 -- 分');
+            $('#import-progress-steps').empty();
+        }
+
+        function updateImportProgress(percent, processedCount, totalCount) {
+            const safePercent = Math.min(Math.round(percent), 100);
+            $('#import-progress-bar').css('width', safePercent + '%');
+            $('#import-progress-percent').text(safePercent + '%');
+
+            if (processedCount > 0 && totalCount > 0) {
+                const elapsed = Date.now() - importStartTime;
+                const avgPerItem = elapsed / processedCount;
+                const remaining = totalCount - processedCount;
+                const etaMs = avgPerItem * remaining;
+                const etaMin = Math.ceil(etaMs / 1000 / 60);
+                const etaSec = Math.ceil((etaMs / 1000) % 60);
+
+                if (etaMin > 1) {
+                    $('#import-progress-eta').text(`残り約 ${etaMin} 分`);
+                } else {
+                    $('#import-progress-eta').text(`残り約 ${etaSec} 秒`);
+                }
+            }
+        }
+
+        function addImportStep(id, label, icon = 'fa-circle') {
+            const stepHtml = `
+                <div id="step-${id}" class="flex items-center gap-4 text-slate-300 transition-colors duration-300">
+                    <div class="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center text-[10px] shrink-0">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <span class="text-sm font-bold text-current">${label}</span>
+                </div>
+            `;
+            $('#import-progress-steps').append(stepHtml);
+        }
+
+        function setImportStepStatus(id, status) {
+            const $step = $(`#step-${id}`);
+            if (status === 'active') {
+                $step.removeClass('text-slate-200 text-green-500').addClass('text-indigo-600');
+                $step.find('i').removeClass('fa-check fa-circle').addClass('fa-circle-notch fa-spin');
+            } else if (status === 'done') {
+                $step.removeClass('text-slate-200 text-indigo-600').addClass('text-green-500');
+                $step.find('i').removeClass('fa-circle-notch fa-spin fa-circle').addClass('fa-check');
+            } else if (status === 'pending') {
+                $step.removeClass('text-indigo-600 text-green-500').addClass('text-slate-200');
+                $step.find('i').removeClass('fa-check fa-circle-notch fa-spin').addClass('fa-circle');
+            }
+        }
+
+        function hideImportProgress() {
+            $('#import-progress-modal').addClass('hidden');
+        }
 
         function hideLoading() {
             $('#loading-overlay').addClass('hidden')
@@ -7861,6 +7961,7 @@
                     });
 
                     showLoading('ログイン処理中...'); // ローディング再開
+
                     targetOrgId = selectedOrg.id;
                     targetOrgName = selectedOrg.name;
 
@@ -21032,7 +21133,12 @@
         };
 
         window.executeCSVImport = async function () {
-            showLoading();
+            const totalRows = currentCSVData.length;
+            showImportProgress('CSVインポート実行中', `${totalRows}件のデータを処理しています`);
+            addImportStep('parse', 'データ変換・バリデーション');
+            addImportStep('ai', 'AI自動補完', 'fa-magic');
+            addImportStep('db', 'データベース登録');
+
             suspectedDuplicates = [];
             try {
                 const mapping = {};
@@ -21090,6 +21196,10 @@
                     // 表示用行数（ヘッダーがあるため +1）
                     const displayRowNumber = i + 2;
 
+                    setImportStepStatus('parse', 'active');
+                    updateImportProgress((i / totalRows) * 100, i, totalRows);
+
+
                     try {
                         const importData = {};
                         // マッピングに基づいてデータ変換
@@ -21132,11 +21242,15 @@
                         }
 
                         importData.organization_id = currentUser.organization_id;
+                        setImportStepStatus('parse', 'done');
+
 
                         if (currentImportType === 'jobs') {
                             // AI自動補完
                             const useAI = $('#csv-ai-augment').is(':checked');
                             if (useAI) {
+                                setImportStepStatus('ai', 'active');
+
                                 const jobText = Object.entries(row).map(([k, v]) => `${k}: ${v}`).join('\n');
                                 const options = {
                                     job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
@@ -21174,12 +21288,16 @@
                                         if (!importData.employment_type && aiResult.employment_type) importData.employment_type = aiResult.employment_type;
                                     }
                                 } catch (e) { console.error('AI error:', e); }
+                                setImportStepStatus('ai', 'done');
                             }
+
 
                             if (!importData.title) throw new Error('求人タイトルは必須です');
                             if (!importData.company) throw new Error('企業名は必須です');
 
+                            setImportStepStatus('db', 'active');
                             // 企業IDの解決
+
                             let companyId = null;
                             const { data: existingCompany } = await supabase
                                 .from('companies')
@@ -21395,6 +21513,8 @@
                         }
 
                         successCount++;
+                        setImportStepStatus('db', 'done');
+
                     } catch (err) {
                         console.error(`Row ${displayRowNumber} error:`, err);
                         failedCount++;
@@ -21414,6 +21534,7 @@
                 });
 
                 closeCSVMappingModal();
+                hideImportProgress();
                 let message = `インポート完了\n成功: ${successCount}件\n失敗: ${failedCount}件\nスキップ: ${skipCount}件`;
 
                 if (failedCount > 0) {
@@ -21484,8 +21605,9 @@
                 console.error('Import process error:', err);
                 alert('インポート処理中に致命的なエラーが発生しました: ' + err.message);
             } finally {
-                hideLoading();
+                hideImportProgress();
             }
+
         };
 
 
@@ -23357,7 +23479,15 @@
             }
 
             const isBulkMode = fileCount > 1;
-            showLoading('PDFを解析中...')
+            showImportProgress(
+                isBulkMode ? '一括PDF求人解析' : 'PDF求人解析',
+                `${fileCount}件のファイルを順番に処理しています。`
+            );
+            addImportStep('extract', 'PDFテキスト抽出');
+            addImportStep('analyze', 'AI求人内容解析', 'fa-magic');
+            addImportStep('duplicate', '重複判定');
+            addImportStep('drive', 'Googleドライブ連動', 'fa-google-drive');
+            addImportStep('register', 'データベース登録');
 
             importResultSuccessFiles = [];
             importResultErrorFiles = [];
@@ -23375,13 +23505,28 @@
                     const file = input.files[i];
                     console.log(`Processing file ${i + 1}/${fileCount}: ${file.name}`);
 
+                    $('#import-progress-subtitle').text(`${i + 1}/${fileCount}件目のファイルを処理中: ${file.name}`);
+                    updateImportProgress((i / fileCount) * 100, i, fileCount);
+
+                    // ステップリセット
+                    setImportStepStatus('extract', 'active');
+                    setImportStepStatus('analyze', 'pending');
+                    setImportStepStatus('duplicate', 'pending');
+                    setImportStepStatus('drive', 'pending');
+                    setImportStepStatus('register', 'pending');
+
                     try {
                         const text = await extractTextFromPDF(file);
+                        setImportStepStatus('extract', 'done');
+
                         if (!text || text.trim().length === 0) {
                             throw new Error('テキストを抽出できませんでした。');
                         }
 
-                        await processParsedJobText(text, file, options, isBulkMode);
+                        await processParsedJobText(text, file, options, isBulkMode, (step, status) => {
+                            setImportStepStatus(step, status);
+                        });
+
                         if (isBulkMode && !bulkConfirmEnabled) {
                             importResultSuccessFiles.push(file.name);
                         }
@@ -23391,36 +23536,38 @@
                     }
                 }
 
-                if (isBulkMode) {
-                    if (bulkConfirmEnabled && pendingBulkJobs.length > 0) {
-                        hideLoading();
-                        renderBulkConfirmList();
-                        // 途中でエラーがあった場合も、後で見せたいが、まずは確認モーダルへ
-                        $('#job-bulk-confirm-modal').removeClass('hidden');
-                    } else {
-                        hideLoading();
-                        showImportResult(importResultSuccessFiles, importResultErrorFiles);
-                        closeJobModal();
-                        loadAdminJobs();
+                updateImportProgress(100, fileCount, fileCount);
+                setTimeout(() => {
+                    hideImportProgress();
+                    if (isBulkMode) {
+                        if (bulkConfirmEnabled && pendingBulkJobs.length > 0) {
+                            renderBulkConfirmList();
+                            $('#job-bulk-confirm-modal').removeClass('hidden');
+                        } else {
+                            showImportResult(importResultSuccessFiles, importResultErrorFiles);
+                            closeJobModal();
+                            loadAdminJobs();
+                        }
+                    } else if (importResultErrorFiles.length > 0) {
+                        showImportResult([], importResultErrorFiles);
                     }
-                } else if (importResultErrorFiles.length > 0) {
-                    hideLoading();
-                    showImportResult([], importResultErrorFiles);
-                }
+                }, 500);
 
             } catch (error) {
                 console.error('Job analysis error:', error)
+                hideImportProgress();
                 alert('解析処理中にエラーが発生しました: ' + error.message)
             } finally {
-                hideLoading()
                 input.value = ''
             }
         }
 
         // Common logic for processing job text
-        async function processParsedJobText(text, file, options, isBulkMode) {
+        async function processParsedJobText(text, file, options, isBulkMode, onStepUpdate) {
+            if (onStepUpdate) onStepUpdate('analyze', 'active');
             let result = await analyzeDocumentWithAI(text, 'job_description', options);
             if (Array.isArray(result)) result = result[0] || {};
+            if (onStepUpdate) onStepUpdate('analyze', 'done');
 
             if (!result.title || !result.company) {
                 throw new Error(`ファイル「${file.name}」からタイトルまたは会社名を特定できませんでした。`);
@@ -23445,6 +23592,7 @@
             const orgSettings = currentUser.organizations?.settings || {};
             const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
 
+            if (onStepUpdate) onStepUpdate('duplicate', 'active');
             // Check duplicates
             const { data: existingJobs } = await supabase
                 .from('jobs')
@@ -23457,6 +23605,7 @@
             // 強化された重複判定を実行
             const duplicateJob = existingJobs?.find(j => isJobDuplicate(result, j));
             const duplicates = duplicateJob ? [duplicateJob] : [];
+            if (onStepUpdate) onStepUpdate('duplicate', 'done');
 
             let companyId = null;
             const { data: ec } = await supabase.from('companies').select('id').eq('organization_id', currentUser.organization_id).eq('name', result.company).maybeSingle();
@@ -23494,9 +23643,11 @@
 
             if (isBulkMode && bulkConfirmEnabled) {
                 pendingBulkJobs.push({ file, result, jobData, duplicates: duplicates || [] });
+                if (onStepUpdate) onStepUpdate('register', 'done');
                 return;
             }
 
+            if (onStepUpdate) onStepUpdate('drive', 'active');
             // Transfer to Drive if enabled (or use existing driveUrl from Drive import)
             let driveCol = orgSettings.drive_column || 'url';
             // 「pdf」カラムは存在しないため、求人詳細で使われる「url」にフォールバック
@@ -23511,11 +23662,14 @@
                     }
                 } catch (e) { console.error('Drive transfer failed:', e); }
             }
+            if (onStepUpdate) onStepUpdate('drive', 'done');
 
+            if (onStepUpdate) onStepUpdate('register', 'active');
             if (!isBulkMode) {
                 // Fill form
                 $('#job-title').val(result.title);
-                $('#job-company-name').val(result.company);
+                $('#job-company-select').val(companyId).trigger('change');
+
                 $('#job-location').val(result.location || '');
                 $('#job-salary-min').val(result.salary_min ? result.salary_min / 10000 : '');
                 $('#job-salary-max').val(result.salary_max ? result.salary_max / 10000 : '');
@@ -23543,6 +23697,7 @@
                 const { error } = await supabase.from('jobs').insert(jobData);
                 if (error) throw error;
             }
+            if (onStepUpdate) onStepUpdate('register', 'done');
         }
 
         window.closeDriveImportModal = function () {
