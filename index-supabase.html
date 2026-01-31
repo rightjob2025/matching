@@ -24178,13 +24178,24 @@
 
             if (!confirm(`${selectedIndexes.length}件の求人を登録しますか？`)) return;
 
-            showLoading('選択した求人を登録中...');
-            // importResultSuccessFiles, importResultErrorFiles は既存のparsing時の結果（error）を引き継ぐため、クリアしない
+            // showLoading('選択した求人を登録中...'); // 旧表示
+            showImportProgress('求人の登録処理', `${selectedIndexes.length}件の求人を登録しています...`);
+            addImportStep('bulk-reg', '求人データの登録');
+            setImportStepStatus('bulk-reg', 'active');
 
             try {
+                let processedCount = 0;
+                const totalCount = selectedIndexes.length;
+
                 for (const idx of selectedIndexes) {
                     const item = pendingBulkJobs[idx];
                     const { result, file, jobData: precalcJobData } = item;
+
+                    // 進捗表示の更新
+                    const currentPercent = (processedCount / totalCount) * 100;
+                    updateImportProgress(currentPercent, processedCount, totalCount);
+                    $('#import-progress-subtitle').text(`${totalCount}件中 ${processedCount + 1}件目を処理しています...`);
+                    processedCount++;
 
                     let jobData = precalcJobData;
                     if (!jobData) {
@@ -24291,6 +24302,13 @@
                     }
                 }
 
+                // 最終進捗更新
+                updateImportProgress(100, totalCount, totalCount);
+                setImportStepStatus('bulk-reg', 'done');
+
+                // 少し待ってから結果表示
+                await new Promise(resolve => setTimeout(resolve, 500));
+
                 showImportResult(importResultSuccessFiles, importResultErrorFiles);
                 pendingBulkJobs = [];
                 $('#job-bulk-confirm-modal').addClass('hidden');
@@ -24299,7 +24317,8 @@
                 console.error('executeBulkJobImport error:', err);
                 alert('一括登録中にエラーが発生しました');
             } finally {
-                hideLoading();
+                // hideLoading();
+                hideImportProgress();
             }
         }
 
