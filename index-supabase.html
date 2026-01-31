@@ -8926,11 +8926,11 @@
                             </div>
                             ` : ''}
                             <div class="md:col-span-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                <p class="text-xs text-gray-500 font-semibold mb-1">求人URL</p>
-                                ${job.url ? `
-                                <a href="${job.url}" target="_blank" class="text-indigo-600 hover:underline flex items-center gap-1 group text-sm truncate">
-                                    <i class="fas fa-link text-xs group-hover:rotate-45 transition-transform"></i>
-                                    <span>${job.url}</span>
+                                <p class="text-xs text-gray-500 font-semibold mb-1">求人URL / 参照ファイル</p>
+                                ${job.pdf_url || job.url ? `
+                                <a href="${job.pdf_url || job.url}" target="_blank" class="text-indigo-600 hover:underline flex items-center gap-1 group text-sm truncate">
+                                    <i class="fas ${job.pdf_url ? 'fa-file-pdf text-red-500' : 'fa-link'} text-xs group-hover:rotate-45 transition-transform"></i>
+                                    <span>${job.pdf_url || job.url}</span>
                                 </a>
                                 ` : '<span class="text-gray-400 text-sm italic">登録されていません</span>'}
                             </div>
@@ -17764,9 +17764,9 @@
 
                     // Google Drive URLの読み込み
                     const orgSettings = currentUser.organizations?.settings || {};
-                    let driveCol = orgSettings.drive_column || 'url';
-                    // 「pdf」カラムは存在しないため、求人詳細で使われる「url」にフォールバック
-                    if (driveCol === 'pdf') driveCol = 'url';
+                    let driveCol = orgSettings.drive_column || 'pdf_url';
+                    // 「pdf」や「url」などの古い名称を最新の「pdf_url」に統一
+                    if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
                     $('#job-drive-pdf-url').val(job[driveCol] || '');
 
 
@@ -17851,9 +17851,8 @@
             const orgSettings = currentUser.organizations?.settings || {};
             const drivePdfUrl = $('#job-drive-pdf-url').val();
             if (drivePdfUrl) {
-                let driveCol = orgSettings.drive_column || 'url';
-                // 「pdf」カラムは存在しないため、求人詳細画面で使われる「url」にフォールバック
-                if (driveCol === 'pdf') driveCol = 'url';
+                let driveCol = orgSettings.drive_column || 'pdf_url';
+                if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
                 jobData[driveCol] = drivePdfUrl;
             }
 
@@ -23661,9 +23660,9 @@
 
             if (onStepUpdate) onStepUpdate('drive', 'active');
             // Transfer to Drive if enabled (or use existing driveUrl from Drive import)
-            let driveCol = orgSettings.drive_column || 'url';
-            // 「pdf」カラムは存在しないため、求人詳細で使われる「url」にフォールバック
-            if (driveCol === 'pdf') driveCol = 'url';
+            let driveCol = orgSettings.drive_column || 'pdf_url';
+            // 「pdf」カラムは存在しないため「pdf_url」にフォールバック
+            if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
             if (file.driveUrl) {
                 jobData[driveCol] = file.driveUrl;
             } else if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url && file.size) {
@@ -23781,12 +23780,12 @@
                 ? targetUser.organizations[0]?.settings
                 : targetUser?.organizations?.settings) || {};
             // インポート設定側の保存先カラムを優先
-            let driveCol = (orgSettings.drive_import_column || orgSettings.drive_column || 'url').toString().trim();
+            let driveCol = (orgSettings.drive_import_column || orgSettings.drive_column || 'pdf_url').toString().trim();
 
-            // 「pdf」というカラムは存在せず、求人詳細は「url」を使用しているためフォールバック
-            if (driveCol === 'pdf') {
-                console.warn('組織設定のカラム名が「pdf」になっていますが、このカラムは存在しません。「url」を使用します。');
-                driveCol = 'url';
+            // 「pdf」や「url」というカラム名が指定されている場合、実際の保存先である「pdf_url」にフォールバック
+            if (driveCol === 'pdf' || driveCol === 'url') {
+                console.warn(`組織設定のカラム名が「${driveCol}」になっていますが、求人PDFの保存には「pdf_url」を使用します。`);
+                driveCol = 'pdf_url';
             }
 
             // インポート用の設定を優先するが、なければ転送用の設定を予備(fallback)として使う
@@ -24233,9 +24232,9 @@
 
                     // Google Drive 転送（設定があれば、既存URLがなければ）
                     const orgSettings = currentUser.organizations?.settings || {};
-                    let driveCol = orgSettings.drive_column || 'url';
-                    // 「pdf」カラムは存在しないため、求人詳細で使われる「url」にフォールバック
-                    if (driveCol === 'pdf') driveCol = 'url';
+                    let driveCol = orgSettings.drive_column || 'pdf_url';
+                    // 「pdf」や「url」などの古い名称を最新の「pdf_url」に統一
+                    if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
                     if (file.driveUrl) {
                         jobData[driveCol] = file.driveUrl;
                     } else if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
