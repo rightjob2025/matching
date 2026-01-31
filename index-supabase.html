@@ -23112,6 +23112,7 @@
 
         async function transferFileToGoogleDrive(file, gasUrl) {
             try {
+                console.log('Transferring file to Drive:', file.name, 'Size:', file.size);
                 const base64 = await fileToBase64(file);
                 const payload = {
                     action: 'upload',
@@ -23122,16 +23123,17 @@
 
                 const response = await fetch(gasUrl, {
                     method: 'POST',
-                    mode: 'cors', // Enable CORS
+                    mode: 'cors',
                     body: JSON.stringify(payload),
                     headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', // Plain text to avoid complex CORS preflights in GAS
+                        'Content-Type': 'text/plain;charset=utf-8',
                     }
                 });
 
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error(`Network response was not ok (${response.status})`);
 
                 const result = await response.json();
+                console.log('Drive transfer response:', result);
                 if (result.status === 'success') {
                     return result.url;
                 } else {
@@ -23728,7 +23730,12 @@
                 $('#job-industry-experience-ok').prop('checked', !!result.industry_experience_ok);
 
                 if (jobData[orgSettings.drive_column || 'pdf_url']) {
-                    $('#job-drive-pdf-url').val(jobData[orgSettings.drive_column || 'pdf_url']);
+                    const finalUrl = jobData[orgSettings.drive_column || 'pdf_url'];
+                    $('#job-drive-pdf-url').val(finalUrl);
+                    // ユーザーに見える「求人URL」フィールドにも反映
+                    if (!$('#job-url').val()) {
+                        $('#job-url').val(finalUrl);
+                    }
                 }
                 $('#job-pdf-filename').val(file.name);
 
@@ -23805,9 +23812,7 @@
             }
 
             const targetUser = window.currentUser || currentUser;
-            const orgSettings = (Array.isArray(targetUser?.organizations)
-                ? targetUser.organizations[0]?.settings
-                : targetUser?.organizations?.settings) || {};
+            const orgSettings = getOrgSettings(targetUser);
             // インポート設定側の保存先カラムを優先
             let driveCol = (orgSettings.drive_import_column || orgSettings.drive_column || 'pdf_url').toString().trim();
 
@@ -24143,7 +24148,10 @@
                                         <h4 class="font-bold text-gray-900 overflow-hidden text-ellipsis">${item.result.company} / ${item.result.title}</h4>
                                         ${badgeHtml}
                                     </div>
-                                    <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded truncate ml-2">📄 ${item.file.name}</span>
+                                    <div class="flex items-center gap-2">
+                                        ${item.file.driveUrl ? `<a href="${item.file.driveUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs"><i class="fab fa-google-drive mr-1"></i>Drive</a>` : ''}
+                                        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded truncate ml-2">📄 ${item.file.name}</span>
+                                    </div>
                                 </div>
                                 <div class="text-xs text-gray-500 space-y-1">
                                     <div><i class="fas fa-map-marker-alt mr-1"></i>${item.result.location || '-'}</div>
@@ -24275,16 +24283,23 @@
                     let driveCol = orgSettings.drive_column || 'pdf_url';
                     // 「pdf」や「url」などの古い名称を最新の「pdf_url」に統一
                     if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
-                    if (file.driveUrl) {
-                        jobData[driveCol] = file.driveUrl;
-                    } else if (orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
+
+                    let driveUrl = file.driveUrl || null;
+                    if (!driveUrl && orgSettings.drive_transfer_enabled && orgSettings.drive_gas_url) {
                         try {
-                            const driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
-                            if (driveUrl) {
-                                jobData[driveCol] = driveUrl;
-                            }
+                            console.log(`[Bulk] Transferring ${file.name} to Drive...`);
+                            driveUrl = await transferFileToGoogleDrive(file, orgSettings.drive_gas_url);
                         } catch (e) {
                             console.error('Drive transfer failed in bulk confirm:', e);
+                        }
+                    }
+
+                    if (driveUrl) {
+                        console.log(`[Bulk] setting ${driveCol} to ${driveUrl}`);
+                        jobData[driveCol] = driveUrl;
+                        // url カラムが空なら、こちらにもコピー（利便性のため）
+                        if (!jobData.url) {
+                            jobData.url = driveUrl;
                         }
                     }
 
