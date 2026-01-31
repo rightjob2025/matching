@@ -2149,7 +2149,24 @@
                         </div>
                     </div>
 
+
+                    <!-- Candidate: Preferred Search -->
+                    <div id="candidate-preferred-search-box" class="mb-6 pb-6 border-b border-slate-100 hidden">
+                        <div class="filter-group-label mb-3">
+                            <i class="fas fa-magic text-indigo-500"></i> プロフィールに合わせて探す
+                        </div>
+                        <button onclick="applyPreferredConditions()"
+                            class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 active:scale-95">
+                            <i class="fas fa-user-check text-xl"></i>
+                            <div class="text-left">
+                                <div class="text-xs opacity-90 leading-none mb-1">あなたのプロフィール設定に基づき</div>
+                                <div class="text-lg leading-none">希望条件を自動セット</div>
+                            </div>
+                        </button>
+                    </div>
+
                     <!-- Primary Search Row upgraded with more fields -->
+
                     <div class="flex flex-col gap-6 mb-4 mt-6">
                         <!-- Row 1: Search Box & Count -->
                         <div class="flex flex-col md:flex-row items-stretch gap-4">
@@ -13010,6 +13027,7 @@
                 if (['org_admin', 'admin', 'coach', 'ca', 'ra', 'super_admin'].includes(currentUser.role)) {
                     $('#admin-job-search-tools').removeClass('hidden')
                     $('#candidate-ai-matching-tools').addClass('hidden')
+                    $('#candidate-preferred-search-box').addClass('hidden')
 
                     // 除外フィルタを表示
                     $('#exclude-matched-container').removeClass('hidden');
@@ -13018,6 +13036,14 @@
                 } else {
                     $('#admin-job-search-tools').addClass('hidden')
                     $('#candidate-ai-matching-tools').addClass('hidden')
+
+                    // 求職者の場合は希望条件ボタンを表示
+                    if (currentUser.role === 'candidate') {
+                        $('#candidate-preferred-search-box').removeClass('hidden')
+                    } else {
+                        $('#candidate-preferred-search-box').addClass('hidden')
+                    }
+
                     $('#exclude-matched-container').addClass('hidden');
                     $('#exclude-applied-container').addClass('hidden');
                     $('#exclude-filters-container').addClass('hidden');
@@ -13352,6 +13378,7 @@
             $('#search-job-category').val(filters.jobCategory || []).trigger('change');
             $('#search-industry-category').val(filters.industryCategory || []).trigger('change');
             $('#search-salary-min').val(filters.salaryMin || '');
+            $('#search-salary-slider').val(filters.salaryMin || 0).trigger('input');
             $('#search-job-experience-ok').prop('checked', !!filters.jobExperienceOk);
             $('#search-industry-experience-ok').prop('checked', !!filters.industryExperienceOk);
             $('#search-is-remote').prop('checked', !!filters.isRemote);
@@ -13359,6 +13386,75 @@
             $('#search-exclude-applied').prop('checked', !!filters.excludeApplied);
             $('#search-favorites-only').prop('checked', !!filters.favoritesOnly);
         }
+
+        window.applyPreferredConditions = async function () {
+            if (!currentUser) return;
+
+            showLoading('プロフィール情報を取得中...');
+            try {
+                // プロフィールデータの取得
+                const { data: profile, error } = await supabase
+                    .from('candidate_profiles')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (!profile) {
+                    alert('プロフィール情報が設定されていません。プロフィール画面から希望条件を登録してください。');
+                    return;
+                }
+
+                // 現在のフィルタ状態を維持するため、既存の条件を取得
+                const currentFilters = {
+                    excludeMatched: $('#search-exclude-matched').is(':checked'),
+                    excludeApplied: $('#search-exclude-applied').is(':checked'),
+                    favoritesOnly: $('#search-favorites-only').is(':checked'),
+                    isRemote: $('#search-is-remote').is(':checked'),
+                    jobExperienceOk: $('#search-job-experience-ok').is(':checked'),
+                    industryExperienceOk: $('#search-industry-experience-ok').is(':checked')
+                };
+
+                // プロフィール情報を検索フィルタ形式に変換
+                const preferredFilters = {
+                    keyword: profile.desired_freewords || '',
+                    keywordMode: (profile.desired_freewords_condition || 'or').toUpperCase(),
+                    jobCategory: profile.desired_job_type ? profile.desired_job_type.split(',') : [],
+                    industryCategory: profile.desired_industry ? profile.desired_industry.split(',') : [],
+                    employmentType: profile.desired_employment_type ? profile.desired_employment_type.split(',') : [],
+                    prefecture: (function () {
+                        if (!profile.desired_location) return [];
+                        // コンマ区切りの都道府県をパース（市町村が含まれている場合は除外するシンプル処理）
+                        const locations = profile.desired_location.split(',');
+                        // prefecturesマスタに含まれるものだけを抽出
+                        return locations.map(l => l.trim()).filter(l => prefectures.includes(l));
+                    })(),
+                    salaryMin: profile.desired_salary ? Math.floor(profile.desired_salary / 10000) : 0,
+                    // 維持する項目
+                    ...currentFilters
+                };
+
+                console.log('Applying preferred filters:', preferredFilters);
+
+                // フィルタを適用
+                applySearchFilters(preferredFilters);
+
+                // 検索実行
+                await searchJobsImmediate();
+
+                // 成功通知（オプション）
+                const toast = $('<div class="fixed top-10 right-10 bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl z-[9999] animate-bounce">希望条件を適用しました</div>');
+                $('body').append(toast);
+                setTimeout(() => toast.fadeOut(() => toast.remove()), 3000);
+
+            } catch (err) {
+                console.error('Apply preferred conditions error:', err);
+                alert('希望条件の適用に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
 
         function animateJobCount(targetCount) {
             const display = $('#job-count-display-premium');
