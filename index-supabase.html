@@ -8946,10 +8946,10 @@
                             ` : ''}
                             <div class="md:col-span-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                                 <p class="text-xs text-gray-500 font-semibold mb-1">求人URL / 参照ファイル</p>
-                                ${job.pdf_url || job.url ? `
-                                <a href="${job.pdf_url || job.url}" target="_blank" class="text-indigo-600 hover:underline flex items-center gap-1 group text-sm truncate">
-                                    <i class="fas ${job.pdf_url ? 'fa-file-pdf text-red-500' : 'fa-link'} text-xs group-hover:rotate-45 transition-transform"></i>
-                                    <span>${job.pdf_url || job.url}</span>
+                                ${job.pdf_url ? `
+                                <a href="${job.pdf_url}" target="_blank" class="text-indigo-600 hover:underline flex items-center gap-1 group text-sm truncate">
+                                    <i class="fas fa-file-pdf text-red-500 text-xs group-hover:rotate-45 transition-transform"></i>
+                                    <span>${job.pdf_url}</span>
                                 </a>
                                 ` : '<span class="text-gray-400 text-sm italic">登録されていません</span>'}
                             </div>
@@ -16265,7 +16265,13 @@
 
             selectedRecs.forEach((rec, idx) => {
                 const job = rec.jobs;
-                const driveUrl = job.url || 'URLなし';
+
+                // URL項目の取得元をGoogle Drive用カラム（pdf_url等）に優先順位を変更
+                const orgSettings = getOrgSettings();
+                let driveCol = orgSettings.drive_column || 'pdf_url';
+                if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
+
+                const driveUrl = job[driveCol] || job.url || 'URLなし';
 
                 // AI出力テキストの取得とクリーニング
                 let fullText = rec.details || rec.reason || rec.recommendation_reason || rec.match_reason || '';
@@ -17776,17 +17782,18 @@
                     $('#job-welcome-requirements').val(job.welcome_requirements || '')
 
                     // 追加項目
-                    $('#job-url').val(job.url || '');
                     $('#job-pic-user-1').val(job.pic_user_id_1 || '');
                     $('#job-pic-user-2').val(job.pic_user_id_2 || '');
                     $('#job-pdf-filename').val(job.pdf_filename || '');
 
-                    // Google Drive URLの読み込み
+                    // URL管理（pdf_url等のドライブ用カラムをメインのURL欄に表示）
                     const orgSettings = getOrgSettings();
                     let driveCol = orgSettings.drive_column || 'pdf_url';
-                    // 「pdf」や「url」などの古い名称を最新の「pdf_url」に統一
                     if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
-                    $('#job-drive-pdf-url').val(job[driveCol] || '');
+
+                    const driveUrl = job[driveCol] || '';
+                    $('#job-url').val(driveUrl);
+                    $('#job-drive-pdf-url').val(driveUrl);
 
 
                     $('#job-employment-type').val(job.employment_type)
@@ -17859,21 +17866,21 @@
                 holidays: $('#job-holidays').val(),
                 benefits: $('#job-benefits').val(),
                 interview_process: $('#job-interview-process').val(),
-                url: $('#job-url').val() || null,
                 pic_user_id_1: $('#job-pic-user-1').val() || null,
                 pic_user_id_2: $('#job-pic-user-2').val() || null,
                 pdf_filename: $('#job-pdf-filename').val() || null,
                 updated_at: new Date().toISOString()
             }
 
-            // Google Drive URLの動的カラム保存
+            // URL項目の保存先をGoogle Drive用カラム（pdf_url等）に統一
             const orgSettings = getOrgSettings();
-            const drivePdfUrl = $('#job-drive-pdf-url').val();
-            if (drivePdfUrl) {
-                let driveCol = orgSettings.drive_column || 'pdf_url';
-                if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
-                jobData[driveCol] = drivePdfUrl;
-            }
+            let driveCol = orgSettings.drive_column || 'pdf_url';
+            if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
+
+            // 入力されたURLをpdf_urlに保存
+            jobData[driveCol] = $('#job-url').val() || null;
+            // 互換性のため、urlカラムは保存対象から外す（またはnullにする）
+            delete jobData.url;
 
             if (!jobData.company_id) {
                 alert('企業を選択してください');
@@ -23905,10 +23912,6 @@
                             id: job.id
                         };
                         updateData[driveCol] = matchedFile.url;
-                        // urlカラムが空なら、そちらにも同期（利便性のため）
-                        if (!job.url) {
-                            updateData.url = matchedFile.url;
-                        }
                         updates.push(updateData);
                         matchCount++;
                         console.log(`Match Found: "${job.pdf_filename}" -> "${matchedFile.name}"`);
@@ -24313,10 +24316,6 @@
                     if (driveUrl) {
                         console.log(`[Bulk] setting ${driveCol} to ${driveUrl}`);
                         jobData[driveCol] = driveUrl;
-                        // url カラムが空なら、こちらにもコピー（利便性のため）
-                        if (!jobData.url) {
-                            jobData.url = driveUrl;
-                        }
                     }
 
                     // 重複疑いがある場合のアップサート判定
