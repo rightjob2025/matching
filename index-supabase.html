@@ -4522,6 +4522,25 @@
                             </div>
                         </div>
 
+                        <!-- 求人インポート設定 -->
+                        <div class="border-b border-gray-200 pb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">求人インポート設定</h4>
+                            <p class="text-sm text-gray-500 mb-4">
+                                求人の一括インポート時の挙動を管理します。
+                            </p>
+                            <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                                <label class="flex items-center cursor-pointer group">
+                                    <input type="checkbox" id="admin-setting-bulk-duplicate-confirm"
+                                        class="form-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 transition-all">
+                                    <div class="ml-3">
+                                        <p class="text-sm font-bold text-gray-700">複数PDF取り込み時に重複疑いを後で一括確認する</p>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">
+                                            ※ONの場合、処理中に一つずつ確認せず、最後に一覧でチェックして登録できます。</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- 共通通知先設定 -->
                         <div class="mt-8 pt-6 border-t border-indigo-100">
                             <h5 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
@@ -17295,7 +17314,7 @@
             if (!currentUser) return
 
             // UI更新: Googleドライブインポートボタンの表示制御
-            const orgSettings = currentUser.organizations?.settings || {};
+            const orgSettings = getOrgSettings();
             $('#admin-job-drive-import-btn').toggleClass('hidden', !orgSettings.drive_import_enabled);
             $('#admin-job-drive-sync-btn').toggleClass('hidden', !orgSettings.drive_import_enabled);
 
@@ -17763,7 +17782,7 @@
                     $('#job-pdf-filename').val(job.pdf_filename || '');
 
                     // Google Drive URLの読み込み
-                    const orgSettings = currentUser.organizations?.settings || {};
+                    const orgSettings = getOrgSettings();
                     let driveCol = orgSettings.drive_column || 'pdf_url';
                     // 「pdf」や「url」などの古い名称を最新の「pdf_url」に統一
                     if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
@@ -17848,7 +17867,7 @@
             }
 
             // Google Drive URLの動的カラム保存
-            const orgSettings = currentUser.organizations?.settings || {};
+            const orgSettings = getOrgSettings();
             const drivePdfUrl = $('#job-drive-pdf-url').val();
             if (drivePdfUrl) {
                 let driveCol = orgSettings.drive_column || 'pdf_url';
@@ -19321,6 +19340,15 @@
             container.html(html)
         }
 
+        function getOrgSettings(user) {
+            const u = user || window.currentUser;
+            if (!u || !u.organizations) return {};
+            if (Array.isArray(u.organizations)) {
+                return u.organizations[0]?.settings || {};
+            }
+            return u.organizations.settings || {};
+        }
+
         function getRoleLabel(role) {
             const roles = {
                 'super_admin': 'スーパー管理者',
@@ -19334,8 +19362,9 @@
 
             // 組織ごとのカスタマイズ名称を確認
             let customLabel = null;
-            if (window.currentUser && window.currentUser.organizations && window.currentUser.organizations.settings) {
-                const labels = window.currentUser.organizations.settings.role_labels || {};
+            const orgSettings = getOrgSettings();
+            if (orgSettings.role_labels) {
+                const labels = orgSettings.role_labels || {};
 
                 // 特定のロールが設定されているか
                 if (labels && labels[role]) {
@@ -21479,7 +21508,7 @@
                                 } catch (e) { console.warn('Failed to refresh org settings before import', e); }
                             }
 
-                            const orgSettings = (Array.isArray(currentUser.organizations) ? currentUser.organizations[0]?.settings : currentUser.organizations?.settings) || {};
+                            const orgSettings = getOrgSettings();
                             const emailRequired = orgSettings.candidate_email_required !== false;
                             const passwordRequired = orgSettings.candidate_password_required !== false;
 
@@ -23509,7 +23538,7 @@
                     industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
                 };
 
-                const orgSettings = currentUser.organizations?.settings || {};
+                const orgSettings = getOrgSettings();
                 const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
 
                 for (let i = 0; i < fileCount; i++) {
@@ -23600,7 +23629,7 @@
             result.salary_min = normalizeSalary(result.salary_min);
             result.salary_max = normalizeSalary(result.salary_max);
 
-            const orgSettings = currentUser.organizations?.settings || {};
+            const orgSettings = getOrgSettings();
             const bulkConfirmEnabled = orgSettings.bulk_duplicate_confirm_enabled === true;
 
             if (onStepUpdate) onStepUpdate('duplicate', 'active');
@@ -23721,7 +23750,7 @@
         window.openDriveImportModal = async function () {
             console.log('DEBUG: openDriveImportModal called');
             const user = window.currentUser || currentUser;
-            const orgSettings = user?.organizations?.settings || {};
+            const orgSettings = getOrgSettings(user);
             if (!orgSettings.drive_import_enabled || !orgSettings.drive_import_gas_url) {
                 console.warn('DEBUG: Drive import settings missing:', orgSettings);
                 alert('Googleドライブインポート設定が未完了です。管理者設定（組織設定）でGAS URLが設定されていることを確認してください。');
@@ -24006,7 +24035,7 @@
             if (selected.length === 0) return;
             if (!confirm(`${selected.length}件のファイルをインポートしますか？`)) return;
 
-            const orgSettings = currentUser.organizations?.settings || {};
+            const orgSettings = getOrgSettings();
             showLoading('Googleドライブからインポート中...');
 
             importResultSuccessFiles = [];
@@ -24242,7 +24271,7 @@
                     }
 
                     // Google Drive 転送（設定があれば、既存URLがなければ）
-                    const orgSettings = currentUser.organizations?.settings || {};
+                    const orgSettings = getOrgSettings();
                     let driveCol = orgSettings.drive_column || 'pdf_url';
                     // 「pdf」や「url」などの古い名称を最新の「pdf_url」に統一
                     if (driveCol === 'pdf' || driveCol === 'url') driveCol = 'pdf_url';
@@ -26973,6 +27002,9 @@
                 $('input[name="setting-history-visibility"][value="' + visibility + '"]').prop('checked', true);
                 $('input[name="setting-scout-visibility"][value="' + scoutVisibility + '"]').prop('checked', true);
 
+                // 求人インポート設定の読み込み
+                $('#admin-setting-bulk-duplicate-confirm').prop('checked', settings.bulk_duplicate_confirm_enabled === true);
+
                 // メール通知設定の読み込み
                 const emailSettings = settings.email_notification_settings || { candidate_notifications: {} };
                 const candNotifs = emailSettings.candidate_notifications || {};
@@ -27019,6 +27051,7 @@
                 // 変更されたトップレベルキーのみを確実にセット
                 newSettings.analysis_history_visibility = visibility;
                 newSettings.scout_history_visibility = scoutVisibility;
+                newSettings.bulk_duplicate_confirm_enabled = $('#admin-setting-bulk-duplicate-confirm').is(':checked');
 
                 // 共通通知先の設定取得
                 const commonEmailsRaw = $('#admin-setting-email-common').val();
