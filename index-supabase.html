@@ -23861,7 +23861,7 @@
                 // 2. 求人をDBから取得 (ファイル名があるもの。URLが空かは後でフィルタ)
                 const { data: jobs, error } = await supabase
                     .from('jobs')
-                    .select(`id, pdf_filename, ${driveCol}`)
+                    .select(`id, pdf_filename, ${driveCol}, url`)
                     .eq('organization_id', targetUser.organization_id)
                     .is('deleted_at', null)
                     .not('pdf_filename', 'is', null)
