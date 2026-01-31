@@ -21092,26 +21092,32 @@
                 return;
             }
 
-            if (!confirm(`${selectedIndices.length}件の求人をインポート（重複疑いがある場合は更新）しますか？`)) return;
+            const totalCount = selectedIndices.length;
+            showImportProgress('重複候補の登録・更新', `${totalCount}件の求人を処理しています`);
+            addImportStep('db', 'データベース登録');
 
-            showLoading('選択した求人を処理中...');
             let successCount = 0;
             let failedCount = 0;
             const errors = [];
 
             try {
-                for (const index of selectedIndices) {
+                for (let i = 0; i < selectedIndices.length; i++) {
+                    const index = selectedIndices[i];
                     const item = suspectedDuplicates[index];
                     const action = $(`input[name="duplicate-action-${index}"]:checked`).val();
+
+                    setImportStepStatus('db', 'active');
+                    updateImportProgress((i / totalCount) * 100, i, totalCount);
+
                     try {
                         if (item.duplicate_id && action === 'update') {
                             // アップサート(更新)処理
-                            const updatePayload = mergeJobData(item.data, {});
+                            const updatePayload = mergeJobData(item.data || item.importData, {});
                             const { error: updateError } = await supabase.from('jobs').update(updatePayload).eq('id', item.duplicate_id);
                             if (updateError) throw updateError;
                         } else {
                             // 新規登録
-                            const { error: insertError } = await supabase.from('jobs').insert(item.data);
+                            const { error: insertError } = await supabase.from('jobs').insert(item.data || item.importData);
                             if (insertError) throw insertError;
                         }
                         successCount++;
@@ -21122,14 +21128,20 @@
                     }
                 }
 
-                alert(`処理完了\n成功: ${successCount}件\n失敗: ${failedCount}件${failedCount > 0 ? '\n\nエラー内容:\n' + errors.map(e => `${e.row}行目: ${e.error}`).join('\n') : ''}`);
-                closeSuspectedDuplicatesModal();
-                if (typeof loadAdminJobs === 'function') loadAdminJobs();
+                setImportStepStatus('db', 'done');
+                updateImportProgress(100, totalCount, totalCount);
+
+                setTimeout(() => {
+                    alert(`処理完了\n成功: ${successCount}件\n失敗: ${failedCount}件${failedCount > 0 ? '\n\nエラー内容:\n' + errors.map(e => `${e.row}行目: ${e.error}`).join('\n') : ''}`);
+                    closeSuspectedDuplicatesModal();
+                    if (typeof loadAdminJobs === 'function') loadAdminJobs();
+                }, 500);
             } catch (err) {
                 alert('処理中にエラーが発生しました: ' + err.message);
             } finally {
-                hideLoading();
+                hideImportProgress();
             }
+
         };
 
         window.executeCSVImport = async function () {
