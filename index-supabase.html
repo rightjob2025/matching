@@ -5995,9 +5995,18 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">進捗メモ・コメント</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">進捗メモ・コメント（社内用）</label>
                             <textarea id="progress-notes" rows="3" class="w-full px-4 py-2 border rounded-lg"
-                                placeholder="ステータス変更の理由や詳細を記入してください"></textarea>
+                                placeholder="ステータス変更の理由や詳細を記入してください。"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-indigo-700 mb-1">
+                                <i class="fas fa-info-circle mr-1"></i>選考情報（求職者に共有されます）
+                            </label>
+                            <textarea id="progress-selection-info" rows="4"
+                                class="w-full px-4 py-2 border border-indigo-200 rounded-lg bg-indigo-50/30"
+                                placeholder="確定した面接日程や選考の詳細などを入力してください。求職者のマイページに表示されます。"></textarea>
                         </div>
                         <div class="flex justify-end">
                             <button type="submit"
@@ -14728,6 +14737,15 @@
                         ` : ''}
 
                         <p class="text-gray-600 text-sm line-clamp-2">${app.jobs?.description || '求人情報が見つかりません'}</p>
+
+                        ${app.selection_info ? `
+                        <div class="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
+                            <h4 class="text-sm font-bold text-indigo-800 mb-2 flex items-center">
+                                <i class="fas fa-calendar-check mr-2"></i>選考情報・連絡事項
+                            </h4>
+                            <div class="text-sm text-indigo-900 whitespace-pre-wrap">${app.selection_info}</div>
+                        </div>
+                        ` : ''}
                     </div>
                 `
             }).join('')
@@ -14791,6 +14809,7 @@
                 $('#progress-probability-rate').val(application.probability_rate || '0');
                 $('#progress-expected-start-date').val(application.expected_start_date || '');
                 $('#progress-yomi-notes').val(application.yomi_notes || '');
+                $('#progress-selection-info').val(application.selection_info || '');
 
                 // ステータスマスタデータを読み込み
                 await loadApplicationStatuses();
@@ -14982,6 +15001,7 @@
                         probability_rate: parseInt($('#progress-probability-rate').val()) || 0,
                         expected_start_date: $('#progress-expected-start-date').val() || null,
                         yomi_notes: $('#progress-yomi-notes').val() || null,
+                        selection_info: $('#progress-selection-info').val() || null,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', applicationId);
