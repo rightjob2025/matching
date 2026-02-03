@@ -3089,6 +3089,39 @@
                             </label>
                         </div>
 
+                        <!-- おすすめ対象外企業 (New) -->
+                        <div class="mt-2 p-4 bg-red-50 rounded-lg border border-red-100">
+                            <label class="block text-sm font-bold text-red-900 mb-2">
+                                <i class="fas fa-ban mr-1"></i> おすすめ対象外企業の設定
+                            </label>
+                            <p class="text-[11px] text-red-700 mb-3 leading-tight">
+                                ここに登録された企業は、AIによる自動マッチングやおすすめ求人の対象から除外されます。<br>
+                                前職や取引先など、求人紹介を希望しない企業を登録してください。
+                            </p>
+
+                            <div class="relative mb-3">
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                                        </div>
+                                        <input type="text" id="excluded-company-search-input" placeholder="企業名で検索..."
+                                            class="w-full pl-9 pr-4 py-2 border border-red-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
+                                            onkeyup="handleExcludedCompanySearch(this.value)">
+                                    </div>
+                                </div>
+                                <!-- 検索結果ドロップダウン -->
+                                <div id="excluded-company-results"
+                                    class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-xl mt-1 hidden max-h-60 overflow-y-auto">
+                                </div>
+                            </div>
+
+                            <div id="excluded-companies-tags" class="flex flex-wrap gap-2">
+                                <!-- 登録済み企業がここに表示される -->
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">スキル</label>
                             <input type="text" id="profile-skills" placeholder="例: React, TypeScript, Figma"
@@ -17136,6 +17169,137 @@
                 throw error;
             }
         }
+        // おすすめ対象外企業の管理
+        let currentExcludedCompanies = [];
+
+        window.handleExcludedCompanySearch = async function (searchText) {
+            const $results = $('#excluded-company-results');
+            if (!searchText || searchText.length < 1) {
+                $results.addClass('hidden').empty();
+                return;
+            }
+
+            try {
+                const { data: companies, error } = await supabase
+                    .from('companies')
+                    .select('id, name')
+                    .eq('organization_id', currentUser.organization_id)
+                    .ilike('name', `%${searchText}%`)
+                    .is('deleted_at', null)
+                    .limit(5);
+
+                if (error) throw error;
+
+                if (companies && companies.length > 0) {
+                    $results.empty().removeClass('hidden');
+                    companies.forEach(company => {
+                        const isAlreadyAdded = currentExcludedCompanies.some(ec => ec.company_id === company.id);
+                        $results.append(`
+                            <div onclick="addExcludedCompany('${company.id}', '${company.name}')" 
+                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center ${isAlreadyAdded ? 'opacity-50 pointer-events-none' : ''}">
+                                <span>${company.name}</span>
+                                ${isAlreadyAdded ? '<span class="text-[10px] bg-gray-200 px-1 rounded">登録済み</span>' : '<i class="fas fa-plus text-indigo-500 text-xs"></i>'}
+                            </div>
+                        `);
+                    });
+                } else {
+                    $results.html('<div class="px-4 py-3 text-sm text-gray-500 text-center">該当する企業が見つかりません</div>').removeClass('hidden');
+                }
+            } catch (error) {
+                console.error('Excluded company search error:', error);
+            }
+        };
+
+        window.addExcludedCompany = async function (companyId, companyName) {
+            if (!currentUser) return;
+
+            try {
+                showLoading('更新中...');
+                const { error } = await supabase
+                    .from('excluded_companies')
+                    .insert({
+                        user_id: currentUser.id,
+                        company_id: companyId,
+                        organization_id: currentUser.organization_id
+                    });
+
+                if (error) {
+                    if (error.code === '23505') { // Unique violation
+                        alert('この企業は既に登録されています');
+                    } else {
+                        throw error;
+                    }
+                } else {
+                    $('#excluded-company-search-input').val('');
+                    $('#excluded-company-results').addClass('hidden');
+                    await loadExcludedCompanies(currentUser.id);
+                }
+            } catch (error) {
+                console.error('Add excluded company error:', error);
+                alert('登録に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        window.removeExcludedCompany = async function (id) {
+            if (!confirm('この企業をおすすめ対象外から解除しますか？')) return;
+
+            try {
+                showLoading('解除中...');
+                const { error } = await supabase
+                    .from('excluded_companies')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                await loadExcludedCompanies(currentUser.id);
+            } catch (error) {
+                console.error('Remove excluded company error:', error);
+                alert('解除に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        window.loadExcludedCompanies = async function (userId) {
+            try {
+                const { data, error } = await supabase
+                    .from('excluded_companies')
+                    .select('id, company_id, companies(name)')
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+
+                currentExcludedCompanies = data || [];
+                renderExcludedCompanies();
+            } catch (error) {
+                console.error('Load excluded companies error:', error);
+            }
+        };
+
+        window.renderExcludedCompanies = function () {
+            const $container = $('#excluded-companies-tags');
+            $container.empty();
+
+            if (currentExcludedCompanies.length === 0) {
+                $container.html('<span class="text-xs text-gray-400">現在、対象外として登録されている企業はありません</span>');
+                return;
+            }
+
+            currentExcludedCompanies.forEach(ec => {
+                const name = ec.companies?.name || '不明な企業';
+                $container.append(`
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium border border-red-200">
+                        ${name}
+                        <button type="button" onclick="removeExcludedCompany('${ec.id}')" class="hover:text-red-900 transition">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                `);
+            });
+        };
+
         async function loadProfile() {
             if (!currentUser) return
 
@@ -17160,6 +17324,9 @@
 
                 // マスタデータロード & 値セット
                 await loadMasterDataForProfile(user);
+
+                // 対象外企業ロード (New)
+                await loadExcludedCompanies(currentUser.id);
 
                 // Fill form
                 $('#profile-name').val(user.name)
