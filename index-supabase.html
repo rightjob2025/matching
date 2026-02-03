@@ -2116,37 +2116,17 @@
                 </div>
 
                 <div class="search-card mb-8">
-                    <!-- Admin/Coach: User Selection (Integrated) -->
-                    <div id="admin-job-search-tools" class="mb-6 pb-6 border-b border-slate-100 hidden">
-                        <div class="filter-group-label">
-                            <i class="fas fa-user-circle text-indigo-500"></i> 対象ユーザー <span
-                                class="admin-badge ml-2">管理者専用</span>
-                        </div>
-                        <div class="relative">
-                            <div id="target-user-input-wrapper">
-                                <input type="text" id="target-user-search" placeholder="ユーザー名またはメールアドレスで検索..."
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-                                <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
-                            </div>
-                            <div id="target-user-dropdown"
-                                class="hidden absolute w-full bg-white border border-slate-200 rounded-lg shadow-xl mt-1 z-50 max-h-60 overflow-y-auto">
-                            </div>
-                            <div id="selected-user-display"
-                                class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold"
-                                        id="selected-user-avatar">?</div>
-                                    <div>
-                                        <div class="font-bold text-slate-900" id="selected-user-name"></div>
-                                        <div class="text-xs text-slate-500" id="selected-user-email"></div>
-                                    </div>
-                                </div>
-                                <button id="clear-user-selection"
-                                    class="text-slate-400 hover:text-red-500 transition-colors">
-                                    <i class="fas fa-times-circle text-xl"></i>
-                                </button>
+                    <div id="selected-user-info-banner"
+                        class="hidden mb-6 p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xs"
+                                id="selected-user-avatar-mini">?</div>
+                            <div class="text-sm">
+                                <span class="font-bold text-slate-900" id="selected-user-name-banner"></span>さんの希望条件を反映中
                             </div>
                         </div>
+                        <button onclick="clearTargetUserSelection()"
+                            class="text-xs text-indigo-600 hover:text-indigo-800 font-bold">解除</button>
                     </div>
 
 
@@ -2792,36 +2772,20 @@
                     <p class="text-gray-600">あなたのプロフィールに基づいて、AIが最適な求人を提案します。</p>
                 </div>
 
-                <!-- Admin/Coach: User Selection for Recommendations -->
-                <div id="admin-rec-user-tools" class="mb-6 pb-6 border-b border-slate-100 hidden">
-                    <div class="filter-group-label font-bold text-gray-700 mb-2">
-                        <i class="fas fa-user-circle text-indigo-500 mr-2"></i>対象ユーザーを選択
-                    </div>
-                    <div class="relative">
-                        <div class="rec-user-input-wrapper relative">
-                            <input type="text" id="rec-target-user-search" placeholder="ユーザー名またはメールアドレスで検索..."
-                                class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
-                            <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
-                        </div>
-                        <div id="rec-target-user-dropdown"
-                            class="hidden absolute w-full bg-white border border-slate-200 rounded-lg shadow-xl mt-1 z-50 max-h-60 overflow-y-auto">
-                        </div>
-                        <div id="rec-selected-user-display"
-                            class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold"
-                                    id="rec-selected-user-avatar">?</div>
-                                <div>
-                                    <div class="font-bold text-slate-900" id="rec-selected-user-name"></div>
-                                    <div class="text-xs text-slate-500" id="rec-selected-user-email"></div>
-                                </div>
-                            </div>
-                            <button id="rec-clear-user-selection"
-                                class="text-slate-400 hover:text-red-500 transition-colors">
-                                <i class="fas fa-times-circle text-xl"></i>
-                            </button>
+                <!-- Recommendations Display User Banner -->
+                <div id="rec-selected-user-info-banner"
+                    class="hidden mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold"
+                            id="rec-selected-user-avatar-mini">?</div>
+                        <div>
+                            <div class="font-bold text-slate-900"><span id="rec-selected-user-name-banner"></span>
+                                さんへのおすすめ</div>
+                            <div class="text-xs text-slate-500" id="rec-selected-user-email-banner"></div>
                         </div>
                     </div>
+                    <button onclick="clearTargetUserSelection()"
+                        class="text-sm text-indigo-600 hover:text-indigo-800 font-bold">ユーザーを変更</button>
                 </div>
                 <!-- フリーワード検索 -->
                 <div class="bg-white rounded-lg shadow p-4 mb-6">
@@ -13493,20 +13457,15 @@
                 // マスタデータのロード
                 await loadMasterDataForSearch()
 
-                // 管理者・コーチ・CA・スーパー管理者用ツールの表示制御
                 // 管理者・コーチ・CA・RA・スーパー管理者用ツールの表示制御
                 if (['org_admin', 'admin', 'coach', 'ca', 'ra', 'super_admin'].includes(currentUser.role)) {
-                    $('#admin-job-search-tools').removeClass('hidden')
-                    $('#candidate-ai-matching-tools').addClass('hidden')
-                    $('#candidate-preferred-search-box').addClass('hidden')
-
+                    $('#global-target-user-nav').css('display', 'flex');
                     // 除外フィルタを表示
                     $('#exclude-matched-container').removeClass('hidden');
                     $('#exclude-applied-container').removeClass('hidden');
                     $('#exclude-filters-container').removeClass('hidden');
                 } else {
-                    $('#admin-job-search-tools').addClass('hidden')
-                    $('#candidate-ai-matching-tools').addClass('hidden')
+                    $('#global-target-user-nav').hide();
 
                     // 求職者の場合は希望条件ボタンを表示
                     if (currentUser.role === 'candidate') {
@@ -19318,6 +19277,9 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="selectTargetUserAndGoToJobs('${u.id}', '${u.name}', '${u.email}')" class="text-green-600 hover:text-green-900 mr-3">
+                            求人検索
+                        </button>
                         <button onclick="viewCandidateProfile('${u.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             詳細
                         </button>
@@ -25509,37 +25471,18 @@
             selectedTargetUserName = userName;
             selectedTargetUserEmail = userEmail;
 
-            // Jobs Page UI
-            $('#selected-user-name').html(`
-                ${userName} 
-                <button onclick="event.stopPropagation(); showAdminUserModal('${userId}')" class="ml-2 text-indigo-600 hover:text-indigo-800 text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200 transition-colors">
-                    <i class="fas fa-address-card mr-1"></i>詳細
-                </button>
-            `);
-            $('#selected-user-email').text(userEmail);
-            $('#selected-user-display').removeClass('hidden');
-            $('#target-user-dropdown').addClass('hidden');
-            $('#target-user-search').val('');
-            $('#target-user-input-wrapper').addClass('hidden');
+            // Global Header UI
+            $('#global-selected-user-name').text(userName);
 
-            // Recommendations Page UI
-            $('#rec-selected-user-name').text(userName);
-            $('#rec-selected-user-email').text(userEmail);
-            $('#rec-selected-user-display').removeClass('hidden');
-            $('#rec-target-user-dropdown').addClass('hidden');
-            $('#rec-target-user-search').val('');
-            $('.rec-user-input-wrapper').addClass('hidden');
+            // Banners on specific pages
+            $('#selected-user-name-banner').text(userName);
+            $('#selected-user-info-banner').removeClass('hidden');
 
-            // Applicants Page UI
-            $('#applicant-selected-user-name').text(userName);
-            $('#applicant-selected-user-email').text(userEmail);
-            $('#applicant-selected-user-display').removeClass('hidden');
-            $('#applicant-target-user-dropdown').addClass('hidden');
-            $('#applicant-target-user-search').val('');
-            $('.applicant-user-input-wrapper').addClass('hidden');
+            $('#rec-selected-user-name-banner').text(userName);
+            $('#rec-selected-user-email-banner').text(userEmail);
+            $('#rec-selected-user-info-banner').removeClass('hidden');
 
-
-            // 追加UIを表示
+            // --- Additional Actions ---
             $('#exclude-filters-container').removeClass('hidden');
             $('#exclude-matched-container').removeClass('hidden');
             $('#exclude-applied-container').removeClass('hidden');
@@ -25681,22 +25624,15 @@
             selectedTargetUserName = null;
             selectedTargetUserEmail = null;
 
-            // Jobs Page
-            $('#selected-user-display').addClass('hidden');
-            $('#target-user-input-wrapper').removeClass('hidden');
-            $('#target-user-search').val('');
+            // Global Header UI
+            $('#global-selected-user-name').text('対象ユーザーを選択');
+
+            // Hide banners
+            $('#selected-user-info-banner').addClass('hidden');
+            $('#rec-selected-user-info-banner').addClass('hidden');
+
             $('#select-top-30-btn').addClass('hidden');
             $('#search-exclude-matched').prop('checked', false);
-
-            // Recommendations Page
-            $('#rec-selected-user-display').addClass('hidden');
-            $('.rec-user-input-wrapper').removeClass('hidden');
-            $('#rec-target-user-search').val('');
-
-            // Applicants Page
-            $('#applicant-selected-user-display').addClass('hidden');
-            $('.applicant-user-input-wrapper').removeClass('hidden');
-            $('#applicant-target-user-search').val('');
 
             // 検索を再実行（現在のページに応じて）
             if ($('#jobs-content').hasClass('active')) searchJobs();
@@ -25706,6 +25642,14 @@
             console.log('Cleared target user selection across all pages');
             updateBulkRecommendBar();
         }
+
+        window.selectTargetUserAndGoToJobs = function (userId, userName, userEmail) {
+            selectTargetUser(userId, userName, userEmail);
+            showAppContent('jobs-content');
+            // ナビゲーションの見た目も更新
+            $('.nav-link').removeClass('bg-indigo-50 text-indigo-600');
+            $('.nav-link[data-page="jobs"]').addClass('bg-indigo-50 text-indigo-600');
+        };
 
         // スーパー管理者用：組織切り替え機能
         async function initOrgSwitcher() {
@@ -25891,61 +25835,24 @@
 
                     // 管理者・コーチの場合、対象ユーザー選択UIを表示
                     if (window.currentUser && ['org_admin', 'admin', 'super_admin', 'coach', 'ca'].includes(window.currentUser.role)) {
+                        $('#global-target-user-nav').css('display', 'flex');
                         if (allCandidateUsers.length === 0 || shouldReloadCandidates) {
                             loadCandidateUsers();
                         }
-
-                        // イベントハンドラーの登録（重複登録防止のためoffしてからon）
-                        $('#target-user-search').off('input focus click').on('input focus click', function () {
-                            const searchTerm = $(this).val().toLowerCase();
-                            filterAndShowTargetUsers(searchTerm);
-                        });
-
-                        // ドロップダウン以外をクリックしたら閉じる
-                        $(document).on('click', function (e) {
-                            if (!$(e.target).closest('#target-user-input-wrapper').length && !$(e.target).closest('#target-user-dropdown').length) {
-                                $('#target-user-dropdown').addClass('hidden');
-                            }
-                        });
-
-                        $('#clear-user-selection').off('click').on('click', function () {
-                            clearTargetUserSelection();
-                        });
-
-                        $(document).off('click', '.target-user-option').on('click', '.target-user-option', function () {
-                            const userId = $(this).data('user-id');
-                            const userName = $(this).find('.user-name').text();
-                            const userEmail = $(this).find('.user-email').text();
-                            selectTargetUser(userId, userName, userEmail);
-                        });
                     }
                 } else if (page === 'applications') {
                     loadApplications()
                 } else if (page === 'recommendations') {
                     loadRecommendations()
-
-                    // 管理者・コーチ用ツール
                     if (window.currentUser && ['org_admin', 'admin', 'super_admin', 'coach', 'ca', 'ra'].includes(window.currentUser.role)) {
-                        $('#admin-rec-user-tools').removeClass('hidden');
+                        $('#global-target-user-nav').css('display', 'flex');
                         if (allCandidateUsers.length === 0) loadCandidateUsers();
-
-                        $('#rec-target-user-search').off('input focus click').on('input focus click', function () {
-                            filterAndShowTargetUsers($(this).val().toLowerCase(), 'rec');
-                        });
-                        $('#rec-clear-user-selection').off('click').on('click', clearTargetUserSelection);
                     }
                 } else if (page === 'admin-applicants') {
                     loadAdminApplicants()
-
-                    // 管理者・コーチ用ツール
                     if (window.currentUser && ['org_admin', 'admin', 'super_admin', 'coach', 'ca', 'ra'].includes(window.currentUser.role)) {
-                        $('#admin-applicant-user-tools').removeClass('hidden');
+                        $('#global-target-user-nav').css('display', 'flex');
                         if (allCandidateUsers.length === 0) loadCandidateUsers();
-
-                        $('#applicant-target-user-search').off('input focus click').on('input focus click', function () {
-                            filterAndShowTargetUsers($(this).val().toLowerCase(), 'applicant');
-                        });
-                        $('#applicant-clear-user-selection').off('click').on('click', clearTargetUserSelection);
                     }
                 } else if (page === 'profile') {
                     loadProfile()
