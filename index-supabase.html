@@ -2791,6 +2791,38 @@
                     <h2 class="text-xl font-semibold mb-2">おすすめ求人</h2>
                     <p class="text-gray-600">あなたのプロフィールに基づいて、AIが最適な求人を提案します。</p>
                 </div>
+
+                <!-- Admin/Coach: User Selection for Recommendations -->
+                <div id="admin-rec-user-tools" class="mb-6 pb-6 border-b border-slate-100 hidden">
+                    <div class="filter-group-label font-bold text-gray-700 mb-2">
+                        <i class="fas fa-user-circle text-indigo-500 mr-2"></i>対象ユーザーを選択
+                    </div>
+                    <div class="relative">
+                        <div class="rec-user-input-wrapper relative">
+                            <input type="text" id="rec-target-user-search" placeholder="ユーザー名またはメールアドレスで検索..."
+                                class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
+                            <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
+                        </div>
+                        <div id="rec-target-user-dropdown"
+                            class="hidden absolute w-full bg-white border border-slate-200 rounded-lg shadow-xl mt-1 z-50 max-h-60 overflow-y-auto">
+                        </div>
+                        <div id="rec-selected-user-display"
+                            class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold"
+                                    id="rec-selected-user-avatar">?</div>
+                                <div>
+                                    <div class="font-bold text-slate-900" id="rec-selected-user-name"></div>
+                                    <div class="text-xs text-slate-500" id="rec-selected-user-email"></div>
+                                </div>
+                            </div>
+                            <button id="rec-clear-user-selection"
+                                class="text-slate-400 hover:text-red-500 transition-colors">
+                                <i class="fas fa-times-circle text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <!-- フリーワード検索 -->
                 <div class="bg-white rounded-lg shadow p-4 mb-6">
                     <div class="flex flex-col md:flex-row gap-4">
@@ -3758,6 +3790,38 @@
             <div id="admin-applicants-content" class="app-content p-6 hidden">
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
                     <p class="text-gray-600 mb-2">応募者のステータスを管理できます。</p>
+                </div>
+
+                <!-- Admin: User Selection for Applicants -->
+                <div id="admin-applicant-user-tools" class="mb-6 pb-6 border-b border-slate-100 hidden">
+                    <div class="filter-group-label font-bold text-gray-700 mb-2">
+                        <i class="fas fa-user-circle text-indigo-500 mr-2"></i>特定の求職者で絞り込む
+                    </div>
+                    <div class="relative">
+                        <div class="applicant-user-input-wrapper relative">
+                            <input type="text" id="applicant-target-user-search" placeholder="求職者名またはメールアドレスで検索..."
+                                class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
+                            <i class="fas fa-search absolute right-3 top-3 text-slate-400"></i>
+                        </div>
+                        <div id="applicant-target-user-dropdown"
+                            class="hidden absolute w-full bg-white border border-slate-200 rounded-lg shadow-xl mt-1 z-50 max-h-60 overflow-y-auto">
+                        </div>
+                        <div id="applicant-selected-user-display"
+                            class="hidden mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold"
+                                    id="applicant-selected-user-avatar">?</div>
+                                <div>
+                                    <div class="font-bold text-slate-900" id="applicant-selected-user-name"></div>
+                                    <div class="text-xs text-slate-500" id="applicant-selected-user-email"></div>
+                                </div>
+                            </div>
+                            <button id="applicant-clear-user-selection"
+                                class="text-slate-400 hover:text-red-500 transition-colors">
+                                <i class="fas fa-times-circle text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="bg-white rounded-lg shadow-sm border p-6 mb-6">
                     <div class="flex flex-col md:flex-row gap-6">
@@ -13338,10 +13402,11 @@
 
                 // クエリを再構築してcompaniesとのjoinを追加
                 // range()とcount取得を同時に行う
-                const { data: jobs, error, count } = await query
+                const { data: jobsResult, error, count } = await query
                     .range(from, to);
 
-                console.log('Query result:', { jobs: jobs?.length, error, count });
+                const jobs = jobsResult || [];
+                console.log('Query result:', { jobs: jobs.length, error, count });
 
                 // AI検索ボックスの状態を更新
                 updateAISearchState('job', count);
@@ -14178,7 +14243,7 @@
             const container = $('#jobs-container')
             container.empty()
 
-            if (jobs.length === 0) {
+            if (!jobs || jobs.length === 0) {
                 container.html('<p class="text-gray-500 text-center py-8">現在募集中の求人はありません</p>')
                 animateJobCount(0); // カウンターを0にリセット
                 return
@@ -14679,6 +14744,12 @@
                                 </div>
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
                                     <p class="text-gray-600">${app.jobs ? app.jobs.company : '-'}</p>
+                                    ${app.will_level ? `
+                                        <span class="text-xs font-bold px-2 py-0.5 rounded ${app.will_level === 'A' ? 'bg-red-100 text-red-700 border border-red-200' :
+                            app.will_level === 'B' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
+                                'bg-blue-100 text-blue-700 border border-blue-200'
+                        }">志望度 ${app.will_level}</span>
+                                    ` : ''}
                                     <button onclick="showJobDetailModal('${app.jobs?.id || app.job_id}')" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded transition-colors">
                                         <i class="fas fa-file-alt"></i> 求人詳細を確認する
                                     </button>
@@ -19878,11 +19949,17 @@
                 // ステータスマスタを先に読み込んでフィルターを構築
                 await loadApplicationStatuses();
 
-                const { data: applications, error } = await supabase
+                let query = supabase
                     .from('applications')
                     .select('*, jobs(*), users!user_id(*)')
-                    .eq('organization_id', currentUser.organization_id)
-                    .order('updated_at', { ascending: false })
+                    .eq('organization_id', currentUser.organization_id);
+
+                if (selectedTargetUserId) {
+                    query = query.eq('user_id', selectedTargetUserId);
+                }
+
+                const { data: applications, error } = await query
+                    .order('updated_at', { ascending: false });
 
                 if (error) throw error
 
@@ -24862,7 +24939,7 @@
         }
 
         // ユーザーをフィルタリングしてドロップダウンに表示
-        function filterAndShowTargetUsers(searchTerm) {
+        function filterAndShowTargetUsers(searchTerm, type = 'jobs') {
             const filtered = allCandidateUsers.filter(user => {
                 if (user.status === 'suspended') return false;
                 const name = (user.name || '').toLowerCase();
@@ -24870,7 +24947,10 @@
                 return name.includes(searchTerm) || email.includes(searchTerm);
             });
 
-            const dropdown = $('#target-user-dropdown');
+            const dropdownId = type === 'rec' ? '#rec-target-user-dropdown' :
+                type === 'applicant' ? '#applicant-target-user-dropdown' :
+                    '#target-user-dropdown';
+            const dropdown = $(dropdownId);
 
             if (filtered.length === 0) {
                 dropdown.html('<div class="p-3 text-gray-500 text-sm">該当するユーザーがいません</div>').removeClass('hidden');
@@ -24893,6 +24973,7 @@
             selectedTargetUserName = userName;
             selectedTargetUserEmail = userEmail;
 
+            // Jobs Page UI
             $('#selected-user-name').html(`
                 ${userName} 
                 <button onclick="event.stopPropagation(); showAdminUserModal('${userId}')" class="ml-2 text-indigo-600 hover:text-indigo-800 text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200 transition-colors">
@@ -24903,7 +24984,24 @@
             $('#selected-user-display').removeClass('hidden');
             $('#target-user-dropdown').addClass('hidden');
             $('#target-user-search').val('');
-            $('#target-user-input-wrapper').addClass('hidden'); // 入力欄を隠す
+            $('#target-user-input-wrapper').addClass('hidden');
+
+            // Recommendations Page UI
+            $('#rec-selected-user-name').text(userName);
+            $('#rec-selected-user-email').text(userEmail);
+            $('#rec-selected-user-display').removeClass('hidden');
+            $('#rec-target-user-dropdown').addClass('hidden');
+            $('#rec-target-user-search').val('');
+            $('.rec-user-input-wrapper').addClass('hidden');
+
+            // Applicants Page UI
+            $('#applicant-selected-user-name').text(userName);
+            $('#applicant-selected-user-email').text(userEmail);
+            $('#applicant-selected-user-display').removeClass('hidden');
+            $('#applicant-target-user-dropdown').addClass('hidden');
+            $('#applicant-target-user-search').val('');
+            $('.applicant-user-input-wrapper').addClass('hidden');
+
 
             // 追加UIを表示
             $('#exclude-filters-container').removeClass('hidden');
@@ -25041,20 +25139,30 @@
             selectedTargetUserName = null;
             selectedTargetUserEmail = null;
 
+            // Jobs Page
             $('#selected-user-display').addClass('hidden');
+            $('#target-user-input-wrapper').removeClass('hidden');
             $('#target-user-search').val('');
-            $('#target-user-input-wrapper').removeClass('hidden'); // 入力欄を表示
-
-            // 追加UIを非表示 (Adminの場合は常に表示する方針に変えたが、一応クラス制御を残す)
-            // $('#exclude-matched-container').addClass('hidden'); 
             $('#select-top-30-btn').addClass('hidden');
-            $('#search-exclude-matched').prop('checked', false); // チェックを外す
+            $('#search-exclude-matched').prop('checked', false);
 
-            // 検索を再実行
-            searchJobs();
+            // Recommendations Page
+            $('#rec-selected-user-display').addClass('hidden');
+            $('.rec-user-input-wrapper').removeClass('hidden');
+            $('#rec-target-user-search').val('');
 
-            console.log('Cleared target user selection');
-            updateBulkRecommendBar(); // ボタン状態更新
+            // Applicants Page
+            $('#applicant-selected-user-display').addClass('hidden');
+            $('.applicant-user-input-wrapper').removeClass('hidden');
+            $('#applicant-target-user-search').val('');
+
+            // 検索を再実行（現在のページに応じて）
+            if ($('#jobs-content').hasClass('active')) searchJobs();
+            if ($('#recommendations-content').hasClass('active')) loadRecommendations();
+            if ($('#admin-applicants-content').hasClass('active')) loadAdminApplicants();
+
+            console.log('Cleared target user selection across all pages');
+            updateBulkRecommendBar();
         }
 
         // スーパー管理者用：組織切り替え機能
@@ -25273,6 +25381,30 @@
                     loadApplications()
                 } else if (page === 'recommendations') {
                     loadRecommendations()
+
+                    // 管理者・コーチ用ツール
+                    if (window.currentUser && ['org_admin', 'admin', 'super_admin', 'coach', 'ca', 'ra'].includes(window.currentUser.role)) {
+                        $('#admin-rec-user-tools').removeClass('hidden');
+                        if (allCandidateUsers.length === 0) loadCandidateUsers();
+
+                        $('#rec-target-user-search').off('input focus click').on('input focus click', function () {
+                            filterAndShowTargetUsers($(this).val().toLowerCase(), 'rec');
+                        });
+                        $('#rec-clear-user-selection').off('click').on('click', clearTargetUserSelection);
+                    }
+                } else if (page === 'admin-applicants') {
+                    loadAdminApplicants()
+
+                    // 管理者・コーチ用ツール
+                    if (window.currentUser && ['org_admin', 'admin', 'super_admin', 'coach', 'ca', 'ra'].includes(window.currentUser.role)) {
+                        $('#admin-applicant-user-tools').removeClass('hidden');
+                        if (allCandidateUsers.length === 0) loadCandidateUsers();
+
+                        $('#applicant-target-user-search').off('input focus click').on('input focus click', function () {
+                            filterAndShowTargetUsers($(this).val().toLowerCase(), 'applicant');
+                        });
+                        $('#applicant-clear-user-selection').off('click').on('click', clearTargetUserSelection);
+                    }
                 } else if (page === 'profile') {
                     loadProfile()
                 } else if (page === 'admin-jobs') {
