@@ -2793,20 +2793,8 @@
                 </div>
 
                 <!-- Recommendations Display User Banner -->
-                <div id="rec-selected-user-info-banner"
-                    class="hidden mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold"
-                            id="rec-selected-user-avatar-mini">?</div>
-                        <div>
-                            <div class="font-bold text-slate-900"><span id="rec-selected-user-name-banner"></span>
-                                さんへのおすすめ</div>
-                            <div class="text-xs text-slate-500" id="rec-selected-user-email-banner"></div>
-                        </div>
-                    </div>
-                    <button onclick="clearTargetUserSelection()"
-                        class="text-sm text-indigo-600 hover:text-indigo-800 font-bold">ユーザーを変更</button>
-                </div>
+                <!-- Omitted as per user request -->
+
                 <!-- フリーワード検索 -->
                 <div class="bg-white rounded-lg shadow p-4 mb-6">
                     <div class="flex flex-col md:flex-row gap-4">
@@ -15773,9 +15761,10 @@
 
             // ユーザーフィルタリング
             let displayRecs = recs;
-            if (currentSelectedUserId) {
-                displayRecs = recs.filter(r => r.user_id === currentSelectedUserId);
-            }
+            // おすすめ一覧では全ユーザーを表示する方針（グローバルでのユーザー選択は反映させない）
+            // if (currentSelectedUserId) {
+            //     displayRecs = recs.filter(r => r.user_id === currentSelectedUserId);
+            // }
 
             // キーワードフィルタリング
             if (keyword) {
@@ -15848,25 +15837,8 @@
             // コントロールエリア（ユーザーフィルター ＆ ソート）の構築
             let controlsHtml = '<div class="flex flex-wrap items-center justify-between mb-6 gap-4">';
 
-            // 左側: ユーザーフィルター (管理者のみ)
-            if (isAdminOrCoach) {
-                // candidatesリストがあればそれを使用、なければ推薦データから抽出（後方互換）
-                const userList = candidates.length > 0 ? candidates : [...new Map(recs.map(r => [r.users?.id, r.users])).values()].filter(u => u);
-
-                controlsHtml += `
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap">求職者:</label>
-                        <div class="w-64">
-                            <select id="rec-user-filter" onchange="filterRecommendations(this.value)" class="select2 w-full">
-                                <option value="">全員</option>
-                                ${userList.map(u => `<option value="${u.id}" ${u.id === currentSelectedUserId ? 'selected' : ''}>${u.name} (${u.email || 'メールなし'})</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                `;
-            } else {
-                controlsHtml += '<div></div>'; // レイアウト調整用のスペーサー
-            }
+            // 左側: ユーザーフィルター (おすすめ一覧ではオミット)
+            controlsHtml += '<div></div>'; // レイアウト調整用のスペーサー
 
             // 右側: ソート（再実行ボタンは削除）
             controlsHtml += `
@@ -25509,10 +25481,10 @@
             $('#target-user-search').val('');
             $('#target-user-input-wrapper').addClass('hidden');
 
-            // Banners on other pages
-            $('#rec-selected-user-name-banner').text(userName);
-            $('#rec-selected-user-email-banner').text(userEmail);
-            $('#rec-selected-user-info-banner').removeClass('hidden');
+            // Banners on other pages (Omitted for Recommendations as per user request)
+            // $('#rec-selected-user-name-banner').text(userName);
+            // $('#rec-selected-user-email-banner').text(userEmail);
+            // $('#rec-selected-user-info-banner').removeClass('hidden');
 
             // --- Additional Actions ---
             $('#exclude-filters-container').removeClass('hidden');
@@ -25664,8 +25636,8 @@
             $('#target-user-input-wrapper').removeClass('hidden');
             $('#target-user-search').val('');
 
-            // Hide banners
-            $('#rec-selected-user-info-banner').addClass('hidden');
+            // Hide banners (Omitted for Recommendations as per user request)
+            // $('#rec-selected-user-info-banner').addClass('hidden');
 
             $('#select-top-30-btn').addClass('hidden');
             $('#search-exclude-matched').prop('checked', false);
@@ -25905,8 +25877,7 @@
                 } else if (page === 'recommendations') {
                     loadRecommendations()
                     if (window.currentUser && ['org_admin', 'admin', 'super_admin', 'coach', 'ca', 'ra'].includes(window.currentUser.role)) {
-                        $('#global-target-user-nav').css('display', 'flex');
-                        if (allCandidateUsers.length === 0) loadCandidateUsers();
+                        $('#global-target-user-nav').hide(); // おすすめ画面では隠す（ユーザーの要望）
                     }
                 } else if (page === 'admin-applicants') {
                     loadAdminApplicants()
