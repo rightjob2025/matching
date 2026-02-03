@@ -5143,6 +5143,39 @@
                             </label>
                         </div>
 
+                        <!-- おすすめ対象外企業 (New) -->
+                        <div class="mt-2 p-4 bg-red-50 rounded-lg border border-red-100">
+                            <label class="block text-sm font-bold text-red-900 mb-2">
+                                <i class="fas fa-ban mr-1"></i> おすすめ対象外企業の設定
+                            </label>
+                            <p class="text-[11px] text-red-700 mb-3 leading-tight">
+                                ここに登録された企業は、AIによる自動マッチングやおすすめ求人の対象から除外されます。
+                            </p>
+
+                            <div class="relative mb-3">
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                                        </div>
+                                        <input type="text" id="admin-excluded-company-search-input"
+                                            placeholder="企業名で検索..."
+                                            class="w-full pl-9 pr-4 py-2 border border-red-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
+                                            onkeyup="handleAdminExcludedCompanySearch(this.value)">
+                                    </div>
+                                </div>
+                                <!-- 検索結果ドロップダウン -->
+                                <div id="admin-excluded-company-results"
+                                    class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-xl mt-1 hidden max-h-60 overflow-y-auto">
+                                </div>
+                            </div>
+
+                            <div id="admin-excluded-companies-tags" class="flex flex-wrap gap-2">
+                                <!-- 登録済み企業がここに表示される -->
+                            </div>
+                        </div>
+
                         <!-- 構造化された職歴 (New) -->
                         <div class="mb-6 border-t border-gray-200 pt-4">
                             <div class="flex justify-between items-center mb-2">
@@ -8746,11 +8779,40 @@
                 }
 
                 // その他の条件
-                if (user.desired_job_type) $('#search-job-category').val(user.desired_job_type).trigger('change');
-                if (user.desired_location && Array.isArray(user.desired_location)) {
-                    $('#search-prefecture').val(user.desired_location).trigger('change');
+                // 職種（あいまい一致対応）
+                if (user.desired_job_type) {
+                    const rawVals = window.safeParseList(user.desired_job_type);
+                    const matchedVals = rawVals.map(v => typeof findClosestMasterValue === 'function' ? findClosestMasterValue(v, masterJobCategories) : null).filter(Boolean);
+                    $('#search-job-category').val(matchedVals.length > 0 ? matchedVals : rawVals).trigger('change');
                 }
-                if (user.desired_employment_type) $('#search-employment-type').val(user.desired_employment_type).trigger('change');
+
+                // 業界（あいまい一致対応）
+                if (user.desired_industry) {
+                    const rawVals = window.safeParseList(user.desired_industry);
+                    const matchedVals = rawVals.map(v => typeof findClosestMasterValue === 'function' ? findClosestMasterValue(v, masterIndustries) : null).filter(Boolean);
+                    $('#search-industry-category').val(matchedVals.length > 0 ? matchedVals : rawVals).trigger('change');
+                }
+
+                // 勤務地（都道府県マスタ照合）
+                if (user.desired_location) {
+                    const locs = window.safeParseList(user.desired_location);
+                    const foundPrefs = [];
+                    locs.forEach(loc => {
+                        const pref = (window.prefectures || []).find(p => loc.includes(p) || p.includes(loc.replace(/[都府県]$/, '')));
+                        if (pref) foundPrefs.push(pref);
+                    });
+                    if (foundPrefs.length > 0) {
+                        $('#search-prefecture').val([...new Set(foundPrefs)]).trigger('change');
+                    }
+                }
+
+                // 雇用形態
+                if (user.desired_employment_type) {
+                    const vals = window.safeParseList(user.desired_employment_type);
+                    $('#search-employment-type').val(vals).trigger('change');
+                }
+
+                // 最低年収
                 if (user.desired_salary) $('#search-salary-min').val(Math.floor(user.desired_salary / 10000));
 
                 $('#search-job-experience-ok').prop('checked', !!user.desired_job_experience_ok);
@@ -10838,25 +10900,45 @@
         }
         // ヘルパー関数: JSON配列文字列かもしれない値をパースして配列または文字列として返す
         window.safeParseList = function (val) {
-            if (!val) return null;
-            if (Array.isArray(val)) return val;
+            if (!val) return [];
+            if (Array.isArray(val)) return val.filter(Boolean);
             if (typeof val === 'string') {
                 val = val.trim();
+                if (!val) return [];
+
+                // JSON 形式の場合
                 if (val.startsWith('[') && val.endsWith(']')) {
                     try {
-                        return JSON.parse(val);
+                        const parsed = JSON.parse(val);
+                        return Array.isArray(parsed) ? parsed.filter(Boolean) : [parsed].filter(Boolean);
                     } catch (e) {
-                        // シングルクォートの場合や、不正なJSONの場合のリカバリ
                         try {
-                            // シングルクォートをダブルクォートに置換して再トライ
-                            return JSON.parse(val.replace(/'/g, '"'));
+                            const parsed = JSON.parse(val.replace(/'/g, '"'));
+                            return Array.isArray(parsed) ? parsed.filter(Boolean) : [parsed].filter(Boolean);
                         } catch (e2) {
-                            return val;
+                            // JSONパース失敗時は続行
                         }
                     }
                 }
+
+                // カンマ、読点、全角カンマなどで区切る
+                // スペースは「法人営業 (BtoB)」のように項目名に含まれる場合があるため、
+                // 他に区切り文字がある場合はスペースで分割しない。
+                if (val.includes(',') || val.includes('、') || val.includes('\uff0c')) {
+                    return val.split(/[,、\uff0c]+/).map(s => s.trim()).filter(Boolean);
+                }
+
+                // 区切り文字がないがスペースが含まれる場合（念のためのフォールバック）
+                if (val.includes(' ') || val.includes('　')) {
+                    // ただし、これまでの「スペースを含む単一項目」を壊さないよう注意が必要
+                    // ここでは既存のロジックとの互換性のため分割するが、上記でカンマ区切りを優先することで
+                    // 「法人営業 (BtoB), キャリア」のようなケースは守られる。
+                    return val.split(/\s+/).map(s => s.trim()).filter(Boolean);
+                }
+
+                return [val];
             }
-            return val;
+            return [val];
         }
 
         // ヘルパー関数: 配列または文字列を表示用にフォーマット
@@ -11030,6 +11112,16 @@
                         </div>
                     </div>
 
+                    <!-- おすすめ対象外企業 (Read-only for detail view) -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                        <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
+                            <i class="fas fa-ban mr-2 text-red-500"></i>おすすめ対象外企業
+                        </h4>
+                        <div id="candidate-detail-excluded-companies" class="flex flex-wrap gap-2">
+                            <p class="text-gray-400 text-sm italic">読み込み中...</p>
+                        </div>
+                    </div>
+
                     <!-- 4. 履歴情報 -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-lg mb-4 text-gray-900 flex items-center">
@@ -11101,6 +11193,27 @@
                 modal.removeClass('hidden').attr('style', 'display: flex !important; z-index: 40000 !important; visibility: visible !important; opacity: 1 !important;');
 
                 // 集約画面用のデータロード
+                console.log('Fetching excluded companies for detail view...');
+                const { data: excludedCos, error: ecError } = await window.supabase
+                    .from('excluded_companies')
+                    .select('companies(name)')
+                    .eq('user_id', candidateId);
+
+                const $ecContainer = $('#candidate-detail-excluded-companies');
+                if (!ecError && excludedCos && excludedCos.length > 0) {
+                    $ecContainer.empty();
+                    excludedCos.forEach(ec => {
+                        $ecContainer.append(`
+                            <span class="px-2 py-1 bg-red-50 text-red-700 text-xs rounded-full border border-red-100">
+                                ${ec.companies?.name || '不明な企業'}
+                            </span>
+                        `);
+                    });
+                } else {
+                    $ecContainer.html('<p class="text-gray-400 text-sm">-</p>');
+                }
+
+                // 推薦・応募履歴のロード
                 loadInterviewHistory(candidateId);
                 loadSelectionProgress(candidateId);
 
@@ -17172,8 +17285,9 @@
         // おすすめ対象外企業の管理
         let currentExcludedCompanies = [];
 
-        window.handleExcludedCompanySearch = async function (searchText) {
-            const $results = $('#excluded-company-results');
+        window.handleExcludedCompanySearch = async function (searchText, isAdmin = false) {
+            const resultSelector = isAdmin ? '#admin-excluded-company-results' : '#excluded-company-results';
+            const $results = $(resultSelector);
             if (!searchText || searchText.length < 1) {
                 $results.addClass('hidden').empty();
                 return;
@@ -17194,8 +17308,9 @@
                     $results.empty().removeClass('hidden');
                     companies.forEach(company => {
                         const isAlreadyAdded = currentExcludedCompanies.some(ec => ec.company_id === company.id);
+                        const onClickAction = isAdmin ? `addAdminExcludedCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')` : `addExcludedCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')`;
                         $results.append(`
-                            <div onclick="addExcludedCompany('${company.id}', '${company.name}')" 
+                            <div onclick="${onClickAction}" 
                                 class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center ${isAlreadyAdded ? 'opacity-50 pointer-events-none' : ''}">
                                 <span>${company.name}</span>
                                 ${isAlreadyAdded ? '<span class="text-[10px] bg-gray-200 px-1 rounded">登録済み</span>' : '<i class="fas fa-plus text-indigo-500 text-xs"></i>'}
@@ -17210,29 +17325,39 @@
             }
         };
 
-        window.addExcludedCompany = async function (companyId, companyName) {
-            if (!currentUser) return;
+        window.handleAdminExcludedCompanySearch = function (text) {
+            handleExcludedCompanySearch(text, true);
+        };
+
+        window.addExcludedCompany = async function (companyId, companyName, targetUserId = null) {
+            const userId = targetUserId || currentUser.id;
+            const isAdminAction = !!targetUserId;
 
             try {
                 showLoading('更新中...');
                 const { error } = await supabase
                     .from('excluded_companies')
                     .insert({
-                        user_id: currentUser.id,
+                        user_id: userId,
                         company_id: companyId,
                         organization_id: currentUser.organization_id
                     });
 
                 if (error) {
-                    if (error.code === '23505') { // Unique violation
+                    if (error.code === '23505') {
                         alert('この企業は既に登録されています');
                     } else {
                         throw error;
                     }
                 } else {
-                    $('#excluded-company-search-input').val('');
-                    $('#excluded-company-results').addClass('hidden');
-                    await loadExcludedCompanies(currentUser.id);
+                    if (isAdminAction) {
+                        $('#admin-excluded-company-search-input').val('');
+                        $('#admin-excluded-company-results').addClass('hidden');
+                    } else {
+                        $('#excluded-company-search-input').val('');
+                        $('#excluded-company-results').addClass('hidden');
+                    }
+                    await loadExcludedCompanies(userId, isAdminAction);
                 }
             } catch (error) {
                 console.error('Add excluded company error:', error);
@@ -17242,7 +17367,12 @@
             }
         };
 
-        window.removeExcludedCompany = async function (id) {
+        window.addAdminExcludedCompany = function (companyId, companyName) {
+            const targetUserId = $('#admin-user-id').val();
+            addExcludedCompany(companyId, companyName, targetUserId);
+        };
+
+        window.removeExcludedCompany = async function (id, isAdminAction = false) {
             if (!confirm('この企業をおすすめ対象外から解除しますか？')) return;
 
             try {
@@ -17253,7 +17383,8 @@
                     .eq('id', id);
 
                 if (error) throw error;
-                await loadExcludedCompanies(currentUser.id);
+                const userId = isAdminAction ? $('#admin-user-id').val() : currentUser.id;
+                await loadExcludedCompanies(userId, isAdminAction);
             } catch (error) {
                 console.error('Remove excluded company error:', error);
                 alert('解除に失敗しました');
@@ -17262,7 +17393,7 @@
             }
         };
 
-        window.loadExcludedCompanies = async function (userId) {
+        window.loadExcludedCompanies = async function (userId, isAdminAction = false) {
             try {
                 const { data, error } = await supabase
                     .from('excluded_companies')
@@ -17272,14 +17403,15 @@
                 if (error) throw error;
 
                 currentExcludedCompanies = data || [];
-                renderExcludedCompanies();
+                renderExcludedCompanies(isAdminAction);
             } catch (error) {
                 console.error('Load excluded companies error:', error);
             }
         };
 
-        window.renderExcludedCompanies = function () {
-            const $container = $('#excluded-companies-tags');
+        window.renderExcludedCompanies = function (isAdminAction = false) {
+            const containerSelector = isAdminAction ? '#admin-excluded-companies-tags' : '#excluded-companies-tags';
+            const $container = $(containerSelector);
             $container.empty();
 
             if (currentExcludedCompanies.length === 0) {
@@ -17289,10 +17421,11 @@
 
             currentExcludedCompanies.forEach(ec => {
                 const name = ec.companies?.name || '不明な企業';
+                const removeAction = isAdminAction ? `removeExcludedCompany('${ec.id}', true)` : `removeExcludedCompany('${ec.id}')`;
                 $container.append(`
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium border border-red-200">
                         ${name}
-                        <button type="button" onclick="removeExcludedCompany('${ec.id}')" class="hover:text-red-900 transition">
+                        <button type="button" onclick="${removeAction}" class="hover:text-red-900 transition">
                             <i class="fas fa-times"></i>
                         </button>
                     </span>
@@ -18588,6 +18721,10 @@
                 }
                 updateJobChangeCount();
                 console.log('Work history rendering complete');
+
+                // 対象外企業ロード (New)
+                console.log('Loading excluded companies for admin view...');
+                await loadExcludedCompanies(userId, true);
 
             } else {
                 console.log('User is not a candidate, skipping candidate fields');
@@ -25456,48 +25593,54 @@
                         }
                     }
 
-                    const normalizeToArray = (val) => {
-                        if (!val) return [];
-                        if (Array.isArray(val)) return val;
-                        if (typeof val === 'string') {
-                            const trimmed = val.trim();
-                            if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-                                try { return JSON.parse(trimmed); } catch (e) { }
-                            }
-                            return val.split(/[,、\s]+/).map(s => s.trim()).filter(s => s.length > 0);
-                        }
-                        return val.toString().split(',').map(s => s.trim());
-                    };
-
                     // 職種
                     if (user.desired_job_type) {
-                        const vals = normalizeToArray(user.desired_job_type);
-                        $('#search-job-category').val(vals).trigger('change');
+                        const rawVals = window.safeParseList(user.desired_job_type);
+                        // マスタデータとのあいまい一致を試みる
+                        const matchedVals = [];
+                        rawVals.forEach(v => {
+                            const match = typeof findClosestMasterValue === 'function' ? findClosestMasterValue(v, masterJobCategories) : null;
+                            matchedVals.push(match || v);
+                        });
+                        const uniqueMatched = [...new Set(matchedVals)].filter(Boolean);
+                        $('#search-job-category').val(uniqueMatched).trigger('change');
                     }
 
                     // 業界
                     if (user.desired_industry) {
-                        const vals = normalizeToArray(user.desired_industry);
-                        $('#search-industry-category').val(vals).trigger('change');
+                        const rawVals = window.safeParseList(user.desired_industry);
+                        const matchedVals = [];
+                        rawVals.forEach(v => {
+                            const match = typeof findClosestMasterValue === 'function' ? findClosestMasterValue(v, masterIndustries) : null;
+                            matchedVals.push(match || v);
+                        });
+                        const uniqueMatched = [...new Set(matchedVals)].filter(Boolean);
+                        $('#search-industry-category').val(uniqueMatched).trigger('change');
                     }
 
                     // 雇用形態
                     if (user.desired_employment_type) {
-                        const vals = normalizeToArray(user.desired_employment_type);
+                        const vals = window.safeParseList(user.desired_employment_type);
                         $('#search-employment-type').val(vals).trigger('change');
                     }
 
                     // 勤務地
                     if (user.desired_location) {
-                        const locs = normalizeToArray(user.desired_location);
+                        const locs = window.safeParseList(user.desired_location);
                         const foundPrefs = [];
                         locs.forEach(loc => {
-                            const pref = (window.prefectures || []).find(p => loc.startsWith(p));
+                            if (!loc) return;
+                            // 都道府県マスタとの照合（都道府県が含まれているか、または都道府県名に一致するか）
+                            const pref = (window.prefectures || []).find(p =>
+                                loc.includes(p) ||
+                                p.includes(loc.replace(/[都府県]$/, ''))
+                            );
                             if (pref) foundPrefs.push(pref);
                         });
 
                         if (foundPrefs.length > 0) {
-                            $('#search-prefecture').val(foundPrefs).trigger('change');
+                            const uniquePrefs = [...new Set(foundPrefs)];
+                            $('#search-prefecture').val(uniquePrefs).trigger('change');
                             $('#search-location').val('');
                         }
                     }
