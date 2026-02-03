@@ -15773,6 +15773,7 @@
             const keyword = $('#rec-search-keyword').val()?.toLowerCase().trim();
 
             // ユーザー名のフィルタリング (New)
+            let displayRecs = recs;
             const candNameFilter = $('#rec-search-candidate-name').val()?.toLowerCase().trim();
             if (candNameFilter) {
                 displayRecs = displayRecs.filter(r => {
