@@ -13241,47 +13241,55 @@
                 // 3. AI評価実行
                 showLoading(`AIが抽出された${candidatesForAI.length}名の候補者を詳細評価中...\nしばらくお待ちください。`);
 
-                // 並列処理でEdge Functionを呼び出す
-                const aiPromises = candidatesForAI.map(async (item) => {
-                    try {
+                // バッチ処理でEdge Functionを呼び出す (同時並列数を制限して503エラーを防ぐ)
+                const aiResults = [];
+                const BATCH_SIZE = 2; // 2件ずつ並列処理
 
+                for (let i = 0; i < candidatesForAI.length; i += BATCH_SIZE) {
+                    const batch = candidatesForAI.slice(i, i + BATCH_SIZE);
+                    const batchPromises = batch.map(async (item) => {
+                        try {
+                            const { data, error } = await supabase.functions.invoke('ai-matching', {
+                                body: {
+                                    user: item.candidate,
+                                    jobs: [job]
+                                }
+                            });
 
-                        const { data, error } = await supabase.functions.invoke('ai-matching', {
-                            body: {
-                                user: item.candidate,
-                                jobs: [job]
-                            }
-                        });
+                            if (error) throw error;
+                            if (!data || data.length === 0) throw new Error("No Data");
 
-                        if (error) throw error;
-                        if (!data || data.length === 0) throw new Error("No Data");
+                            const result = data[0];
 
-                        const result = data[0];
+                            // マージ
+                            return {
+                                ...item,
+                                match_score: result.match_score || item.match_score,
+                                recommendation_reason: result.recommendation_reason || result.reason,
 
-                        // マージ
-                        return {
-                            ...item,
-                            match_score: result.match_score || item.match_score,
-                            recommendation_reason: result.recommendation_reason || result.reason,
+                                // 詳細スコアの上書き (AI結果にあれば優先)
+                                skill_match_score: result.skill_match_score ?? item.skill_match_score,
+                                experience_match_score: result.experience_match_score ?? item.experience_match_score,
+                                location_match_score: result.location_match_score ?? item.location_match_score,
+                                salary_match_score: result.salary_match_score ?? item.salary_match_score,
+                                culture_match_score: result.culture_match_score ?? item.culture_match_score,
 
-                            // 詳細スコアの上書き (AI結果にあれば優先)
-                            skill_match_score: result.skill_match_score ?? item.skill_match_score,
-                            experience_match_score: result.experience_match_score ?? item.experience_match_score,
-                            location_match_score: result.location_match_score ?? item.location_match_score,
-                            salary_match_score: result.salary_match_score ?? item.salary_match_score,
-                            culture_match_score: result.culture_match_score ?? item.culture_match_score,
+                                ai_details: result.details,
+                                is_ai_evaluated: true
+                            };
 
-                            ai_details: result.details,
-                            is_ai_evaluated: true
-                        };
+                        } catch (e) {
+                            console.error('AI Error for', item.candidate.name, e);
+                            return { ...item, recommendation_reason: item.recommendation_reason + ' (AI評価エラー)' };
+                        }
+                    });
 
-                    } catch (e) {
-                        console.error('AI Error for', item.candidate.name, e);
-                        return { ...item, recommendation_reason: item.recommendation_reason + ' (AI評価エラー)' };
-                    }
-                });
+                    const batchResults = await Promise.all(batchPromises);
+                    aiResults.push(...batchResults);
 
-                const aiResults = (await Promise.all(aiPromises));
+                    // 進行状況の表示を更新したい場合はここでUI更新を入れることも可能
+                    showLoading(`AIが候補者を詳細評価中... (${Math.min(i + BATCH_SIZE, candidatesForAI.length)} / ${candidatesForAI.length})`);
+                }
 
                 // 再ソート（AIスコアで順位が変わる可能性あり）
                 aiResults.sort((a, b) => b.match_score - a.match_score);
