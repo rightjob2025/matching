@@ -25546,16 +25546,27 @@
                 const { data: apps, error } = await supabase
                     .from('applications')
                     .select(`
-                        *,
-                        jobs (*),
-                        users!applications_user_id_fkey (*)
+                        id, 
+                        status, 
+                        expected_revenue, 
+                        probability_rate, 
+                        interview_scheduled_at, 
+                        selection_info,
+                        jobs (title, company),
+                        users!applications_user_id_fkey (name)
                     `)
                     .in('user_id', assignedUserIds)
                     .not('status', 'ilike', '選考終了%')
-                    .not('status', 'in', '("辞退","不合格","入社確認済","NG")')
-                    .order('interview_scheduled_at', { ascending: true, nullsFirst: false });
+                    .not('status', 'eq', '辞退')
+                    .not('status', 'eq', '不合格')
+                    .not('status', 'eq', '入社確認済')
+                    .not('status', 'eq', 'NG')
+                    .order('interview_scheduled_at', { ascending: true });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase query error:', error);
+                    throw error;
+                }
 
                 // --- 面接リストの描画 ---
                 const interviews = apps.filter(a => a.interview_scheduled_at).sort((a, b) => new Date(a.interview_scheduled_at) - new Date(b.interview_scheduled_at));
