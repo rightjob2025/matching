@@ -13659,7 +13659,7 @@
 
                 // キーワード検索 (AND/OR)
                 if (filters.keyword) {
-                    const keywords = filters.keyword.split(/[\s　]+/).filter(k => k) // 空白で分割
+                    const keywords = filters.keyword.split(/[\s　,、]+/).filter(k => k) // 空白・カンマ・読点などでも分割
                     const mode = filters.keywordMode || 'OR'
 
                     if (keywords.length > 0) {
@@ -13957,11 +13957,35 @@
             if (!filters) return;
 
             console.log('Applying search filters:', filters);
-            $('#search-keyword').val(filters.keyword || '');
-            if (filters.keywordMode) {
-                $(`input[name="search-keyword-mode"][value="${filters.keywordMode}"]`).prop('checked', true);
+
+            // キーワードとタグの同期
+            if (filters.keyword) {
+                $('#search-keyword').val(filters.keyword);
+                if (window.populateFreewordTags) {
+                    window.populateFreewordTags(filters.keyword, 'tags-keyword', 'tag-indigo');
+                    $('#search-keyword').val(''); // タグ化した後は入力をクリア
+                }
+            } else {
+                $('#search-keyword').val('');
+                if (window.populateFreewordTags) $('#tags-keyword').empty();
             }
-            $('#search-location').val(filters.location || '');
+
+            if (filters.keywordMode) {
+                $(`input[name="search-keyword-mode"][value="${filters.keywordMode.toUpperCase()}"]`).prop('checked', true);
+            }
+
+            // エリア詳細とタグの同期
+            if (filters.location) {
+                $('#search-location').val(filters.location);
+                if (window.populateFreewordTags) {
+                    window.populateFreewordTags(filters.location, 'tags-freeword', 'tag-amber');
+                    $('#search-location').val(''); // タグ化した後は入力をクリア
+                }
+            } else {
+                $('#search-location').val('');
+                if (window.populateFreewordTags) $('#tags-freeword').empty();
+            }
+
             $('#search-prefecture').val(filters.prefecture || []).trigger('change');
             $('#search-employment-type').val(filters.employmentType || []).trigger('change');
             $('#search-job-category').val(filters.jobCategory || []).trigger('change');
@@ -14018,6 +14042,12 @@
                         const locations = profile.desired_location.split(',');
                         // prefecturesマスタに含まれるものだけを抽出
                         return locations.map(l => l.trim()).filter(l => prefectures.includes(l));
+                    })(),
+                    location: (function () {
+                        if (!profile.desired_location) return '';
+                        const locations = profile.desired_location.split(',');
+                        // prefecturesマスタに含まれないものをエリア詳細として抽出
+                        return locations.map(l => l.trim()).filter(l => !prefectures.includes(l)).join(', ');
                     })(),
                     salaryMin: profile.desired_salary ? Math.floor(profile.desired_salary / 10000) : 0,
                     // 維持する項目
