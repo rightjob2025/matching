@@ -6358,6 +6358,16 @@
                                 placeholder="ステータス変更の理由や詳細を記入してください。"></textarea>
                         </div>
 
+                        <div id="progress-interview-scheduled-section"
+                            class="bg-orange-50 p-4 rounded-lg border border-orange-100 mb-4">
+                            <label class="block text-sm font-medium text-orange-800 mb-1">
+                                <i class="far fa-calendar-check mr-1"></i> 面接予定日時 (確定)
+                            </label>
+                            <input type="datetime-local" id="progress-interview-scheduled-at"
+                                class="w-full px-4 py-2 border border-orange-200 rounded-lg text-sm focus:ring-orange-500">
+                            <p class="text-[10px] text-orange-600 mt-1">※面接が確定した際に入力してください。</p>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-indigo-700 mb-1">
                                 <i class="fas fa-info-circle mr-1"></i>選考情報（求職者に共有されます）
@@ -15327,6 +15337,19 @@
 
                 $('#progress-selection-info').val(application.selection_info || '');
 
+                // 面接予定日時のセット
+                if (application.interview_scheduled_at) {
+                    const d = new Date(application.interview_scheduled_at);
+                    const formattedDate = d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0') + 'T' +
+                        String(d.getHours()).padStart(2, '0') + ':' +
+                        String(d.getMinutes()).padStart(2, '0');
+                    $('#progress-interview-scheduled-at').val(formattedDate);
+                } else {
+                    $('#progress-interview-scheduled-at').val('');
+                }
+
                 // ヨミ情報のセット
                 $('#progress-expected-revenue').val(application.expected_revenue || '');
                 $('#progress-probability-rate').val(application.probability_rate || '0');
@@ -15531,6 +15554,7 @@
                         expected_revenue: $('#progress-expected-revenue').val() ? parseInt($('#progress-expected-revenue').val()) : null,
                         probability_rate: parseInt($('#progress-probability-rate').val()) || 0,
                         expected_start_date: $('#progress-expected-start-date').val() || null,
+                        interview_scheduled_at: $('#progress-interview-scheduled-at').val() || null,
                         yomi_notes: $('#progress-yomi-notes').val() || null,
                         selection_info: $('#progress-selection-info').val() || null,
                         updated_at: new Date().toISOString()
@@ -25223,6 +25247,8 @@
                 // --- Charts Rendering Logic ---
                 if (isAgent) {
                     await renderDashboardCharts();
+                    // --- Agent Specific Sections (Interviews & Yomi) ---
+                    await renderAgentDashboardSections(contentArea);
                 }
 
             } catch (error) {
@@ -25443,6 +25469,192 @@
                     }
                 }
             });
+        }
+
+        async function renderAgentDashboardSections(container) {
+            // 面接予定セクション
+            const interviewSection = $(`
+                <div class="mb-10">
+                    <h3 class="text-xl font-bold text-gray-800 mb-5 flex items-center">
+                        <i class="far fa-calendar-check mr-3 text-orange-500 text-2xl"></i>直近の面接予定
+                    </h3>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-100">
+                                <thead class="bg-gray-50/50">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">日程</th>
+                                        <th class="px-6 py-4 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">求職者名</th>
+                                        <th class="px-6 py-4 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">求人 / 企業</th>
+                                        <th class="px-6 py-4 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">選考情報・メモ</th>
+                                        <th class="px-6 py-4 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">詳細</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-50" id="dashboard-interview-list">
+                                    <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fas fa-circle-notch fa-spin text-2xl mb-3 text-indigo-200"></i>
+                                            <span class="text-sm">データを読み込み中...</span>
+                                        </div>
+                                    </td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `);
+            container.append(interviewSection);
+
+            // ヨミ・アクティブ案件セクション
+            const yomiSection = $(`
+                <div class="mb-10">
+                    <div class="flex justify-between items-end mb-5">
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-funnel-dollar mr-3 text-indigo-500 text-2xl"></i>マイ・アクティブ案件 (ヨミ管理)
+                        </h3>
+                        <div class="flex gap-4">
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase">担当分 見込み売上</p>
+                                <p class="text-lg font-bold text-indigo-600" id="dashboard-my-yomi-revenue">¥0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dashboard-yomi-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Loading placeholder -->
+                        <div class="col-span-full bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 p-12 text-center text-gray-400">
+                             <i class="fas fa-spinner fa-spin text-xl mb-2"></i><br>
+                             読み込み中...
+                        </div>
+                    </div>
+                </div>
+            `);
+            container.append(yomiSection);
+
+            try {
+                // データの取得
+                // 1. 担当求職者のIDリストを取得
+                const { data: assignedUsers } = await supabase.from('users').select('id').eq('coach_id', currentUser.id);
+                const assignedUserIds = assignedUsers?.map(u => u.id) || [];
+
+                if (assignedUserIds.length === 0) {
+                    $('#dashboard-interview-list').html('<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">現在の担当求職者はいません</td></tr>');
+                    $('#dashboard-yomi-content').html('<div class="col-span-full bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 p-12 text-center text-gray-400">アクティブな案件はありません</div>');
+                    return;
+                }
+
+                // 2. 案件データの取得 (担当者フィルタリング)
+                const { data: apps, error } = await supabase
+                    .from('applications')
+                    .select(`
+                        *,
+                        jobs (*),
+                        users!applications_user_id_fkey (*)
+                    `)
+                    .in('user_id', assignedUserIds)
+                    .not('status', 'ilike', '選考終了%')
+                    .not('status', 'in', '("辞退","不合格","入社確認済","NG")')
+                    .order('interview_scheduled_at', { ascending: true, nullsFirst: false });
+
+                if (error) throw error;
+
+                // --- 面接リストの描画 ---
+                const interviews = apps.filter(a => a.interview_scheduled_at).sort((a, b) => new Date(a.interview_scheduled_at) - new Date(b.interview_scheduled_at));
+                const interviewListBody = $('#dashboard-interview-list');
+                if (interviews.length === 0) {
+                    interviewListBody.html('<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">予定されている面接はありません</td></tr>');
+                } else {
+                    interviewListBody.empty();
+                    interviews.forEach(app => {
+                        const d = new Date(app.interview_scheduled_at);
+                        const dateStr = d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', weekday: 'short' });
+                        const timeStr = d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+                        const row = `
+                            <tr class="hover:bg-indigo-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-gray-900">${dateStr}</span>
+                                        <span class="text-xs font-medium text-indigo-600">${timeStr}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-bold text-gray-800">${app.users.name}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-bold text-gray-700 truncate max-w-[180px]" title="${app.jobs.title}">${app.jobs.title}</div>
+                                    <div class="text-[11px] text-gray-400 truncate max-w-[180px]">${app.jobs.company}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-xs text-gray-600 line-clamp-2 max-w-[220px]" title="${app.selection_info || ''}">
+                                        ${app.selection_info ? `<i class="fas fa-info-circle text-indigo-300 mr-1"></i>${app.selection_info}` : '<span class="text-gray-300">未入力</span>'}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick="openProgressModal('${app.id}')" class="inline-flex items-center px-3 py-1.5 border border-indigo-100 text-xs font-bold rounded-lg text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                                        管理
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        interviewListBody.append(row);
+                    });
+                }
+
+                // --- ヨミ状況の描画 ---
+                const yomiContent = $('#dashboard-yomi-content');
+                let totalExpectedRevenue = 0;
+
+                if (apps.length === 0) {
+                    yomiContent.html('<div class="col-span-full bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 p-12 text-center text-gray-400">現在、動いている案件はありません</div>');
+                } else {
+                    yomiContent.empty();
+                    apps.forEach(app => {
+                        const rev = app.expected_revenue || 0;
+                        const prob = app.probability_rate || 0;
+                        totalExpectedRevenue += (rev * prob / 100);
+
+                        const revStr = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(rev);
+                        const statusLabel = getSelectionStatusLabel(app.status || 'applied');
+
+                        // ステータスに応じた色 (Tailwind safe classes)
+                        let statusColorClass = 'bg-gray-50 text-gray-600 border-gray-100';
+                        if (app.status?.includes('面接')) statusColorClass = 'bg-orange-50 text-orange-600 border-orange-100';
+                        else if (app.status?.includes('書類')) statusColorClass = 'bg-blue-50 text-blue-600 border-blue-100';
+                        else if (app.status?.includes('内定')) statusColorClass = 'bg-green-50 text-green-600 border-green-100';
+
+                        const card = `
+                            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all group cursor-pointer" onclick="openProgressModal('${app.id}')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColorClass} border">
+                                        ${statusLabel}
+                                    </span>
+                                    <div class="text-right">
+                                        <p class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">稼働確度</p>
+                                        <p class="text-sm font-bold text-indigo-500">${prob}%</p>
+                                    </div>
+                                </div>
+                                <h4 class="font-bold text-gray-800 text-base mb-1 group-hover:text-indigo-600 transition-colors">${app.users.name}</h4>
+                                <div class="text-[11px] text-gray-500 truncate mb-4">${app.jobs.company} / ${app.jobs.title}</div>
+                                
+                                <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                                    <div>
+                                        <p class="text-[9px] font-bold text-gray-300 uppercase">見込み売上</p>
+                                        <p class="text-sm font-bold text-gray-700">${revStr}</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-gray-200 group-hover:text-indigo-300 transition-colors"></i>
+                                </div>
+                            </div>
+                        `;
+                        yomiContent.append(card);
+                    });
+                }
+
+                $('#dashboard-my-yomi-revenue').text(new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(totalExpectedRevenue));
+
+            } catch (err) {
+                console.error('Agent dashboard load error:', err);
+                $('#dashboard-interview-list').html('<tr><td colspan="5" class="px-6 py-12 text-center text-red-500">エラーが発生しました</td></tr>');
+            }
         }
 
         // ダッシュボードカード描画ヘルパー関数 (変更なし)
