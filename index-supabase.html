@@ -6310,8 +6310,8 @@
                                     class="w-full px-4 py-2 border rounded-lg bg-gray-100">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">新しいステータス *</label>
-                                <select id="progress-new-status" required class="w-full px-4 py-2 border rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">新しいステータス</label>
+                                <select id="progress-new-status" class="w-full px-4 py-2 border rounded-lg">
                                     <option value="">選択してください</option>
                                 </select>
                             </div>
@@ -15544,13 +15544,14 @@
             const oldStatus = $('#progress-current-status').data('code');
             const newStatus = $('#progress-new-status').val();
             const notes = $('#progress-notes').val();
+            const finalStatus = newStatus || oldStatus;
 
             try {
                 // 1. 応募ステータスを更新
                 const { error: updateError } = await supabase
                     .from('applications')
                     .update({
-                        status: newStatus,
+                        status: finalStatus,
                         expected_revenue: $('#progress-expected-revenue').val() ? parseInt($('#progress-expected-revenue').val()) : null,
                         probability_rate: parseInt($('#progress-probability-rate').val()) || 0,
                         expected_start_date: $('#progress-expected-start-date').val() || null,
@@ -15571,7 +15572,7 @@
                         application_id: applicationId,
                         user_id: currentApplicationData.user_id,
                         old_status: oldStatus,
-                        new_status: newStatus,
+                        new_status: finalStatus,
                         notes: notes,
                         changed_by: currentUser.id,
                         changed_by_name: currentUser.name
@@ -15579,26 +15580,28 @@
 
                 if (historyError) throw historyError;
 
-                // 3. 通知作成 (求職者へ)
-                try {
-                    const statusLabel = getSelectionStatusLabel(newStatus);
-                    await supabase.from('notifications').insert({
-                        user_id: currentApplicationData.user_id,
-                        title: '選考ステータスが更新されました',
-                        message: `「${currentApplicationData.jobs.company} / ${currentApplicationData.jobs.title}」の選考状況が「${statusLabel}」に更新されました。`,
-                        read: false,
-                        metadata: {
-                            page: 'applications',
-                            application_id: applicationId
-                        },
-                        created_at: new Date().toISOString()
-                    });
-                } catch (notifyError) {
-                    console.error('Candidate notification error:', notifyError);
+                // 3. 通知作成 (求職者へ) - ステータス変更時のみ
+                if (newStatus && newStatus !== oldStatus) {
+                    try {
+                        const statusLabel = getSelectionStatusLabel(newStatus);
+                        await supabase.from('notifications').insert({
+                            user_id: currentApplicationData.user_id,
+                            title: '選考ステータスが更新されました',
+                            message: `「${currentApplicationData.jobs.company} / ${currentApplicationData.jobs.title}」の選考状況が「${statusLabel}」に更新されました。`,
+                            read: false,
+                            metadata: {
+                                page: 'applications',
+                                application_id: applicationId
+                            },
+                            created_at: new Date().toISOString()
+                        });
+                    } catch (notifyError) {
+                        console.error('Candidate notification error:', notifyError);
+                    }
                 }
 
-                // 4. メール通知 (ステータス変更時)
-                if (currentApplicationData && currentApplicationData.users && currentApplicationData.users.email) {
+                // 4. メール通知 (ステータス変更時のみ)
+                if (newStatus && newStatus !== oldStatus && currentApplicationData && currentApplicationData.users && currentApplicationData.users.email) {
                     const statusLabel = getSelectionStatusLabel(newStatus);
 
                     // 応募者へ
@@ -15635,10 +15638,10 @@
                     }
                 }
 
-                alert('ステータスを更新しました');
+                alert('進捗を更新しました');
 
-                // 4. 画面を更新
-                $('#progress-current-status').data('code', newStatus).val(getSelectionStatusLabel(newStatus));
+                // 画面を更新
+                $('#progress-current-status').data('code', finalStatus).val(getSelectionStatusLabel(finalStatus));
                 $('#progress-notes').val('');
                 $('#progress-new-status').val('');
 
