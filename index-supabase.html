@@ -28872,10 +28872,11 @@
                 const probRate = $('#yomi-filter-probability').val();
 
                 // 3. 応募データの取得 (ヨミ情報含む)
-                let usersSelector = 'users!applications_user_id_fkey(id, name, team_id, coach_id, coach:users!users_coach_id_fkey(name))';
+                // 400エラー(PGRST200)回避のため、一旦自己参照ジョインを外す
+                let usersSelector = 'users!applications_user_id_fkey(id, name, team_id, coach_id)';
 
                 if (teamId || coachId) {
-                    usersSelector = 'users!applications_user_id_fkey!inner(id, name, team_id, coach_id, coach:users!users_coach_id_fkey(name))';
+                    usersSelector = 'users!applications_user_id_fkey!inner(id, name, team_id, coach_id)';
                 }
 
                 let query = window.supabase
@@ -29019,7 +29020,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="font-bold text-gray-900">${item.users?.name || '不明'}</div>
-                            <div class="text-[10px] text-gray-400">担当: ${item.users?.coach?.name || '-'}</div>
+                            <div class="text-[10px] text-gray-400">担当ID: ${item.users?.coach_id || '-'}</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900">${item.jobs?.title || ''}</div>
