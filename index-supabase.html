@@ -28872,14 +28872,9 @@
                 const probRate = $('#yomi-filter-probability').val();
 
                 // 3. 応募データの取得 (ヨミ情報含む)
-                console.log('[Yomi] Loading with Filters:', { teamId, coachId, period, probRate });
-                console.log('--- Yomi Data Load Start ---');
-                console.log('Target Org:', currentUser?.organization_id);
-                console.log('Filters:', { teamId, coachId, period, probRate });
-
-                let usersSelector = 'users(id, name, team_id, coach_id)';
+                let usersSelector = 'users!applications_user_id_fkey(id, name, team_id, coach_id)';
                 if (teamId || coachId) {
-                    usersSelector = 'users!inner(id, name, team_id, coach_id)';
+                    usersSelector = 'users!applications_user_id_fkey!inner(id, name, team_id, coach_id)';
                 }
 
                 let query = window.supabase
