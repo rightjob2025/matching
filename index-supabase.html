@@ -15554,7 +15554,7 @@
                         expected_revenue: $('#progress-expected-revenue').val() ? parseInt($('#progress-expected-revenue').val()) : null,
                         probability_rate: parseInt($('#progress-probability-rate').val()) || 0,
                         expected_start_date: $('#progress-expected-start-date').val() || null,
-                        interview_scheduled_at: $('#progress-interview-scheduled-at').val() || null,
+                        interview_scheduled_at: $('#progress-interview-scheduled-at').val() ? new Date($('#progress-interview-scheduled-at').val()).toISOString() : null,
                         yomi_notes: $('#progress-yomi-notes').val() || null,
                         selection_info: $('#progress-selection-info').val() || null,
                         updated_at: new Date().toISOString()
