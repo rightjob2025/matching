@@ -28887,11 +28887,10 @@
                 const probRate = $('#yomi-filter-probability').val();
 
                 // 3. 応募データの取得 (ヨミ情報含む)
-                let usersSelector = 'users!applications_user_id_fkey(id, name, team_id, coach_id, coach:users!users_coach_id_fkey(name))';
+                let usersSelector = 'users(id, name, team_id, coach_id, coach:coach_id(name))';
 
-                // チームや担当者でフィルタする場合は !inner を使用してメインのレコードを絞り込む
                 if (teamId || coachId) {
-                    usersSelector = 'users!applications_user_id_fkey!inner(id, name, team_id, coach_id, coach:users!users_coach_id_fkey(name))';
+                    usersSelector = 'users!inner(id, name, team_id, coach_id, coach:coach_id(name))';
                 }
 
                 let query = window.supabase
@@ -28909,7 +28908,6 @@
                 }
 
                 if (coachId) {
-                    // 候補者の担当コーチでフィルタ
                     query = query.eq('users.coach_id', coachId);
                 }
 
@@ -28920,6 +28918,13 @@
                 if (period && period !== 'all') {
                     const today = new Date();
                     let start, end;
+                    const formatDate = (date) => {
+                        const y = date.getFullYear();
+                        const m = String(date.getMonth() + 1).padStart(2, '0');
+                        const d = String(date.getDate()).padStart(2, '0');
+                        return `${y}-${m}-${d}`;
+                    };
+
                     if (period === 'this_month') {
                         start = new Date(today.getFullYear(), today.getMonth(), 1);
                         end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -28931,9 +28936,10 @@
                         start = new Date(today.getFullYear(), q * 3, 1);
                         end = new Date(today.getFullYear(), (q + 1) * 3, 0);
                     }
+
                     if (start && end) {
-                        query = query.gte('expected_start_date', start.toISOString().split('T')[0]);
-                        query = query.lte('expected_start_date', end.toISOString().split('T')[0]);
+                        query = query.gte('expected_start_date', formatDate(start));
+                        query = query.lte('expected_start_date', formatDate(end));
                     }
                 }
 
