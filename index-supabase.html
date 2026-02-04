@@ -28884,7 +28884,10 @@
                         ${usersSelector},
                         jobs(id, title, company, company_id)
                     `)
-                    .eq('organization_id', currentUser.organization_id);
+                    .eq('organization_id', currentUser.organization_id)
+                    // 非アクティブ（選考終了・辞退など）を除外
+                    .not('status', 'ilike', '選考終了%')
+                    .not('status', 'in', '("辞退","不合格","入社確認済","NG")');
 
                 // フィルタ適用
                 if (teamId) {
