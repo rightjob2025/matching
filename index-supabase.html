@@ -1321,6 +1321,105 @@
                 height: 56px;
             }
         }
+
+        /* AI Search Box Specific Styles */
+        .ai-search-box.searching {
+            border-color: #6366f1;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .ai-search-box.searching .ai-search-toggle-icon {
+            animation: ai-bounce 1s infinite;
+        }
+
+        @keyframes ai-bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .ai-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            border-radius: inherit;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .ai-search-box.searching .ai-loading-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .ai-scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #6366f1, transparent);
+            box-shadow: 0 0 10px #6366f1;
+            display: none;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .ai-search-box.searching .ai-scanner-line {
+            display: block;
+            animation: ai-scan 2.5s linear infinite;
+        }
+
+        @keyframes ai-scan {
+            0% {
+                top: 0%;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        .ai-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        .ai-loading-text {
+            color: #4338ca;
+            font-weight: 800;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
     </style>
 
 </head>
@@ -1340,7 +1439,7 @@
                 </div>
                 <div>
                     <h3 class="font-bold">AI検索アシスタント</h3>
-                    <p class="text-[10px] opacity-80 uppercase tracking-tighter">Powered by Gemini 2.5 Flash</p>
+                    <p class="text-[10px] opacity-80 uppercase tracking-tighter">Powered by Gemini 2.5 Flash-Lite</p>
                 </div>
             </div>
             <button onclick="toggleAISearchChat()" class="text-white/80 hover:text-white transition">
@@ -2379,6 +2478,12 @@
                         <!-- AI Search Prompt -->
                         <div id="job-ai-search-box"
                             class="ai-search-box bg-white disabled collapsed mt-8 p-6 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+                            <!-- AI Loading UI -->
+                            <div class="ai-scanner-line"></div>
+                            <div class="ai-loading-overlay">
+                                <div class="ai-loading-spinner"></div>
+                                <div class="ai-loading-text">AIが紹介文と求人を精査中...</div>
+                            </div>
                             <div
                                 class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <i class="fas fa-robot text-6xl text-indigo-600"></i>
@@ -2644,6 +2749,12 @@
                     <!-- AI Search Prompt -->
                     <div id="candidate-ai-search-box"
                         class="ai-search-box bg-white disabled collapsed mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+                        <!-- AI Loading UI -->
+                        <div class="ai-scanner-line"></div>
+                        <div class="ai-loading-overlay">
+                            <div class="ai-loading-spinner"></div>
+                            <div class="ai-loading-text">AIが条件に合わせて分析中...</div>
+                        </div>
                         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <i class="fas fa-robot text-6xl text-indigo-600"></i>
                         </div>
@@ -13050,7 +13161,8 @@
                 console.log('AI Prompt Trigger Check (Candidates):', { isInitialLoad, isAiBoxDisabled, prompt: aiPrompt, resultCount: totalCount });
 
                 if (!isInitialLoad && !isAiBoxDisabled && aiPrompt && aiPrompt.trim().length > 0 && results.length > 0) {
-                    showLoading('AIが指示内容に基づき精査中...');
+                    $('#candidate-ai-search-box').addClass('searching');
+                    // showLoading('AIが指示内容に基づき精査中...');
                     try {
                         const topResults = results.slice(0, 50); // プロンプト評価は上位50件に制限
                         const { data: aiRanked, error: aiError } = await supabase.functions.invoke('score-ai-recommendations', {
@@ -13080,8 +13192,10 @@
                     } catch (err) {
                         console.error('AI Ranking error (Candidates):', err);
                         alert('AIへのリクエスト中にエラーが発生しました。');
+                    } finally {
+                        $('#candidate-ai-search-box').removeClass('searching');
                     }
-                    hideLoading();
+                    // hideLoading();
                 }
 
                 const from = (page - 1) * CANDIDATES_PER_PAGE;
@@ -13684,7 +13798,8 @@
                 console.log('AI Prompt Trigger Check (Jobs):', { isInitialLoad, isAiBoxDisabled, prompt: filters.aiPrompt, resultCount: count });
 
                 if (!isInitialLoad && !isAiBoxDisabled && filters.aiPrompt && filters.aiPrompt.trim().length > 0) {
-                    showLoading('AIが指示内容に基づき求人を精査中...');
+                    $('#job-ai-search-box').addClass('searching');
+                    // showLoading('AIが指示内容に基づき求人を精査中...'); // ローカルに切り替えるため無効化（必要なら残してもよいが、今回は要望通りローカルへ）
                     try {
                         if (jobs && jobs.length > 0) {
                             const { data: aiRanked, error: aiError } = await supabase.functions.invoke('score-ai-recommendations', {
@@ -13715,8 +13830,10 @@
                     } catch (err) {
                         console.error('AI Ranking error (Jobs):', err);
                         alert('AIへのリクエスト中にエラーが発生しました。');
+                    } finally {
+                        $('#job-ai-search-box').removeClass('searching');
                     }
-                    hideLoading();
+                    // hideLoading();
                 }
 
                 // 総ページ数を計算
