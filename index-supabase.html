@@ -28991,8 +28991,16 @@
             if (!statuses) return;
 
             // 各ステータスのカラムを作成
+            console.log('[Yomi] Master Statuses:', statuses.map(s => s.value));
+            if (yomiData.length > 0) {
+                console.log('[Yomi] Sample Data Status:', yomiData[0].status);
+            }
+
             statuses.forEach(status => {
-                const columnData = yomiData.filter(d => d.status === status.value);
+                const columnData = yomiData.filter(d => {
+                    const match = String(d.status).trim() === String(status.value).trim();
+                    return match;
+                });
                 const colHtml = `
                     <div class="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-[70vh]">
                         <div class="p-4 flex justify-between items-center border-b">
