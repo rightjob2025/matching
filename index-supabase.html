@@ -4232,7 +4232,14 @@
                             <h3 class="font-semibold mb-3 flex items-center">
                                 <i class="fas fa-briefcase mr-2 text-indigo-600"></i>求人データ
                             </h3>
-                            <input type="file" id="csv-jobs-file" accept=".csv" class="mb-3 w-full">
+                            <div class="mb-3">
+                                <label class="text-xs text-gray-500 block mb-1">文字コード</label>
+                                <select id="csv-jobs-encoding" class="w-full text-sm border rounded p-1 mb-2">
+                                    <option value="UTF-8">UTF-8 (標準)</option>
+                                    <option value="Shift_JIS">Shift-JIS (Excel用)</option>
+                                </select>
+                                <input type="file" id="csv-jobs-file" accept=".csv" class="mb-3 w-full">
+                            </div>
                             <button onclick="importJobsCSV()"
                                 class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full">
                                 <i class="fas fa-upload mr-2"></i>インポート
@@ -4248,6 +4255,14 @@
                             <h3 class="font-semibold mb-3 flex items-center">
                                 <i class="fas fa-user-tie mr-2 text-green-600"></i>求職者データ
                             </h3>
+                            <div class="mb-3">
+                                <label class="text-xs text-gray-500 block mb-1">文字コード</label>
+                                <select id="csv-users-encoding" class="w-full text-sm border rounded p-1 mb-2">
+                                    <option value="UTF-8">UTF-8 (標準)</option>
+                                    <option value="Shift_JIS">Shift-JIS (Excel用)</option>
+                                </select>
+                                <input type="file" id="csv-users-file" accept=".csv" class="mb-3 w-full">
+                            </div>
                             <p class="text-sm text-gray-600 mb-4">
                                 求職者情報をCSVファイルから一括登録できます。
                             </p>
@@ -5480,7 +5495,12 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">文字コード</label>
+                        <select id="user-csv-encoding" class="w-full border rounded-lg p-2 mb-2">
+                            <option value="UTF-8">UTF-8 (標準)</option>
+                            <option value="Shift_JIS">Shift-JIS (Excel用)</option>
+                        </select>
                         <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
                         <input type="file" id="user-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
                     </div>
@@ -5590,7 +5610,14 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">CSVファイルを選択</label>
-                        <input type="file" id="company-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">文字コード</label>
+                            <select id="company-csv-encoding" class="w-full border rounded-lg p-2 mb-2">
+                                <option value="UTF-8">UTF-8 (標準)</option>
+                                <option value="Shift_JIS">Shift-JIS (Excel用)</option>
+                            </select>
+                            <input type="file" id="company-csv-file" accept=".csv" class="w-full border rounded-lg p-2">
+                        </div>
                     </div>
 
                     <div id="company-csv-preview" class="hidden max-h-40 overflow-y-auto border rounded p-2 text-xs">
@@ -20117,9 +20144,11 @@
 
             showLoading('CSVファイルを読み込み中...');
 
+            const encoding = $('#user-csv-encoding').val() || 'UTF-8';
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
+                encoding: encoding,
                 complete: async function (results) {
                     hideLoading();
 
@@ -21663,9 +21692,14 @@
         }
 
         function processCSVFile(file, type) {
+            const encoding = type === 'jobs' ? $('#csv-jobs-encoding').val() :
+                type === 'companies' ? $('#company-csv-encoding').val() :
+                    $('#csv-users-encoding').val();
+
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true, // 空行をスキップ
+                encoding: encoding || 'UTF-8',
                 complete: function (results) {
                     console.log('Parsed results:', results);
 
