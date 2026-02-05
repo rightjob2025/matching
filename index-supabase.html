@@ -4299,7 +4299,7 @@
                                                   file:bg-green-50 file:text-green-700
                                                   hover:file:bg-green-100 transition-all cursor-pointer">
                                 </div>
-                                <button onclick="importUsersCSV()"
+                                <button onclick="importCandidatesCSV()"
                                     class="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center font-bold group">
                                     <i
                                         class="fas fa-file-import mr-3 group-hover:translate-x-1 transition-transform text-lg"></i>
@@ -20111,7 +20111,7 @@
 
         window.downloadCandidateCsvTemplate = function (e) {
             e.preventDefault();
-            const csvContent = "user_code,name,email,password,age,desired_job_type,desired_location,desired_salary,skills,work_history,academic_background,languages,certifications,matching_info,internal_info,other_info\nC001,山田太郎,yamada@example.com,pass123,28,エンジニア,\"東京都,神奈川県\",600,JavaScript・Python,○○株式会社でWebエンジニアとして3年勤務,○○大学情報学部卒業,英語(TOEIC800点),基本情報技術者,マッチング情報サンプル,社内情報サンプル,その他情報サンプル\nC002,鈴木花子,suzuki@example.com,pass456,32,営業,\"大阪府,兵庫県\",500,営業経験5年,△△株式会社で法人営業として5年勤務,○○大学経済学部卒業,英語(日常会話レベル),普通自動車免許,,,";
+            const csvContent = "user_code,name,email,password,birth_date,age,desired_job_type,desired_location,desired_salary,skills,work_history,academic_background,languages,certifications,matching_info,internal_info,other_info\nC001,山田太郎,yamada@example.com,pass123,1990-01-01,34,エンジニア,\"東京都,神奈川県\",600,JavaScript・Python,○○株式会社でWebエンジニアとして3年勤務,○○大学情報学部卒業,英語(TOEIC800点),基本情報技術者,マッチング情報サンプル,社内情報サンプル,その他情報サンプル\nC002,鈴木花子,suzuki@example.com,pass456,1995-05-15,29,営業,\"大阪府,兵庫県\",500,営業経験5年,△△株式会社で法人営業として5年勤務,○○大学経済学部卒業,英語(日常会話レベル),普通自動車免許,,,";
             const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM付き
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
@@ -21586,6 +21586,10 @@
             handleCSVUpload('jobs');
         }
 
+        window.importCandidatesCSV = function () {
+            handleCSVUpload('candidates');
+        }
+
         window.importUsersCSV = function () {
             handleCSVUpload('users');
         }
@@ -22600,6 +22604,7 @@
                                     userCode: importData.user_code || null,
                                     profileData: {
                                         user_code: importData.user_code || null,
+                                        birth_date: importData.birth_date || null,
                                         age: importData.age || null,
                                         desired_job_type: importData.desired_job_type ?
                                             (typeof importData.desired_job_type === 'string' ? importData.desired_job_type.split(/[,、\uff0c\uff0f\s　]+/).map(s => s.trim()).filter(Boolean) : importData.desired_job_type) : null,
