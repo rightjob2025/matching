@@ -6331,26 +6331,18 @@
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             </div>
 
-                            <div id="faq-content-area" class="space-y-6">
-                                <!-- FAQ content will be dynamically loaded from database -->
-                                <div class="flex justify-center py-12">
-                                    <div
-                                        class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent">
-                                    </div>
-                                </div>
-                            </div>
-                    </div>
-
-                    <div
-                        class="mt-12 p-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl text-white text-center">
-                        <h4 class="text-xl font-bold mb-2">解決しませんでしたか？</h4>
-                        <p class="text-indigo-100 text-sm mb-6">専任のサポートスタッフがリアルタイムで対応いたします。</p>
-                        <button onclick="toggleAISearchChat(); closeFAQModal();"
-                            class="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                            AIアシスタントに聞く
-                        </button>
                     </div>
                     </main>
+                </div>
+
+                <div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-center shrink-0">
+                    <div class="flex flex-col items-center">
+                        <p class="text-sm text-slate-500 mb-3">解決しませんでしたか？</p>
+                        <button onclick="toggleAISearchChat(); closeFAQModal();"
+                            class="bg-indigo-600 text-white px-8 py-2.5 rounded-full font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+                            <i class="fas fa-comment-dots"></i> AIアシスタントに相談する
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -28935,20 +28927,33 @@
         };
 
         async function loadPortalFAQs() {
+            console.log('loadPortalFAQs: starting...', { supabase: !!window.supabase, currentUser: !!currentUser });
             if (!window.supabase) return;
             if (!currentUser) {
                 console.warn('loadPortalFAQs: currentUser is not defined');
                 return;
             }
             const $container = $('#faq-content-area');
+            if ($container.length === 0) {
+                console.error('loadPortalFAQs: #faq-content-area not found');
+                return;
+            }
             $container.html('<div class="flex justify-center py-10"><div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div></div>');
 
             try {
-                // Fetch both organization-specific FAQs and global ones (organization_id is null)
+                const orgId = currentUser.organization_id;
+                console.log('loadPortalFAQs: fetching FAQs for org:', orgId);
+
+                // Construct the OR filter carefully
+                let filter = 'organization_id.is.null';
+                if (orgId) {
+                    filter = `organization_id.eq.${orgId},organization_id.is.null`;
+                }
+
                 const { data: faqs, error } = await supabase
                     .from('faqs')
                     .select('*')
-                    .or(`organization_id.eq.${currentUser.organization_id},organization_id.is.null`)
+                    .or(filter)
                     .eq('is_published', true)
                     .order('display_order', { ascending: true });
 
