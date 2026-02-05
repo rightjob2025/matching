@@ -18114,6 +18114,10 @@
                     case 'experience_level': return 'マネジメント経験者';
                     case 'industry': return 'IT・通信';
                     case 'url': return 'https://example.com/recruit/sales-mgr';
+                    case 'qualifications': return '普通自動車免許、TOEIC 700点以上';
+                    case 'pdf_url': return 'https://drive.google.com/xxx';
+                    case 'pdf_filename': return '募集要項.pdf';
+                    case 'status': return 'active';
                     default: return '';
                 }
             });
@@ -18133,11 +18137,15 @@
                     case 'work_hours': return 'フレックスタイム制';
                     case 'holidays': return '完全週休2日制';
                     case 'employment_type': return '正社員';
-                    case 'benefits': '書籍購入補助、リモートワーク手当';
+                    case 'benefits': return '書籍購入補助、リモートワーク手当';
                     case 'is_remote': return 'はい';
                     case 'experience_level': return '実務経験3年以上';
                     case 'industry': return 'Webサービス';
                     case 'url': return 'https://example.com/recruit/engineer';
+                    case 'qualifications': return 'Java Silver以上などの資格';
+                    case 'pdf_url': return '';
+                    case 'pdf_filename': return '';
+                    case 'status': return 'active';
                     default: return '';
                 }
             });
@@ -21473,11 +21481,16 @@
             { key: 'description', label: '職務内容', aliases: ['仕事内容', '詳細'] },
             { key: 'requirements', label: '必須要件', aliases: ['応募資格', '必須スキル'] },
             { key: 'welcome_requirements', label: '歓迎要件', aliases: ['歓迎スキル', '尚可'] },
+            { key: 'qualifications', label: '応募資格(詳細)', aliases: ['求める資格', '資格'] },
             { key: 'benefits', label: '福利厚生', aliases: ['待遇', '福利'] },
             { key: 'is_remote', label: 'リモート可否', aliases: ['リモート', '在宅'] },
             { key: 'experience_level', label: '経験レベル', aliases: ['経験年数', 'レベル'] },
             { key: 'industry', label: '業界', aliases: ['業種', '産業'] },
             { key: 'url', label: '求人URL', aliases: ['URL', 'リンク', 'サイト', 'ページ'] },
+            { key: 'pdf_url', label: 'PDFファイルURL', aliases: ['PDF', '添付ファイル'] },
+            { key: 'pdf_filename', label: 'PDFファイル名', aliases: ['ファイル名'] },
+            { key: 'status', label: 'ステータス', aliases: ['公開状態', '状態'] },
+            { key: 'pic_user_name', label: '担当者名', aliases: ['担当者', '担当者名'] },
             { key: 'job_experience_ok', label: '職種未経験OK', aliases: ['職種未経験', '未経験可', '職種未経験歓迎'] },
             { key: 'industry_experience_ok', label: '業種未経験OK', aliases: ['業界未経験', '業種未経験', '業界未経験歓迎'] },
             { key: 'work_hours', label: '勤務時間', aliases: ['就業時間', '拘束時間'] },
@@ -22265,8 +22278,8 @@
                                         if (!importData.job_category && aiResult.job_category) importData.job_category = aiResult.job_category;
                                         if (!importData.industry_category && aiResult.industry_category) importData.industry_category = aiResult.industry_category;
                                         if (!importData.is_remote) {
-                                            if (aiResult.is_remote === true || aiResult.is_remote === 'true') importData.is_remote = '可';
-                                            else if (aiResult.is_remote === false || aiResult.is_remote === 'false') importData.is_remote = '不可';
+                                            if (aiResult.is_remote === true || aiResult.is_remote === 'true') importData.is_remote = true;
+                                            else if (aiResult.is_remote === false || aiResult.is_remote === 'false') importData.is_remote = false;
                                             else if (aiResult.is_remote) importData.is_remote = aiResult.is_remote;
                                         }
                                         if (!importData.industry) importData.industry = aiResult.industry || aiResult.industry_category;
@@ -22324,7 +22337,9 @@
                                 companyId = newCompany.id;
                             }
                             importData.company_id = companyId;
-                            importData.status = 'active';
+                            if (!importData.status) {
+                                importData.status = 'active';
+                            }
 
                             if (importData.industry) {
                                 let val = importData.industry;
