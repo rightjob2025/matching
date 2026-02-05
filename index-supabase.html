@@ -6366,21 +6366,6 @@
                     </label>
                 </div>
 
-                <!-- AI自動補完オプション -->
-                <div class="mb-6 bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" id="csv-ai-augment" class="w-5 h-5 text-indigo-600 rounded mt-0.5">
-                        <div>
-                            <span class="font-bold text-gray-900">AIによる自動補完を行う</span>
-                            <p class="text-xs text-gray-600 mt-1">
-                                職種カテゴリ、業界カテゴリ、リモートワーク可否などの項目が空欄の場合、<br>
-                                求人詳細などのテキスト情報からAIが自動的に推測して補完します。<br>
-                                <span class="text-red-500">※処理に時間がかかる場合があります。</span>
-                            </p>
-                        </div>
-                    </label>
-                </div>
-
                 <div class="flex justify-end gap-3 pt-4 border-t">
                     <button type="button" onclick="closeMasterModal()"
                         class="px-6 py-2 border rounded-lg hover:bg-gray-50">
@@ -7065,11 +7050,11 @@
             </div>
 
             <div class="mb-4 flex justify-end">
-                <button onclick="autoMapWithAI()"
+                <button onclick="autoMapWithAI(event)"
                     class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 shadow-sm text-sm font-medium flex items-center transition-all duration-200 mr-2">
                     <i class="fas fa-magic mr-2"></i>AIで自動マッピング
                 </button>
-                <button onclick="previewAIAnalysis()"
+                <button onclick="previewAIAnalysis(event)"
                     class="px-4 py-2 bg-white border border-purple-200 text-purple-700 rounded-lg hover:bg-purple-50 shadow-sm text-sm font-medium flex items-center transition-all duration-200">
                     <i class="fas fa-eye mr-2"></i>1件目をAI解析プレビュー
                 </button>
@@ -7122,6 +7107,22 @@
                 <p class="text-[10px] text-blue-500 mt-2">
                     ※ インポート後のデータはシステム内で「●●万円」として統一して扱われます。
                 </p>
+            </div>
+
+            <!-- AI自動補完オプション -->
+            <div class="mb-6 bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="csv-ai-augment" class="w-5 h-5 text-indigo-600 rounded mt-0.5" checked>
+                    <div>
+                        <span class="font-bold text-indigo-900">AIによる項目補完・判定を行う</span>
+                        <p class="text-xs text-indigo-700 mt-1 leading-relaxed">
+                            CSVに値が入っていない項目を、他のテキスト情報からAIが自動的に推測して補完します。<br>
+                            <span class="font-semibold text-indigo-800">【求人】</span> 職種・業界カテゴリ、リモートワーク、募集背景など<br>
+                            <span class="font-semibold text-indigo-800">【求職者】</span> 希望職種・勤務地、スキル、経歴情報の構造化など<br>
+                            <span class="text-red-500 font-medium">※AI解析を有効にすると、インポートに時間がかかる場合があります（数分程度）。</span>
+                        </p>
+                    </div>
+                </label>
             </div>
 
             <div class="overflow-x-auto mb-6">
@@ -21561,7 +21562,6 @@
             { key: 'role', label: '権限(candidate/coach/...)', aliases: ['ロール', '役割'] },
             { key: 'birth_date', label: '生年月日', aliases: ['誕生日', '生れ'] },
             { key: 'age', label: '年齢', aliases: ['歳', '年齢'] },
-            { key: 'education', label: '学歴', aliases: ['学校', '大学', '学部', '学歴'] },
 
             // 希望条件
             { key: 'desired_job_type', label: '希望職種', aliases: ['希望職種名', '職種'] },
@@ -21964,13 +21964,14 @@
             currentCSVHeaders = [];
         }
 
-        window.autoMapWithAI = async function () {
+        window.autoMapWithAI = async function (event) {
             if (!currentCSVHeaders || currentCSVHeaders.length === 0) {
                 alert('解析対象のCSVヘッダーがありません');
                 return;
             }
 
-            const fields = currentImportType === 'jobs' ? jobFields : userFields;
+            const fields = currentImportType === 'jobs' ? jobFields :
+                currentImportType === 'companies' ? companyFields : userFields;
 
             // AIに送る情報
             // 補足情報として既存のエイリアスも渡すことで精度向上を図る
@@ -22042,14 +22043,14 @@
             }
         }
 
-        window.previewAIAnalysis = async function () {
+        window.previewAIAnalysis = async function (event) {
             if (!currentCSVData || currentCSVData.length === 0) {
-                alert('データがありません');
+                alert('データが見つかりません');
                 return;
             }
 
-            if (currentImportType !== 'jobs') {
-                alert('現在、求人データのAI解析プレビューのみ対応しています');
+            if (currentImportType !== 'jobs' && currentImportType !== 'candidates' && currentImportType !== 'users') {
+                alert('現在、求人または求職者のAI解析プレビューに対応しています');
                 return;
             }
 
@@ -22067,8 +22068,10 @@
                     industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
                 };
 
-                // プロンプトキーは 'job_description'
-                let aiResult = await analyzeDocumentWithAI(text, 'job_description', options);
+                // プロンプトキーの決定
+                const aiType = (currentImportType === 'users' || currentImportType === 'candidates') ? 'resume' : 'job_description';
+
+                let aiResult = await analyzeDocumentWithAI(text, aiType, options);
 
                 // 配列で返ってくる場合への対応
                 if (Array.isArray(aiResult)) aiResult = aiResult[0] || {};
@@ -22079,9 +22082,19 @@
 
                 // キーの正規化 (AIの揺らぎ吸収)
                 if (aiResult.industry_category && !aiResult.industry) aiResult.industry = aiResult.industry_category;
+
+                // 求職者用フィールドの正規化
+                if (aiResult.experience && !aiResult.work_history) aiResult.work_history = aiResult.experience;
+                if (aiResult.education && !aiResult.academic_background) aiResult.academic_background = aiResult.education;
+
                 // リモート可否の表示用変換
                 if (aiResult.is_remote === true || aiResult.is_remote === 'true') aiResult.is_remote = '可';
                 if (aiResult.is_remote === false || aiResult.is_remote === 'false') aiResult.is_remote = '不可';
+
+                // 配列データの表示用変換 (求職者用)
+                if (Array.isArray(aiResult.desired_job_type)) aiResult.desired_job_type = aiResult.desired_job_type.join(', ');
+                if (Array.isArray(aiResult.desired_location)) aiResult.desired_location = aiResult.desired_location.join(', ');
+                if (Array.isArray(aiResult.skills)) aiResult.skills = aiResult.skills.join(', ');
 
                 console.log('AI Preview Result:', aiResult);
 
@@ -22364,21 +22377,24 @@
                         setImportStepStatus('parse', 'done');
 
 
-                        if (currentImportType === 'jobs') {
-                            // AI自動補完
-                            const useAI = $('#csv-ai-augment').is(':checked');
-                            if (useAI) {
-                                setImportStepStatus('ai', 'active');
+                        // AI自動補完
+                        const useAI = $('#csv-ai-augment').is(':checked');
+                        if (useAI && (currentImportType === 'jobs' || currentImportType === 'candidates')) {
+                            setImportStepStatus('ai', 'active');
 
-                                const jobText = Object.entries(row).map(([k, v]) => `${k}: ${v}`).join('\n');
-                                const options = {
-                                    job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
-                                    industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
-                                };
-                                try {
-                                    let aiResult = await analyzeDocumentWithAI(jobText, 'job_description', options);
-                                    if (Array.isArray(aiResult)) aiResult = aiResult[0] || {};
-                                    if (aiResult) {
+                            const rowText = Object.entries(row).map(([k, v]) => `${k}: ${v}`).join('\n');
+                            const aiType = currentImportType === 'jobs' ? 'job_description' : 'resume';
+                            const options = {
+                                job_categories: typeof masterJobCategories !== 'undefined' ? masterJobCategories : [],
+                                industry_categories: typeof masterIndustries !== 'undefined' ? masterIndustries : []
+                            };
+
+                            try {
+                                let aiResult = await analyzeDocumentWithAI(rowText, aiType, options);
+                                if (Array.isArray(aiResult)) aiResult = aiResult[0] || {};
+
+                                if (aiResult) {
+                                    if (currentImportType === 'jobs') {
                                         if (!importData.job_category && aiResult.job_category) importData.job_category = aiResult.job_category;
                                         if (!importData.industry_category && aiResult.industry_category) importData.industry_category = aiResult.industry_category;
                                         if (!importData.is_remote) {
@@ -22387,36 +22403,33 @@
                                             else if (aiResult.is_remote) importData.is_remote = aiResult.is_remote;
                                         }
                                         if (!importData.industry) importData.industry = aiResult.industry || aiResult.industry_category;
-
-                                        if (aiResult.requirements) {
-                                            if (!importData.requirements || importData.requirements.length < 10 || aiResult.requirements.length > importData.requirements.length) {
-                                                importData.requirements = aiResult.requirements;
-                                            }
-                                        }
-                                        if (aiResult.welcome_requirements) {
-                                            if (!importData.welcome_requirements || importData.welcome_requirements.length < 5 || aiResult.welcome_requirements.length > importData.welcome_requirements.length) {
-                                                importData.welcome_requirements = aiResult.welcome_requirements;
-                                            }
-                                        }
-
+                                        if (aiResult.requirements && (!importData.requirements || importData.requirements.length < 10)) importData.requirements = aiResult.requirements;
+                                        if (aiResult.welcome_requirements && (!importData.welcome_requirements || importData.welcome_requirements.length < 5)) importData.welcome_requirements = aiResult.welcome_requirements;
                                         if (!importData.description && aiResult.description) importData.description = aiResult.description;
                                         if (!importData.work_hours && aiResult.work_hours) importData.work_hours = aiResult.work_hours;
                                         if (!importData.holidays && aiResult.holidays) importData.holidays = aiResult.holidays;
                                         if (!importData.benefits && aiResult.benefits) importData.benefits = aiResult.benefits;
                                         if (!importData.interview_process && aiResult.interview_process) importData.interview_process = aiResult.interview_process;
                                         if (!importData.employment_type && aiResult.employment_type) importData.employment_type = aiResult.employment_type;
+                                    } else if (currentImportType === 'candidates') {
+                                        if (!importData.age && aiResult.age) importData.age = aiResult.age;
+                                        if (!importData.skills && aiResult.skills) importData.skills = Array.isArray(aiResult.skills) ? aiResult.skills.join(', ') : aiResult.skills;
+                                        if (!importData.work_history && aiResult.experience) importData.work_history = Array.isArray(aiResult.experience) ? aiResult.experience.join('\n') : aiResult.experience;
+                                        if (!importData.academic_background && aiResult.education) importData.academic_background = Array.isArray(aiResult.education) ? aiResult.education.join('\n') : aiResult.education;
+                                        if (!importData.desired_job_type && aiResult.desired_job_type) importData.desired_job_type = Array.isArray(aiResult.desired_job_type) ? aiResult.desired_job_type.join(', ') : aiResult.desired_job_type;
+                                        if (!importData.desired_location && aiResult.desired_location) importData.desired_location = Array.isArray(aiResult.desired_location) ? aiResult.desired_location.join(', ') : aiResult.desired_location;
                                     }
-                                } catch (e) { console.error('AI error:', e); }
-                                setImportStepStatus('ai', 'done');
-                            }
+                                }
+                            } catch (e) { console.error('AI error:', e); }
+                            setImportStepStatus('ai', 'done');
+                        }
 
-
+                        if (currentImportType === 'jobs') {
                             if (!importData.title) throw new Error('求人タイトルは必須です');
                             if (!importData.company) throw new Error('企業名は必須です');
 
                             setImportStepStatus('db', 'active');
                             // 企業IDの解決
-
                             let companyId = null;
                             const { data: existingCompany } = await supabase
                                 .from('companies')
@@ -22448,7 +22461,6 @@
                             if (importData.industry) {
                                 let val = importData.industry;
                                 if (typeof masterIndustries !== 'undefined') {
-                                    // masterIndustries は文字列の配列
                                     const match = masterIndustries.find(label => label === val);
                                     if (match) val = match;
                                 }
@@ -22459,7 +22471,6 @@
                             if (importData.job_category) {
                                 let val = importData.job_category;
                                 if (typeof masterJobCategories !== 'undefined') {
-                                    // masterJobCategories は文字列の配列
                                     const match = masterJobCategories.find(label => label === val);
                                     if (match) val = match;
                                 }
@@ -22468,13 +22479,12 @@
 
                             // 重複疑いのチェック
                             if (!isUpsert) {
-                                // 組織の求人を一部取得して判定（判定を強固にするため多めに取得）
                                 const { data: existingJobs } = await supabase
                                     .from('jobs')
                                     .select('id, job_code, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, qualifications, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pdf_url, pdf_filename, status')
                                     .eq('organization_id', currentUser.organization_id)
                                     .is('deleted_at', null)
-                                    .limit(500); // 簡易化のため一旦500件程度を対象とする
+                                    .limit(500);
 
                                 const duplicate = existingJobs?.find(j => isJobDuplicate(importData, j));
 
@@ -22483,7 +22493,7 @@
                                         row: displayRowNumber,
                                         importData: importData,
                                         existingJob: duplicate,
-                                        duplicate_id: duplicate.id, // 更新用に保存
+                                        duplicate_id: duplicate.id,
                                         company: importData.company,
                                         title: importData.title,
                                         location: importData.location,
@@ -22622,7 +22632,7 @@
                                         desired_salary: importData.desired_salary || null,
                                         skills: importData.skills || null,
                                         work_history: importData.work_history || null,
-                                        academic_background: importData.academic_background || null,
+                                        academic_background: importData.academic_background || importData.education || null,
                                         languages: importData.languages || null,
                                         certifications: importData.certifications || null,
                                         matching_info: importData.matching_info || null,
