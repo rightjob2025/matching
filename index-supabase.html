@@ -28748,9 +28748,32 @@
         window.openFAQModal = async function () {
             console.log('Opening FAQ Modal...');
             try {
-                $('#faq-modal').removeClass('hidden').addClass('flex');
+                const $modal = $('#faq-modal');
+                if ($modal.length === 0) {
+                    console.error('CRITICAL: #faq-modal not found in DOM!');
+                    alert('システムエラー：ヘルプポータルの部品が見つかりません。ページを再読み込みしてください。');
+                    return;
+                }
+
+                // 強制的に表示状態にする
+                $modal.removeClass('hidden').addClass('flex');
+                $modal.css({
+                    'display': 'flex',
+                    'z-index': '999999',
+                    'visibility': 'visible',
+                    'opacity': '1'
+                });
+
+                console.log('Modal element state:', {
+                    display: $modal.css('display'),
+                    zIndex: $modal.css('z-index'),
+                    visible: $modal.is(':visible')
+                });
+
                 await loadPortalFAQs();
-                switchFAQCategory('all');
+                if (typeof switchFAQCategory === 'function') {
+                    switchFAQCategory('all');
+                }
             } catch (err) {
                 console.error('Error opening FAQ Modal:', err);
                 alert('ヘルプポータルの読み込み中にエラーが発生しました。');
