@@ -21531,6 +21531,7 @@
             // 基本情報
             { key: 'user_code', label: '求職者ID', aliases: ['ID', '求職者ID', '管理ID', '求職者コード', 'User Code'] },
             { key: 'name', label: '氏名', required: true, aliases: ['名前', 'ユーザー名', '氏名'] },
+            { key: 'furigana', label: 'フリガナ', aliases: ['ふりがな', 'カナ'] },
             { key: 'email', label: 'メールアドレス', required: true, aliases: ['メール', 'Email', 'E-mail'] },
             { key: 'password', label: 'パスワード', required: false, aliases: ['パスワード', 'Password', 'pass'] },
             { key: 'role', label: '権限(candidate/coach/...)', aliases: ['ロール', '役割'] },
@@ -22653,6 +22654,7 @@
                                     email: importData.email,
                                     password: importData.password,
                                     name: importData.name,
+                                    furigana: importData.furigana || null,
                                     role: 'candidate',
                                     organizationId: currentUser.organization_id,
                                     upsert: isUpsert,
