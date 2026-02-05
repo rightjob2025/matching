@@ -22067,8 +22067,21 @@
                 }
 
             } catch (e) {
-                console.error(e);
-                alert('解析失敗: ' + e.message);
+                console.error('AI Preview Error:', e);
+                let errorMsg = e.message;
+                if (e.details) {
+                    try {
+                        const detailObj = JSON.parse(e.details);
+                        if (detailObj.error && detailObj.error.message) {
+                            errorMsg += '\n詳細: ' + detailObj.error.message;
+                        } else {
+                            errorMsg += '\n詳細: ' + e.details;
+                        }
+                    } catch (err) {
+                        errorMsg += '\n詳細: ' + e.details;
+                    }
+                }
+                alert('解析失敗: ' + errorMsg);
             } finally {
                 btn.prop('disabled', false).html(originalContent);
             }
@@ -22344,8 +22357,9 @@
                             if (importData.industry) {
                                 let val = importData.industry;
                                 if (typeof masterIndustries !== 'undefined') {
-                                    const match = masterIndustries.find(m => m.label === val || m.value === val);
-                                    if (match) val = match.value;
+                                    // masterIndustries は文字列の配列
+                                    const match = masterIndustries.find(label => label === val);
+                                    if (match) val = match;
                                 }
                                 importData.industry_category = val;
                                 delete importData.industry;
@@ -22354,8 +22368,9 @@
                             if (importData.job_category) {
                                 let val = importData.job_category;
                                 if (typeof masterJobCategories !== 'undefined') {
-                                    const match = masterJobCategories.find(m => m.label === val || m.value === val);
-                                    if (match) val = match.value;
+                                    // masterJobCategories は文字列の配列
+                                    const match = masterJobCategories.find(label => label === val);
+                                    if (match) val = match;
                                 }
                                 importData.job_category = val;
                             }
@@ -22365,7 +22380,7 @@
                                 // 組織の求人を一部取得して判定（判定を強固にするため多めに取得）
                                 const { data: existingJobs } = await supabase
                                     .from('jobs')
-                                    .select('id, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pdf_filename, status')
+                                    .select('id, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, qualifications, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pic_user_name, pdf_url, pdf_filename, status')
                                     .eq('organization_id', currentUser.organization_id)
                                     .is('deleted_at', null)
                                     .limit(500); // 簡易化のため一旦500件程度を対象とする
