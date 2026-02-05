@@ -21538,7 +21538,6 @@
             { key: 'pdf_url', label: 'PDFファイルURL', aliases: ['PDF', '添付ファイル'] },
             { key: 'pdf_filename', label: 'PDFファイル名', aliases: ['ファイル名'] },
             { key: 'status', label: 'ステータス', aliases: ['公開状態', '状態'] },
-            { key: 'pic_user_name', label: '担当者名', aliases: ['担当者', '担当者名'] },
             { key: 'job_experience_ok', label: '職種未経験OK', aliases: ['職種未経験', '未経験可', '職種未経験歓迎'] },
             { key: 'industry_experience_ok', label: '業種未経験OK', aliases: ['業界未経験', '業種未経験', '業界未経験歓迎'] },
             { key: 'work_hours', label: '勤務時間', aliases: ['就業時間', '拘束時間'] },
@@ -22433,7 +22432,7 @@
                                 // 組織の求人を一部取得して判定（判定を強固にするため多めに取得）
                                 const { data: existingJobs } = await supabase
                                     .from('jobs')
-                                    .select('id, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, qualifications, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pic_user_name, pdf_url, pdf_filename, status')
+                                    .select('id, job_code, title, company, job_category, location, salary_min, salary_max, description, requirements, welcome_requirements, qualifications, work_hours, holidays, benefits, interview_process, employment_type, is_remote, job_experience_ok, industry_experience_ok, pdf_url, pdf_filename, status')
                                     .eq('organization_id', currentUser.organization_id)
                                     .is('deleted_at', null)
                                     .limit(500); // 簡易化のため一旦500件程度を対象とする
