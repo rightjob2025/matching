@@ -2059,9 +2059,14 @@
                         <span class="ml-3">組織・通知設定</span>
                     </a>
                     <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
-                        onclick="openFAQModal()">
+                        data-page="admin-faqs">
                         <i class="fas fa-question-circle w-5"></i>
-                        <span class="ml-3">ヘルプ・FAQ</span>
+                        <span class="ml-3">FAQ・マニュアル管理</span>
+                    </a>
+                    <a href="#" class="nav-link flex items-center px-4 py-3 rounded-lg transition"
+                        onclick="openFAQModal()">
+                        <i class="fas fa-life-ring w-5 text-indigo-400"></i>
+                        <span class="ml-3">ヘルプポータルを表示</span>
                     </a>
 
                 </div>
@@ -6049,250 +6054,294 @@
         </div>
     </div>
 
-    <!-- FAQ Portal Modal -->
-    <div id="faq-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
-        style="z-index: 99999;">
-        <div
-            class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col animate-fade-in-up">
-            <!-- Modal Header -->
-            <div class="bg-indigo-600 p-6 flex justify-between items-center text-white shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white/20 p-2 rounded-lg">
-                        <i class="fas fa-question-circle text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold">RightJob ヘルプセンター</h2>
-                        <p class="text-xs text-indigo-100 uppercase tracking-widest font-medium">Support Hub</p>
-                    </div>
+    <!-- Admin: FAQ & Inquiry Management -->
+    <div id="admin-faqs-content" class="app-content p-6 hidden">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">FAQ・マニュアル管理</h2>
+                    <p class="text-slate-500 mt-1">ヘルプセンターのコンテンツ管理と問い合わせ対応</p>
                 </div>
-                <button onclick="closeFAQModal()" class="text-white/80 hover:text-white transition p-2">
-                    <i class="fas fa-times text-2xl"></i>
+                <div class="flex gap-3">
+                    <button onclick="syncHardcodedFAQsToDB()"
+                        class="bg-white text-slate-600 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center gap-2 text-sm font-bold">
+                        <i class="fas fa-sync-alt"></i> 初期データを同期
+                    </button>
+                    <button onclick="showFAQForm()"
+                        class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition-all flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-100">
+                        <i class="fas fa-plus"></i> 新規FAQ作成
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 mb-8 overflow-x-auto no-scrollbar">
+                <button onclick="switchAdminFAQTab('list')" id="admin-faq-tab-list"
+                    class="admin-faq-tab px-6 py-3 border-b-2 border-indigo-600 text-indigo-600 font-bold text-sm whitespace-nowrap">
+                    FAQリスト
+                </button>
+                <button onclick="switchAdminFAQTab('logs')" id="admin-faq-tab-logs"
+                    class="admin-faq-tab px-6 py-3 border-b-2 border-transparent text-slate-500 font-bold text-sm hover:text-slate-700 whitespace-nowrap">
+                    問い合わせログ
+                    <span id="unread-inquiry-count"
+                        class="hidden ml-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="flex-1 flex overflow-hidden">
-                <!-- FAQ Sidebar -->
-                <aside class="w-64 bg-slate-50 border-r border-slate-200 overflow-y-auto hidden md:block">
-                    <div class="p-4">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Categories
-                        </p>
-                        <nav class="space-y-1">
-                            <button onclick="switchFAQCategory('all')"
-                                class="faq-nav-btn active w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
-                                <i class="fas fa-th-large w-4"></i> 全てのヘルプ
-                            </button>
-                            <button onclick="switchFAQCategory('start')"
-                                class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
-                                <i class="fas fa-rocket w-4"></i> 導入・基本設定
-                            </button>
-                            <button onclick="switchFAQCategory('ai')"
-                                class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
-                                <i class="fas fa-magic w-4"></i> AIマッチング
-                            </button>
-                            <button onclick="switchFAQCategory('manage')"
-                                class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
-                                <i class="fas fa-tasks w-4"></i> 求人・進捗管理
-                            </button>
-                            <button onclick="switchFAQCategory('trouble')"
-                                class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
-                                <i class="fas fa-exclamation-triangle w-4 text-orange-500"></i> トラブル解決
-                            </button>
-                        </nav>
-                    </div>
-
-                    <!-- Quick Contact -->
-                    <div class="mt-auto p-4 border-t border-slate-200">
-                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <p class="text-xs font-bold text-indigo-900 mb-2">お困りですか？</p>
-                            <a href="mailto:support@rightjob.com"
-                                class="text-[11px] text-indigo-600 hover:underline flex items-center gap-2">
-                                <i class="fas fa-envelope"></i> メールでお問い合わせ
-                            </a>
-                        </div>
-                    </div>
-                </aside>
-
-                <!-- FAQ Content -->
-                <main class="flex-1 bg-white overflow-y-auto custom-scrollbar p-6">
-                    <!-- Search Box -->
-                    <div class="relative mb-8">
-                        <input type="text" id="faq-search-input" onkeyup="filterFAQ(this.value)"
-                            placeholder="キーワードを入力して検索（例：一括、AI、エラー）"
-                            class="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all outline-none">
+            <!-- FAQ List View -->
+            <div id="admin-faq-list-view" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="md:col-span-3 h-12 relative">
+                        <input type="text" id="admin-faq-search" onkeyup="filterAdminFAQTable()"
+                            placeholder="質問内容やキーワードで検索..."
+                            class="w-full h-full pl-12 pr-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-50 leading-none outline-none transition-all">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     </div>
+                    <select id="admin-faq-filter-category" onchange="filterAdminFAQTable()"
+                        class="h-12 px-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-50 outline-none transition-all font-bold text-slate-600">
+                        <option value="all">すべてのカテゴリ</option>
+                        <option value="start">導入・基本設定</option>
+                        <option value="ai">AIマッチング</option>
+                        <option value="manage">求人・進捗管理</option>
+                        <option value="trouble">トラブル解決</option>
+                    </select>
+                </div>
 
-                    <div id="faq-content-area" class="space-y-6">
-                        <!-- 導入・基本ガイド -->
-                        <div class="faq-category-section" data-category="start">
-                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-                                <i class="fas fa-rocket text-indigo-500"></i> 導入・基本ガイド
-                            </h3>
-                            <div class="space-y-3">
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">招待メールが届かない、またはリンクが期限切れになった</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    カテゴリ</th>
+                                <th
+                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    質問 / 回答概要</th>
+                                <th
+                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    表示設定</th>
+                                <th
+                                    class="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-faq-table-body" class="divide-y divide-slate-100">
+                            <!-- Loading State -->
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin">
+                                        </div>
+                                        <p class="text-sm text-slate-400 font-medium">データを読み込み中...</p>
                                     </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        管理者画面の「ユーザー管理」から、該当ユーザーの「招待を再送」ボタンをクリックしてください。迷惑メールフォルダもご確認ください（noreply@rightjob.com
-                                        から送信されます）。
-                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Inquiry Logs View -->
+            <div id="admin-inquiry-logs-view" class="hidden">
+                <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 mb-8">
+                    <h3 class="text-indigo-900 font-bold mb-2 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-indigo-500"></i> ナレッジ蓄積のヒント
+                    </h3>
+                    <p class="text-indigo-700 text-sm leading-relaxed">
+                        ユーザーがAIアシスタントに尋ねた質問がここに蓄積されます。
+                        AIで解決しきれなかった質問や、頻出する質問を「FAQに追加」ボタンで簡単にナレッジ化できます。これにより、次回のAI回答精度が向上します。
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    日時</th>
+                                <th
+                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    ユーザー</th>
+                                <th
+                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    相談内容</th>
+                                <th
+                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    状態</th>
+                                <th
+                                    class="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    ナレッジ化</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-inquiry-table-body" class="divide-y divide-slate-100">
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Edit/Add Modal -->
+    <div id="faq-form-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden"
+        style="z-index: 99999;">
+        <div
+            class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col animate-fade-in-up">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="faq-modal-title" class="text-xl font-bold text-slate-800">新規FAQ作成</h3>
+                <button onclick="closeFAQForm()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-8 overflow-y-auto max-h-[80vh]">
+                <form id="faq-edit-form" class="space-y-6">
+                    <input type="hidden" id="faq-id">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">カテゴリ</label>
+                            <select id="faq-category"
+                                class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-slate-700"
+                                required>
+                                <option value="start">導入・基本設定</option>
+                                <option value="ai">AIマッチング</option>
+                                <option value="manage">求人・進捗管理</option>
+                                <option value="trouble">トラブル解決</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">表示順</label>
+                            <input type="number" id="faq-display-order"
+                                class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                                value="0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">質問
+                            (Question)</label>
+                        <input type="text" id="faq-question-input"
+                            class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-medium"
+                            placeholder="ユーザーが困っている内容を入力..." required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">回答
+                            (Answer)</label>
+                        <textarea id="faq-answer-input" rows="6"
+                            class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm leading-relaxed"
+                            placeholder="解決策や手順を入力（改行も反映されます）..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">参照画像URL
+                            (任意)</label>
+                        <input type="text" id="faq-image-url"
+                            class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-xs"
+                            placeholder="https://... または 画面キャプチャのファイル名">
+                    </div>
+
+                    <div class="flex items-center gap-2 p-4 bg-slate-50 rounded-2xl">
+                        <input type="checkbox" id="faq-is-published" checked class="w-5 h-5 accent-indigo-600">
+                        <label for="faq-is-published" class="text-sm font-bold text-slate-600">この内容を今すぐ公開する</label>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button onclick="closeFAQForm()"
+                    class="px-6 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all">キャンセル</button>
+                <button onclick="saveFAQ()"
+                    class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">保存する</button>
+            </div>
+
+            <!-- FAQ Portal Modal -->
+            <div id="faq-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+                style="z-index: 99999;">
+                <div
+                    class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden flex flex-col animate-fade-in-up">
+                    <!-- Modal Header -->
+                    <div class="bg-indigo-600 p-6 flex justify-between items-center text-white shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/20 p-2 rounded-lg">
+                                <i class="fas fa-question-circle text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold">RightJob ヘルプセンター</h2>
+                                <p class="text-xs text-indigo-100 uppercase tracking-widest font-medium">Support Hub</p>
+                            </div>
+                        </div>
+                        <button onclick="closeFAQModal()" class="text-white/80 hover:text-white transition p-2">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="flex-1 flex overflow-hidden">
+                        <!-- FAQ Sidebar -->
+                        <aside class="w-64 bg-slate-50 border-r border-slate-200 overflow-y-auto hidden md:block">
+                            <div class="p-4">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                                    Categories
+                                </p>
+                                <nav class="space-y-1">
+                                    <button onclick="switchFAQCategory('all')"
+                                        class="faq-nav-btn active w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
+                                        <i class="fas fa-th-large w-4"></i> 全てのヘルプ
+                                    </button>
+                                    <button onclick="switchFAQCategory('start')"
+                                        class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
+                                        <i class="fas fa-rocket w-4"></i> 導入・基本設定
+                                    </button>
+                                    <button onclick="switchFAQCategory('ai')"
+                                        class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
+                                        <i class="fas fa-magic w-4"></i> AIマッチング
+                                    </button>
+                                    <button onclick="switchFAQCategory('manage')"
+                                        class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
+                                        <i class="fas fa-tasks w-4"></i> 求人・進捗管理
+                                    </button>
+                                    <button onclick="switchFAQCategory('trouble')"
+                                        class="faq-nav-btn w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-3 transition-colors text-slate-600 hover:bg-white hover:shadow-sm">
+                                        <i class="fas fa-exclamation-triangle w-4 text-orange-500"></i> トラブル解決
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <!-- Quick Contact -->
+                            <div class="mt-auto p-4 border-t border-slate-200">
+                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                    <p class="text-xs font-bold text-indigo-900 mb-2">お困りですか？</p>
+                                    <a href="mailto:support@rightjob.com"
+                                        class="text-[11px] text-indigo-600 hover:underline flex items-center gap-2">
+                                        <i class="fas fa-envelope"></i> メールでお問い合わせ
+                                    </a>
                                 </div>
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">ログイン時に「Invalid login
-                                            credentials」と表示される</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
+                            </div>
+                        </aside>
+
+                        <!-- FAQ Content -->
+                        <main class="flex-1 bg-white overflow-y-auto custom-scrollbar p-6">
+                            <!-- Search Box -->
+                            <div class="relative mb-8">
+                                <input type="text" id="faq-search-input" onkeyup="filterFAQ(this.value)"
+                                    placeholder="キーワードを入力して検索（例：一括、AI、エラー）"
+                                    class="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-xl focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all outline-none">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            </div>
+
+                            <div id="faq-content-area" class="space-y-6">
+                                <!-- FAQ content will be dynamically loaded from database -->
+                                <div class="flex justify-center py-12">
                                     <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        メールアドレスまたはパスワードに誤りがあります。大文字小文字の違いや、余計なスペースが入っていないか確認してください。解決しない場合はログイン画面の「パスワードを忘れた場合」からリセットを行ってください。
-                                    </div>
-                                </div>
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">求職者が複数の求人に応募できますか？</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        はい、何件でも応募できます。ただし、既に一度応募した同じ求人に再度応募することはできません。
+                                        class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent">
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- AIマッチングの活用 -->
-                        <div class="faq-category-section" data-category="ai">
-                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-                                <i class="fas fa-magic text-indigo-500"></i> AIマッチングの活用
-                            </h3>
-                            <div class="space-y-3">
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">AIのマッチングスコアが極端に低い（または「N/A」になる）</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        以下の3点を確認してください。<br>
-                                        1. **プロフィールの不足**: 求職者の「スキル」と「職務経歴」が合計200文字以下だと精度が低下します。<br>
-                                        2. **求人詳細の不足**: 業務内容が具体的であるほどスコアが安定します。<br>
-                                        3. **マッチング実行**: データ更新直後は、再度「AIマッチング実行」ボタンを押す必要があります。<br>
-                                        <img src="ai_recommendations_view_1770253534178.png"
-                                            class="mt-3 rounded-lg border shadow-sm max-w-full">
-                                    </div>
-                                </div>
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">スカウト文面が作成途中で止まってしまう</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        ブラウザの更新を行い、再度生成を試みてください。AIの応答制限に達した可能性があります。頻繁に発生する場合は、入力する推薦理由やコメントを少し短くして試してください。
-                                    </div>
-                                </div>
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">AIマッチングの精度を上げるには？</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        以下のポイントを意識してください：<br>
-                                        ・求職者のプロフィール（特に職務経歴）を具体的に記入する<br>
-                                        ・社内専用情報（マッチング情報、メモ）を充実させる（これらもAIの分析対象です）<br>
-                                        ・求人の「業務内容」と「応募資格」を詳細に記載する
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 求人・進捗管理 -->
-                        <div class="faq-category-section" data-category="manage">
-                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-                                <i class="fas fa-tasks text-indigo-500"></i> 求人・進捗管理
-                            </h3>
-                            <div class="space-y-3">
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">ステータスを変更したのに、履歴に反映されない</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        一時的な通信エラーの可能性があります。画面をリロードして確認してください。また、更新時に右下に表示される「更新完了」の通知を確認してから画面を遷移するようにしてください。
-                                    </div>
-                                </div>
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">「除外企業」を設定したが、推薦リストにまだ表示される</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        除外設定は「設定後の新規マッチング」から適用されます。既に生成済みの推薦リストには即時反映されませんので、一度既存の推薦を削除してから、再度「AIマッチング実行」を行ってください。
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- トラブル解決 -->
-                        <div class="faq-category-section" data-category="trouble">
-                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-                                <i class="fas fa-exclamation-triangle text-orange-500"></i> トラブル解決
-                            </h3>
-                            <div class="space-y-3">
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">CSVインポートで全件失敗する</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        主な原因は以下の通りです：<br>
-                                        1. **ヘッダーの不一致**: テンプレートの項目名（1行目）を変更していないか確認してください。<br>
-                                        2. **文字コード**: ファイルの保存形式を「CSV (UTF-8)」に指定して保存してください。<br>
-                                        3. **必須項目の欠如**: 「名前」や「メールアドレス」が空の行がないか確認してください。
-                                    </div>
-                                </div>
-                                <div class="faq-item group">
-                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
-                                        onclick="$(this).next().slideToggle()">
-                                        <span class="font-bold text-slate-700">画面の動作が重い、またはボタンが反応しない</span>
-                                        <i
-                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
-                                    </div>
-                                    <div
-                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        ブラウザのキャッシュが影響している場合があります。一度ログアウトし、ブラウザの更新（Ctrl+F5 または
-                                        Cmd+Shift+R）を行ってから再度お試しください。
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div
@@ -6304,66 +6353,66 @@
                             AIアシスタントに聞く
                         </button>
                     </div>
-                </main>
-            </div>
-        </div>
-    </div>
-    <!-- Admin: Company Management Page -->
-    <div id="admin-companies-content" class="app-content p-6 hidden">
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">企業管理</h2>
-                    <p class="text-gray-600 text-sm mt-1">登録されている企業の一覧と管理</p>
-                </div>
-                <div class="flex gap-2">
-                    <button id="bulk-delete-companies" onclick="bulkDeleteCompanies()"
-                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hidden">
-                        <i class="fas fa-trash-alt mr-2"></i>一括削除 (<span id="selected-companies-count">0</span>)
-                    </button>
-                    <button onclick="showCompanyCsvImportModal()"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                        <i class="fas fa-file-csv mr-2"></i>CSVインポート
-                    </button>
-                    <button onclick="showCompanyForm()"
-                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-                        <i class="fas fa-plus mr-2"></i>新規企業登録
-                    </button>
+                    </main>
                 </div>
             </div>
-            <div class="mb-4">
-                <input type="text" id="company-search" placeholder="企業名、業界、所在地で検索..."
-                    class="w-full px-4 py-2 border rounded-lg" onkeyup="filterCompanies()">
+        </div>
+        <!-- Admin: Company Management Page -->
+        <div id="admin-companies-content" class="app-content p-6 hidden">
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">企業管理</h2>
+                        <p class="text-gray-600 text-sm mt-1">登録されている企業の一覧と管理</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="bulk-delete-companies" onclick="bulkDeleteCompanies()"
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 hidden">
+                            <i class="fas fa-trash-alt mr-2"></i>一括削除 (<span id="selected-companies-count">0</span>)
+                        </button>
+                        <button onclick="showCompanyCsvImportModal()"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-file-csv mr-2"></i>CSVインポート
+                        </button>
+                        <button onclick="showCompanyForm()"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                            <i class="fas fa-plus mr-2"></i>新規企業登録
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <input type="text" id="company-search" placeholder="企業名、業界、所在地で検索..."
+                        class="w-full px-4 py-2 border rounded-lg" onkeyup="filterCompanies()">
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="companies-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left w-10">
+                                <input type="checkbox" id="select-all-companies" onchange="toggleAllCompanies(this)"
+                                    class="rounded text-indigo-600 focus:ring-indigo-500">
+                            </th>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                                企業名</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                業界</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                所在地</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Webサイト</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companies-container" class="bg-white divide-y divide-gray-200">
+                        <!-- Companies will be loaded here -->
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200" id="companies-table">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left w-10">
-                            <input type="checkbox" id="select-all-companies" onchange="toggleAllCompanies(this)"
-                                class="rounded text-indigo-600 focus:ring-indigo-500">
-                        </th>
-                        <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                            企業名</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            業界</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            所在地</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Webサイト</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            操作</th>
-                    </tr>
-                </thead>
-                <tbody id="companies-container" class="bg-white divide-y divide-gray-200">
-                    <!-- Companies will be loaded here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-    </main>
+        </main>
     </div>
 
     <!-- Company Form Modal -->
@@ -8366,6 +8415,7 @@
                     'kpi-dashboard-content',
                     'admin-yomi-management-content',
                     'admin-templates-content',
+                    'admin-faqs-content',
                     'super-admin-organizations-content',
                     'coach-students-content'
                 ];
@@ -26616,7 +26666,8 @@
                     'coach-students': '担当求職者管理',
                     'candidate-search': '求職者検索',
                     'kpi-dashboard': 'KPIダッシュボード',
-                    'admin-settings': '組織・通知設定'
+                    'admin-settings': '組織・通知設定',
+                    'admin-faqs': 'FAQ・マニュアル管理'
                 }
                 $('#page-title').text(titles[page] || page)
             })
@@ -26746,7 +26797,8 @@
                 <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-indigo-900">自分の文体を適用する</h3>
-                        <p class="text-xs text-indigo-700 mt-1">ONにすると、あなたの普段のメールや過去のスカウト文を学習し、AIが「あなたらしい」文面を生成します。</p>
+                        <p class="text-xs text-indigo-700 mt-1">ONにすると、あなたの普段のメールや過去のスカウト文を学習し、AIが「あなたらしい」文面を生成します。
+                        </p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="scout-style-active" class="sr-only peer">
@@ -28645,6 +28697,8 @@
             $('#chat-typing').show();
             scrollToBottom();
 
+            let aiResponse = '';
+
             try {
                 // Determine current context (what page am I on?)
                 const currentPage = $('.nav-link.active').data('page') || 'dashboard';
@@ -28662,11 +28716,22 @@
                 $('#chat-typing').hide();
 
                 if (data.explanation) {
+                    aiResponse = data.explanation;
                     addChatBubble('ai', data.explanation);
                 }
 
                 if (data.filters) {
                     applyAISearchFilters(data.searchType, data.filters);
+                }
+
+                // Log the inquiry
+                if (window.currentUser) {
+                    await supabase.from('support_inquiry_logs').insert({
+                        user_id: currentUser.id,
+                        organization_id: currentUser.organization_id,
+                        message: text,
+                        ai_response: aiResponse
+                    });
                 }
 
             } catch (error) {
@@ -28750,7 +28815,11 @@
 
                 // Set salary
                 if (filters.salary_min) {
-                    $('#search-salary-slider').val(filters.salary_min).trigger('input');
+                    const salaryVal = filters.salary_min;
+                    $('#search-salary-slider').val(salaryVal).trigger('input');
+                    $('#search-salary-min').val(salaryVal);
+                    // Update display text manually just in case trigger('input') doesn't catch it
+                    $('#salary-display').text(salaryVal === '0' ? '指定なし' : salaryVal + ' 万円以上');
                 }
 
                 // Multi-selects (Select2)
@@ -28833,7 +28902,11 @@
                     setSelect2ByLabels($('#c-search-employment-type'), filters.employment_types);
                 }
                 if (filters.salary_min) {
-                    $('#c-search-salary-slider').val(filters.salary_min).trigger('input');
+                    const salaryVal = filters.salary_min;
+                    $('#c-search-salary-slider').val(salaryVal).trigger('input');
+                    $('#c-search-salary-min').val(salaryVal);
+                    // Update display text
+                    $('#c-salary-display').text(salaryVal === '0' ? '指定なし' : salaryVal + ' 万円以上');
                 }
 
                 // Trigger search
@@ -28843,14 +28916,85 @@
             }
         }
 
-        // FAQ Portal Logic
-        window.openFAQModal = function () {
+        // FAQ Portal Logic (DB Driven)
+        window.openFAQModal = async function () {
             $('#faq-modal').removeClass('hidden').addClass('flex');
+            await loadPortalFAQs();
             switchFAQCategory('all');
         };
+
         window.closeFAQModal = function () {
             $('#faq-modal').addClass('hidden').removeClass('flex');
         };
+
+        async function loadPortalFAQs() {
+            const $container = $('#faq-content-area');
+            $container.html('<div class="flex justify-center py-10"><div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div></div>');
+
+            try {
+                const { data: faqs, error } = await supabase
+                    .from('faqs')
+                    .select('*')
+                    .eq('is_published', true)
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                if (!faqs || faqs.length === 0) {
+                    $container.html('<div class="text-center py-10 text-slate-400">FAQはまだ登録されていません。</div>');
+                    return;
+                }
+
+                $container.empty();
+                const categories = {
+                    'start': { title: '導入・基本ガイド', icon: 'fa-rocket' },
+                    'ai': { title: 'AIマッチングの活用', icon: 'fa-robot' },
+                    'manage': { title: '求人・進捗管理', icon: 'fa-tasks' },
+                    'trouble': { title: 'トラブル解決', icon: 'fa-exclamation-triangle' }
+                };
+
+                Object.entries(categories).forEach(([key, info]) => {
+                    const catFaqs = faqs.filter(f => f.category === key);
+                    if (catFaqs.length === 0) return;
+
+                    const $section = $(`
+                            <div class="faq-category-section mb-10" data-category="${key}">
+                                <h3 class="text-xl font-extrabold text-slate-800 mb-6 flex items-center gap-3 border-b-2 border-indigo-50 pb-3">
+                                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                        <i class="fas ${info.icon} text-indigo-600"></i>
+                                    </div>
+                                    ${info.title}
+                                </h3>
+                                <div class="space-y-4"></div>
+                            </div>
+                        `);
+
+                    const $itemsContainer = $section.find('.space-y-4');
+                    catFaqs.forEach(faq => {
+                        const $item = $(`
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-5 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 hover:shadow-md transition-all flex justify-between items-center"
+                                         onclick="$(this).next().slideToggle().siblings('.faq-answer').slideUp()">
+                                        <span class="font-bold text-slate-700 pr-8 line-clamp-2">${faq.question}</span>
+                                        <i class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div class="faq-answer hidden p-6 text-sm text-slate-600 bg-slate-50/50 border-x border-b rounded-b-2xl border-slate-100 leading-relaxed">
+                                        ${faq.answer.replace(/\n/g, '<br>')}
+                                        ${faq.image_url ? `<img src="${faq.image_url}" alt="FAQ Image" class="mt-4 rounded-xl border border-slate-200 shadow-sm max-w-full">` : ''}
+                                    </div>
+                                </div>
+                            `);
+                        $itemsContainer.append($item);
+                    });
+                    $container.append($section);
+                });
+
+            } catch (err) {
+                console.error('Portal FAQ loading error:', err);
+                $container.html('<div class="text-center py-10 text-red-500">FAQの読み込みに失敗しました。</div>');
+            }
+        }
+
         window.switchFAQCategory = function (cat) {
             $('.faq-nav-btn').removeClass('active bg-white shadow-sm').addClass('text-slate-600');
             $(`.faq-nav-btn[onclick*="${cat}"]`).addClass('active bg-white shadow-sm').removeClass('text-slate-600');
@@ -28862,6 +29006,7 @@
                 $(`.faq-category-section[data-category="${cat}"]`).show();
             }
         };
+
         window.filterFAQ = function (query) {
             query = query.toLowerCase();
             $('.faq-item').each(function () {
@@ -28881,6 +29026,227 @@
                 }
             });
         };
+
+        // --- Admin FAQ Management Logic ---
+        window.switchAdminFAQTab = function (tab) {
+            $('.admin-faq-tab').removeClass('border-indigo-600 text-indigo-600').addClass('border-transparent text-slate-500');
+            $(`#admin-faq-tab-${tab}`).addClass('border-indigo-600 text-indigo-600').removeClass('border-transparent text-slate-500');
+
+            if (tab === 'list') {
+                $('#admin-faq-list-view').show();
+                $('#admin-inquiry-logs-view').hide();
+                loadAdminFAQs();
+            } else {
+                $('#admin-faq-list-view').hide();
+                $('#admin-inquiry-logs-view').show();
+                loadInquiryLogs();
+            }
+        };
+
+        async function loadAdminFAQs() {
+            const $tbody = $('#admin-faq-table-body');
+            $tbody.html('<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">読み込み中...</td></tr>');
+
+            try {
+                const { data, error } = await supabase
+                    .from('faqs')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                $tbody.empty();
+                if (!data || data.length === 0) {
+                    $tbody.html('<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">FAQがありません。「初期データを同期」ボタンで追加できます。</td></tr>');
+                    return;
+                }
+
+                data.forEach(faq => {
+                    const row = $(`
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase tracking-wider">${faq.category}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-bold text-slate-800 mb-1">${faq.question}</div>
+                                    <div class="text-xs text-slate-400 line-clamp-1">${faq.answer}</div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="px-2 py-1 rounded text-[10px] font-bold ${faq.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}">
+                                        ${faq.is_published ? '公開中' : '非公開'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex justify-end gap-2">
+                                        <button onclick="showFAQForm('${faq.id}')" class="text-slate-400 hover:text-indigo-600 p-2"><i class="fas fa-edit"></i></button>
+                                        <button onclick="deleteFAQ('${faq.id}')" class="text-slate-400 hover:text-red-600 p-2"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    $tbody.append(row);
+                });
+            } catch (err) {
+                console.error('Load admin FAQs error:', err);
+            }
+        }
+
+        window.showFAQForm = async function (id = null) {
+            $('#faq-edit-form')[0].reset();
+            $('#faq-id').val('');
+            $('#faq-modal-title').text(id ? 'FAQの編集' : '新規FAQ作成');
+
+            if (id) {
+                const { data } = await supabase.from('faqs').select('*').eq('id', id).single();
+                if (data) {
+                    $('#faq-id').val(data.id);
+                    $('#faq-category').val(data.category);
+                    $('#faq-display-order').val(data.display_order);
+                    $('#faq-question-input').val(data.question);
+                    $('#faq-answer-input').val(data.answer);
+                    $('#faq-image-url').val(data.image_url || '');
+                    $('#faq-is-published').prop('checked', data.is_published);
+                }
+            }
+            $('#faq-form-modal').removeClass('hidden').addClass('flex');
+        };
+
+        window.closeFAQForm = function () {
+            $('#faq-form-modal').addClass('hidden').removeClass('flex');
+        };
+
+        window.saveFAQ = async function () {
+            const id = $('#faq-id').val();
+            const faqData = {
+                category: $('#faq-category').val(),
+                display_order: parseInt($('#faq-display-order').val()) || 0,
+                question: $('#faq-question-input').val(),
+                answer: $('#faq-answer-input').val(),
+                image_url: $('#faq-image-url').val(),
+                is_published: $('#faq-is-published').is(':checked'),
+                organization_id: currentUser.organization_id
+            };
+
+            showLoading();
+            try {
+                let error;
+                if (id) {
+                    const { error: err } = await supabase.from('faqs').update(faqData).eq('id', id);
+                    error = err;
+                } else {
+                    const { error: err } = await supabase.from('faqs').insert(faqData);
+                    error = err;
+                }
+
+                if (error) throw error;
+                closeFAQForm();
+                loadAdminFAQs();
+            } catch (err) {
+                console.error('Save FAQ error:', err);
+                alert('保存に失敗しました');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        window.deleteFAQ = async function (id) {
+            if (!confirm('このFAQを削除してもよろしいですか？')) return;
+            showLoading();
+            try {
+                const { error } = await supabase.from('faqs').delete().eq('id', id);
+                if (error) throw error;
+                loadAdminFAQs();
+            } catch (err) {
+                console.error('Delete FAQ error:', err);
+            } finally {
+                hideLoading();
+            }
+        };
+
+        async function loadInquiryLogs() {
+            const $tbody = $('#admin-inquiry-table-body');
+            $tbody.html('<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">読み込み中...</td></tr>');
+
+            try {
+                const { data, error } = await supabase
+                    .from('support_inquiry_logs')
+                    .select('*, users(name)')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                $tbody.empty();
+                data.forEach(log => {
+                    const row = $(`
+                            <tr>
+                                <td class="px-6 py-4 text-xs text-slate-400 whitespace-nowrap">${new Date(log.created_at).toLocaleString()}</td>
+                                <td class="px-6 py-4 text-sm font-bold text-slate-800">${log.users?.name || '不明'}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-slate-600 line-clamp-2">${log.message}</div>
+                                </td>
+                                <td class="px-6 py-4 text-center text-xs">
+                                    <span class="px-2 py-1 rounded-full ${log.is_resolved ? 'bg-indigo-50 text-indigo-600' : 'bg-orange-50 text-orange-600'}">
+                                        ${log.is_resolved ? 'FAQ化済み' : '未対応'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick="convertLogToFAQ('${log.id}')" class="text-indigo-600 text-xs font-bold hover:underline">FAQに追加</button>
+                                </td>
+                            </tr>
+                        `);
+                    $tbody.append(row);
+                });
+            } catch (err) {
+                console.error('Load inquiry logs error:', err);
+            }
+        }
+
+        window.convertLogToFAQ = async function (logId) {
+            const { data } = await supabase.from('support_inquiry_logs').select('*').eq('id', logId).single();
+            if (data) {
+                $('#faq-form-modal').removeClass('hidden').addClass('flex');
+                $('#faq-question-input').val(data.message);
+                $('#faq-answer-input').val(data.ai_response || '');
+                // マーカーとして更新
+                await supabase.from('support_inquiry_logs').update({ is_resolved: true }).eq('id', logId);
+            }
+        };
+
+        window.syncHardcodedFAQsToDB = async function () {
+            if (!confirm('現在の固定データをDBに同期しますか？（重複して登録される可能性があります）')) return;
+
+            const currentFaqs = [
+                { category: 'start', question: 'ログインできません（パスワード忘れなど）', answer: 'ログイン画面の「パスワードをお忘れの方」リンクから再設定を行ってください。解決しない場合は管理者またはサポートにお問い合わせください。' },
+                { category: 'start', question: '求職者は同じ求人に複数回応募できますか？', answer: 'いいえ、原則として1つの求人に対して1回の応募となります。誤って辞退した場合などは管理側でステータスを戻す必要があります。' },
+                { category: 'ai', question: 'マッチング精度を上げるには？', answer: '求職者のプロフィール（特に職務経歴）を具体的に記入してください。また、求人の「業務内容」と「応募資格」を詳細に記載することでAIの分析精度が向上します。' },
+                { category: 'ai', question: 'スカウト文面が作成途中で止まってしまう', answer: 'ブラウザをリロードして再度お試しください。AIの応答制限に達した可能性があります。頻繁に発生する場合はコメントを少し短くしてみてください。' },
+                { category: 'trouble', question: 'CSVインポートで失敗する', answer: 'まずはヘッダー行が正しいか確認してください。また、文字コードがUTF-8であること、必須項目（名前、メールアドレス等）が埋まっているかを確認してください。' }
+            ];
+
+            showLoading('同期中...');
+            try {
+                for (const faq of currentFaqs) {
+                    await supabase.from('faqs').insert({
+                        ...faq,
+                        organization_id: currentUser.organization_id,
+                        is_published: true
+                    });
+                }
+                alert('同期が完了しました');
+                loadAdminFAQs();
+            } catch (err) {
+                console.error('Sync error:', err);
+            } finally {
+                hideLoading();
+            }
+        };
+
+        $(document).on('page-switched', function (e, pageId) {
+            if (pageId === 'admin-faqs') {
+                loadAdminFAQs();
+            }
+        });
 
         // ========================
         // Admin: Data Management (Duplicate Detection & Merge)
