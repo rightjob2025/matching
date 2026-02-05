@@ -2163,7 +2163,7 @@
                         </div>
 
                         <!-- Help/FAQ Button -->
-                        <div class="relative">
+                        <div class="relative hidden">
                             <button id="help-portal-btn" onclick="openFAQModal()"
                                 class="p-2 text-indigo-600 hover:text-indigo-900 bg-indigo-50 rounded-lg flex items-center gap-1.5 transition-all hover:shadow-md">
                                 <i class="fas fa-question-circle text-lg sm:text-xl"></i>
@@ -8602,6 +8602,13 @@
                     $('#nav-dashboard').addClass('hidden')
                 } else {
                     $('#nav-dashboard').removeClass('hidden')
+                }
+
+                // ヘルプボタンの表示制御（求職者以外に表示）
+                if (userData.role === 'candidate') {
+                    $('#help-portal-btn').parent().addClass('hidden')
+                } else {
+                    $('#help-portal-btn').parent().removeClass('hidden')
                 }
 
                 // ログイン後の初期画面を設定
