@@ -22318,6 +22318,19 @@
                                 value = isPos ? '可' : '不可';
                             }
 
+                            if (key === 'status') {
+                                const valStr = String(value || '').trim().toLowerCase();
+                                if (['active', '公開中', '公開', '募集開始', '開始', '1'].includes(valStr)) {
+                                    value = 'active';
+                                } else if (['inactive', '非公開', '停止', '一時停止', '0'].includes(valStr)) {
+                                    value = 'inactive';
+                                } else if (['closed', '終了', '募集終了', '完売'].includes(valStr)) {
+                                    value = 'closed';
+                                } else {
+                                    value = 'active'; // デフォルト
+                                }
+                            }
+
                             importData[key] = value;
                         }
 
