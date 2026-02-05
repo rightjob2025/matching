@@ -6124,6 +6124,7 @@
                     </div>
 
                     <div id="faq-content-area" class="space-y-6">
+                        <!-- 導入・基本ガイド -->
                         <div class="faq-category-section" data-category="start">
                             <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
                                 <i class="fas fa-rocket text-indigo-500"></i> 導入・基本ガイド
@@ -6142,9 +6143,35 @@
                                         から送信されます）。
                                     </div>
                                 </div>
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">ログイン時に「Invalid login
+                                            credentials」と表示される</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        メールアドレスまたはパスワードに誤りがあります。大文字小文字の違いや、余計なスペースが入っていないか確認してください。解決しない場合はログイン画面の「パスワードを忘れた場合」からリセットを行ってください。
+                                    </div>
+                                </div>
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">求職者が複数の求人に応募できますか？</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        はい、何件でも応募できます。ただし、既に一度応募した同じ求人に再度応募することはできません。
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- AIマッチングの活用 -->
                         <div class="faq-category-section" data-category="ai">
                             <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
                                 <i class="fas fa-magic text-indigo-500"></i> AIマッチングの活用
@@ -6159,10 +6186,109 @@
                                     </div>
                                     <div
                                         class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
-                                        1. プロフィールの不足: 求職者の「スキル」と「職務経歴」が充実しているか確認してください。<br>
-                                        2. 求人詳細の不足: 業務内容が具体的であるほどスコアが安定します。<br>
+                                        以下の3点を確認してください。<br>
+                                        1. **プロフィールの不足**: 求職者の「スキル」と「職務経歴」が合計200文字以下だと精度が低下します。<br>
+                                        2. **求人詳細の不足**: 業務内容が具体的であるほどスコアが安定します。<br>
+                                        3. **マッチング実行**: データ更新直後は、再度「AIマッチング実行」ボタンを押す必要があります。<br>
                                         <img src="ai_recommendations_view_1770253534178.png"
                                             class="mt-3 rounded-lg border shadow-sm max-w-full">
+                                    </div>
+                                </div>
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">スカウト文面が作成途中で止まってしまう</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        ブラウザの更新を行い、再度生成を試みてください。AIの応答制限に達した可能性があります。頻繁に発生する場合は、入力する推薦理由やコメントを少し短くして試してください。
+                                    </div>
+                                </div>
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">AIマッチングの精度を上げるには？</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        以下のポイントを意識してください：<br>
+                                        ・求職者のプロフィール（特に職務経歴）を具体的に記入する<br>
+                                        ・社内専用情報（マッチング情報、メモ）を充実させる（これらもAIの分析対象です）<br>
+                                        ・求人の「業務内容」と「応募資格」を詳細に記載する
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 求人・進捗管理 -->
+                        <div class="faq-category-section" data-category="manage">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
+                                <i class="fas fa-tasks text-indigo-500"></i> 求人・進捗管理
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">ステータスを変更したのに、履歴に反映されない</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        一時的な通信エラーの可能性があります。画面をリロードして確認してください。また、更新時に右下に表示される「更新完了」の通知を確認してから画面を遷移するようにしてください。
+                                    </div>
+                                </div>
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">「除外企業」を設定したが、推薦リストにまだ表示される</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        除外設定は「設定後の新規マッチング」から適用されます。既に生成済みの推薦リストには即時反映されませんので、一度既存の推薦を削除してから、再度「AIマッチング実行」を行ってください。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- トラブル解決 -->
+                        <div class="faq-category-section" data-category="trouble">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
+                                <i class="fas fa-exclamation-triangle text-orange-500"></i> トラブル解決
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">CSVインポートで全件失敗する</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        主な原因は以下の通りです：<br>
+                                        1. **ヘッダーの不一致**: テンプレートの項目名（1行目）を変更していないか確認してください。<br>
+                                        2. **文字コード**: ファイルの保存形式を「CSV (UTF-8)」に指定して保存してください。<br>
+                                        3. **必須項目の欠如**: 「名前」や「メールアドレス」が空の行がないか確認してください。
+                                    </div>
+                                </div>
+                                <div class="faq-item group">
+                                    <div class="faq-question cursor-pointer p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors flex justify-between items-center"
+                                        onclick="$(this).next().slideToggle()">
+                                        <span class="font-bold text-slate-700">画面の動作が重い、またはボタンが反応しない</span>
+                                        <i
+                                            class="fas fa-chevron-down text-slate-300 group-hover:text-indigo-500 transition-transform"></i>
+                                    </div>
+                                    <div
+                                        class="faq-answer hidden p-4 text-sm text-slate-600 border-x border-b rounded-b-xl border-slate-50 leading-relaxed">
+                                        ブラウザのキャッシュが影響している場合があります。一度ログアウトし、ブラウザの更新（Ctrl+F5 または
+                                        Cmd+Shift+R）を行ってから再度お試しください。
                                     </div>
                                 </div>
                             </div>
