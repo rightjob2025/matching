@@ -21720,6 +21720,60 @@
             });
         }
 
+        window.updateMappingPreview = function (key) {
+            const container = $(`.mapping-container[data-key="${key}"]`);
+            const selectedHeaders = [];
+            container.find('.mapping-select').each(function () {
+                const val = $(this).val();
+                if (val) selectedHeaders.push(val);
+            });
+
+            const previewCell = $(`.mapping-preview[data-key="${key}"]`);
+            if (currentCSVData.length > 0 && selectedHeaders.length > 0) {
+                const vals = selectedHeaders.map(h => currentCSVData[0][h]).filter(v => v !== undefined && v !== null && v !== '');
+                previewCell.text(vals.join(' '));
+            } else {
+                previewCell.text('-');
+            }
+
+            // アップサートキーの選択肢を更新
+            if ($('#csv-upsert-mode').is(':checked')) {
+                updateUpsertKeyOptions();
+            }
+        };
+
+        window.addMappingSelect = function (key, selectedHeader = '') {
+            const container = $(`.mapping-container[data-key="${key}"]`);
+            const options = currentCSVHeaders.map(h =>
+                `<option value="${h}" ${h === selectedHeader ? 'selected' : ''}>${h}</option>`
+            ).join('');
+
+            const isFirst = container.find('.mapping-row').length === 0;
+
+            const $row = $(`
+                <div class="mapping-row flex items-center gap-1 mb-1">
+                    <select class="mapping-select w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-key="${key}">
+                        <option value="">(選択解除)</option>
+                        ${options}
+                    </select>
+                    ${isFirst ?
+                    `<button type="button" onclick="addMappingSelect('${key}')" class="p-1 text-indigo-600 hover:text-indigo-800" title="カラムを追加">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>` :
+                    `<button type="button" onclick="$(this).parent().remove(); updateMappingPreview('${key}')" class="p-1 text-red-600 hover:text-red-800" title="削除">
+                            <i class="fas fa-minus-circle"></i>
+                        </button>`
+                }
+                </div>
+            `);
+
+            container.append($row);
+            $row.find('select').on('change', function () {
+                updateMappingPreview(key);
+            });
+            updateMappingPreview(key);
+        };
+
         function showCSVMappingModal(type) {
             const fields = type === 'jobs' ? jobFields :
                 type === 'companies' ? companyFields : userFields;
@@ -21730,28 +21784,19 @@
             $('#csv-upsert-mode').prop('checked', false);
             $('#csv-upsert-key-container').addClass('hidden');
 
-            // 保存済み設定のプルダウンを更新
-            // candidatesタイプの場合は、usersの設定を読み込む
             const mappingType = (currentImportType === 'candidates') ? 'users' : type;
             updateSavedMappingSelect(mappingType);
-            $('#new-mapping-name').val(''); // 入力欄クリア
+            $('#new-mapping-name').val('');
 
             fields.forEach(field => {
                 // 自動マッピングロジック
                 let selectedHeader = '';
-                // 完全一致またはエイリアス一致を探す
                 const match = currentCSVHeaders.find(h =>
                     h === field.key ||
                     h === field.label ||
                     (field.aliases && field.aliases.some(alias => h.includes(alias)))
                 );
                 if (match) selectedHeader = match;
-
-                const options = currentCSVHeaders.map(h =>
-                    `<option value="${h}" ${h === selectedHeader ? 'selected' : ''}>${h}</option>`
-                ).join('');
-
-                const previewValue = currentCSVData.length > 0 && selectedHeader ? currentCSVData[0][selectedHeader] : '-';
 
                 const row = `
                     <tr>
@@ -21760,33 +21805,18 @@
                             <div class="text-xs text-gray-500">${field.key}</div>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 border-b">
-                            <select class="mapping-select w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-key="${field.key}">
-                                <option value="">(インポートしない)</option>
-                                ${options}
-                            </select>
+                            <div class="mapping-container" data-key="${field.key}">
+                                <!-- JSで動的に追加 -->
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 mapping-preview border-b break-all" data-key="${field.key}">
-                            <div class="max-h-24 overflow-y-auto w-full">
-                                ${previewValue}
-                            </div>
+                            -
                         </td>
                     </tr>
                 `;
                 tbody.append(row);
-            });
-
-            // セレクトボックス変更時にプレビュー更新とアップサートキー選択肢更新
-            $('.mapping-select').on('change', function () {
-                const key = $(this).data('key');
-                const header = $(this).val();
-                const previewCell = $(`.mapping-preview[data-key="${key}"]`);
-                const val = currentCSVData.length > 0 && header ? currentCSVData[0][header] : '-';
-                previewCell.text(val);
-
-                // アップサートキーの選択肢を更新
-                if ($('#csv-upsert-mode').is(':checked')) {
-                    updateUpsertKeyOptions();
-                }
+                // 初期行の追加
+                addMappingSelect(field.key, selectedHeader);
             });
 
             $('#csv-mapping-modal').removeClass('hidden');
@@ -21834,15 +21864,14 @@
             if (!target) return;
 
             // マッピング適用
-            for (const [key, header] of Object.entries(target.mapping)) {
-                const select = $(`.mapping-select[data-key="${key}"]`);
-                if (select.length) {
-                    // CSVヘッダーにその値が存在するか確認
-                    // 存在しない場合は、警告を出さずに空にするか、そのままにするか。
-                    // ここでは、ヘッダーが存在する場合のみ適用する
-                    if (currentCSVHeaders.includes(header)) {
-                        select.val(header).trigger('change');
-                    }
+            for (const [key, mappingValue] of Object.entries(target.mapping)) {
+                const container = $(`.mapping-container[data-key="${key}"]`);
+                if (container.length) {
+                    container.empty();
+                    const headers = Array.isArray(mappingValue) ? mappingValue : [mappingValue];
+                    headers.forEach(header => {
+                        addMappingSelect(key, header);
+                    });
                 }
             }
         }
@@ -21860,7 +21889,13 @@
                 const key = $(this).data('key');
                 const val = $(this).val();
                 if (val) {
-                    mapping[key] = val;
+                    if (!mapping[key]) {
+                        mapping[key] = val;
+                    } else if (Array.isArray(mapping[key])) {
+                        mapping[key].push(val);
+                    } else {
+                        mapping[key] = [mapping[key], val];
+                    }
                     hasMapping = true;
                 }
             });
@@ -22227,22 +22262,33 @@
                 }
 
                 // マッピング情報の収集
+                const mappingKeys = new Set();
                 $('.mapping-select').each(function () {
                     const key = $(this).data('key');
+                    mappingKeys.add(key);
                     const header = $(this).val();
                     if (header) {
-                        mapping[key] = header;
-                    } else {
-                        const field = fields.find(f => f.key === key);
-                        if (field && field.required) {
-                            // メールアドレスの必須チェックを組織設定に基づいてスキップ
-                            if ((currentImportType === 'users' || currentImportType === 'candidates') && field.key === 'email') {
-                                if (currentUser.organizations && currentUser.organizations.settings && currentUser.organizations.settings.candidate_email_required === false) {
-                                    return; // スキップ
-                                }
-                            }
-                            missingRequired.push(field.label);
+                        if (!mapping[key]) {
+                            mapping[key] = header;
+                        } else if (Array.isArray(mapping[key])) {
+                            mapping[key].push(header);
+                        } else {
+                            mapping[key] = [mapping[key], header];
                         }
+                    }
+                });
+
+                // 必須項目のチェック
+                mappingKeys.forEach(key => {
+                    const field = fields.find(f => f.key === key);
+                    if (field && field.required && !mapping[key]) {
+                        // メールアドレスの必須チェックを組織設定に基づいてスキップ
+                        if ((currentImportType === 'users' || currentImportType === 'candidates') && field.key === 'email') {
+                            if (currentUser.organizations && currentUser.organizations.settings && currentUser.organizations.settings.candidate_email_required === false) {
+                                return;
+                            }
+                        }
+                        missingRequired.push(field.label);
                     }
                 });
 
@@ -22274,8 +22320,17 @@
                     try {
                         const importData = {};
                         // マッピングに基づいてデータ変換
-                        for (const [key, header] of Object.entries(mapping)) {
-                            let value = row[header];
+                        for (const [key, mappingValue] of Object.entries(mapping)) {
+                            let value;
+                            if (Array.isArray(mappingValue)) {
+                                // 複数カラムの結合
+                                const values = mappingValue
+                                    .map(h => row[h])
+                                    .filter(v => v !== undefined && v !== null && v !== '');
+                                value = values.join(' '); // 半角スペースで結合
+                            } else {
+                                value = row[mappingValue];
+                            }
 
                             // 数値変換が必要なフィールドの処理（年収・希望年収）
                             if (['salary_min', 'salary_max', 'desired_salary'].includes(key)) {
