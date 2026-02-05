@@ -28506,7 +28506,10 @@
             if (isVisible) {
                 chat.fadeOut(200, () => chat.css('display', 'none'));
             } else {
-                chat.css('display', 'flex').hide().fadeIn(300);
+                chat.css({
+                    'display': 'flex',
+                    'z-index': '1000000'
+                }).hide().fadeIn(300);
                 $('#ai-search-agent-trigger .notification-dot').hide();
                 $('#ai-chat-input').focus();
             }
@@ -28759,7 +28762,9 @@
                 $modal.removeClass('hidden').addClass('flex');
 
                 // 強制的にBodyの直下に移動（親要素のhidden設定を回避するため）
-                $('body').append($modal);
+                if ($modal.parent().is('body') === false) {
+                    $('body').append($modal);
+                }
 
                 $modal.css({
                     'display': 'flex',
@@ -28793,7 +28798,14 @@
         };
 
         window.closeFAQModal = function () {
-            $('#faq-modal').addClass('hidden').removeClass('flex');
+            console.log('Closing FAQ Modal...');
+            const $modal = $('#faq-modal');
+            $modal.addClass('hidden').removeClass('flex');
+            $modal.css({
+                'display': 'none',
+                'visibility': 'hidden',
+                'opacity': '0'
+            });
         };
 
         async function loadPortalFAQs() {
