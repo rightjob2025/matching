@@ -9385,11 +9385,12 @@
                         pic2:users!pic_user_id_2(name)
                     `)
                     .eq('id', jobId)
+                    .eq('organization_id', currentUser.organization_id)
                     .single();
 
                 if (error) {
                     console.log('Fetch error, trying fallback:', error);
-                    const fallback = await client.from('jobs').select('*').eq('id', jobId).single();
+                    const fallback = await client.from('jobs').select('*').eq('id', jobId).eq('organization_id', currentUser.organization_id).single();
                     job = fallback.data;
                     error = fallback.error;
                 }
@@ -9819,6 +9820,7 @@
                     .from('jobs')
                     .select('*, companies(name)')
                     .eq('id', jobId)
+                    .eq('organization_id', currentUser.organization_id)
                     .single();
 
                 if (error) throw error;
@@ -9830,6 +9832,7 @@
                     .from('users')
                     .select('name, email')
                     .eq('id', targetUserId)
+                    .eq('organization_id', currentUser.organization_id)
                     .single();
 
                 if (userError) throw userError;
@@ -9885,8 +9888,8 @@
                 // 失敗時は簡易ロジックにフォールバック、またはエラー表示
                 // ここでは簡易ロジックを試みる
                 try {
-                    const { data: job } = await supabase.from('jobs').select('*').eq('id', currentRecommendJobId).single();
-                    const { data: user } = await supabase.from('users').select('*').eq('id', currentRecommendTargetUserId).single();
+                    const { data: job } = await supabase.from('jobs').select('*').eq('id', currentRecommendJobId).eq('organization_id', currentUser.organization_id).single();
+                    const { data: user } = await supabase.from('users').select('*').eq('id', currentRecommendTargetUserId).eq('organization_id', currentUser.organization_id).single();
                     const reason = generateSimpleReason(job, user);
                     $('#recommend-reason').val(reason);
                     alert('AI生成に失敗したため、簡易テンプレートを使用しました');
@@ -12988,16 +12991,23 @@
         };
 
         async function loadAllJobsforSearch() {
+            if (!currentUser || !currentUser.organization_id) {
+                console.warn('loadAllJobsforSearch: No organization selected');
+                allCandidateSearchJobs = [];
+                return;
+            }
             let query = supabase.from('jobs')
                 .select('id, title, companies(name), requirements, salary_min, salary_max, job_category, industry_category, location, employment_type')
-                .eq('status', 'active');
+                .eq('status', 'active')
+                .eq('organization_id', currentUser.organization_id);
 
-            if (currentUser && currentUser.organization_id) {
-                query = query.eq('organization_id', currentUser.organization_id);
+            const { data, error } = await query;
+            if (error) {
+                console.error('Error loading jobs for search:', error);
+                allCandidateSearchJobs = [];
+            } else {
+                allCandidateSearchJobs = data || [];
             }
-
-            const { data } = await query;
-            allCandidateSearchJobs = data || [];
         }
 
         window.filterAndShowTargetJobs = function (term) {
@@ -13070,7 +13080,8 @@
             console.log('selectTargetJob called', jobId);
             const job = allCandidateSearchJobs.find(j => j.id === jobId);
             if (!job) {
-                console.error('Job not found in cache', jobId);
+                console.error('Job not found in current organization context', jobId);
+                alert('選択された求人は現在の組織に属していないか、読み込まれていません。');
                 return;
             }
 
@@ -13471,6 +13482,7 @@
                 if (isSubset) {
                     const { data: users } = await supabase.from('users')
                         .select('*, candidate_profiles(*)')
+                        .eq('organization_id', currentUser.organization_id)
                         .in('id', checkedIds);
                     if (users) candidates = users;
                 } else {
@@ -13646,6 +13658,7 @@
                         .select('id')
                         .eq('user_id', rec.user_id)
                         .eq('job_id', rec.job_id)
+                        .eq('organization_id', currentUser.organization_id)
                         .maybeSingle();
 
                     if (checkError) {
@@ -13663,7 +13676,8 @@
                                 recommended_by: rec.recommended_by,
                                 details: rec.details
                             })
-                            .eq('id', existing.id);
+                            .eq('id', existing.id)
+                            .eq('organization_id', currentUser.organization_id);
 
                         if (updateError) throw updateError;
                     } else {
@@ -14602,6 +14616,7 @@
                     .from('favorites')
                     .select('job_id')
                     .eq('user_id', currentUser.id)
+                    .eq('organization_id', currentUser.organization_id)
 
                 if (error) throw error
                 favoriteJobIds = new Set(favs.map(f => f.job_id))
@@ -14630,7 +14645,8 @@
                 const { data: jobs, error } = await supabase
                     .from('jobs')
                     .select('*, companies(name)')
-                    .in('id', Array.from(favoriteJobIds));
+                    .in('id', Array.from(favoriteJobIds))
+                    .eq('organization_id', currentUser.organization_id);
 
                 if (error) throw error;
 
@@ -14716,6 +14732,7 @@
                         .delete()
                         .eq('user_id', currentUser.id)
                         .eq('job_id', jobId)
+                        .eq('organization_id', currentUser.organization_id)
                     if (error) throw error
                     favoriteJobIds.delete(jobId)
                     updateButtons(false);
@@ -14723,7 +14740,7 @@
                     // Add
                     const { error } = await supabase
                         .from('favorites')
-                        .insert({ user_id: currentUser.id, job_id: jobId })
+                        .insert({ user_id: currentUser.id, job_id: jobId, organization_id: currentUser.organization_id })
                     if (error) throw error
                     favoriteJobIds.add(jobId)
                     updateButtons(true);
@@ -15303,6 +15320,7 @@
                         .from('users')
                         .select('id')
                         .eq('coach_id', currentUser.id)
+                        .eq('organization_id', currentUser.organization_id)
 
                     const assignedUserIds = assignedUsers?.map(u => u.id) || []
 
@@ -15523,6 +15541,7 @@
                     .from('applications')
                     .select('*, jobs(title, company), users!applications_user_id_fkey(name, email, coach_id)')
                     .eq('id', applicationId)
+                    .eq('organization_id', currentUser.organization_id)
                     .single();
 
                 if (appError) throw appError;
@@ -15759,7 +15778,8 @@
                         selection_info: $('#progress-selection-info').val() || null,
                         updated_at: new Date().toISOString()
                     })
-                    .eq('id', applicationId);
+                    .eq('id', applicationId)
+                    .eq('organization_id', currentUser.organization_id);
 
                 if (updateError) throw updateError;
 
@@ -17293,7 +17313,7 @@
 
                 let error;
                 if (id) {
-                    const { error: err } = await supabase.from('email_templates').update(data).eq('id', id);
+                    const { error: err } = await supabase.from('email_templates').update(data).eq('id', id).eq('organization_id', currentUser.organization_id);
                     error = err;
                 } else {
                     const { error: err } = await supabase.from('email_templates').insert(data);
@@ -17318,7 +17338,7 @@
 
             showLoading();
             try {
-                const { error } = await supabase.from('email_templates').delete().eq('id', id);
+                const { error } = await supabase.from('email_templates').delete().eq('id', id).eq('organization_id', currentUser.organization_id);
                 if (error) throw error;
                 loadEmailTemplates();
             } catch (error) {
@@ -18410,6 +18430,7 @@
                     .from('jobs')
                     .update({ deleted_at: new Date().toISOString() })
                     .eq('id', jobId)
+                    .eq('organization_id', currentUser.organization_id)
 
                 if (error) throw error
 
@@ -18501,6 +18522,7 @@
                     .from('users')
                     .update({ deleted_at: new Date().toISOString() })
                     .eq('id', userId)
+                    .eq('organization_id', currentUser.organization_id)
 
                 if (error) throw error
 
@@ -18597,7 +18619,7 @@
                 if (jobId) {
                     try {
                         // 求人情報を取得して会社IDを確認
-                        const { data: jobInfo } = await supabase.from('jobs').select('company_id').eq('id', jobId).single();
+                        const { data: jobInfo } = await supabase.from('jobs').select('company_id').eq('id', jobId).eq('organization_id', currentUser.organization_id).single();
                         if (jobInfo && jobInfo.company_id) {
                             const { data: comp } = await supabase.from('companies').select('id, name').eq('id', jobInfo.company_id).single();
                             if (comp) {
@@ -18707,6 +18729,7 @@
                     .from('jobs')
                     .select('*')
                     .eq('id', jobId)
+                    .eq('organization_id', currentUser.organization_id)
                     .single()
 
                 if (job) {
@@ -18843,6 +18866,7 @@
                         .from('jobs')
                         .update(jobData)
                         .eq('id', jobId)
+                        .eq('organization_id', currentUser.organization_id)
 
                     if (error) throw error
 
@@ -18916,6 +18940,7 @@
                 .from('users')
                 .select('*, candidate_profiles!fk_candidate_profiles_user(*)')
                 .eq('id', userId)
+                .eq('organization_id', currentUser.organization_id)
                 .single();
 
             if (error || !userData) {
@@ -19438,6 +19463,7 @@
                     .from('users')
                     .update(updates)
                     .eq('id', userId)
+                    .eq('organization_id', currentUser.organization_id)
                     .select();
 
                 console.log('Users table update result:', { data: updatedUser, error: usersError });
@@ -21432,7 +21458,7 @@
 
                 let result;
                 if (id) {
-                    result = await supabase.from('companies').update(companyData).eq('id', id).select();
+                    result = await supabase.from('companies').update(companyData).eq('id', id).eq('organization_id', currentUser.organization_id).select();
                 } else {
                     result = await supabase.from('companies').insert(companyData).select();
                 }
@@ -21469,6 +21495,7 @@
                     .from('companies')
                     .update({ deleted_at: new Date().toISOString() })
                     .eq('id', id)
+                    .eq('organization_id', currentUser.organization_id)
                 if (error) throw error
 
                 alert('削除しました')
@@ -22208,7 +22235,7 @@
                         if (item.duplicate_id && action === 'update') {
                             // アップサート(更新)処理
                             const updatePayload = mergeJobData(item.data || item.importData, {});
-                            const { error: updateError } = await supabase.from('jobs').update(updatePayload).eq('id', item.duplicate_id);
+                            const { error: updateError } = await supabase.from('jobs').update(updatePayload).eq('id', item.duplicate_id).eq('organization_id', currentUser.organization_id);
                             if (updateError) throw updateError;
                         } else {
                             // 新規登録
@@ -23009,6 +23036,10 @@
 
                 // メニューの再構築（役割に応じて表示/非表示）
                 loadedPages.clear(); // キャッシュをクリア
+                if (typeof allCandidateSearchJobs !== 'undefined') allCandidateSearchJobs = [];
+                if (typeof allCandidatesCache !== 'undefined') allCandidatesCache = [];
+                isCandidateSearchInitialized = false; // 再初期化を促す
+
                 updateMenuVisibility(role);
 
                 // 4. ダッシュボードへ戻る
@@ -25582,7 +25613,7 @@
                         { label: '総応募数', value: appCount || 0, icon: 'fa-file-alt', color: 'purple' }
                     ]);
                 } else if (['coach', 'ca', 'ra'].includes(currentUser.role)) {
-                    const { data: assignedUsers } = await supabase.from('users').select('id').eq('coach_id', currentUser.id);
+                    const { data: assignedUsers } = await supabase.from('users').select('id').eq('coach_id', currentUser.id).eq('organization_id', currentUser.organization_id);
                     const assignedUserIds = assignedUsers?.map(u => u.id) || [];
                     let candidateAppCount = 0;
                     if (assignedUserIds.length > 0) {
@@ -29654,11 +29685,11 @@
 
                     // 2. 関連データの紐づけ替え (新しい方への紐づけを、残す古い方へ移動)
                     if (type === 'company') {
-                        await supabase.from('jobs').update({ company_id: older.id }).eq('company_id', newer.id);
+                        await supabase.from('jobs').update({ company_id: older.id }).eq('company_id', newer.id).eq('organization_id', currentUser.organization_id);
                     } else {
-                        await supabase.from('applications').update({ job_id: older.id }).eq('job_id', newer.id);
-                        await supabase.from('recommendations').update({ job_id: older.id }).eq('job_id', newer.id);
-                        await supabase.from('favorites').update({ job_id: older.id }).eq('job_id', newer.id);
+                        await supabase.from('applications').update({ job_id: older.id }).eq('job_id', newer.id).eq('organization_id', currentUser.organization_id);
+                        await supabase.from('recommendations').update({ job_id: older.id }).eq('job_id', newer.id).eq('organization_id', currentUser.organization_id);
+                        await supabase.from('favorites').update({ job_id: older.id }).eq('job_id', newer.id).eq('organization_id', currentUser.organization_id);
                     }
 
                     // 3. 重複側の削除
@@ -29777,12 +29808,12 @@
                 // 2. 関連データの紐づけ替え
                 if (type === 'company') {
                     // 求人の紐づけ替え
-                    await supabase.from('jobs').update({ company_id: recordA.id }).eq('company_id', recordB.id);
+                    await supabase.from('jobs').update({ company_id: recordA.id }).eq('company_id', recordB.id).eq('organization_id', currentUser.organization_id);
                 } else {
                     // 応募、推薦、お気に入りの紐づけ替え
-                    await supabase.from('applications').update({ job_id: recordA.id }).eq('job_id', recordB.id);
-                    await supabase.from('recommendations').update({ job_id: recordA.id }).eq('job_id', recordB.id);
-                    await supabase.from('favorites').update({ job_id: recordA.id }).eq('job_id', recordB.id);
+                    await supabase.from('applications').update({ job_id: recordA.id }).eq('job_id', recordB.id).eq('organization_id', currentUser.organization_id);
+                    await supabase.from('recommendations').update({ job_id: recordA.id }).eq('job_id', recordB.id).eq('organization_id', currentUser.organization_id);
+                    await supabase.from('favorites').update({ job_id: recordA.id }).eq('job_id', recordB.id).eq('organization_id', currentUser.organization_id);
                 }
 
                 // 3. レコードBを削除 (論理削除可能な場合は論理削除)
