@@ -28757,17 +28757,29 @@
 
                 // 強制的に表示状態にする
                 $modal.removeClass('hidden').addClass('flex');
+
+                // 強制的にBodyの直下に移動（親要素のhidden設定を回避するため）
+                $('body').append($modal);
+
                 $modal.css({
                     'display': 'flex',
                     'z-index': '999999',
                     'visibility': 'visible',
-                    'opacity': '1'
+                    'opacity': '1',
+                    'position': 'fixed',
+                    'top': '0',
+                    'left': '0',
+                    'width': '100vw',
+                    'height': '100vh'
                 });
 
                 console.log('Modal element state:', {
                     display: $modal.css('display'),
                     zIndex: $modal.css('z-index'),
-                    visible: $modal.is(':visible')
+                    visible: $modal.is(':visible'),
+                    parent: $modal.parent().prop('tagName'),
+                    parentVisible: $modal.parent().is(':visible'),
+                    offset: $modal.offset()
                 });
 
                 await loadPortalFAQs();
