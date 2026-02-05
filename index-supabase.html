@@ -28933,9 +28933,11 @@
             $container.html('<div class="flex justify-center py-10"><div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div></div>');
 
             try {
+                // Fetch both organization-specific FAQs and global ones (organization_id is null)
                 const { data: faqs, error } = await supabase
                     .from('faqs')
                     .select('*')
+                    .or(`organization_id.eq.${currentUser.organization_id},organization_id.is.null`)
                     .eq('is_published', true)
                     .order('display_order', { ascending: true });
 
