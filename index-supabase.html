@@ -22286,19 +22286,40 @@
                         for (const [key, header] of Object.entries(mapping)) {
                             let value = row[header];
 
-                            // 数値変換が必要なフィールドの処理
+                            // 数値変換が必要なフィールドの処理（年収・希望年収）
                             if (['salary_min', 'salary_max', 'desired_salary'].includes(key)) {
                                 if (value) {
-                                    value = String(value).replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-                                    const numStr = value.replace(/[^0-9]/g, '');
+                                    // 全角数字を半角に
+                                    let str = String(value).replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+
+                                    // 「万円」が含まれているかチェック
+                                    const hasMan = str.includes('万');
+
+                                    // 範囲（〜, -, ～, -）で分割を試みる
+                                    const parts = str.split(/[〜～\-\−]/);
+                                    let targetValue = str;
+
+                                    if (parts.length >= 2) {
+                                        // 範囲形式の場合、項目名（key）に合わせて適切な方を選択
+                                        if (key === 'salary_min' || key === 'desired_salary') {
+                                            targetValue = parts[0]; // 前半を最小値とする
+                                        } else if (key === 'salary_max') {
+                                            targetValue = parts[parts.length - 1]; // 後半を最大値とする
+                                        }
+                                    }
+
+                                    // 数字以外を削除（カンマや「万円」など）
+                                    const numStr = targetValue.replace(/[^0-9]/g, '');
                                     const num = parseInt(numStr);
+
                                     if (!isNaN(num)) {
-                                        if (salaryUnit === 'man') {
+                                        // 単位の判定
+                                        if (hasMan || salaryUnit === 'man') {
                                             value = num * 10000;
                                         } else if (salaryUnit === 'yen') {
                                             value = num;
                                         } else {
-                                            // auto
+                                            // auto: 1万未満なら万円単位とみなす
                                             value = num < 10000 ? num * 10000 : num;
                                         }
                                     } else {
