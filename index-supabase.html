@@ -22289,7 +22289,7 @@
                             // 数値変換が必要なフィールドの処理（年収・希望年収）
                             if (['salary_min', 'salary_max', 'desired_salary'].includes(key)) {
                                 if (value) {
-                                    // 全角数字・記号を半角に、カンマ除去
+                                    // 全角数字を半角に、カンマ除去
                                     let str = String(value)
                                         .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
                                         .replace(/,/g, '');
@@ -22297,23 +22297,23 @@
                                     // 「万円」が含まれているかチェック
                                     const hasMan = str.includes('万');
 
-                                    // 範囲（〜, -, ～, -, ―, －, ‐）で分割を試みる
-                                    const parts = str.split(/[〜～\-\−\—\－\‐]/);
-                                    let targetValue = str;
+                                    // 全ての数値（小数点含む）を抽出
+                                    const numbers = str.match(/[0-9.]+/g);
 
-                                    if (parts.length >= 2) {
-                                        // 範囲形式の場合、項目名（key）に合わせて適切な方を選択
-                                        if (key === 'salary_min' || key === 'desired_salary') {
-                                            targetValue = parts[0]; // 前半を最小値とする
-                                        } else if (key === 'salary_max') {
-                                            targetValue = parts[parts.length - 1]; // 後半を最大値とする
+                                    if (numbers && numbers.length > 0) {
+                                        let num;
+                                        if (numbers.length >= 2) {
+                                            // 2つ以上数値がある場合（範囲とみなす）
+                                            if (key === 'salary_min' || key === 'desired_salary') {
+                                                num = parseFloat(numbers[0]); // 最初の数値を最小値に
+                                            } else if (key === 'salary_max') {
+                                                num = parseFloat(numbers[1]); // 2番目の数値を最大値に
+                                            }
+                                        } else {
+                                            // 1つしか数値がない場合
+                                            num = parseFloat(numbers[0]);
                                         }
-                                    }
 
-                                    // 数値部分のみ抽出（小数点含む）
-                                    const numMatch = targetValue.match(/[0-9.]+/);
-                                    if (numMatch) {
-                                        const num = parseFloat(numMatch[0]);
                                         if (!isNaN(num)) {
                                             if (hasMan || salaryUnit === 'man') {
                                                 value = Math.round(num * 10000);
@@ -22329,7 +22329,7 @@
                                     } else {
                                         value = null;
                                     }
-                                    console.log(`Salary Conversion: [${key}] "${str}" -> "${targetValue}" -> ${value}`);
+                                    console.log(`Salary Conversion: [${key}] "${str}" -> extracted num: ${value / 10000}万`);
                                 } else {
                                     value = null;
                                 }
