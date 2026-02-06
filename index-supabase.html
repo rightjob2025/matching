@@ -26558,13 +26558,15 @@
                         locs.forEach(loc => {
                             if (!loc) return;
                             console.log('[selectTargetUser] Processing location:', loc);
-                            // 都道府県マスタとの照合（都道府県が含まれているか、または都道府県名に一致するか）
-                            const pref = (window.prefectures || []).find(p => {
-                                const includesCheck = loc.includes(p);
-                                const reverseCheck = p.includes(loc.replace(/[都府県]$/, ''));
-                                console.log(`[selectTargetUser]   Checking "${loc}" vs "${p}": includes=${includesCheck}, reverse=${reverseCheck}`);
-                                return includesCheck || reverseCheck;
-                            });
+                            // 都道府県マスタとの照合
+                            // 1. 完全一致を優先
+                            let pref = (window.prefectures || []).find(p => p === loc);
+
+                            // 2. 完全一致しない場合、都道府県名で始まるかチェック（例: "京都府京都市" → "京都府"）
+                            if (!pref) {
+                                pref = (window.prefectures || []).find(p => loc.startsWith(p));
+                            }
+
                             console.log('[selectTargetUser]   -> Matched prefecture:', pref);
                             if (pref) foundPrefs.push(pref);
                         });
