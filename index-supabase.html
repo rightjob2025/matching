@@ -16086,7 +16086,23 @@
                     }
                 }
 
-                renderRecommendations(finalRecs, isAdminOrCoach, allCandidates, appliedJobIds);
+                // 見送り済みデータを取得（ユーザーIDと求人IDの組み合わせで管理）
+                let dismissedJobIds = new Set();
+                try {
+                    const { data: dismissedData, error: dismissedError } = await supabase
+                        .from('dismissed_recommendations')
+                        .select('user_id, job_id')
+                        .eq('organization_id', currentUser.organization_id);
+
+                    if (!dismissedError && dismissedData) {
+                        // ユーザーIDと求人IDの組み合わせをSetに格納
+                        dismissedJobIds = new Set(dismissedData.map(d => `${d.user_id}_${d.job_id}`));
+                    }
+                } catch (error) {
+                    console.error('Failed to load dismissed recommendations:', error);
+                }
+
+                renderRecommendations(finalRecs, isAdminOrCoach, allCandidates, appliedJobIds, dismissedJobIds);
 
             } catch (error) {
                 console.error('Load recommendations error:', error)
@@ -16135,7 +16151,7 @@
         // 一括見送り
         window.dismissSelectedRecommendations = async function () {
             const selectedItems = $('.rec-checkbox:checked').map((i, el) => {
-                return { recId: $(el).val(), jobId: $(el).data('job-id') };
+                return { recId: $(el).val(), jobId: $(el).data('job-id'), userId: $(el).data('user-id') };
             }).get();
 
             if (selectedItems.length === 0) {
@@ -16145,16 +16161,30 @@
 
             if (!confirm(`${selectedItems.length}件の求人を一括で見送りにしますか？\n（アンマッチタブへ移動します）`)) return;
 
-            const dismissedKey = (window.currentUser ? `dismissed_recs_${window.currentUser.id}` : 'dismissed_recs_temp');
-            const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]'));
+            showLoading();
+            try {
+                // データベースに見送り情報を保存
+                const dismissRecords = selectedItems.map(item => ({
+                    organization_id: currentUser.organization_id,
+                    user_id: item.userId,
+                    job_id: item.jobId,
+                    dismissed_by: currentUser.id
+                }));
 
-            selectedItems.forEach(item => {
-                dismissed.add(item.jobId);
-            });
+                const { error } = await supabase
+                    .from('dismissed_recommendations')
+                    .upsert(dismissRecords, { onConflict: 'user_id,job_id' });
 
-            localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
-            alert('見送り処理が完了しました。');
-            renderRecommendations();
+                if (error) throw error;
+
+                alert('見送り処理が完了しました。');
+                await loadRecommendations();
+            } catch (error) {
+                console.error('Dismiss error:', error);
+                alert('見送り処理に失敗しました: ' + error.message);
+            } finally {
+                hideLoading();
+            }
         };
 
         // 一括応募代理（モーダルを開かずに直接応募処理を実行）
@@ -16313,12 +16343,15 @@
             await loadRecommendations();
         };
 
-        window.renderRecommendations = function (recs, isAdminOrCoach, candidates, appliedJobIds) {
+        let dismissedJobIdsCache = new Set(); // 見送り済み求人IDキャッシュ
+
+        window.renderRecommendations = function (recs, isAdminOrCoach, candidates, appliedJobIds, dismissedJobIds) {
             // 引数省略時のフォールバック
             if (recs === undefined) recs = allRecommendations;
             if (isAdminOrCoach === undefined) isAdminOrCoach = isAdminOrCoachView;
             if (candidates === undefined) candidates = allCandidatesList;
             if (appliedJobIds === undefined) appliedJobIds = appliedJobIdsCache;
+            if (dismissedJobIds === undefined) dismissedJobIds = dismissedJobIdsCache;
 
             // グローバル変数に保存
             allRecommendations = recs;
@@ -16326,14 +16359,14 @@
             isAdminOrCoachView = isAdminOrCoach;
             allCandidatesList = candidates;
             appliedJobIdsCache = appliedJobIds;
+            dismissedJobIdsCache = dismissedJobIds;
 
             const container = $('#recommendations-container');
             // 全選択チェックボックスをリセット
             $('#select-all-recs').prop('checked', false);
 
-            // 見送り済みデータの取得
-            const dismissedKey = (window.currentUser ? `dismissed_recs_${window.currentUser.id}` : 'dismissed_recs_temp');
-            const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]'));
+            // 見送り済みデータの取得（データベースから）
+            const dismissed = dismissedJobIds;
 
             // キーワード検索
             const keyword = $('#rec-search-keyword').val()?.toLowerCase().trim();
@@ -16374,7 +16407,7 @@
 
             // タブに応じてフィルタリング
             let filteredRecs = displayRecs.filter(rec => {
-                const isDismissed = dismissed.has(rec.job_id);
+                const isDismissed = dismissed.has(`${rec.user_id}_${rec.job_id}`);
                 if (currentRecommendationTab === 'matches') {
                     // 提案タブ: スコア50%以上 かつ 見送りでない
                     return rec.score >= 50 && !isDismissed;
@@ -16390,16 +16423,16 @@
                 tab: currentRecommendationTab,
                 score10Count: filteredRecs.filter(r => r.score === 10).length,
                 scoreLessThan50: filteredRecs.filter(r => r.score < 50).length,
-                dismissedCount: filteredRecs.filter(r => dismissed.has(r.job_id)).length,
-                samples: filteredRecs.slice(0, 3).map(r => ({ score: r.score, job: r.jobs?.title, dismissed: dismissed.has(r.job_id) }))
+                dismissedCount: filteredRecs.filter(r => dismissed.has(`${r.user_id}_${r.job_id}`)).length,
+                samples: filteredRecs.slice(0, 3).map(r => ({ score: r.score, job: r.jobs?.title, dismissed: dismissed.has(`${r.user_id}_${r.job_id}`) }))
             });
 
             // ソート処理
 
             filteredRecs.sort((a, b) => {
                 // 見送り済みを後ろへ
-                const aDis = dismissed.has(a.job_id) ? 1 : 0;
-                const bDis = dismissed.has(b.job_id) ? 1 : 0;
+                const aDis = dismissed.has(`${a.user_id}_${a.job_id}`) ? 1 : 0;
+                const bDis = dismissed.has(`${b.user_id}_${b.job_id}`) ? 1 : 0;
                 if (aDis !== bDis) return aDis - bDis;
 
                 const [key, order] = currentSortOption.split('-');
@@ -16527,8 +16560,8 @@
                 const userEmail = rec.users ? rec.users.email : '';
                 const isApplied = appliedJobIds.has(`${rec.user_id}_${rec.job_id}`);
 
-                // 見送りチェック
-                const isDismissed = dismissed.has(rec.job_id);
+                // 見送りチェック（ユーザーIDと求人IDの組み合わせで判定）
+                const isDismissed = dismissed.has(`${rec.user_id}_${rec.job_id}`);
                 const cardStyle = isDismissed ? 'bg-gray-100 opacity-60' : 'bg-white border-gray-200 hover:shadow-md';
 
                 // URL項目の取得元をGoogle Drive用カラム（pdf_url等）に優先
@@ -16641,7 +16674,7 @@
                                         ${isAdminOrCoach ? '代理応募' : '応募する'}
                                     </button>
                                     ${rec.score >= 50 && !isDismissed ? `
-                                    <button onclick="event.stopPropagation(); window.dismissRecommendation('${rec.job_id}')" 
+                                    <button onclick="event.stopPropagation(); window.dismissRecommendation('${rec.job_id}', '${rec.user_id}')" 
                                         class="text-sm bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded hover:bg-gray-50 transition">
                                         見送る
                                     </button>
@@ -27794,8 +27827,11 @@
 
         // おすすめ求人を見送る（最下部へ移動＆グレーアウト）
         // おすすめ求人を見送る（最下部へ移動＆グレーアウト）
-        window.dismissRecommendation = function (jobId) {
+        window.dismissRecommendation = async function (jobId, userId) {
             if (!window.currentUser) return;
+
+            // userIdが指定されていない場合は現在のユーザー
+            const targetUserId = userId || window.currentUser.id;
 
             // 視覚的な即時フィードバック（クリックしたカードをグレーアウト）
             const card = $(`.rec-card[data-job-id="${jobId}"]`);
@@ -27808,19 +27844,34 @@
                 });
             }
 
-            const key = `dismissed_recs_${window.currentUser.id}`;
-            let dismissed = JSON.parse(localStorage.getItem(key) || '[]');
+            try {
+                // データベースに見送り情報を保存
+                const { error } = await window.supabase
+                    .from('dismissed_recommendations')
+                    .upsert({
+                        organization_id: window.currentUser.organization_id,
+                        user_id: targetUserId,
+                        job_id: jobId,
+                        dismissed_by: window.currentUser.id
+                    }, { onConflict: 'user_id,job_id' });
 
-            if (!dismissed.includes(jobId)) {
-                dismissed.push(jobId);
-                localStorage.setItem(key, JSON.stringify(dismissed));
+                if (error) throw error;
 
                 // 少し待ってから再描画（グレーアウトを見せるため）
-                setTimeout(() => {
-                    if (typeof renderRecommendations === 'function') {
-                        renderRecommendations();
-                    }
+                setTimeout(async () => {
+                    await loadRecommendations();
                 }, 400);
+            } catch (error) {
+                console.error('Dismiss recommendation error:', error);
+                alert('見送り処理に失敗しました: ' + error.message);
+                // エラー時は元に戻す
+                if (card.length > 0) {
+                    card.css({
+                        'opacity': '1',
+                        'filter': 'none',
+                        'pointer-events': 'auto'
+                    });
+                }
             }
         }
 
