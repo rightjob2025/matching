@@ -9231,7 +9231,13 @@
                 const { data: recommendations, error: functionError } = await supabase.functions.invoke('score-ai-recommendations', {
                     body: {
                         userProfile,
-                        jobs: selectedJobs.map(j => ({ id: j.id, title: j.title, description: j.description }))
+                        jobs: selectedJobs.map(j => ({
+                            id: j.id,
+                            title: j.title,
+                            description: j.description,
+                            qualifications: j.qualifications,
+                            company_info: j.company_info
+                        }))
                     }
                 });
 
@@ -9302,7 +9308,13 @@
                 const { data: recommendations, error: functionError } = await supabase.functions.invoke('score-ai-recommendations', {
                     body: {
                         userProfile,
-                        jobs: selectedJobs.map(j => ({ id: j.id, title: j.title, description: j.description }))
+                        jobs: selectedJobs.map(j => ({
+                            id: j.id,
+                            title: j.title,
+                            description: j.description,
+                            qualifications: j.qualifications,
+                            company_info: j.company_info
+                        }))
                     }
                 });
 
@@ -17074,7 +17086,13 @@
                 const { data: recommendations, error: functionError } = await supabase.functions.invoke('score-ai-recommendations', {
                     body: {
                         userProfile,
-                        jobs: jobs.map(j => ({ id: j.id, title: j.title, description: j.description }))
+                        jobs: jobs.map(j => ({
+                            id: j.id,
+                            title: j.title,
+                            description: j.description,
+                            qualifications: j.qualifications,
+                            company_info: j.company_info
+                        }))
                     }
                 })
 
