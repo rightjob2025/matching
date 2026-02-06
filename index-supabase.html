@@ -10358,7 +10358,18 @@
                 // DBに保存（detailsとculture_scoreも含める）
                 const dbRecommendations = recommendations.map(r => {
                     const { job_title, company, ...dbRecord } = r;
+                    // match_typeが設定されていない場合はautoを設定
+                    if (!dbRecord.match_type) {
+                        dbRecord.match_type = 'auto';
+                    }
                     return dbRecord;
+                });
+
+                console.log(`Saving ${dbRecommendations.length} recommendations to database:`, {
+                    total: dbRecommendations.length,
+                    highScore: dbRecommendations.filter(r => r.score >= 50).length,
+                    lowScore: dbRecommendations.filter(r => r.score < 50).length,
+                    score10: dbRecommendations.filter(r => r.score === 10).length
                 });
 
                 const { error } = await supabase
@@ -10366,6 +10377,8 @@
                     .insert(dbRecommendations);
 
                 if (error) throw error;
+
+                console.log('Successfully saved all recommendations to database');
 
                 // ログ記録
                 await auditLog.bulkRecommendationExecuted(recommendations.length, {
@@ -15927,7 +15940,13 @@
                 let { data: recs, error } = await query;
                 if (error) throw error;
 
-                console.log('Loaded recommendations:', recs); // デバッグ用ログ
+                console.log('Loaded recommendations:', {
+                    total: recs?.length || 0,
+                    highScore: recs?.filter(r => r.score >= 50).length || 0,
+                    lowScore: recs?.filter(r => r.score < 50).length || 0,
+                    score10: recs?.filter(r => r.score === 10).length || 0,
+                    samples: recs?.slice(0, 3).map(r => ({ id: r.id, score: r.score, job: r.jobs?.title }))
+                });
 
                 // 2. ユーザー情報を取得（管理者/コーチの場合）
                 let users = [];
@@ -16195,6 +16214,16 @@
                     // アンマッチタブ: スコア49%以下 または 見送り済み
                     return rec.score < 50 || isDismissed;
                 }
+            });
+
+            console.log(`Tab filtering (${currentRecommendationTab}):`, {
+                beforeFilter: displayRecs.length,
+                afterFilter: filteredRecs.length,
+                tab: currentRecommendationTab,
+                score10Count: filteredRecs.filter(r => r.score === 10).length,
+                scoreLessThan50: filteredRecs.filter(r => r.score < 50).length,
+                dismissedCount: filteredRecs.filter(r => dismissed.has(r.job_id)).length,
+                samples: filteredRecs.slice(0, 3).map(r => ({ score: r.score, job: r.jobs?.title, dismissed: dismissed.has(r.job_id) }))
             });
 
             // ソート処理
