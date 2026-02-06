@@ -16066,6 +16066,7 @@
         // 現在のタブ状態を保持
         let currentRecommendationTab = 'matches';
         let allRecommendations = [];
+        window.allRecommendations = allRecommendations; // デバッグ用にグローバルに公開
         let isAdminOrCoachView = false;
         let allCandidatesList = []; // プルダウン用
         let currentSelectedUserId = ''; // 選択中のユーザーID
@@ -16288,6 +16289,7 @@
 
             // グローバル変数に保存
             allRecommendations = recs;
+            window.allRecommendations = recs; // デバッグ用にwindowオブジェクトにも保存
             isAdminOrCoachView = isAdminOrCoach;
             allCandidatesList = candidates;
             appliedJobIdsCache = appliedJobIds;
