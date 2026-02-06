@@ -15270,7 +15270,7 @@
                         await supabase.from('notifications').insert(notifications);
                     }
 
-                    // メール送信
+                    // 求職者へメール送信
                     await sendEmail('application_submitted', applicant.email, {
                         userName: applicant.name,
                         jobTitle: jobTitle,
@@ -15279,6 +15279,58 @@
                         interviewDates: dates,
                         notes: notes
                     });
+
+                    // 担当コーチへメール通知
+                    if (applicant.coach_id) {
+                        try {
+                            const { data: coachData } = await supabase
+                                .from('users')
+                                .select('name, email')
+                                .eq('id', applicant.coach_id)
+                                .single();
+
+                            if (coachData && coachData.email) {
+                                await sendEmail('ca_notification', coachData.email, {
+                                    userName: coachData.name,
+                                    candidateName: applicant.name,
+                                    jobTitle: jobTitle,
+                                    companyName: companyName,
+                                    subject: '【RightJob】担当求職者からの新規応募',
+                                    body: `担当求職者の ${applicant.name} 様が「${companyName} / ${jobTitle}」に応募しました。(志望度: ${willLevel})`
+                                }, currentUser.organization_id);
+                            }
+                        } catch (coachErr) {
+                            console.error('Coach email notification failed:', coachErr);
+                        }
+                    }
+
+                    // 管理者へメール通知
+                    try {
+                        const { data: adminUsers } = await supabase
+                            .from('users')
+                            .select('name, email')
+                            .eq('organization_id', currentUser.organization_id)
+                            .in('role', ['org_admin', 'admin']);
+
+                        if (adminUsers && adminUsers.length > 0) {
+                            for (const admin of adminUsers) {
+                                if (admin.email) {
+                                    await sendEmail('ca_notification', admin.email, {
+                                        userName: admin.name,
+                                        candidateName: applicant.name,
+                                        jobTitle: jobTitle,
+                                        companyName: companyName,
+                                        subject: '【RightJob】新規応募の通知',
+                                        body: isProxy
+                                            ? `${currentUser.name} さんが ${applicant.name} さんの代理で「${companyName} / ${jobTitle}」に応募しました。(志望度: ${willLevel})`
+                                            : `${applicant.name} さんが「${companyName} / ${jobTitle}」に応募しました。(志望度: ${willLevel})`
+                                    }, currentUser.organization_id);
+                                }
+                            }
+                        }
+                    } catch (adminErr) {
+                        console.error('Admin email notification failed:', adminErr);
+                    }
                 } catch (notifyErr) {
                     console.error('Notification failed:', notifyErr);
                 }
@@ -16276,7 +16328,7 @@
                         await supabase.from('notifications').insert(notifications);
                     }
 
-                    // メール送信
+                    // 求職者へメール送信
                     await sendEmail('application_submitted', applicant.email, {
                         userName: applicant.name,
                         jobTitle: jobTitle,
@@ -16285,6 +16337,56 @@
                         interviewDates: '',
                         notes: '一括応募代理'
                     });
+
+                    // 担当コーチへメール通知
+                    if (applicant.coach_id) {
+                        try {
+                            const { data: coachData } = await supabase
+                                .from('users')
+                                .select('name, email')
+                                .eq('id', applicant.coach_id)
+                                .single();
+
+                            if (coachData && coachData.email) {
+                                await sendEmail('ca_notification', coachData.email, {
+                                    userName: coachData.name,
+                                    candidateName: applicant.name,
+                                    jobTitle: jobTitle,
+                                    companyName: companyName,
+                                    subject: '【RightJob】担当求職者からの新規応募',
+                                    body: `担当求職者の ${applicant.name} 様が「${companyName} / ${jobTitle}」に応募しました。(志望度: ${willLevel})`
+                                }, currentUser.organization_id);
+                            }
+                        } catch (coachErr) {
+                            console.error('Coach email notification failed:', coachErr);
+                        }
+                    }
+
+                    // 管理者へメール通知
+                    try {
+                        const { data: adminUsers } = await supabase
+                            .from('users')
+                            .select('name, email')
+                            .eq('organization_id', currentUser.organization_id)
+                            .in('role', ['org_admin', 'admin']);
+
+                        if (adminUsers && adminUsers.length > 0) {
+                            for (const admin of adminUsers) {
+                                if (admin.email) {
+                                    await sendEmail('ca_notification', admin.email, {
+                                        userName: admin.name,
+                                        candidateName: applicant.name,
+                                        jobTitle: jobTitle,
+                                        companyName: companyName,
+                                        subject: '【RightJob】新規応募の通知',
+                                        body: `${currentUser.name} さんが ${applicant.name} さんの代理で「${companyName} / ${jobTitle}」に応募しました。(志望度: ${willLevel})`
+                                    }, currentUser.organization_id);
+                                }
+                            }
+                        }
+                    } catch (adminErr) {
+                        console.error('Admin email notification failed:', adminErr);
+                    }
                 } catch (notifyErr) {
                     console.error('Notification failed:', notifyErr);
                 }
