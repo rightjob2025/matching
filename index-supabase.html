@@ -14682,7 +14682,6 @@
                     .from('favorites')
                     .select('job_id')
                     .eq('user_id', currentUser.id)
-                    .eq('organization_id', currentUser.organization_id)
 
                 if (error) throw error
                 favoriteJobIds = new Set(favs.map(f => f.job_id))
