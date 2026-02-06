@@ -26550,20 +26550,29 @@
 
                     // 勤務地
                     if (user.desired_location) {
+                        console.log('[selectTargetUser] Original desired_location:', user.desired_location);
                         const locs = window.safeParseList(user.desired_location);
+                        console.log('[selectTargetUser] Parsed locations:', locs);
+                        console.log('[selectTargetUser] Available prefectures:', window.prefectures);
                         const foundPrefs = [];
                         locs.forEach(loc => {
                             if (!loc) return;
+                            console.log('[selectTargetUser] Processing location:', loc);
                             // 都道府県マスタとの照合（都道府県が含まれているか、または都道府県名に一致するか）
-                            const pref = (window.prefectures || []).find(p =>
-                                loc.includes(p) ||
-                                p.includes(loc.replace(/[都府県]$/, ''))
-                            );
+                            const pref = (window.prefectures || []).find(p => {
+                                const includesCheck = loc.includes(p);
+                                const reverseCheck = p.includes(loc.replace(/[都府県]$/, ''));
+                                console.log(`[selectTargetUser]   Checking "${loc}" vs "${p}": includes=${includesCheck}, reverse=${reverseCheck}`);
+                                return includesCheck || reverseCheck;
+                            });
+                            console.log('[selectTargetUser]   -> Matched prefecture:', pref);
                             if (pref) foundPrefs.push(pref);
                         });
 
+                        console.log('[selectTargetUser] Found prefectures:', foundPrefs);
                         if (foundPrefs.length > 0) {
                             const uniquePrefs = [...new Set(foundPrefs)];
+                            console.log('[selectTargetUser] Setting unique prefectures:', uniquePrefs);
                             $('#search-prefecture').val(uniquePrefs).trigger('change');
                             $('#search-location').val('');
                         }
