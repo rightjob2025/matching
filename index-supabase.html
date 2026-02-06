@@ -14201,6 +14201,7 @@
             }
 
             $('#search-prefecture').val(filters.prefecture || []).trigger('change');
+            console.log('[applySearchFilters] Setting prefecture to:', filters.prefecture);
             $('#search-employment-type').val(filters.employmentType || []).trigger('change');
             $('#search-job-category').val(filters.jobCategory || []).trigger('change');
             $('#search-industry-category').val(filters.industryCategory || []).trigger('change');
@@ -14233,6 +14234,8 @@
                     return;
                 }
 
+                console.log('[applyPreferredConditions] Full profile object:', profile);
+
                 // 現在のフィルタ状態を維持するため、既存の条件を取得
                 const currentFilters = {
                     excludeMatched: $('#search-exclude-matched').is(':checked'),
@@ -14252,10 +14255,41 @@
                     employmentType: profile.desired_employment_type ? profile.desired_employment_type.split(',') : [],
                     prefecture: (function () {
                         if (!profile.desired_location) return [];
+                        console.log('[applyPreferredConditions] Original desired_location:', profile.desired_location);
                         // コンマ区切りの都道府県をパース（市町村が含まれている場合は除外するシンプル処理）
-                        const locations = profile.desired_location.split(',');
-                        // prefecturesマスタに含まれるものだけを抽出
-                        return locations.map(l => l.trim()).filter(l => prefectures.includes(l));
+                        // より堅牢なパース処理
+                        // 1. まず、カンマで分割
+                        let parts = profile.desired_location.split(',').map(s => s.trim()).filter(s => s);
+                        console.log('[applyPreferredConditions] Split by comma:', parts);
+
+                        // 2. 各パートから都道府県を抽出
+                        const extractedPrefs = [];
+                        parts.forEach(part => {
+                            // スペースで分割されている場合（例: "兵庫県 神戸市"）
+                            const subParts = part.split(/\s+/);
+                            for (const subPart of subParts) {
+                                // 都道府県マスタに完全一致するか確認
+                                if (prefectures.includes(subPart)) {
+                                    if (!extractedPrefs.includes(subPart)) {
+                                        extractedPrefs.push(subPart);
+                                    }
+                                    break; // このパートの処理は終了
+                                }
+                                // 都道府県名で始まる場合（例: "京都府京都市"）
+                                for (const pref of prefectures) {
+                                    if (subPart.startsWith(pref)) {
+                                        if (!extractedPrefs.includes(pref)) {
+                                            extractedPrefs.push(pref);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+
+                        console.log('[applyPreferredConditions] Extracted prefectures:', extractedPrefs);
+                        console.log('[applyPreferredConditions] Available prefectures array sample:', prefectures.slice(0, 15));
+                        return extractedPrefs;
                     })(),
                     location: (function () {
                         if (!profile.desired_location) return '';
@@ -18095,6 +18129,8 @@
                 desired_location: (() => {
                     const prefs = $('#profile-prefecture').val();
                     const city = $('#profile-city').val() || '';
+                    console.log('[saveProfile] Profile prefecture val():', prefs);
+                    console.log('[saveProfile] Profile city val():', city);
                     if (Array.isArray(prefs) && prefs.length > 0) {
                         let loc = prefs.join(',');
                         if (city) {
@@ -18104,10 +18140,13 @@
                                 loc = prefs[0] + city;
                             }
                         }
+                        console.log('[saveProfile] Final desired_location:', loc);
                         return loc;
                     } else if (prefs) {
+                        console.log('[saveProfile] Single pref (non-array):', prefs + city);
                         return prefs + city;
                     }
+                    console.log('[saveProfile] Returning city only or null:', city || null);
                     return city || null;
                 })(),
                 desired_employment_type: $('#profile-employment-type').val() ? $('#profile-employment-type').val().join(',') : null,
