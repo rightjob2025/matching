@@ -15218,8 +15218,7 @@
                             page: 'admin-applicants',
                             application_id: application.id,
                             user_id: applicantId
-                        },
-                        created_at: new Date().toISOString()
+                        }
                     }));
 
                     if (notifications.length > 0) {
@@ -16112,6 +16111,115 @@
             renderRecommendations();
         };
 
+        // 一括応募代理（モーダルを開かずに直接応募処理を実行）
+        window.bulkApplyForJob = async function (jobId, targetUserId, willLevel = 'B') {
+            const applicantId = targetUserId;
+
+            try {
+                // 応募者情報を取得
+                const { data: applicant, error: userError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', applicantId)
+                    .single();
+                if (userError) throw userError;
+
+                // 既に応募済みかチェック
+                const { data: existingApp, error: checkError } = await supabase
+                    .from('applications')
+                    .select('id')
+                    .eq('user_id', applicantId)
+                    .eq('job_id', jobId)
+                    .maybeSingle();
+
+                if (checkError) throw checkError;
+                if (existingApp) {
+                    console.log(`Already applied: user ${applicantId}, job ${jobId}`);
+                    return { success: false, reason: 'already_applied' };
+                }
+
+                // 応募レコードを作成
+                const { data: application, error: insertError } = await supabase
+                    .from('applications')
+                    .insert({
+                        organization_id: currentUser.organization_id,
+                        user_id: applicantId,
+                        job_id: jobId,
+                        status: '応募完了',
+                        will_level: willLevel,
+                        interview_dates: '',
+                        notes: '一括応募代理'
+                    })
+                    .select('*, jobs(title, company)')
+                    .single();
+
+                if (insertError) throw insertError;
+
+                // ログ記録
+                try {
+                    await auditLog.applicationSubmitted(application.id, {
+                        job_id: jobId,
+                        applicant_id: applicantId,
+                        is_proxy: true,
+                        will_level: willLevel
+                    });
+                } catch (logErr) {
+                    console.error('Audit log failed:', logErr);
+                }
+
+                // 通知作成処理
+                try {
+                    const { data: admins } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('organization_id', currentUser.organization_id)
+                        .in('role', ['org_admin', 'admin']);
+
+                    let coachId = applicant.coach_id;
+                    const notifyUserIds = new Set(admins?.map(a => a.id) || []);
+                    if (coachId) notifyUserIds.add(coachId);
+
+                    const jobTitle = application.jobs.title;
+                    const companyName = application.jobs.company;
+
+                    const message = `${currentUser.name} さんが ${applicant.name} さんの代理で「${companyName} / ${jobTitle}」に応募しました。(志望度: ${willLevel})`;
+
+                    const notifications = Array.from(notifyUserIds).map(uid => ({
+                        user_id: uid,
+                        title: '新規応募がありました',
+                        message: message,
+                        read: false,
+                        metadata: {
+                            page: 'admin-applicants',
+                            application_id: application.id,
+                            user_id: applicantId
+                        }
+                    }));
+
+                    if (notifications.length > 0) {
+                        await supabase.from('notifications').insert(notifications);
+                    }
+
+                    // メール送信
+                    await sendEmail('application_submitted', applicant.email, {
+                        userName: applicant.name,
+                        jobTitle: jobTitle,
+                        companyName: companyName,
+                        willLevel: willLevel,
+                        interviewDates: '',
+                        notes: '一括応募代理'
+                    });
+                } catch (notifyErr) {
+                    console.error('Notification failed:', notifyErr);
+                }
+
+                return { success: true, applicationId: application.id };
+            } catch (error) {
+                console.error('Bulk apply error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+
         // 一括応募代理
         window.applySelectedRecommendations = async function () {
             const selectedItems = $('.rec-checkbox:checked').map((i, el) => {
@@ -16128,13 +16236,18 @@
             showLoading();
             let successCount = 0;
             let failCount = 0;
+            let alreadyAppliedCount = 0;
 
             for (const item of selectedItems) {
                 try {
-                    // applyForJob は内部でアラートを出す可能性があるため、静かに実行できるか要確認
-                    // ここでは個別に応募処理を走らせる
-                    await applyForJob(item.jobId, item.userId);
-                    successCount++;
+                    const result = await bulkApplyForJob(item.jobId, item.userId, 'B');
+                    if (result.success) {
+                        successCount++;
+                    } else if (result.reason === 'already_applied') {
+                        alreadyAppliedCount++;
+                    } else {
+                        failCount++;
+                    }
                 } catch (e) {
                     console.error('Bulk apply error:', e);
                     failCount++;
@@ -16142,8 +16255,16 @@
             }
 
             hideLoading();
-            alert(`一括応募が完了しました。\n成功: ${successCount}件${failCount > 0 ? `\n失敗: ${failCount}件` : ''}`);
-            renderRecommendations();
+
+            let message = `一括応募が完了しました。\n成功: ${successCount}件`;
+            if (alreadyAppliedCount > 0) message += `\n既に応募済み: ${alreadyAppliedCount}件`;
+            if (failCount > 0) message += `\n失敗: ${failCount}件`;
+
+            alert(message);
+
+            // キャッシュをクリアして再読み込み
+            localStorage.removeItem('applications-content');
+            await loadRecommendations();
         };
 
         window.renderRecommendations = function (recs, isAdminOrCoach, candidates, appliedJobIds) {
