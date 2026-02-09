@@ -19638,7 +19638,7 @@
             $('#admin-user-id').val(user.id);
             $('#admin-user-name').val(user.name);
             $('#admin-user-furigana').val(user.furigana || '');
-            $('#admin-user-email').val(user.email);
+            $('#admin-user-email').val(user.email).data('original-email', user.email);
             $('#admin-user-new-password').val(''); // パスワードフィールドをリセット (新規追加)
 
             // 権限ラベルの更新
@@ -19787,7 +19787,7 @@
         // パスワード更新処理 (新規追加)
         window.updateUserPassword = async function () {
             const userId = $('#admin-user-id').val();
-            const newPassword = $('#admin-user-new-password').val();
+            const newPassword = $('#admin-user-new-password').val()?.trim(); // Trim password
 
             if (!userId) {
                 alert('ユーザーIDが見つかりません');
@@ -20138,6 +20138,24 @@
                 if (!updatedUser || updatedUser.length === 0) {
                     console.warn('⚠️ No rows were updated in users table. This might be an RLS policy issue.');
                     alert('警告: ユーザー情報の更新に失敗しました。RLSポリシーを確認してください。');
+                }
+
+                // Eメール変更検知とAuth同期 (New)
+                const currentEmail = $('#admin-user-email').data('original-email');
+                const newEmail = updates.email;
+                if (currentEmail && newEmail && currentEmail !== newEmail) {
+                    console.log(`Email changed from ${currentEmail} to ${newEmail}. Syncing to Auth...`);
+                    const { data: authData, error: authError } = await supabase.functions.invoke('update-user-password', {
+                        body: { userId: userId, email: newEmail }
+                    });
+
+                    if (authError || (authData && authData.success === false)) {
+                        console.error('Failed to sync email to Auth:', authError || authData);
+                        alert('警告: ユーザー情報は保存されましたが、ログイン用メールアドレスの変更に失敗しました。\n' + (authError?.message || authData?.error || '不明なエラー'));
+                    } else {
+                        console.log('Email synced to Auth successfully.');
+                        $('#admin-user-email').data('original-email', newEmail); // Update original for next save
+                    }
                 }
 
                 // 2. candidate_profilesテーブル更新 (role === 'candidate' の場合のみ)
