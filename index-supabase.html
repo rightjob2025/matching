@@ -16681,10 +16681,10 @@
             let filteredRecs = displayRecs.filter(rec => {
                 const isDismissed = dismissed.has(`${rec.user_id}_${rec.job_id}`);
                 if (currentRecommendationTab === 'matches') {
-                    // 提案タブ: スコア50%以上 かつ 見送りでない
+                    // 提案タブ: スコア50点以上 かつ 見送りでない
                     return rec.score >= 50 && !isDismissed;
                 } else {
-                    // アンマッチタブ: スコア49%以下 または 見送り済み
+                    // アンマッチタブ: スコア49点以下 または 見送り済み
                     return rec.score < 50 || isDismissed;
                 }
             });
