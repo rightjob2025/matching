@@ -6610,15 +6610,13 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">職種カテゴリ</label>
-                        <select id="job-category" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="">選択してください</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">職種カテゴリ（複数選択可）</label>
+                        <select id="job-category" multiple class="w-full px-4 py-2 border rounded-lg">
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">業界カテゴリ</label>
-                        <select id="job-industry-category" class="w-full px-4 py-2 border rounded-lg">
-                            <option value="">選択してください</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">業界カテゴリ（複数選択可）</label>
+                        <select id="job-industry-category" multiple class="w-full px-4 py-2 border rounded-lg">
                         </select>
                     </div>
                 </div>
@@ -7973,17 +7971,25 @@
             const select = document.getElementById(elementId);
             if (!select) return;
 
-            const currentVal = selectedValue || select.value;
+            // 複数選択かどうかを判定
+            const isMultiple = select.hasAttribute('multiple');
 
-            // 既存のオプション（最初の1つ目＝デフォルト選択肢など）を保持するか、
-            // あるいは data-default-text 属性などで管理するか。
-            // ここではシンプルに、最初のオプション（value=""のもの）だけ残して他を削除する
-            const defaultOption = select.querySelector('option[value=""]');
+            // selectedValueを配列に正規化
+            let selectedArray = [];
+            if (selectedValue) {
+                if (Array.isArray(selectedValue)) {
+                    selectedArray = selectedValue;
+                } else if (typeof selectedValue === 'string') {
+                    // カンマ区切りの文字列を配列に変換
+                    selectedArray = selectedValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                }
+            }
+
+            // 既存のオプションをクリア
             select.innerHTML = '';
-            if (defaultOption) {
-                select.appendChild(defaultOption);
-            } else {
-                // デフォルトがない場合は追加しておく
+
+            // 単一選択の場合のみデフォルトオプションを追加
+            if (!isMultiple) {
                 const opt = document.createElement('option');
                 opt.value = "";
                 opt.text = "選択してください";
@@ -7991,24 +7997,38 @@
             }
 
             // マスタデータの追加
-            options.forEach(optVal => {
-                const opt = document.createElement('option');
-                opt.value = optVal;
-                opt.text = optVal;
-                select.appendChild(opt);
-            });
-
-            // 選択値のセット
-            if (currentVal) {
-                // マスタにない値の場合、一時的に追加する
-                if (!options.includes(currentVal)) {
+            if (Array.isArray(options)) {
+                options.forEach(optVal => {
                     const opt = document.createElement('option');
-                    opt.value = currentVal;
-                    opt.text = currentVal; // (未登録) などをつけてもいいが、そのまま表示
+                    // optValがオブジェクトの場合（{value, label}形式）
+                    if (typeof optVal === 'object' && optVal.value !== undefined) {
+                        opt.value = optVal.value;
+                        opt.text = optVal.label || optVal.value;
+                        if (selectedArray.includes(optVal.value) || selectedArray.includes(optVal.label)) {
+                            opt.selected = true;
+                        }
+                    } else {
+                        // 文字列の場合
+                        opt.value = optVal;
+                        opt.text = optVal;
+                        if (selectedArray.includes(optVal)) {
+                            opt.selected = true;
+                        }
+                    }
+                    select.appendChild(opt);
+                });
+            }
+
+            // マスタにない値が選択されている場合は追加
+            selectedArray.forEach(val => {
+                if (val && !Array.from(select.options).some(opt => opt.value === val)) {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.text = val;
+                    opt.selected = true;
                     select.appendChild(opt);
                 }
-                select.value = currentVal;
-            }
+            });
         }
 
         // 職歴入力用のdatalistを更新する関数
@@ -9494,11 +9514,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <p class="text-xs text-gray-500 font-semibold mb-1">職種カテゴリ</p>
-                                <p class="font-medium text-gray-900">${job.job_category || '未設定'}</p>
+                                <p class="font-medium text-gray-900">${job.job_category ? job.job_category.split(',').map(c => `<span class="inline-block bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs mr-1 mb-1">${c.trim()}</span>`).join('') : '未設定'}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 font-semibold mb-1">業界カテゴリ</p>
-                                <p class="font-medium text-gray-900">${job.industry_category || '未設定'}</p>
+                                <p class="font-medium text-gray-900">${job.industry_category ? job.industry_category.split(',').map(c => `<span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs mr-1 mb-1">${c.trim()}</span>`).join('') : '未設定'}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 font-semibold mb-1">雇用形態</p>
@@ -10093,8 +10113,32 @@
         function generateSimpleReason(job, user) {
             const reasons = [];
 
-            if (user.desired_job_category && job.job_category === user.desired_job_category) {
-                reasons.push(`ご希望の職種「${job.job_category}」に合致しています`);
+            // 職種カテゴリのマッチング（複数対応）
+            if (user.desired_job_category && job.job_category) {
+                const jobCategories = job.job_category.split(',').map(c => c.trim());
+                const userCategories = user.desired_job_category.split(',').map(c => c.trim());
+                const matchedCategories = jobCategories.filter(jc => userCategories.includes(jc));
+                if (matchedCategories.length > 0) {
+                    reasons.push(`ご希望の職種「${matchedCategories.join('、')}」に合致しています`);
+                }
+            }
+
+            // 業界カテゴリのマッチング（複数対応）
+            if (user.desired_industry && job.industry_category) {
+                // user.desired_industry は配列か文字列の可能性があるため正規化
+                let userIndustries = [];
+                if (Array.isArray(user.desired_industry)) {
+                    userIndustries = user.desired_industry;
+                } else {
+                    userIndustries = user.desired_industry.split(',').map(c => c.trim());
+                }
+
+                const jobIndustries = job.industry_category.split(',').map(c => c.trim());
+                const matchedIndustries = jobIndustries.filter(ji => userIndustries.includes(ji));
+
+                if (matchedIndustries.length > 0) {
+                    reasons.push(`ご希望の業界「${matchedIndustries.join('、')}」に関連しています`);
+                }
             }
 
             if (user.desired_location && job.location.includes(user.desired_location)) {
@@ -15206,7 +15250,7 @@
                         <p class="text-xs font-medium text-gray-500 mb-3 line-clamp-1"><i class="far fa-building mr-1"></i>${job.companies?.name || job.company}</p>
                         
                         <div class="flex flex-wrap gap-2 mb-4">
-                            ${job.job_category ? `<span class="px-2 py-1 text-xs bg-indigo-50 text-indigo-700 rounded border border-indigo-100">${job.job_category}</span>` : ''}
+                            ${job.job_category ? job.job_category.split(',').map(c => `<span class="px-2 py-1 text-xs bg-indigo-50 text-indigo-700 rounded border border-indigo-100">${c.trim()}</span>`).join('') : ''}
                             ${job.is_remote ? `<span class="px-2 py-1 text-xs bg-emerald-50 text-emerald-700 rounded border border-emerald-100">リモート可</span>` : ''}
                             ${job.tags && Array.isArray(job.tags) ? job.tags.slice(0, 2).map(tag => `<span class="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded border border-gray-200">${tag}</span>`).join('') : ''}
                         </div>
@@ -18000,7 +18044,7 @@
                 });
 
                 // 管理者用フォームのSelect2は特別な設定が必要
-                $('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').select2({
+                $('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture, #job-category, #job-industry-category').select2({
                     language: "ja",
                     width: '100%',
                     closeOnSelect: false,
@@ -18009,7 +18053,7 @@
                 });
 
                 // その他のSelect2は標準設定（select要素のみ）
-                $('select.select2').not('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture').each(function () {
+                $('select.select2').not('#admin-user-job-type, #admin-user-industry, #admin-user-employment-type, #admin-user-prefecture, #job-category, #job-industry-category').each(function () {
                     if (!$(this).hasClass("select2-hidden-accessible")) {
                         $(this).select2({
                             language: "ja",
@@ -18926,6 +18970,9 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
+                            <button onclick='copyJob("${job.id}")' class="text-green-600 hover:text-green-800 px-3 py-1 text-sm" title="この求人を複製">
+                                <i class="fas fa-copy mr-1"></i>コピー
+                            </button>
                             <button onclick='openEditJobModal("${job.id}")' class="text-indigo-600 hover:text-indigo-800 px-3 py-1 text-sm">
                                 <i class="fas fa-edit mr-1"></i>編集
                             </button>
@@ -18939,6 +18986,63 @@
             `).join('')
 
             container.html(html)
+        }
+
+        window.copyJob = async function (jobId) {
+            if (!confirm('この求人を複製しますか？')) return;
+
+            showLoading();
+            try {
+                // 元の求人データを取得
+                const { data: job, error } = await supabase
+                    .from('jobs')
+                    .select('*')
+                    .eq('id', jobId)
+                    .eq('organization_id', currentUser.organization_id)
+                    .single();
+
+                if (error || !job) {
+                    throw new Error('求人データの取得に失敗しました');
+                }
+
+                // コピー用のデータを作成（IDと作成日時を除外）
+                const newJobData = {
+                    ...job,
+                    title: job.title + ' (コピー)',
+                    job_code: null, // 求人管理IDはクリア
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                // 不要なフィールドを削除
+                delete newJobData.id;
+                delete newJobData.deleted_at;
+
+                // 新しい求人として登録
+                const { data: newJob, error: insertError } = await supabase
+                    .from('jobs')
+                    .insert(newJobData)
+                    .select()
+                    .single();
+
+                if (insertError) throw insertError;
+
+                // ログ記録
+                if (newJob) {
+                    await auditLog.jobCreated(newJob.id, {
+                        title: newJobData.title,
+                        copied_from: jobId
+                    });
+                }
+
+                alert('求人を複製しました');
+                loadAdminJobs();
+            } catch (error) {
+                console.error('Copy job error:', error);
+                alert('求人の複製に失敗しました: ' + error.message);
+            } finally {
+                hideLoading();
+            }
         }
 
         window.deleteJob = async function (jobId) {
@@ -19291,15 +19395,48 @@
                     $('#job-experience-ok').prop('checked', job.job_experience_ok === '可')
                     $('#job-industry-experience-ok').prop('checked', job.industry_experience_ok === '可')
 
-                    // マスタデータ選択肢の再設定 (selected valueを反映)
-                    // populateSelectOptions はマスタにない値も追加してくれる
-                    populateSelectOptions('job-category', masterJobCategories, job.job_category);
-                    populateSelectOptions('job-industry-category', masterIndustries, job.industry_category);
+                    // Select2の再初期化と値セットを行うヘルパー
+                    const refreshCategorySelect = (id, options, val) => {
+                        const el = $(`#${id}`);
+                        if (el.hasClass("select2-hidden-accessible")) {
+                            el.select2('destroy');
+                        }
+                        populateSelectOptions(id, options, val);
+                        el.select2({
+                            language: "ja",
+                            width: '100%',
+                            closeOnSelect: false,
+                            allowClear: true,
+                            placeholder: '選択してください'
+                        });
+                    };
+
+                    refreshCategorySelect('job-category', masterJobCategories, job.job_category);
+                    refreshCategorySelect('job-industry-category', masterIndustries, job.industry_category);
                 }
             } else {
                 $('#job-modal-title').text('求人作成')
                 // 新規作成時は Select2 をリセット
                 $('#job-company-select').val('').trigger('change');
+                // カテゴリのSelect2も初期化（再構築）
+                const catIds = ['job-category', 'job-industry-category'];
+                catIds.forEach(id => {
+                    const el = $(`#${id}`);
+                    if (el.hasClass("select2-hidden-accessible")) {
+                        el.select2('destroy');
+                    }
+                });
+
+                populateSelectOptions('job-category', masterJobCategories, []);
+                populateSelectOptions('job-industry-category', masterIndustries, []);
+
+                $('#job-category, #job-industry-category').select2({
+                    language: "ja",
+                    width: '100%',
+                    closeOnSelect: false,
+                    allowClear: true,
+                    placeholder: '選択してください'
+                });
             }
             $('#job-modal').removeClass('hidden')
         }
@@ -19334,6 +19471,10 @@
             const salaryMin = $('#job-salary-min').val()
             const salaryMax = $('#job-salary-max').val()
 
+            // カテゴリの値を取得（配列として）
+            const jobCategories = $('#job-category').val(); // Select2の複数選択は配列を返す
+            const industryCategories = $('#job-industry-category').val();
+
             const jobData = {
                 organization_id: currentUser.organization_id,
                 title: $('#job-title').val(),
@@ -19344,8 +19485,9 @@
                 employment_type: $('#job-employment-type').val(),
                 salary_min: salaryMin ? parseInt(salaryMin) * 10000 : null,
                 salary_max: salaryMax ? parseInt(salaryMax) * 10000 : null,
-                job_category: $('#job-category').val() || null,
-                industry_category: $('#job-industry-category').val() || null,
+                // 配列をカンマ区切りで保存
+                job_category: jobCategories && jobCategories.length > 0 ? jobCategories.join(',') : null,
+                industry_category: industryCategories && industryCategories.length > 0 ? industryCategories.join(',') : null,
                 job_experience_ok: $('#job-experience-ok').is(':checked') ? '可' : '不可',
                 industry_experience_ok: $('#job-industry-experience-ok').is(':checked') ? '可' : '不可',
                 description: $('#job-description').val(),
