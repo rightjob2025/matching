@@ -19808,10 +19808,12 @@
                 return;
             }
 
+            const email = $('#admin-user-email').val()?.trim();
+
             showLoading();
             try {
                 const { data, error } = await supabase.functions.invoke('update-user-password', {
-                    body: { userId, newPassword }
+                    body: { userId, newPassword, email }
                 });
 
                 if (error) throw error;
