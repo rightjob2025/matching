@@ -9835,7 +9835,7 @@
                             </div>
                             
                             <!-- 類似度の内訳 -->
-                            <div class="grid grid-cols-4 gap-2 mb-3 text-xs">
+                            <div class="grid grid-cols-5 gap-2 mb-3 text-xs">
                                 <div class="text-center">
                                     <div class="text-gray-500">職種</div>
                                     <div class="font-semibold ${breakdown.title >= 70 ? 'text-green-600' : 'text-gray-700'}">
@@ -9858,6 +9858,12 @@
                                     <div class="text-gray-500">年収</div>
                                     <div class="font-semibold ${breakdown.salary >= 70 ? 'text-green-600' : 'text-gray-700'}">
                                         ${Math.round(breakdown.salary)}%
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-500">未経験</div>
+                                    <div class="font-semibold ${breakdown.experience >= 70 ? 'text-green-600' : 'text-gray-700'}">
+                                        ${Math.round(breakdown.experience)}%
                                     </div>
                                 </div>
                             </div>
