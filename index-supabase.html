@@ -9677,6 +9677,21 @@
                         <span>最終更新日: ${new Date(job.updated_at).toLocaleDateString()}</span>
                     </div>
 
+                    <!-- 類似求人セクション -->
+                    <div id="similar-jobs-section" class="mt-8 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 border border-indigo-100">
+                        <h4 class="text-lg font-bold mb-4 text-gray-900 flex items-center">
+                            <i class="fas fa-th-list mr-2 text-indigo-600"></i>
+                            この求人に似た求人
+                        </h4>
+                        
+                        <div id="similar-jobs-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="col-span-full text-center py-8 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                                <p>類似求人を検索中...</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex gap-3 pt-6 mt-6 border-t">
                         <button id="modal-fav-btn-${job.id}" onclick="toggleFavorite('${job.id}')" class="flex-1 px-6 py-3 border-2 ${typeof favoriteJobIds !== 'undefined' && favoriteJobIds.has(job.id) ? 'border-pink-500 text-pink-600' : 'border-gray-300 text-gray-700'} rounded-lg hover:bg-gray-50 font-medium transition shadow-sm flex items-center justify-center gap-2">
                             <i class="fas fa-heart ${typeof favoriteJobIds !== 'undefined' && favoriteJobIds.has(job.id) ? 'text-pink-500' : ''}"></i>
@@ -9715,6 +9730,9 @@
                 switchJobDetailTab('details');
                 console.log('Modal show process complete - z-index 99999 applied');
 
+                // 類似求人を非同期で読み込み
+                loadSimilarJobs(jobId);
+
             } catch (error) {
                 console.error('Load job detail error:', error);
                 alert('求人詳細の取得に失敗しました: ' + error.message);
@@ -9727,6 +9745,152 @@
         window.closeJobDetailModal = function () {
             console.log('--- closeJobDetailModal Triggered ---');
             $('#job-detail-modal').addClass('hidden').attr('style', 'display: none !important;');
+        }
+
+        // ============================================
+        // 類似求人機能 (MVP)
+        // ============================================
+
+        async function loadSimilarJobs(jobId) {
+            try {
+                console.log('Loading similar jobs for:', jobId);
+
+                const container = $('#similar-jobs-container');
+
+                // Edge Functionを呼び出し
+                const { data, error } = await supabase.functions.invoke('get-similar-jobs-mvp', {
+                    body: {
+                        job_id: jobId,
+                        user_id: currentUser.id,
+                        organization_id: currentUser.organization_id,
+                        limit: 6
+                    }
+                });
+
+                if (error) {
+                    console.error('Similar jobs error:', error);
+                    container.html(`
+                        <div class="col-span-full text-center py-8 text-gray-500">
+                            <i class="fas fa-exclamation-circle text-3xl mb-3 text-gray-400"></i>
+                            <p>類似求人の取得に失敗しました</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                if (!data || !data.success) {
+                    console.error('Similar jobs failed:', data);
+                    container.html(`
+                        <div class="col-span-full text-center py-8 text-gray-500">
+                            <i class="fas fa-exclamation-circle text-3xl mb-3 text-gray-400"></i>
+                            <p>類似求人の取得に失敗しました</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                console.log('Similar jobs loaded:', data.similar_jobs?.length || 0);
+
+                if (!data.similar_jobs || data.similar_jobs.length === 0) {
+                    container.html(`
+                        <div class="col-span-full text-center py-8 text-gray-500">
+                            <i class="fas fa-search text-3xl mb-3 text-gray-400"></i>
+                            <p>類似する求人が見つかりませんでした</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                // 類似求人カードを生成
+                const cardsHtml = data.similar_jobs.map(item => {
+                    const job = item.job;
+                    const score = Math.round(item.similarity_score);
+                    const breakdown = item.breakdown;
+
+                    return `
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all cursor-pointer group"
+                             onclick="showJobDetailModal('${job.id}')">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex-1 pr-3">
+                                    <h5 class="font-semibold text-gray-800 mb-1 group-hover:text-indigo-600 transition line-clamp-2">
+                                        ${escapeHtml(job.title)}
+                                    </h5>
+                                    <p class="text-sm text-gray-600">${escapeHtml(job.company || '企業名未設定')}</p>
+                                </div>
+                                
+                                <div class="text-center flex-shrink-0">
+                                    <div class="text-2xl font-bold ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-indigo-600' : 'text-gray-600'}">
+                                        ${score}%
+                                    </div>
+                                    <div class="text-xs text-gray-500">類似度</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 推薦理由 -->
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-2 mb-3">
+                                <p class="text-xs text-blue-800">
+                                    <i class="fas fa-lightbulb mr-1"></i>
+                                    ${escapeHtml(item.recommendation_reason)}
+                                </p>
+                            </div>
+                            
+                            <!-- 類似度の内訳 -->
+                            <div class="grid grid-cols-4 gap-2 mb-3 text-xs">
+                                <div class="text-center">
+                                    <div class="text-gray-500">職種</div>
+                                    <div class="font-semibold ${breakdown.title >= 70 ? 'text-green-600' : 'text-gray-700'}">
+                                        ${Math.round(breakdown.title)}%
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-500">業種</div>
+                                    <div class="font-semibold ${breakdown.industry >= 70 ? 'text-green-600' : 'text-gray-700'}">
+                                        ${Math.round(breakdown.industry)}%
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-500">勤務地</div>
+                                    <div class="font-semibold ${breakdown.location >= 70 ? 'text-green-600' : 'text-gray-700'}">
+                                        ${Math.round(breakdown.location)}%
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-gray-500">年収</div>
+                                    <div class="font-semibold ${breakdown.salary >= 70 ? 'text-green-600' : 'text-gray-700'}">
+                                        ${Math.round(breakdown.salary)}%
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 求人情報 -->
+                            <div class="flex gap-3 text-xs text-gray-600 border-t pt-2">
+                                <span class="flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-1 text-gray-400"></i>
+                                    ${escapeHtml(job.location || '未設定')}
+                                </span>
+                                ${job.salary_min ? `
+                                <span class="flex items-center">
+                                    <i class="fas fa-yen-sign mr-1 text-gray-400"></i>
+                                    ${(job.salary_min / 10000).toLocaleString()}万円〜
+                                </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.html(cardsHtml);
+
+            } catch (error) {
+                console.error('Error loading similar jobs:', error);
+                $('#similar-jobs-container').html(`
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-exclamation-circle text-3xl mb-3 text-gray-400"></i>
+                        <p>類似求人の取得中にエラーが発生しました</p>
+                        <p class="text-xs mt-2">${escapeHtml(error.message)}</p>
+                    </div>
+                `);
+            }
         }
 
         // ============================================
