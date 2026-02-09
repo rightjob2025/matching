@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RightJob マッチング - Supabase版</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Supabase SDK -->
@@ -1845,7 +1846,8 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
-                        <input type="password" id="login-password" required
+                        <input type="password" id="login-password" required autocomplete="current-password"
+                            autocomplete="current-password"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     </div>
 
@@ -1911,7 +1913,8 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
-                        <input type="password" id="signup-password" required minlength="6"
+                        <input type="password" id="signup-password" required minlength="6" autocomplete="new-password"
+                            autocomplete="new-password"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     </div>
 
@@ -5115,6 +5118,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">パスワードの変更</label>
                         <div class="flex gap-2">
                             <input type="password" id="admin-user-new-password" placeholder="新しいパスワード"
+                                autocomplete="new-password" autocomplete="new-password"
                                 class="flex-1 px-4 py-2 border rounded-lg text-sm">
                             <button type="button" onclick="updateUserPassword()"
                                 class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition shadow-sm whitespace-nowrap">
@@ -7173,7 +7177,8 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">パスワード *</label>
-                    <input type="password" id="reg-password" minlength="6" class="w-full px-4 py-2 border rounded-lg">
+                    <input type="password" id="reg-password" minlength="6" class="w-full px-4 py-2 border rounded-lg"
+                        autocomplete="new-password">
                 </div>
 
                 <!-- Role Selection (for User Management) -->
