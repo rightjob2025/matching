@@ -16401,7 +16401,7 @@
 
                         if (applications) {
                             // ユーザーIDと求人IDの組み合わせをSetに格納して、特定のユーザーが応募済みかを正確に判定できるようにする
-                            appliedJobIds = new Set(applications.map(a => `${a.user_id}_${a.job_id}`));
+                            appliedJobIds = new Set(applications.map(a => `${String(a.user_id).trim()}_${String(a.job_id).trim()}`));
                         }
                     } catch (error) {
                         console.error('Failed to load applications:', error);
@@ -16415,7 +16415,7 @@
                             .eq('user_id', currentUser.id);
 
                         if (applications) {
-                            appliedJobIds = new Set(applications.map(a => `${currentUser.id}_${a.job_id}`));
+                            appliedJobIds = new Set(applications.map(a => `${String(currentUser.id).trim()}_${String(a.job_id).trim()}`));
                         }
                     } catch (error) {
                         console.error('Failed to load applications:', error);
@@ -16432,7 +16432,7 @@
 
                     if (!dismissedError && dismissedData) {
                         // ユーザーIDと求人IDの組み合わせをSetに格納
-                        dismissedJobIds = new Set(dismissedData.map(d => `${d.user_id}_${d.job_id}`));
+                        dismissedJobIds = new Set(dismissedData.map(d => `${String(d.user_id).trim()}_${String(d.job_id).trim()}`));
                     }
                 } catch (error) {
                     console.error('Failed to load dismissed recommendations:', error);
@@ -16853,10 +16853,33 @@
                 currentTab: currentRecommendationTab
             });
 
+            const pendingOnlyBtn = document.getElementById('rec-filter-pending-only');
+            const isPendingChecked = pendingOnlyBtn ? pendingOnlyBtn.checked : false;
+
+            console.log('--- Recommendation Filter Debug ---');
+            console.log('Pending Only Checked:', isPendingChecked);
+            console.log('Current Tab:', currentRecommendationTab);
+            console.log('Total Applied IDs in Cache:', appliedJobIds.size);
+            console.log('Total Dismissed IDs in Cache:', dismissed.size);
+
             let filteredRecs = displayRecs.filter(rec => {
-                const isDismissed = dismissed.has(`${rec.user_id}_${rec.job_id}`);
+                const uId = String(rec.user_id).trim();
+                const jId = String(rec.job_id).trim();
+                const key = `${uId}_${jId}`;
+
+                const isDismissed = dismissed.has(key);
+                const isApplied = appliedJobIds.has(key);
+
+                // 未対応のみフィルタの強制適用
+                if (isPendingChecked) {
+                    if (isApplied || isDismissed) {
+                        return false;
+                    }
+                }
+
+                // タブごとの表示条件
                 if (currentRecommendationTab === 'matches') {
-                    // 提案タブ: スコア50点以上 かつ 見送りでない
+                    // 提案タブ: スコア50点以上 かつ 見送りでない (見送りは未対応フィルタOFFでも隠す方針)
                     return rec.score >= 50 && !isDismissed;
                 } else {
                     // アンマッチタブ: スコア49点以下 または 見送り済み
@@ -17005,10 +17028,13 @@
                 // ユーザー情報がない場合のガード
                 const userName = rec.users ? rec.users.name : '不明なユーザー';
                 const userEmail = rec.users ? rec.users.email : '';
-                const isApplied = appliedJobIds.has(`${rec.user_id}_${rec.job_id}`);
 
-                // 見送りチェック（ユーザーIDと求人IDの組み合わせで判定）
-                const isDismissed = dismissed.has(`${rec.user_id}_${rec.job_id}`);
+                const uId = String(rec.user_id).trim();
+                const jId = String(rec.job_id).trim();
+                const key = `${uId}_${jId}`;
+
+                const isApplied = appliedJobIds.has(key);
+                const isDismissed = dismissed.has(key);
                 const cardStyle = isDismissed ? 'bg-gray-100 opacity-60' : 'bg-white border-gray-200 hover:shadow-md';
 
                 // URL項目の取得元をGoogle Drive用カラム（pdf_url等）に優先
