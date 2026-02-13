@@ -16217,7 +16217,7 @@
         // ========================
         // Recommendation Pagination Variables
         // ========================
-        const RECOMMENDATIONS_PER_PAGE = 20;
+        let RECOMMENDATIONS_PER_PAGE = 20;
         let currentRecommendationPage = 1;
         let totalRecommendationPages = 1;
         let allRecommendationsCache = []; // フィルタリング後の全推薦
@@ -16484,6 +16484,13 @@
         // ソート切り替え関数
         window.sortRecommendations = function (option) {
             currentSortOption = option;
+            currentRecommendationPage = 1; // ページ番号をリセット
+            renderRecommendations(allRecommendations, isAdminOrCoachView, allCandidatesList, appliedJobIdsCache);
+        }
+
+        // 表示件数切り替え関数
+        window.changeRecommendationsPerPage = function (count) {
+            RECOMMENDATIONS_PER_PAGE = parseInt(count);
             currentRecommendationPage = 1; // ページ番号をリセット
             renderRecommendations(allRecommendations, isAdminOrCoachView, allCandidatesList, appliedJobIdsCache);
         }
@@ -16981,6 +16988,16 @@
                             <option value="score-desc" ${currentSortOption === 'score-desc' ? 'selected' : ''}>マッチ度順</option>
                             <option value="date-desc" ${currentSortOption === 'date-desc' ? 'selected' : ''}>新着順</option>
                             <option value="date-asc" ${currentSortOption === 'date-asc' ? 'selected' : ''}>古い順</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2 ml-2 pl-4 border-l">
+                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap"><i class="fas fa-list mr-1"></i></label>
+                        <select onchange="changeRecommendationsPerPage(this.value)" class="px-3 py-2 border rounded-lg text-sm cursor-pointer hover:bg-gray-50 border-gray-200">
+                            <option value="20" ${RECOMMENDATIONS_PER_PAGE === 20 ? 'selected' : ''}>20件表示</option>
+                            <option value="60" ${RECOMMENDATIONS_PER_PAGE === 60 ? 'selected' : ''}>60件表示</option>
+                            <option value="100" ${RECOMMENDATIONS_PER_PAGE === 100 ? 'selected' : ''}>100件表示</option>
+                            <option value="200" ${RECOMMENDATIONS_PER_PAGE === 200 ? 'selected' : ''}>200件表示</option>
                         </select>
                     </div>
                 </div>
