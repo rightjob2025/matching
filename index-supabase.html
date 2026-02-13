@@ -2931,44 +2931,83 @@
 
                 <!-- 検索・フィルターエリア -->
                 <div class="bg-white rounded-lg shadow p-4 mb-6">
-                    <div class="flex flex-col lg:flex-row gap-4">
-                        <!-- 求人検索キーワード -->
-                        <div class="flex-grow">
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                    <i class="fas fa-search"></i>
-                                </span>
-                                <input type="text" id="rec-search-keyword"
-                                    onkeyup="if(event.key === 'Enter') renderRecommendations()"
-                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm transition-all"
-                                    placeholder="企業名、ポジション名、キーワードで検索...">
+                    <div class="flex flex-col gap-4">
+                        <!-- 1行目: 基本検索 -->
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <!-- 求人検索キーワード -->
+                            <div class="flex-grow">
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" id="rec-search-keyword"
+                                        onkeyup="if(event.key === 'Enter') renderRecommendations()"
+                                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm transition-all"
+                                        placeholder="キーワードで全体検索...">
+                                </div>
+                            </div>
+                            <!-- 求職者名検索 -->
+                            <div class="w-full lg:w-48">
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                        <i class="fas fa-user-circle"></i>
+                                    </span>
+                                    <input type="text" id="rec-search-candidate-name"
+                                        onkeyup="if(event.key === 'Enter') renderRecommendations()"
+                                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm transition-all"
+                                        placeholder="求職者名...">
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 transition">
+                                    <input type="checkbox" id="rec-filter-pending-only"
+                                        onchange="renderRecommendations()"
+                                        class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                    <span class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                        未対応のみ
+                                    </span>
+                                </label>
+                                <button onclick="renderRecommendations()"
+                                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-bold shadow-sm flex items-center justify-center gap-2">
+                                    <i class="fas fa-search"></i>検索
+                                </button>
                             </div>
                         </div>
-                        <!-- 求職者名検索 -->
-                        <div class="w-full lg:w-64">
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                    <i class="fas fa-user-circle"></i>
-                                </span>
-                                <input type="text" id="rec-search-candidate-name"
-                                    onkeyup="if(event.key === 'Enter') renderRecommendations()"
-                                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm transition-all"
-                                    placeholder="求職者名で絞り込み...">
+
+                        <!-- 2行目: 詳細フィルタ -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 pt-3 border-t border-gray-50">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">社名</label>
+                                <input type="text" id="rec-search-company" oninput="renderRecommendations()"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="株式会社...">
                             </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <label
-                                class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 transition">
-                                <input type="checkbox" id="rec-filter-pending-only" onchange="renderRecommendations()"
-                                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                <span class="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                    <i class="fas fa-filter mr-1"></i>未対応のみ表示
-                                </span>
-                            </label>
-                            <button onclick="renderRecommendations()"
-                                class="bg-indigo-600 text-white px-8 py-2 rounded-md hover:bg-indigo-700 transition font-bold shadow-sm flex items-center justify-center gap-2">
-                                <i class="fas fa-search"></i>検索
-                            </button>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">職種</label>
+                                <input type="text" id="rec-search-job-category" oninput="renderRecommendations()"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="営業、事務...">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">勤務地</label>
+                                <input type="text" id="rec-search-location" oninput="renderRecommendations()"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="東京、大阪...">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">最低年収(万)</label>
+                                <input type="number" id="rec-search-salary-min" oninput="renderRecommendations()"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="500">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[10px] font-bold text-gray-400 uppercase mb-1">最低マッチ度(%)</label>
+                                <input type="number" id="rec-search-score-min" oninput="renderRecommendations()"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="60">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -16754,6 +16793,13 @@
             //     displayRecs = recs.filter(r => r.user_id === currentSelectedUserId);
             // }
 
+            // 詳細フィルタ設定
+            const companyFilter = $('#rec-search-company').val()?.toLowerCase().trim();
+            const jobCatFilter = $('#rec-search-job-category').val()?.toLowerCase().trim();
+            const locationFilter = $('#rec-search-location').val()?.toLowerCase().trim();
+            const salaryMinFilter = parseInt($('#rec-search-salary-min').val());
+            const scoreMinFilter = parseInt($('#rec-search-score-min').val());
+
             // キーワードフィルタリング
             if (keyword) {
                 displayRecs = displayRecs.filter(r => {
@@ -16771,6 +16817,27 @@
 
                     return searchTargets.some(target => target.includes(keyword));
                 });
+            }
+
+            // 個別詳細フィルタの適用
+            if (companyFilter) {
+                displayRecs = displayRecs.filter(r => (r.jobs?.company || '').toLowerCase().includes(companyFilter));
+            }
+            if (jobCatFilter) {
+                displayRecs = displayRecs.filter(r =>
+                    (r.jobs?.title || '').toLowerCase().includes(jobCatFilter) ||
+                    (r.jobs?.job_category || '').toLowerCase().includes(jobCatFilter)
+                );
+            }
+            if (locationFilter) {
+                displayRecs = displayRecs.filter(r => (r.jobs?.location || '').toLowerCase().includes(locationFilter));
+            }
+            if (!isNaN(salaryMinFilter)) {
+                // 上限年収が指定最低年収以上のものを表示
+                displayRecs = displayRecs.filter(r => (r.jobs?.salary_max || 0) >= salaryMinFilter * 10000);
+            }
+            if (!isNaN(scoreMinFilter)) {
+                displayRecs = displayRecs.filter(r => r.score >= scoreMinFilter);
             }
 
             // タブに応じてフィルタリング
