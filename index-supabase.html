@@ -16185,10 +16185,10 @@
                 // CAロールも管理者/コーチ枠に追加
                 const isAdminOrCoach = ['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role);
 
-                // 1. 推薦データを取得
+                // 1. 推薦データを取得（JOINなしで全件取得）
                 let query = supabase
                     .from('recommendations')
-                    .select('*, jobs(*), users!recommendations_user_id_fkey(id, name, email)')
+                    .select('*')
                     .order('score', { ascending: false })
                     .limit(10000);
 
@@ -16203,11 +16203,33 @@
                 let { data: recs, error } = await query;
                 if (error) throw error;
 
-                console.log('Loaded recommendations:', {
+                console.log('Loaded recommendations (before JOIN):', {
                     total: recs?.length || 0,
                     highScore: recs?.filter(r => r.score >= 50).length || 0,
                     lowScore: recs?.filter(r => r.score < 50).length || 0,
                     score10: recs?.filter(r => r.score === 10).length || 0,
+                    minScore: recs?.length > 0 ? Math.min(...recs.map(r => r.score)) : 0,
+                    maxScore: recs?.length > 0 ? Math.max(...recs.map(r => r.score)) : 0
+                });
+
+                // 2. 求人情報を別途取得してマージ
+                if (recs && recs.length > 0) {
+                    const jobIds = [...new Set(recs.map(r => r.job_id))];
+                    const { data: jobs, error: jobsError } = await supabase
+                        .from('jobs')
+                        .select('*')
+                        .in('id', jobIds);
+
+                    if (!jobsError && jobs) {
+                        // 求人情報をマージ
+                        recs.forEach(rec => {
+                            rec.jobs = jobs.find(j => j.id === rec.job_id);
+                        });
+                    }
+                }
+
+                console.log('Loaded recommendations (after jobs JOIN):', {
+                    total: recs?.length || 0,
                     score10Details: recs?.filter(r => r.score === 10).map(r => ({
                         id: r.id,
                         score: r.score,
