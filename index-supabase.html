@@ -14035,7 +14035,13 @@
 
                 let query = window.supabase
                     .from('jobs')
-                    .select('*, companies(name)', { count: 'exact' })
+                    .select(`
+                        id, organization_id, company, company_id, title, job_code, location, 
+                        salary_min, salary_max, employment_type, job_category, industry_category, 
+                        is_remote, status, created_at, welcome_requirements, tags, ai_score, ai_reason,
+                        pdf_url, pdf_filename,
+                        companies(name)
+                    `, { count: 'exact' })
                     .eq('organization_id', currentUser.organization_id)
                     .is('deleted_at', null) // 論理削除された求人を除外
                 // .eq('status', 'active') // 一時的にステータスフィルタを解除（インポートデータが表示されない問題対応）
@@ -16199,7 +16205,7 @@
                 while (hasMore) {
                     let query = supabase
                         .from('recommendations')
-                        .select('*', { count: 'exact' })
+                        .select('id, user_id, job_id, score, reason, match_type, created_at, updated_at', { count: 'exact' })
                         .order('score', { ascending: false })
                         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -16251,7 +16257,7 @@
                         const batchIds = jobIds.slice(i, i + JOB_BATCH_SIZE);
                         const { data: jobs, error: jobsError } = await supabase
                             .from('jobs')
-                            .select('*')
+                            .select('id, company, title, location, salary_min, salary_max, employment_type, job_category, industry_category, description, qualifications')
                             .in('id', batchIds);
 
                         if (!jobsError && jobs) {
@@ -18639,10 +18645,10 @@
             });
             showLoading()
             try {
-                // 担当ユーザーを取得
+                // 担当ユーザーを取得（一覧表示に必要なカラムに限定）
                 let studentQuery = supabase
                     .from('users')
-                    .select('*')
+                    .select('id, name, email, created_at, organization_id, coach_id')
                     .eq('coach_id', currentUser.id)
                     .eq('organization_id', currentUser.organization_id)
                     .order('created_at', { ascending: false });
