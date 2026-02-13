@@ -16236,14 +16236,14 @@
 
                 // 2. 求人情報を別途取得してマージ
                 if (recs && recs.length > 0) {
-                    const jobIds = [...new Set(recs.map(r => r.job_id))];
+                    const jobIds = [...new Set(recs.map(r => r.job_id).filter(Boolean))];
                     console.log(`Fetching ${jobIds.length} unique jobs...`);
 
-                    // 求人情報もページネーションで取得
+                    // 求人情報もバッチで取得
                     let allJobs = [];
-                    const JOB_PAGE_SIZE = 1000;
-                    for (let i = 0; i < jobIds.length; i += JOB_PAGE_SIZE) {
-                        const batchIds = jobIds.slice(i, i + JOB_PAGE_SIZE);
+                    const JOB_BATCH_SIZE = 100; // URL長制限を回避するため小さめに分割
+                    for (let i = 0; i < jobIds.length; i += JOB_BATCH_SIZE) {
+                        const batchIds = jobIds.slice(i, i + JOB_BATCH_SIZE);
                         const { data: jobs, error: jobsError } = await supabase
                             .from('jobs')
                             .select('*')
@@ -16251,26 +16251,30 @@
 
                         if (!jobsError && jobs) {
                             allJobs = allJobs.concat(jobs);
+                        } else if (jobsError) {
+                            console.error(`Error fetching job batch starting at ${i}:`, jobsError);
                         }
                     }
 
-                    console.log(`Fetched ${allJobs.length} jobs`);
+                    console.log(`Fetched ${allJobs.length} jobs total`);
 
-                    // 求人情報をマージ
+                    // Mapを使用してマージ
+                    const jobMap = new Map();
+                    allJobs.forEach(j => {
+                        if (j && j.id) jobMap.set(j.id, j);
+                    });
+
                     recs.forEach(rec => {
-                        rec.jobs = allJobs.find(j => j.id === rec.job_id);
+                        rec.jobs = jobMap.get(rec.job_id);
                     });
                 }
 
                 console.log('Loaded recommendations (after jobs JOIN):', {
                     total: recs?.length || 0,
-                    score10Details: recs?.filter(r => r.score === 10).map(r => ({
-                        id: r.id,
-                        score: r.score,
-                        job: r.jobs?.title,
-                        user_id: r.user_id,
-                        job_id: r.job_id
-                    })),
+                    withJobs: recs?.filter(r => r.jobs).length || 0,
+                    withoutJobs: recs?.filter(r => !r.jobs).length || 0,
+                    score10Count: recs?.filter(r => r.score === 10).length || 0,
+                    score10WithJobs: recs?.filter(r => r.score === 10 && r.jobs).length || 0,
                     samples: recs?.slice(0, 3).map(r => ({ id: r.id, score: r.score, job: r.jobs?.title }))
                 });
 
