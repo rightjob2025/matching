@@ -8282,6 +8282,11 @@
 
                     try {
                         switch (contentId) {
+                            case 'dashboard-content':
+                                if (typeof loadDashboard === 'function') {
+                                    await loadDashboard();
+                                }
+                                break;
                             case 'recommendations-content':
                                 // 推薦一覧は初回のみロード
                                 if (typeof loadRecommendations === 'function') {
@@ -16389,6 +16394,11 @@
                 }
 
                 renderRecommendations(finalRecs, isAdminOrCoach, allCandidates, appliedJobIds, dismissedJobIds);
+
+                // ダッシュボードの統計も更新（AI紹介件数などを同期させるため）
+                if (typeof loadDashboard === 'function') {
+                    loadDashboard();
+                }
 
             } catch (error) {
                 console.error('Load recommendations error:', error)
@@ -27517,13 +27527,8 @@
                                 // メニュー表示の更新
                                 updateMenuVisibility(currentUser.role);
 
-                                // ダッシュボードへ (役割に応じたファイルへ遷移)（単独動作のためコメントアウト）
-                                // if (currentUser.role === 'candidate') {
-                                //     window.location.href = 'candidate.html';
-                                // } else {
-                                //     window.location.href = 'admin.html';
-                                // }
-                                // return;
+                                // 初期表示としてダッシュボードを読み込む
+                                await loadDashboard();
 
                                 loadNotifications()
                                 initMasterDataDropdowns(); // マスタデータ読み込み
