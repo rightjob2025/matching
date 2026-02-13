@@ -16208,6 +16208,13 @@
                     highScore: recs?.filter(r => r.score >= 50).length || 0,
                     lowScore: recs?.filter(r => r.score < 50).length || 0,
                     score10: recs?.filter(r => r.score === 10).length || 0,
+                    score10Details: recs?.filter(r => r.score === 10).map(r => ({
+                        id: r.id,
+                        score: r.score,
+                        job: r.jobs?.title,
+                        user_id: r.user_id,
+                        job_id: r.job_id
+                    })),
                     samples: recs?.slice(0, 3).map(r => ({ id: r.id, score: r.score, job: r.jobs?.title }))
                 });
 
@@ -16622,6 +16629,22 @@
             if (appliedJobIds === undefined) appliedJobIds = appliedJobIdsCache;
             if (dismissedJobIds === undefined) dismissedJobIds = dismissedJobIdsCache;
 
+            console.log('renderRecommendations called with:', {
+                recsCount: recs?.length || 0,
+                score10Count: recs?.filter(r => r.score === 10).length || 0,
+                score10Details: recs?.filter(r => r.score === 10).map(r => ({
+                    id: r.id,
+                    score: r.score,
+                    job: r.jobs?.title,
+                    user_id: r.user_id,
+                    user_name: r.users?.name,
+                    job_id: r.job_id
+                })),
+                currentUser: window.currentUser?.id,
+                currentUserRole: window.currentUser?.role,
+                isAdminOrCoach: isAdminOrCoach
+            });
+
             // グローバル変数に保存
             allRecommendations = recs;
             window.allRecommendations = recs; // デバッグ用にwindowオブジェクトにも保存
@@ -16675,6 +16698,18 @@
             }
 
             // タブに応じてフィルタリング
+            console.log(`Before tab filtering:`, {
+                displayRecsCount: displayRecs.length,
+                score10InDisplayRecs: displayRecs.filter(r => r.score === 10).length,
+                score10Details: displayRecs.filter(r => r.score === 10).map(r => ({
+                    score: r.score,
+                    job: r.jobs?.title,
+                    user_id: r.user_id,
+                    job_id: r.job_id
+                })),
+                currentTab: currentRecommendationTab
+            });
+
             let filteredRecs = displayRecs.filter(rec => {
                 const isDismissed = dismissed.has(`${rec.user_id}_${rec.job_id}`);
                 if (currentRecommendationTab === 'matches') {
