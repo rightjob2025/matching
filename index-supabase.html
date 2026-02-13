@@ -14038,7 +14038,7 @@
                     .select(`
                         id, organization_id, company, company_id, title, job_code, location, 
                         salary_min, salary_max, employment_type, job_category, industry_category, 
-                        is_remote, status, created_at, welcome_requirements, tags, ai_score, ai_reason,
+                        is_remote, status, created_at, welcome_requirements, 
                         pdf_url, pdf_filename,
                         companies(name)
                     `, { count: 'exact' })
@@ -16205,7 +16205,7 @@
                 while (hasMore) {
                     let query = supabase
                         .from('recommendations')
-                        .select('id, user_id, job_id, score, reason, match_type, created_at, updated_at', { count: 'exact' })
+                        .select('id, user_id, job_id, score, reason, created_at, organization_id', { count: 'exact' })
                         .order('score', { ascending: false })
                         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -16257,7 +16257,7 @@
                         const batchIds = jobIds.slice(i, i + JOB_BATCH_SIZE);
                         const { data: jobs, error: jobsError } = await supabase
                             .from('jobs')
-                            .select('id, company, title, location, salary_min, salary_max, employment_type, job_category, industry_category, description, qualifications')
+                            .select('id, company, title, location, salary_min, salary_max, employment_type, job_category, industry_category, description, qualifications, pdf_url, pdf_filename, job_code')
                             .in('id', batchIds);
 
                         if (!jobsError && jobs) {
