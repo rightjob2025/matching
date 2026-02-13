@@ -16185,23 +16185,45 @@
                 // CAロールも管理者/コーチ枠に追加
                 const isAdminOrCoach = ['org_admin', 'admin', 'coach', 'ca', 'super_admin'].includes(currentUser.role);
 
-                // 1. 推薦データを取得（JOINなしで全件取得）
-                let query = supabase
-                    .from('recommendations')
-                    .select('*')
-                    .order('score', { ascending: false })
-                    .limit(10000);
+                // 1. 推薦データを取得（ページネーションで全件取得）
+                const PAGE_SIZE = 1000;
+                let allRecs = [];
+                let page = 0;
+                let hasMore = true;
 
-                if (isAdminOrCoach) {
-                    // 管理者/コーチの場合は組織内の全推薦を取得
-                    query = query.eq('organization_id', currentUser.organization_id);
-                } else {
-                    // 一般ユーザーは自分の推薦のみ
-                    query = query.eq('user_id', currentUser.id);
+                while (hasMore) {
+                    let query = supabase
+                        .from('recommendations')
+                        .select('*', { count: 'exact' })
+                        .order('score', { ascending: false })
+                        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+                    if (isAdminOrCoach) {
+                        query = query.eq('organization_id', currentUser.organization_id);
+                    } else {
+                        query = query.eq('user_id', currentUser.id);
+                    }
+
+                    const { data: pageRecs, error, count } = await query;
+                    if (error) throw error;
+
+                    if (pageRecs && pageRecs.length > 0) {
+                        allRecs = allRecs.concat(pageRecs);
+                        console.log(`Fetched page ${page + 1}: ${pageRecs.length} recommendations (total so far: ${allRecs.length})`);
+                    }
+
+                    // 次のページがあるかチェック
+                    hasMore = pageRecs && pageRecs.length === PAGE_SIZE;
+                    page++;
+
+                    // 安全のため、最大10ページ（10000件）まで
+                    if (page >= 10) {
+                        console.warn('Reached maximum page limit (10 pages)');
+                        break;
+                    }
                 }
 
-                let { data: recs, error } = await query;
-                if (error) throw error;
+                let recs = allRecs;
 
                 console.log('Loaded recommendations (before JOIN):', {
                     total: recs?.length || 0,
@@ -16215,17 +16237,29 @@
                 // 2. 求人情報を別途取得してマージ
                 if (recs && recs.length > 0) {
                     const jobIds = [...new Set(recs.map(r => r.job_id))];
-                    const { data: jobs, error: jobsError } = await supabase
-                        .from('jobs')
-                        .select('*')
-                        .in('id', jobIds);
+                    console.log(`Fetching ${jobIds.length} unique jobs...`);
 
-                    if (!jobsError && jobs) {
-                        // 求人情報をマージ
-                        recs.forEach(rec => {
-                            rec.jobs = jobs.find(j => j.id === rec.job_id);
-                        });
+                    // 求人情報もページネーションで取得
+                    let allJobs = [];
+                    const JOB_PAGE_SIZE = 1000;
+                    for (let i = 0; i < jobIds.length; i += JOB_PAGE_SIZE) {
+                        const batchIds = jobIds.slice(i, i + JOB_PAGE_SIZE);
+                        const { data: jobs, error: jobsError } = await supabase
+                            .from('jobs')
+                            .select('*')
+                            .in('id', batchIds);
+
+                        if (!jobsError && jobs) {
+                            allJobs = allJobs.concat(jobs);
+                        }
                     }
+
+                    console.log(`Fetched ${allJobs.length} jobs`);
+
+                    // 求人情報をマージ
+                    recs.forEach(rec => {
+                        rec.jobs = allJobs.find(j => j.id === rec.job_id);
+                    });
                 }
 
                 console.log('Loaded recommendations (after jobs JOIN):', {
