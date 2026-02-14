@@ -8273,7 +8273,7 @@
                     'admin-candidates-content',
                     'admin-users-content',
                     'admin-csv-content',
-                    'admin-log-content',
+                    'admin-logs-content',
                     'admin-master-content',
                     'admin-settings-content',
                     'admin-data-management-content',
@@ -23922,11 +23922,18 @@
             const adminRoles = ['org_admin', 'admin', 'super_admin'];
             const staffRoles = ['org_admin', 'admin', 'coach', 'ca', 'ra', 'super_admin'];
 
-            if (adminRoles.includes(role)) $('#admin-menu').removeClass('hidden');
-            else $('#admin-menu').addClass('hidden');
+            if (adminRoles.includes(role)) {
+                $('#admin-menu').removeClass('hidden');
+                $('.nav-link[data-page="admin-logs"]').removeClass('hidden').show();
+            } else {
+                $('#admin-menu').addClass('hidden');
+            }
 
-            if (role === 'super_admin') $('#super-admin-menu').removeClass('hidden');
-            else $('#super-admin-menu').addClass('hidden');
+            if (role === 'super_admin') {
+                $('#super-admin-menu').removeClass('hidden');
+            } else {
+                $('#super-admin-menu').addClass('hidden');
+            }
 
             if (staffRoles.includes(role)) {
                 $('#coach-menu').removeClass('hidden');
